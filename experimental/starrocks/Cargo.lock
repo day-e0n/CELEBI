@@ -623,6 +623,8 @@ checksum = "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
 dependencies = [
  "equivalent",
  "hashbrown 0.17.1",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -1430,6 +1432,7 @@ version = "1.0.150"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8014e44b4736ed0538adeecded0fce2a272f22dc9578a7eb6b2d9993c74cfb9"
 dependencies = [
+ "indexmap",
  "itoa",
  "memchr",
  "serde",
@@ -1585,7 +1588,7 @@ version = "0.1.0"
 dependencies = [
  "prost",
  "starrocks-thrift",
- "substrait",
+ "substrait 0.63.0",
  "substrait-explain",
  "thiserror",
 ]
@@ -1629,6 +1632,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "substrait"
+version = "0.63.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e620ff4d5c02fd6f7752931aa74b16a26af66a63022cc1ad412c77edbe0bab47"
+dependencies = [
+ "heck",
+ "indexmap",
+ "prettyplease",
+ "prost",
+ "prost-build",
+ "prost-types",
+ "regress",
+ "schemars",
+ "semver",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "syn",
+ "typify",
+ "walkdir",
+]
+
+[[package]]
 name = "substrait-explain"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1648,7 +1674,7 @@ dependencies = [
  "protox",
  "serde_json",
  "serde_yaml",
- "substrait",
+ "substrait 0.62.2",
  "thiserror",
 ]
 
