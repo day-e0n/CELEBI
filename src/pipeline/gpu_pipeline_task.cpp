@@ -97,6 +97,239 @@ int current_gpu_id()
   return dev;
 }
 
+// wdy start
+const char* tier_name(cucascade::memory::Tier tier)
+{
+  switch (tier) {
+    case cucascade::memory::Tier::GPU: return "GPU";
+    case cucascade::memory::Tier::HOST: return "HOST";
+    case cucascade::memory::Tier::DISK: return "DISK";
+    default: return "UNKNOWN";
+  }
+}
+
+struct locality_bytes_snapshot {
+  size_t input_bytes      = 0;
+  size_t local_bytes      = 0;
+  size_t remote_gpu_bytes = 0;
+  size_t host_bytes       = 0;
+  size_t disk_bytes       = 0;
+  size_t batch_count      = 0;
+};
+
+void add_batch_to_snapshot(locality_bytes_snapshot& snapshot,
+                           const cucascade::memory::memory_space* space,
+                           size_t bytes,
+                           const cucascade::memory::memory_space* target_space)
+{
+  snapshot.input_bytes += bytes;
+  snapshot.batch_count++;
+  if (space == nullptr) { return; }
+  if (target_space != nullptr && space->get_id() == target_space->get_id()) {
+    snapshot.local_bytes += bytes;
+    return;
+  }
+  switch (space->get_tier()) {
+    case cucascade::memory::Tier::GPU: snapshot.remote_gpu_bytes += bytes; break;
+    case cucascade::memory::Tier::HOST: snapshot.host_bytes += bytes; break;
+    case cucascade::memory::Tier::DISK: snapshot.disk_bytes += bytes; break;
+    default: break;
+  }
+}
+
+locality_bytes_snapshot summarize_unlocked_batches(
+  const op::pipelineable_operator_data& data, const cucascade::memory::memory_space* target_space)
+{
+  locality_bytes_snapshot snapshot;
+  for (const auto& batch : data.get_data_batches()) {
+    if (!batch) { continue; }
+    auto ro = batch->to_read_only();
+    if (!ro.get_data()) { continue; }
+    add_batch_to_snapshot(
+      snapshot, ro.get_memory_space(), ro.get_data()->get_size_in_bytes(), target_space);
+  }
+  return snapshot;
+}
+
+locality_bytes_snapshot summarize_locked_batches(
+  const op::pipelineable_operator_data& data, const cucascade::memory::memory_space* target_space)
+{
+  locality_bytes_snapshot snapshot;
+  for (const auto& ro : data.get_read_only_batches(false)) {
+    if (!ro.get_data()) { continue; }
+    add_batch_to_snapshot(
+      snapshot, ro.get_memory_space(), ro.get_data()->get_size_in_bytes(), target_space);
+  }
+  return snapshot;
+}
+
+void log_locality_snapshot(const char* phase,
+                           const sirius_pipeline* pipeline,
+                           uint64_t task_id,
+                           std::optional<int> preferred_device_id,
+                           int actual_gpu,
+                           const cucascade::memory::memory_space* target_space,
+                           const locality_bytes_snapshot& snapshot)
+{
+  SIRIUS_LOG_INFO(
+    "[locality-audit] {} pipeline_id={} task_id={} preferred_device={} actual_gpu={} "
+    "target_tier={} target_device={} input_bytes={} local_bytes={} remote_gpu_bytes={} "
+    "host_bytes={} disk_bytes={} batch_count={}",
+    phase,
+    pipeline ? pipeline->get_pipeline_id() : 0,
+    task_id,
+    preferred_device_id.value_or(-1),
+    actual_gpu,
+    target_space ? tier_name(target_space->get_tier()) : "NONE",
+    target_space ? target_space->get_device_id() : -1,
+    snapshot.input_bytes,
+    snapshot.local_bytes,
+    snapshot.remote_gpu_bytes,
+    snapshot.host_bytes,
+    snapshot.disk_bytes,
+    snapshot.batch_count);
+}
+// wdy end
+
+// wdy start
+const char* operator_data_type_name(op::operator_data_type type)
+{
+  switch (type) {
+    case op::operator_data_type::BASE: return "BASE";
+    case op::operator_data_type::PIPELINEABLE: return "PIPELINEABLE";
+    case op::operator_data_type::PARTITIONED: return "PARTITIONED";
+    case op::operator_data_type::GPU_SCAN: return "GPU_SCAN";
+    default: return "UNKNOWN";
+  }
+}
+
+const char* stage_kind(op::SiriusPhysicalOperatorType type)
+{
+  switch (type) {
+    case op::SiriusPhysicalOperatorType::TABLE_SCAN:
+    case op::SiriusPhysicalOperatorType::COLUMN_DATA_SCAN:
+    case op::SiriusPhysicalOperatorType::CHUNK_SCAN:
+    case op::SiriusPhysicalOperatorType::RECURSIVE_CTE_SCAN:
+    case op::SiriusPhysicalOperatorType::RECURSIVE_RECURRING_CTE_SCAN:
+    case op::SiriusPhysicalOperatorType::CTE_SCAN:
+    case op::SiriusPhysicalOperatorType::DELIM_SCAN:
+    case op::SiriusPhysicalOperatorType::EXPRESSION_SCAN:
+    case op::SiriusPhysicalOperatorType::POSITIONAL_SCAN:
+    case op::SiriusPhysicalOperatorType::DUCKDB_SCAN:
+    case op::SiriusPhysicalOperatorType::PARQUET_SCAN:
+    case op::SiriusPhysicalOperatorType::ICEBERG_SCAN:
+    case op::SiriusPhysicalOperatorType::CPU_SOURCE:
+    case op::SiriusPhysicalOperatorType::GPU_SCAN: return "SCAN";
+    case op::SiriusPhysicalOperatorType::FILTER: return "FILTER";
+    case op::SiriusPhysicalOperatorType::PROJECTION: return "PROJECTION";
+    case op::SiriusPhysicalOperatorType::HASH_JOIN:
+    case op::SiriusPhysicalOperatorType::NESTED_LOOP_JOIN:
+    case op::SiriusPhysicalOperatorType::BLOCKWISE_NL_JOIN:
+    case op::SiriusPhysicalOperatorType::CROSS_PRODUCT:
+    case op::SiriusPhysicalOperatorType::PIECEWISE_MERGE_JOIN:
+    case op::SiriusPhysicalOperatorType::IE_JOIN:
+    case op::SiriusPhysicalOperatorType::LEFT_DELIM_JOIN:
+    case op::SiriusPhysicalOperatorType::RIGHT_DELIM_JOIN:
+    case op::SiriusPhysicalOperatorType::POSITIONAL_JOIN:
+    case op::SiriusPhysicalOperatorType::ASOF_JOIN: return "JOIN";
+    case op::SiriusPhysicalOperatorType::UNGROUPED_AGGREGATE:
+    case op::SiriusPhysicalOperatorType::HASH_GROUP_BY:
+    case op::SiriusPhysicalOperatorType::PERFECT_HASH_GROUP_BY:
+    case op::SiriusPhysicalOperatorType::PARTITIONED_AGGREGATE:
+    case op::SiriusPhysicalOperatorType::MERGE_GROUP_BY:
+    case op::SiriusPhysicalOperatorType::MERGE_AGGREGATE: return "AGGREGATE";
+    case op::SiriusPhysicalOperatorType::ORDER_BY:
+    case op::SiriusPhysicalOperatorType::MERGE_SORT:
+    case op::SiriusPhysicalOperatorType::SORT_PARTITION:
+    case op::SiriusPhysicalOperatorType::SORT_SAMPLE: return "SORT";
+    case op::SiriusPhysicalOperatorType::LIMIT:
+    case op::SiriusPhysicalOperatorType::STREAMING_LIMIT:
+    case op::SiriusPhysicalOperatorType::LIMIT_PERCENT:
+    case op::SiriusPhysicalOperatorType::TOP_N:
+    case op::SiriusPhysicalOperatorType::MERGE_TOP_N: return "LIMIT";
+    case op::SiriusPhysicalOperatorType::PARTITION: return "PARTITION";
+    case op::SiriusPhysicalOperatorType::CONCAT:
+    case op::SiriusPhysicalOperatorType::UNION: return "CONCAT";
+    case op::SiriusPhysicalOperatorType::CTE:
+    case op::SiriusPhysicalOperatorType::RECURSIVE_CTE:
+    case op::SiriusPhysicalOperatorType::RECURSIVE_KEY_CTE: return "CTE";
+    case op::SiriusPhysicalOperatorType::RESULT_COLLECTOR: return "RESULT";
+    default: return "OTHER";
+  }
+}
+
+struct stage_data_summary {
+  size_t batches = 0;
+  size_t rows    = 0;
+  size_t columns = 0;
+  size_t bytes   = 0;
+};
+
+stage_data_summary summarize_stage_data(const op::operator_data& data)
+{
+  stage_data_summary summary;
+  auto* p_data = dynamic_cast<const op::pipelineable_operator_data*>(&data);
+  if (p_data == nullptr) { return summary; }
+
+  for (auto const& batch : p_data->get_read_only_batches(false)) {
+    if (!batch.get_data()) { continue; }
+    auto view = get_cudf_table_view(batch);
+    summary.batches++;
+    summary.rows += static_cast<size_t>(view.num_rows());
+    summary.columns += static_cast<size_t>(view.num_columns());
+    summary.bytes += batch.get_data()->get_size_in_bytes();
+  }
+  return summary;
+}
+
+void log_stage_audit(const op::sirius_physical_operator& op,
+                     const op::operator_data& input_data,
+                     const op::operator_data& output_data,
+                     const sirius_pipeline* pipeline,
+                     uint64_t task_id,
+                     size_t num_operators,
+                     int actual_gpu,
+                     std::chrono::microseconds duration)
+{
+  auto input_summary  = summarize_stage_data(input_data);
+  auto output_summary = summarize_stage_data(output_data);
+  double byte_ratio   = input_summary.bytes == 0 ? 0.0
+                                                 : static_cast<double>(output_summary.bytes) /
+                                                   static_cast<double>(input_summary.bytes);
+  double row_ratio    = input_summary.rows == 0 ? 0.0
+                                                : static_cast<double>(output_summary.rows) /
+                                                 static_cast<double>(input_summary.rows);
+
+  SIRIUS_LOG_INFO(
+    "[stage-audit] pipeline_id={} task_id={} operator_id={} operator_name={} stage_kind={} "
+    "operator_type={} input_type={} output_type={} actual_gpu={} pipeline_operator_count={} "
+    "input_batches={} input_rows={} input_columns={} input_bytes={} output_batches={} "
+    "output_rows={} output_columns={} output_bytes={} byte_ratio={:.6f} row_ratio={:.6f} "
+    "duration_us={}",
+    pipeline ? pipeline->get_pipeline_id() : 0,
+    task_id,
+    op.get_operator_id(),
+    op.get_name(),
+    stage_kind(op.type),
+    static_cast<int>(op.type),
+    operator_data_type_name(input_data.get_type()),
+    operator_data_type_name(output_data.get_type()),
+    actual_gpu,
+    num_operators,
+    input_summary.batches,
+    input_summary.rows,
+    input_summary.columns,
+    input_summary.bytes,
+    output_summary.batches,
+    output_summary.rows,
+    output_summary.columns,
+    output_summary.bytes,
+    byte_ratio,
+    row_ratio,
+    duration.count());
+}
+// wdy end
+
 void log_operator_data(const op::sirius_physical_operator& op,
                        const op::operator_data& data,
                        const sirius_pipeline* pipeline,
@@ -166,6 +399,17 @@ std::unique_ptr<op::operator_data> run_one_operator(
   stream.synchronize();
   auto end      = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+  // wdy start
+  log_stage_audit(op,
+                  operator_input_data,
+                  *operator_output_data,
+                  pipeline,
+                  task_id,
+                  num_operators,
+                  current_gpu_id(),
+                  duration);
+  // wdy end
 
   auto peak_bytes        = allocator ? allocator->get_peak_allocated_bytes(stream) : 0;
   std::string extra_info = fmt::format(
@@ -408,11 +652,36 @@ void gpu_pipeline_task::execute(rmm::cuda_stream_view stream)
     .target_tier                 = "GPU",
     .executor_thread_resource_id = executor_thread_resource_id,
   });
+  // wdy start
+  if (auto* pipelineable_input =
+        dynamic_cast<const op::pipelineable_operator_data*>(local_state._input_data.get())) {
+    log_locality_snapshot("prepare_before",
+                          pipeline,
+                          get_task_id(),
+                          get_preferred_device_id(),
+                          current_gpu_id(),
+                          requested_memory_space,
+                          summarize_unlocked_batches(*pipelineable_input, requested_memory_space));
+  }
+  // wdy end
+
   try {
     local_state._input_data->prepare_for_processing(requested_memory_space, stream);
     // synchronizing here to ensure the timing collected by Quent and logging for preparing the task
     // is accurate.
     stream.synchronize();
+    // wdy start
+    if (auto* pipelineable_input =
+          dynamic_cast<const op::pipelineable_operator_data*>(local_state._input_data.get())) {
+      log_locality_snapshot("prepare_after",
+                            pipeline,
+                            get_task_id(),
+                            get_preferred_device_id(),
+                            current_gpu_id(),
+                            requested_memory_space,
+                            summarize_locked_batches(*pipelineable_input, requested_memory_space));
+    }
+    // wdy end
   } catch (const rmm::out_of_memory& oom) {
     auto peak_bytes  = allocator->get_peak_allocated_bytes(stream);
     auto input_basis = local_state.get_reservation_size_info()->input_basis;

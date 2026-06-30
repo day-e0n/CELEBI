@@ -346,9 +346,12 @@ void task_scheduler::management_eventloop()
         ++it;
         continue;
       }
+      // wdy start
       uint64_t task_id = 0;
+      std::optional<int> preferred_device_id;
       if (auto* gpu_task = dynamic_cast<pipeline::gpu_pipeline_task*>(task.get())) {
-        task_id = gpu_task->get_task_id();
+        task_id             = gpu_task->get_task_id();
+        preferred_device_id = gpu_task->get_preferred_device_id();
       }
 
       if (auto* pipeline_task = dynamic_cast<sirius_pipeline_itask*>(task.get())) {
@@ -363,6 +366,11 @@ void task_scheduler::management_eventloop()
       // load-bearing — verification greps depend on it.
       SIRIUS_LOG_INFO(
         "[mgpu-audit] pipeline_task dispatched to GPU {} task_id={}", device_id, task_id);
+      SIRIUS_LOG_INFO("[locality-audit] dispatch task_id={} preferred_device={} actual_gpu={}",
+                      task_id,
+                      preferred_device_id.value_or(-1),
+                      device_id);
+      // wdy end
       _gpu_executors.at(device_id)->schedule(std::move(task));
       it = _ready_devices.erase(it);
     }

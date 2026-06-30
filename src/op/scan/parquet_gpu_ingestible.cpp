@@ -53,6 +53,9 @@
 #include <cctype>
 #include <memory>
 #include <optional>
+// wdy start
+#include <sstream>
+// wdy end
 #include <stdexcept>
 #include <string_view>
 #include <unordered_set>
@@ -94,6 +97,105 @@ std::string strip_file_uri(std::string const& p)
   }
   return p;
 }
+
+// wdy start
+std::string join_strings(std::vector<std::string> const& values, char sep)
+{
+  std::ostringstream out;
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (i != 0) { out << sep; }
+    out << values[i];
+  }
+  return out.str();
+}
+
+std::string join_row_group_indices(std::vector<cudf::size_type> const& values)
+{
+  std::ostringstream out;
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (i != 0) { out << ","; }
+    out << values[i];
+  }
+  return out.str();
+}
+
+std::string scan_audit_file_paths(std::vector<row_group_slice> const& slices)
+{
+  std::vector<std::string> files;
+  files.reserve(slices.size());
+  for (auto const& slice : slices) {
+    files.push_back(slice.file_path);
+  }
+  return join_strings(files, '|');
+}
+
+std::string scan_audit_row_groups(std::vector<row_group_slice> const& slices)
+{
+  std::vector<std::string> groups;
+  groups.reserve(slices.size());
+  for (auto const& slice : slices) {
+    groups.push_back(join_row_group_indices(slice.row_group_indices));
+  }
+  return join_strings(groups, '|');
+}
+
+std::size_t scan_audit_compressed_bytes(std::vector<row_group_slice> const& slices)
+{
+  std::size_t total = 0;
+  for (auto const& slice : slices) {
+    total += slice.reserved_compressed_bytes;
+  }
+  return total;
+}
+
+std::size_t scan_audit_uncompressed_bytes(std::vector<row_group_slice> const& slices)
+{
+  std::size_t total = 0;
+  for (auto const& slice : slices) {
+    total += slice.reserved_uncompressed_bytes;
+  }
+  return total;
+}
+
+std::string scan_audit_column_bytes(std::vector<row_group_slice> const& slices,
+                                    std::vector<std::string> const& column_names)
+{
+  struct byte_pair {
+    std::size_t compressed   = 0;
+    std::size_t uncompressed = 0;
+  };
+
+  std::vector<byte_pair> totals(column_names.size());
+  for (auto const& slice : slices) {
+    auto const& metadata = *slice.file_metadata;
+    std::vector<std::vector<std::size_t>> leaf_indices;
+    leaf_indices.reserve(column_names.size());
+    for (auto const& column_name : column_names) {
+      leaf_indices.push_back(detail::leaf_indices_for_column(metadata, column_name));
+    }
+
+    for (auto const rg_idx : slice.row_group_indices) {
+      auto const& row_group = metadata.row_groups[rg_idx];
+      for (std::size_t col_idx = 0; col_idx < leaf_indices.size(); ++col_idx) {
+        for (auto const leaf_idx : leaf_indices[col_idx]) {
+          auto const& column_metadata = row_group.columns[leaf_idx].meta_data;
+          totals[col_idx].compressed +=
+            static_cast<std::size_t>(column_metadata.total_compressed_size);
+          totals[col_idx].uncompressed +=
+            static_cast<std::size_t>(column_metadata.total_uncompressed_size);
+        }
+      }
+    }
+  }
+
+  std::ostringstream out;
+  for (std::size_t i = 0; i < column_names.size(); ++i) {
+    if (i != 0) { out << ","; }
+    out << column_names[i] << ":" << totals[i].compressed << ":" << totals[i].uncompressed;
+  }
+  return out.str();
+}
+// wdy end
 
 }  // namespace
 
@@ -577,6 +679,23 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
   rmm::device_async_resource_ref mr_ref(mem_space.get_default_allocator());
   auto [table, _] =
     cudf::io::read_parquet(std::move(sources), std::move(metadatas), opts, stream, mr_ref);
+
+  // wdy start
+  SIRIUS_LOG_INFO(
+    "[scan-audit] parquet_materialize target_gpu={} files={} columns={} row_groups={} "
+    "compressed_bytes={} uncompressed_bytes={} column_bytes={} output_rows={} output_columns={} "
+    "split_count={}",
+    mem_space.get_device_id(),
+    scan_audit_file_paths(split.rg_slices),
+    join_strings(split.plan->data_column_names(), ','),
+    scan_audit_row_groups(split.rg_slices),
+    scan_audit_compressed_bytes(split.rg_slices),
+    scan_audit_uncompressed_bytes(split.rg_slices),
+    scan_audit_column_bytes(split.rg_slices, split.plan->data_column_names()),
+    table->num_rows(),
+    table->num_columns(),
+    split.rg_slices.size());
+  // wdy end
 
   SIRIUS_LOG_DEBUG(
     "[parquet_gpu_ingestible::materialize_table] Read {} file(s) (first: {}) — {} rows, {} "

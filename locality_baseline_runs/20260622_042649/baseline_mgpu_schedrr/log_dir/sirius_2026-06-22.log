@@ -1,0 +1,189 @@
+[2026-06-22 04:26:58.640] [warning] [sirius_config.cpp:459] sirius_config: use_sirius_datasource was false but 2 GPUs are configured; the sirius datasource is required for multi-GPU IO routing. Overriding use_sirius_datasource to true.
+[2026-06-22 04:26:58.640] [info] [sirius_context.cpp:1046] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/locality_baseline_runs/20260622_042649/configs/sirius_mgpu2.yaml
+[2026-06-22 04:26:58.646] [info] [telemetry_context.cpp:67] Telemetry context initialized (engine=siriusDB)
+[2026-06-22 04:26:58.646] [info] [sirius_context.cpp:337] SiriusContext: topology summary — 2 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-06-22 04:26:58.646] [info] [sirius_context.cpp:342]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
+[2026-06-22 04:26:58.646] [info] [sirius_context.cpp:342]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:34:00.0)
+[2026-06-22 04:26:58.821] [warning] [sirius_context.cpp:352] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-06-22 04:26:58.821] [info] [sirius_context.cpp:364] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-06-22 04:26:58.824] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 1
+[2026-06-22 04:26:58.824] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 0
+[2026-06-22 04:26:58.846] [info] [sirius_context.cpp:477] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-06-22 04:26:59.077] [info] [sirius_context.cpp:1007] Connection opened.
+[2026-06-22 04:26:59.077] [info] [sirius_context.cpp:1020] Extension loaded: sirius
+[2026-06-22 04:26:59.077] [info] [sirius_context.cpp:258] QueryEnd
+[2026-06-22 04:26:59.085] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-06-22 04:26:59.085] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-06-22 04:26:59.085] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-06-22 04:26:59.086] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-06-22 04:26:59.086] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-06-22 04:26:59.086] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-06-22 04:26:59.086] [info] [sirius_context.cpp:242] QueryBegin: SQL: SET gpu_execution = true;
+[2026-06-22 04:26:59.086] [info] [sirius_context.cpp:258] QueryEnd
+[2026-06-22 04:26:59.095] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-06-22 04:26:59.095] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-06-22 04:26:59.095] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-06-22 04:26:59.096] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-06-22 04:26:59.096] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-06-22 04:26:59.096] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-06-22 04:26:59.096] [info] [sirius_context.cpp:242] QueryBegin: SQL: select sum(l_extendedprice * l_discount) as revenue from lineitem where l_shipdate >= date '1997-01-01' and l_shipdate < date '1998-01-01' and l_discount between 0.03 - 0.01 and 0.03 + 0.01 and l_quantity < 24
+[2026-06-22 04:26:59.391] [info] [sirius_context.cpp:954] Transparent execution: Sirius physical plan generated successfully
+[2026-06-22 04:26:59.403] [info] [sirius_context.cpp:966] Transparent execution: physical plan replaced with GPU operator
+[2026-06-22 04:26:59.403] [info] [physical_sirius_execution.cpp:96] Transparent GPU execution: executing query
+[2026-06-22 04:26:59.458] [info] [sirius_engine.cpp:400] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=7) -> PROJECTION (id=4) -> UNGROUPED_AGGREGATE (id=5)
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #1: MERGE_AGGREGATE (id=8)
+  Input: <- Pipeline #0 [on: MERGE_AGGREGATE (id=8), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #2: RESULT_COLLECTOR (id=6)
+  Input: <- Pipeline #1 [on: RESULT_COLLECTOR (id=6), port: default, barrier: FULL]
+  Dependencies: Pipeline #1
+
+=== Query Plan DAG ===
+┌────────────────────────────┐
+│ Pipeline #2                │
+│ RESULT_COLLECTOR (id=6)    │
+│ Input(#1): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #1                │
+│ MERGE_AGGREGATE (id=8)     │
+│ Input(#0): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #0                │
+│ UNGROUPED_AGGREGATE (id=5) │
+│ PROJECTION (id=4)          │
+│ GPU_SCAN (id=7)            │
+└────────────────────────────┘
+
+[2026-06-22 04:26:59.618] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=1
+[2026-06-22 04:26:59.618] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=1 preferred_device=1 actual_gpu=1
+[2026-06-22 04:26:59.618] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-06-22 04:26:59.618] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=0 preferred_device=0 actual_gpu=0
+[2026-06-22 04:26:59.619] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=2
+[2026-06-22 04:26:59.619] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=2 preferred_device=0 actual_gpu=0
+[2026-06-22 04:26:59.619] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3
+[2026-06-22 04:26:59.619] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=3 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:00.223] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4
+[2026-06-22 04:27:00.223] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=4 preferred_device=0 actual_gpu=0
+[2026-06-22 04:27:00.225] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=5
+[2026-06-22 04:27:00.225] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=5 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:00.570] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=6
+[2026-06-22 04:27:00.570] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=6 preferred_device=0 actual_gpu=0
+[2026-06-22 04:27:00.773] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=7
+[2026-06-22 04:27:00.773] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=7 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:01.012] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=8
+[2026-06-22 04:27:01.012] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=8 preferred_device=0 actual_gpu=0
+[2026-06-22 04:27:01.124] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=9
+[2026-06-22 04:27:01.124] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=9 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:01.846] [info] [task_creator.cpp:351] [locality-audit] task_create operator_id=8 input_bytes=160 local_bytes=64 gpu_source_bytes=128 host_source_bytes=32 disk_source_bytes=0 gpu_sources=2 host_sources=1 preferred_device=1
+[2026-06-22 04:27:01.846] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10
+[2026-06-22 04:27:01.846] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=10 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:01.846] [info] [gpu_pipeline_task.cpp:173] [locality-audit] prepare_before pipeline_id=1 task_id=10 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=160 local_bytes=64 remote_gpu_bytes=64 host_bytes=32 disk_bytes=0 batch_count=10
+[2026-06-22 04:27:01.851] [info] [gpu_pipeline_task.cpp:173] [locality-audit] prepare_after pipeline_id=1 task_id=10 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=160 local_bytes=160 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=10
+[2026-06-22 04:27:01.855] [info] [task_creator.cpp:351] [locality-audit] task_create operator_id=6 input_bytes=16 local_bytes=16 gpu_source_bytes=16 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-06-22 04:27:01.855] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=11
+[2026-06-22 04:27:01.855] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=11 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:01.855] [info] [gpu_pipeline_task.cpp:173] [locality-audit] prepare_before pipeline_id=2 task_id=11 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=16 local_bytes=16 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-06-22 04:27:01.855] [info] [gpu_pipeline_task.cpp:173] [locality-audit] prepare_after pipeline_id=2 task_id=11 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=16 local_bytes=16 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-06-22 04:27:01.876] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-06-22 04:27:01.876] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-06-22 04:27:01.892] [info] [physical_sirius_execution.cpp:160] Transparent GPU execution: query completed
+[2026-06-22 04:27:01.913] [info] [sirius_context.cpp:258] QueryEnd
+[2026-06-22 04:27:01.920] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=8388608 bytes free_blocks=507
+[2026-06-22 04:27:01.920] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:01.920] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:01.921] [info] [:] [host_pool] HOST:0 QueryBegin allocated=5242880 bytes peak=8388608 bytes free_blocks=507
+[2026-06-22 04:27:01.921] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:01.921] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:01.921] [info] [sirius_context.cpp:242] QueryBegin: SQL: SET gpu_execution = true;
+[2026-06-22 04:27:01.921] [info] [sirius_context.cpp:258] QueryEnd
+[2026-06-22 04:27:01.930] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=8388608 bytes free_blocks=507
+[2026-06-22 04:27:01.930] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:01.930] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:01.931] [info] [:] [host_pool] HOST:0 QueryBegin allocated=5242880 bytes peak=8388608 bytes free_blocks=507
+[2026-06-22 04:27:01.931] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:01.931] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:01.931] [info] [sirius_context.cpp:242] QueryBegin: SQL: select sum(l_extendedprice * l_discount) as revenue from lineitem where l_shipdate >= date '1997-01-01' and l_shipdate < date '1998-01-01' and l_discount between 0.03 - 0.01 and 0.03 + 0.01 and l_quantity < 24
+[2026-06-22 04:27:02.174] [info] [sirius_context.cpp:954] Transparent execution: Sirius physical plan generated successfully
+[2026-06-22 04:27:02.195] [info] [sirius_context.cpp:966] Transparent execution: physical plan replaced with GPU operator
+[2026-06-22 04:27:02.195] [info] [physical_sirius_execution.cpp:96] Transparent GPU execution: executing query
+[2026-06-22 04:27:02.241] [info] [sirius_engine.cpp:400] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=7) -> PROJECTION (id=4) -> UNGROUPED_AGGREGATE (id=5)
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #1: MERGE_AGGREGATE (id=8)
+  Input: <- Pipeline #0 [on: MERGE_AGGREGATE (id=8), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #2: RESULT_COLLECTOR (id=6)
+  Input: <- Pipeline #1 [on: RESULT_COLLECTOR (id=6), port: default, barrier: FULL]
+  Dependencies: Pipeline #1
+
+=== Query Plan DAG ===
+┌────────────────────────────┐
+│ Pipeline #2                │
+│ RESULT_COLLECTOR (id=6)    │
+│ Input(#1): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #1                │
+│ MERGE_AGGREGATE (id=8)     │
+│ Input(#0): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #0                │
+│ UNGROUPED_AGGREGATE (id=5) │
+│ PROJECTION (id=4)          │
+│ GPU_SCAN (id=7)            │
+└────────────────────────────┘
+
+[2026-06-22 04:27:02.378] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=12
+[2026-06-22 04:27:02.378] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=12 preferred_device=0 actual_gpu=0
+[2026-06-22 04:27:02.378] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=13
+[2026-06-22 04:27:02.378] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=13 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:02.378] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=15
+[2026-06-22 04:27:02.378] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=15 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:02.378] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=14
+[2026-06-22 04:27:02.378] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=14 preferred_device=0 actual_gpu=0
+[2026-06-22 04:27:02.379] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16
+[2026-06-22 04:27:02.379] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=16 preferred_device=0 actual_gpu=0
+[2026-06-22 04:27:02.379] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=17
+[2026-06-22 04:27:02.379] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=17 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:02.678] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=18
+[2026-06-22 04:27:02.678] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=18 preferred_device=0 actual_gpu=0
+[2026-06-22 04:27:02.921] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=19
+[2026-06-22 04:27:02.921] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=19 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:03.108] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=20
+[2026-06-22 04:27:03.108] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=20 preferred_device=0 actual_gpu=0
+[2026-06-22 04:27:03.273] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=21
+[2026-06-22 04:27:03.273] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=21 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:04.357] [info] [task_creator.cpp:351] [locality-audit] task_create operator_id=8 input_bytes=160 local_bytes=64 gpu_source_bytes=128 host_source_bytes=32 disk_source_bytes=0 gpu_sources=2 host_sources=1 preferred_device=1
+[2026-06-22 04:27:04.357] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=22
+[2026-06-22 04:27:04.357] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=22 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:04.357] [info] [gpu_pipeline_task.cpp:173] [locality-audit] prepare_before pipeline_id=1 task_id=22 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=160 local_bytes=64 remote_gpu_bytes=64 host_bytes=32 disk_bytes=0 batch_count=10
+[2026-06-22 04:27:04.358] [info] [gpu_pipeline_task.cpp:173] [locality-audit] prepare_after pipeline_id=1 task_id=22 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=160 local_bytes=160 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=10
+[2026-06-22 04:27:04.359] [info] [task_creator.cpp:351] [locality-audit] task_create operator_id=6 input_bytes=16 local_bytes=16 gpu_source_bytes=16 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-06-22 04:27:04.359] [info] [task_scheduler.cpp:366] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=23
+[2026-06-22 04:27:04.359] [info] [task_scheduler.cpp:368] [locality-audit] dispatch task_id=23 preferred_device=1 actual_gpu=1
+[2026-06-22 04:27:04.359] [info] [gpu_pipeline_task.cpp:173] [locality-audit] prepare_before pipeline_id=2 task_id=23 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=16 local_bytes=16 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-06-22 04:27:04.359] [info] [gpu_pipeline_task.cpp:173] [locality-audit] prepare_after pipeline_id=2 task_id=23 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=16 local_bytes=16 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-06-22 04:27:04.379] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-06-22 04:27:04.380] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-06-22 04:27:04.396] [info] [physical_sirius_execution.cpp:160] Transparent GPU execution: query completed
+[2026-06-22 04:27:04.412] [info] [sirius_context.cpp:258] QueryEnd
+[2026-06-22 04:27:04.429] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=8388608 bytes free_blocks=507
+[2026-06-22 04:27:04.429] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:04.429] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=3200000000 bytes reserved=0 bytes
+[2026-06-22 04:27:04.430] [info] [sirius_context.cpp:1013] Connection closed.
+[2026-06-22 04:27:04.441] [info] [task_scheduler.cpp:295] Task request channel closed, exiting management event loop.
+[2026-06-22 04:27:04.441] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-06-22 04:27:04.441] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop

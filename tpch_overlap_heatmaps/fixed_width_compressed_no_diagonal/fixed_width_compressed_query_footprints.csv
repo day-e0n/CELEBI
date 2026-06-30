@@ -1,0 +1,23 @@
+query,footprint_bytes,footprint_gb,columns
+q1,5114534199,5.114534199,lineitem.l_discount lineitem.l_extendedprice lineitem.l_quantity lineitem.l_shipdate lineitem.l_tax
+q2,924566217,0.924566217,nation.n_nationkey nation.n_regionkey part.p_partkey part.p_size partsupp.ps_partkey partsupp.ps_suppkey partsupp.ps_supplycost region.r_regionkey supplier.s_acctbal supplier.s_nationkey supplier.s_suppkey
+q3,6989405396,6.989405396,customer.c_custkey lineitem.l_discount lineitem.l_extendedprice lineitem.l_orderkey lineitem.l_shipdate orders.o_custkey orders.o_orderdate orders.o_orderkey orders.o_shippriority
+q4,3674658727,3.674658727,lineitem.l_commitdate lineitem.l_orderkey lineitem.l_receiptdate orders.o_orderdate orders.o_orderkey
+q5,9012025890,9.01202589,customer.c_custkey customer.c_nationkey lineitem.l_discount lineitem.l_extendedprice lineitem.l_orderkey lineitem.l_suppkey nation.n_nationkey nation.n_regionkey orders.o_custkey orders.o_orderdate orders.o_orderkey region.r_regionkey supplier.s_nationkey supplier.s_suppkey
+q6,4811409485,4.811409485,lineitem.l_discount lineitem.l_extendedprice lineitem.l_quantity lineitem.l_shipdate
+q7,9726809530,9.72680953,customer.c_custkey customer.c_nationkey lineitem.l_discount lineitem.l_extendedprice lineitem.l_orderkey lineitem.l_shipdate lineitem.l_suppkey nation.n_nationkey orders.o_custkey orders.o_orderkey supplier.s_nationkey supplier.s_suppkey
+q8,12358791691,12.358791691,customer.c_custkey customer.c_nationkey lineitem.l_discount lineitem.l_extendedprice lineitem.l_orderkey lineitem.l_partkey lineitem.l_suppkey nation.n_nationkey nation.n_regionkey orders.o_custkey orders.o_orderdate orders.o_orderkey part.p_partkey region.r_regionkey supplier.s_nationkey supplier.s_suppkey
+q9,12762199677,12.762199677,lineitem.l_discount lineitem.l_extendedprice lineitem.l_orderkey lineitem.l_partkey lineitem.l_quantity lineitem.l_suppkey nation.n_nationkey orders.o_orderdate orders.o_orderkey part.p_partkey partsupp.ps_partkey partsupp.ps_suppkey partsupp.ps_supplycost supplier.s_nationkey supplier.s_suppkey
+q10,6120663556,6.120663556,customer.c_acctbal customer.c_custkey customer.c_nationkey lineitem.l_discount lineitem.l_extendedprice lineitem.l_orderkey nation.n_nationkey orders.o_custkey orders.o_orderdate orders.o_orderkey
+q11,990878910,0.99087891,nation.n_nationkey partsupp.ps_availqty partsupp.ps_partkey partsupp.ps_suppkey partsupp.ps_supplycost supplier.s_nationkey supplier.s_suppkey
+q12,4389442491,4.389442491,lineitem.l_commitdate lineitem.l_orderkey lineitem.l_receiptdate lineitem.l_shipdate orders.o_orderkey
+q13,1459309146,1.459309146,customer.c_custkey orders.o_custkey orders.o_orderkey
+q14,7703961958,7.703961958,lineitem.l_discount lineitem.l_extendedprice lineitem.l_partkey lineitem.l_shipdate part.p_partkey
+q15,7322052594,7.322052594,lineitem.l_discount lineitem.l_extendedprice lineitem.l_shipdate lineitem.l_suppkey supplier.s_suppkey
+q16,559981864,0.559981864,part.p_partkey part.p_size partsupp.ps_partkey partsupp.ps_suppkey supplier.s_suppkey
+q17,6902753993,6.902753993,lineitem.l_extendedprice lineitem.l_partkey lineitem.l_quantity part.p_partkey
+q18,3926448896,3.926448896,customer.c_custkey lineitem.l_orderkey lineitem.l_quantity orders.o_custkey orders.o_orderdate orders.o_orderkey orders.o_totalprice
+q19,7221040361,7.221040361,lineitem.l_discount lineitem.l_extendedprice lineitem.l_partkey lineitem.l_quantity part.p_partkey part.p_size
+q20,8345959665,8.345959665,lineitem.l_partkey lineitem.l_quantity lineitem.l_shipdate lineitem.l_suppkey nation.n_nationkey part.p_partkey partsupp.ps_availqty partsupp.ps_partkey partsupp.ps_suppkey supplier.s_nationkey supplier.s_suppkey
+q21,6402669942,6.402669942,lineitem.l_commitdate lineitem.l_orderkey lineitem.l_receiptdate lineitem.l_suppkey nation.n_nationkey orders.o_orderkey supplier.s_nationkey supplier.s_suppkey
+q22,935281506,0.935281506,customer.c_acctbal customer.c_custkey orders.o_custkey
