@@ -51,6 +51,7 @@ class Materialization:
     output_rows: int
     output_columns: int
     split_count: int
+    duration_us: int
 
 
 @dataclass(frozen=True)
@@ -278,6 +279,7 @@ def collect(args: argparse.Namespace) -> tuple[list[Materialization], list[Colum
                     output_rows=to_int(fields.get("output_rows")),
                     output_columns=to_int(fields.get("output_columns")),
                     split_count=to_int(fields.get("split_count")),
+                    duration_us=to_int(fields.get("duration_us")),
                 )
             )
             for column, compressed, uncompressed in col_bytes:
@@ -491,7 +493,7 @@ def main() -> int:
         aggregate(
             materializations,
             lambda r: (r.experiment, r.query, r.table, r.target_gpu),
-            ("compressed_bytes", "uncompressed_bytes", "column_compressed_bytes", "column_uncompressed_bytes", "output_rows"),
+            ("compressed_bytes", "uncompressed_bytes", "column_compressed_bytes", "column_uncompressed_bytes", "output_rows", "duration_us"),
         ),
         ["experiment", "query", "table", "target_gpu"],
     )
@@ -508,7 +510,7 @@ def main() -> int:
     write_csv(
         output_dir / "scan_audit_by_query_table.csv",
         table_rows,
-        ["experiment", "query", "table", "target_gpu", "count", "compressed_bytes", "uncompressed_bytes", "column_compressed_bytes", "column_uncompressed_bytes", "output_rows"],
+        ["experiment", "query", "table", "target_gpu", "count", "compressed_bytes", "uncompressed_bytes", "column_compressed_bytes", "column_uncompressed_bytes", "output_rows", "duration_us"],
     )
     write_csv(
         output_dir / "scan_audit_by_query_column.csv",

@@ -109,10 +109,12 @@ def main() -> int:
     pair_root = run_root / "pairs"
     summary_dir = run_root / "summary"
     stage_summary_dir = run_root / "stage_summary"
+    runtime_breakdown_dir = run_root / "runtime_breakdown"
     config_dir.mkdir(parents=True, exist_ok=True)
     pair_root.mkdir(parents=True, exist_ok=True)
     summary_dir.mkdir(parents=True, exist_ok=True)
     stage_summary_dir.mkdir(parents=True, exist_ok=True)
+    runtime_breakdown_dir.mkdir(parents=True, exist_ok=True)
 
     config_path = config_dir / f"sirius_{args.num_gpus}gpu.yaml"
     write_config(config_path, args)
@@ -137,6 +139,11 @@ Main stage summary files:
 - `stage_summary/stage_audit_by_query_stage.csv`
 - `stage_summary/stage_output_gb_by_query.png`
 - `stage_summary/stage_byte_ratio_heatmap.png`
+
+Main runtime breakdown files:
+- `runtime_breakdown/runtime_breakdown.csv`
+- `runtime_breakdown/runtime_load_nonload_breakdown.png`
+- `runtime_breakdown/runtime_load_ratio.png`
 
 Interpretation: for each Qi->Qj pair, the overlap reload bytes are the Qj
 materialized table/column bytes whose table/column also appeared in Qi's TPC-H
@@ -200,9 +207,20 @@ footprint.
     stage_cmd.extend(["--output-dir", str(stage_summary_dir)])
     run(stage_cmd, env=env, cwd=REPO_ROOT, dry_run=args.dry_run)
 
+    breakdown_cmd = [
+        "python3",
+        str(REPO_ROOT / "scripts" / "summarize_runtime_breakdown.py"),
+        "--run-root",
+        str(run_root),
+        "--output-dir",
+        str(runtime_breakdown_dir),
+    ]
+    run(breakdown_cmd, env=env, cwd=REPO_ROOT, dry_run=args.dry_run)
+
     print(f"==> Done. Output root: {run_root}")
     print(f"==> Pair summary: {summary_dir / 'scan_audit_by_pair_second_query.csv'}")
     print(f"==> Stage summary: {stage_summary_dir / 'stage_audit_by_query_stage.csv'}")
+    print(f"==> Runtime breakdown: {runtime_breakdown_dir / 'runtime_breakdown.csv'}")
     return 0
 
 

@@ -50,6 +50,9 @@
 
 // standard library
 #include <algorithm>
+// wdy start
+#include <chrono>
+// wdy end
 #include <cctype>
 #include <memory>
 #include <optional>
@@ -677,14 +680,23 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
   }
 
   rmm::device_async_resource_ref mr_ref(mem_space.get_default_allocator());
+  // wdy start
+  auto const materialize_start = std::chrono::steady_clock::now();
+  // wdy end
   auto [table, _] =
     cudf::io::read_parquet(std::move(sources), std::move(metadatas), opts, stream, mr_ref);
+  // wdy start
+  auto const materialize_duration_us =
+    std::chrono::duration_cast<std::chrono::microseconds>(
+      std::chrono::steady_clock::now() - materialize_start)
+      .count();
+  // wdy end
 
   // wdy start
   SIRIUS_LOG_INFO(
     "[scan-audit] parquet_materialize target_gpu={} files={} columns={} row_groups={} "
     "compressed_bytes={} uncompressed_bytes={} column_bytes={} output_rows={} output_columns={} "
-    "split_count={}",
+    "split_count={} duration_us={}",
     mem_space.get_device_id(),
     scan_audit_file_paths(split.rg_slices),
     join_strings(split.plan->data_column_names(), ','),
@@ -694,7 +706,8 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
     scan_audit_column_bytes(split.rg_slices, split.plan->data_column_names()),
     table->num_rows(),
     table->num_columns(),
-    split.rg_slices.size());
+    split.rg_slices.size(),
+    materialize_duration_us);
   // wdy end
 
   SIRIUS_LOG_DEBUG(
