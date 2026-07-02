@@ -21,6 +21,8 @@
 #include "memory/defragmenter_oom_policy.hpp"
 #include "pipeline/oom_reschedule_exception.hpp"
 #include "telemetry/telemetry_context.hpp"
+#include "op/sirius_physical_hash_join.hpp"
+#include "op/scan/sirius_gpu_scan_operator.hpp"
 
 #include <nvtx3/nvtx3.hpp>
 
@@ -32,9 +34,15 @@
 #include <data/data_batch_utils.hpp>
 
 #include <cstdint>
+#include <cstdlib>
 #include <format>
+#include <mutex>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <sstream>
+#include <unordered_map>
+#include <vector>
 
 namespace sirius {
 namespace pipeline {
@@ -328,6 +336,340 @@ void log_stage_audit(const op::sirius_physical_operator& op,
     row_ratio,
     duration.count());
 }
+
+
+// wdy start
+struct retained_join_batch {
+  std::shared_ptr<cucascade::data_batch> batch;
+  std::size_t bytes = 0;
+};
+
+std::mutex retained_join_batches_mutex;
+std::vector<retained_join_batch> retained_join_batches;
+std::size_t retained_join_bytes = 0;
+
+struct cached_join_output {
+  std::vector<std::shared_ptr<cucascade::data_batch>> batches;
+  std::size_t bytes = 0;
+  std::size_t hits  = 0;
+};
+
+std::unordered_map<std::string, cached_join_output> retained_join_outputs_by_signature;
+
+bool env_truthy(const char* name)
+{
+  auto* value = std::getenv(name);
+  if (value == nullptr) { return false; }
+  std::string_view sv(value);
+  return sv == "1" || sv == "true" || sv == "TRUE" || sv == "on" || sv == "ON";
+}
+
+std::size_t env_size_or_default(const char* name, std::size_t fallback)
+{
+  auto* value = std::getenv(name);
+  if (value == nullptr || value[0] == '\0') { return fallback; }
+  try {
+    return static_cast<std::size_t>(std::stoull(value));
+  } catch (...) {
+    return fallback;
+  }
+}
+
+bool join_output_retention_enabled()
+{
+  return duckdb::Config::JOIN_OUTPUT_RETENTION || env_truthy("SIRIUS_JOIN_OUTPUT_RETENTION");
+}
+
+bool join_output_reuse_enabled()
+{
+  return duckdb::Config::JOIN_OUTPUT_REUSE || env_truthy("SIRIUS_JOIN_OUTPUT_REUSE");
+}
+
+std::size_t join_output_retention_limit_bytes()
+{
+  return env_size_or_default("SIRIUS_JOIN_OUTPUT_RETENTION_LIMIT_BYTES",
+                             duckdb::Config::JOIN_OUTPUT_RETENTION_LIMIT_BYTES);
+}
+
+std::size_t join_output_retention_max_batch_bytes()
+{
+  return env_size_or_default("SIRIUS_JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES",
+                             duckdb::Config::JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES);
+}
+
+void clear_retained_join_batches_locked(const char* reason)
+{
+  auto released_batches = retained_join_batches.size();
+  auto released_bytes   = retained_join_bytes;
+  retained_join_batches.clear();
+  retained_join_outputs_by_signature.clear();
+  retained_join_bytes = 0;
+  if (released_batches > 0 || released_bytes > 0) {
+    SIRIUS_LOG_INFO("[join-retention] cleared reason={} released_batches={} released_bytes={}",
+                    reason,
+                    released_batches,
+                    released_bytes);
+  }
+}
+
+void append_type_signature(std::ostringstream& out, duckdb::vector<sirius::logical_type> const& types)
+{
+  out << "types(" << types.size() << ")=";
+  for (auto const& type : types) {
+    auto cudf_type = sirius::get_cudf_type(type);
+    out << static_cast<int>(cudf_type.id()) << ":";
+  }
+}
+
+void append_operator_signature(std::ostringstream& out, const op::sirius_physical_operator& op)
+{
+  out << "op{" << static_cast<int>(op.type) << "," << op.get_name() << ",card="
+      << op.estimated_cardinality << ",";
+  append_type_signature(out, op.get_types());
+
+  if (auto const* scan_op = dynamic_cast<const op::scan::sirius_gpu_scan_operator*>(&op)) {
+    out << ",scan_paths=";
+    try {
+      auto paths = scan_op->get_ingestible().table_info().file_paths();
+      for (auto const& path : paths) { out << path << ";"; }
+    } catch (...) {
+      out << "unprepared";
+    }
+  }
+
+  if (auto const* join_op = dynamic_cast<const op::sirius_physical_hash_join*>(&op)) {
+    out << ",join_type=" << static_cast<int>(join_op->join_type);
+    out << ",conditions=";
+    for (auto const& cond : join_op->conditions) {
+      out << static_cast<int>(cond.comparison) << ";";
+    }
+    out << ",lhs_cols=";
+    for (auto col : join_op->lhs_output_columns.col_idxs) { out << col << ";"; }
+    out << ",rhs_cols=";
+    for (auto col : join_op->rhs_output_columns.col_idxs) { out << col << ";"; }
+  }
+
+  out << ",children=[";
+  for (auto const& child : op.children) {
+    if (child) { append_operator_signature(out, *child); }
+  }
+  out << "]}";
+}
+
+void append_input_shape_signature(std::ostringstream& out, const op::operator_data& data)
+{
+  out << "input{" << static_cast<int>(data.get_type()) << ":";
+  auto const* pipelineable = dynamic_cast<const op::pipelineable_operator_data*>(&data);
+  if (pipelineable == nullptr) {
+    out << "non_pipelineable}";
+    return;
+  }
+  for (auto const& batch : pipelineable->get_read_only_batches(false)) {
+    if (!batch.get_data()) { continue; }
+    auto view = get_cudf_table_view(batch);
+    out << "b(rows=" << view.num_rows() << ",cols=" << view.num_columns()
+        << ",bytes=" << batch.get_data()->get_size_in_bytes() << ",types=";
+    for (cudf::size_type i = 0; i < view.num_columns(); i++) {
+      out << static_cast<int>(view.column(i).type().id()) << ";";
+    }
+    out << ")";
+  }
+  out << "}";
+}
+
+std::string make_join_reuse_signature(const op::sirius_physical_operator& op,
+                                      const op::operator_data& input_data)
+{
+  std::ostringstream out;
+  append_operator_signature(out, op);
+  out << "|";
+  append_input_shape_signature(out, input_data);
+  return out.str();
+}
+
+std::unique_ptr<op::operator_data> try_reuse_join_output_if_enabled(
+  const op::sirius_physical_operator& op,
+  const op::operator_data& input_data,
+  const sirius_pipeline* pipeline,
+  uint64_t task_id,
+  rmm::cuda_stream_view stream,
+  bool& reused)
+{
+  reused = false;
+  if (!join_output_reuse_enabled()) { return nullptr; }
+  if (op.type != sirius::op::SiriusPhysicalOperatorType::HASH_JOIN) { return nullptr; }
+
+  auto signature = make_join_reuse_signature(op, input_data);
+  std::lock_guard<std::mutex> lock(retained_join_batches_mutex);
+  auto it = retained_join_outputs_by_signature.find(signature);
+  if (it == retained_join_outputs_by_signature.end()) {
+    SIRIUS_LOG_INFO("[join-reuse] miss pipeline_id={} task_id={} operator_id={} operator_name={} key_hash={} cache_entries={}",
+                    pipeline ? pipeline->get_pipeline_id() : 0,
+                    task_id,
+                    op.get_operator_id(),
+                    op.get_name(),
+                    std::hash<std::string>{}(signature),
+                    retained_join_outputs_by_signature.size());
+    return nullptr;
+  }
+
+  std::vector<std::shared_ptr<cucascade::data_batch>> copied_batches;
+  copied_batches.reserve(it->second.batches.size());
+  auto const executing_device = current_gpu_id();
+  for (auto const& cached_batch : it->second.batches) {
+    if (!cached_batch) { continue; }
+    auto ro = cached_batch->to_read_only();
+    if (!ro.get_data() || ro.get_memory_space() == nullptr) { continue; }
+    auto const cached_device = ro.get_memory_space()->get_device_id();
+    if (cached_device != executing_device) {
+      SIRIUS_LOG_INFO(
+        "[join-reuse] miss pipeline_id={} task_id={} operator_id={} operator_name={} key_hash={} "
+        "cache_entries={} reason=device_mismatch cached_device={} executing_device={}",
+        pipeline ? pipeline->get_pipeline_id() : 0,
+        task_id,
+        op.get_operator_id(),
+        op.get_name(),
+        std::hash<std::string>{}(signature),
+        retained_join_outputs_by_signature.size(),
+        cached_device,
+        executing_device);
+      return nullptr;
+    }
+    auto view = get_cudf_table_view(ro);
+    auto copied_table = std::make_unique<cudf::table>(
+      view, stream, ro.get_memory_space()->get_default_allocator());
+    copied_batches.push_back(make_data_batch(std::move(copied_table), *ro.get_memory_space(), stream));
+  }
+
+  it->second.hits++;
+  reused = true;
+  SIRIUS_LOG_INFO("[join-reuse] hit pipeline_id={} task_id={} operator_id={} operator_name={} key_hash={} batches={} bytes={} hits={} mode=copy",
+                  pipeline ? pipeline->get_pipeline_id() : 0,
+                  task_id,
+                  op.get_operator_id(),
+                  op.get_name(),
+                  std::hash<std::string>{}(signature),
+                  copied_batches.size(),
+                  it->second.bytes,
+                  it->second.hits);
+  return std::make_unique<op::pipelineable_operator_data>(std::move(copied_batches));
+}
+
+void retain_join_output_if_enabled(const op::sirius_physical_operator& op,
+                                   const op::operator_data& input_data,
+                                   const op::operator_data& output_data,
+                                   const sirius_pipeline* pipeline,
+                                   uint64_t task_id)
+{
+  std::lock_guard<std::mutex> lock(retained_join_batches_mutex);
+  if (!join_output_retention_enabled()) {
+    if (!retained_join_batches.empty()) { clear_retained_join_batches_locked("disabled"); }
+    return;
+  }
+
+  if (op.type != sirius::op::SiriusPhysicalOperatorType::HASH_JOIN) { return; }
+  auto const* pipelineable_output =
+    dynamic_cast<const op::pipelineable_operator_data*>(&output_data);
+  if (pipelineable_output == nullptr) { return; }
+
+  auto const signature       = make_join_reuse_signature(op, input_data);
+  auto const key_hash        = std::hash<std::string>{}(signature);
+  auto const limit_bytes     = join_output_retention_limit_bytes();
+  auto const max_batch_bytes = join_output_retention_max_batch_bytes();
+  std::vector<std::shared_ptr<cucascade::data_batch>> retained_for_signature;
+  std::size_t retained_for_signature_bytes = 0;
+  for (const auto& batch : pipelineable_output->get_data_batches()) {
+    if (!batch) { continue; }
+    auto ro = batch->to_read_only();
+    auto* data = ro.get_data();
+    if (data == nullptr) { continue; }
+    auto const bytes = data->get_size_in_bytes();
+    auto* space      = ro.get_memory_space();
+    auto const tier  = space ? tier_name(space->get_tier()) : "NONE";
+    auto const dev   = space ? space->get_device_id() : -1;
+    auto const batch_id = batch->get_batch_id();
+
+    if (max_batch_bytes > 0 && bytes > max_batch_bytes) {
+      SIRIUS_LOG_INFO(
+        "[join-retention] skipped pipeline_id={} task_id={} operator_id={} operator_name={} "
+        "batch_id={} bytes={} tier={} device={} cache_bytes={} cache_batches={} limit_bytes={} "
+        "max_batch_bytes={} reason=max_batch",
+        pipeline ? pipeline->get_pipeline_id() : 0,
+        task_id,
+        op.get_operator_id(),
+        op.get_name(),
+        batch_id,
+        bytes,
+        tier,
+        dev,
+        retained_join_bytes,
+        retained_join_batches.size(),
+        limit_bytes,
+        max_batch_bytes);
+      continue;
+    }
+
+    if (limit_bytes > 0 && retained_join_bytes + bytes > limit_bytes) {
+      SIRIUS_LOG_INFO(
+        "[join-retention] skipped pipeline_id={} task_id={} operator_id={} operator_name={} "
+        "batch_id={} bytes={} tier={} device={} cache_bytes={} cache_batches={} limit_bytes={} "
+        "max_batch_bytes={} reason=limit",
+        pipeline ? pipeline->get_pipeline_id() : 0,
+        task_id,
+        op.get_operator_id(),
+        op.get_name(),
+        batch_id,
+        bytes,
+        tier,
+        dev,
+        retained_join_bytes,
+        retained_join_batches.size(),
+        limit_bytes,
+        max_batch_bytes);
+      continue;
+    }
+
+    // Keep the GPU data object alive for the experiment without changing Sirius task
+    // subscriber accounting. subscribe()/unsubscribe() are used for pipeline consumers.
+    retained_join_batches.push_back(retained_join_batch{batch, bytes});
+    retained_join_bytes += bytes;
+    retained_for_signature.push_back(batch);
+    retained_for_signature_bytes += bytes;
+    SIRIUS_LOG_INFO(
+      "[join-retention] retained pipeline_id={} task_id={} operator_id={} operator_name={} "
+      "batch_id={} bytes={} tier={} device={} cache_bytes={} cache_batches={} limit_bytes={} "
+      "max_batch_bytes={}",
+      pipeline ? pipeline->get_pipeline_id() : 0,
+      task_id,
+      op.get_operator_id(),
+      op.get_name(),
+      batch_id,
+      bytes,
+      tier,
+      dev,
+      retained_join_bytes,
+      retained_join_batches.size(),
+      limit_bytes,
+      max_batch_bytes);
+  }
+
+  if (!retained_for_signature.empty()) {
+    auto& entry = retained_join_outputs_by_signature[signature];
+    if (entry.batches.empty()) {
+      entry.batches = retained_for_signature;
+      entry.bytes   = retained_for_signature_bytes;
+      SIRIUS_LOG_INFO("[join-reuse] cached pipeline_id={} task_id={} operator_id={} operator_name={} key_hash={} batches={} bytes={} cache_entries={}",
+                      pipeline ? pipeline->get_pipeline_id() : 0,
+                      task_id,
+                      op.get_operator_id(),
+                      op.get_name(),
+                      key_hash,
+                      entry.batches.size(),
+                      entry.bytes,
+                      retained_join_outputs_by_signature.size());
+    }
+  }
+}
 // wdy end
 
 void log_operator_data(const op::sirius_physical_operator& op,
@@ -394,9 +736,14 @@ std::unique_ptr<op::operator_data> run_one_operator(
   auto nvtx_label = std::format(
     "Pipeline {}: {} (id={})", pipeline->get_pipeline_id(), op.get_name(), op.get_operator_id());
   nvtx3::scoped_range nvtx_range{nvtx_label.c_str()};
-  auto start                = std::chrono::high_resolution_clock::now();
-  auto operator_output_data = op.execute(operator_input_data, stream);
-  stream.synchronize();
+  auto start = std::chrono::high_resolution_clock::now();
+  bool reused_join_output = false;
+  auto operator_output_data =
+    try_reuse_join_output_if_enabled(op, operator_input_data, pipeline, task_id, stream, reused_join_output);
+  if (!operator_output_data) {
+    operator_output_data = op.execute(operator_input_data, stream);
+    stream.synchronize();
+  }
   auto end      = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
@@ -409,6 +756,9 @@ std::unique_ptr<op::operator_data> run_one_operator(
                   num_operators,
                   current_gpu_id(),
                   duration);
+  if (!reused_join_output) {
+    retain_join_output_if_enabled(op, operator_input_data, *operator_output_data, pipeline, task_id);
+  }
   // wdy end
 
   auto peak_bytes        = allocator ? allocator->get_peak_allocated_bytes(stream) : 0;

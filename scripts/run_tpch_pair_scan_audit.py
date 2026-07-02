@@ -44,6 +44,28 @@ def parse_args() -> argparse.Namespace:
         help="Sirius memory.gpu.reservation_limit_fraction",
     )
     parser.add_argument("--skip-build", action="store_true", help="Do not run pixi run make -j4 first")
+    # wdy start
+    parser.add_argument(
+        "--join-output-retention",
+        action="store_true",
+        help="Enable experimental retain-only HASH_JOIN output retention.",
+    )
+    parser.add_argument(
+        "--join-output-retention-limit-bytes",
+        default="8589934592",
+        help="Maximum retained HASH_JOIN output bytes when --join-output-retention is set.",
+    )
+    parser.add_argument(
+        "--join-output-retention-max-batch-bytes",
+        default="268435456",
+        help="Maximum single HASH_JOIN output batch retained when --join-output-retention is set.",
+    )
+    parser.add_argument(
+        "--join-output-reuse",
+        action="store_true",
+        help="Enable experimental HASH_JOIN output reuse on exact signature hit.",
+    )
+    # wdy end
     parser.add_argument("--dry-run", action="store_true", help="Print commands without executing")
     return parser.parse_args()
 
@@ -97,6 +119,24 @@ def run(cmd: list[str], *, env: dict[str, str], cwd: Path, dry_run: bool) -> Non
     subprocess.run(cmd, cwd=cwd, env=env, check=True)
 
 
+def run_pair(
+    cmd: list[str], *, env: dict[str, str], cwd: Path, dry_run: bool
+) -> bool:
+    """Like run() but returns False on failure instead of raising."""
+    printable = " ".join(cmd)
+    print(f"==> {printable}", flush=True)
+    if dry_run:
+        return True
+    result = subprocess.run(cmd, cwd=cwd, env=env)
+    if result.returncode != 0:
+        print(
+            f"[WARN] command failed with exit code {result.returncode}, skipping pair.",
+            flush=True,
+        )
+        return False
+    return True
+
+
 def main() -> int:
     args = parse_args()
     if not args.input.is_dir():
@@ -128,6 +168,10 @@ Pairs: `{readme_pairs}`
 Iterations: `{args.iterations}`
 Devices: `{args.devices}`
 Config: `{config_path.relative_to(run_root)}`
+Join output retention: `{args.join_output_retention}`
+Join output retention limit bytes: `{args.join_output_retention_limit_bytes}`
+Join output retention max batch bytes: `{args.join_output_retention_max_batch_bytes}`
+Join output reuse: `{args.join_output_reuse}`
 
 Main scan summary files:
 - `summary/scan_audit_by_pair_second_query.csv`
@@ -155,16 +199,33 @@ footprint.
     env["CUDA_VISIBLE_DEVICES"] = args.devices
     env["SIRIUS_CONFIG_FILE"] = str(config_path)
     env["SIRIUS_LOG_LEVEL"] = "info"
+    # wdy start
+    if args.join_output_retention:
+        env["SIRIUS_JOIN_OUTPUT_RETENTION"] = "1"
+        env["SIRIUS_JOIN_OUTPUT_RETENTION_LIMIT_BYTES"] = str(args.join_output_retention_limit_bytes)
+        env["SIRIUS_JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES"] = str(
+            args.join_output_retention_max_batch_bytes
+        )
+        if args.join_output_reuse:
+            env["SIRIUS_JOIN_OUTPUT_REUSE"] = "1"
+        else:
+            env.pop("SIRIUS_JOIN_OUTPUT_REUSE", None)
+    else:
+        env.pop("SIRIUS_JOIN_OUTPUT_RETENTION", None)
+        env.pop("SIRIUS_JOIN_OUTPUT_RETENTION_LIMIT_BYTES", None)
+        env.pop("SIRIUS_JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES", None)
+        env.pop("SIRIUS_JOIN_OUTPUT_REUSE", None)
+    # wdy end
 
     if not args.skip_build:
         run(["pixi", "run", "make", "-j4"], env=env, cwd=REPO_ROOT, dry_run=args.dry_run)
 
     benchmark_dirs: list[Path] = []
     manifest_rows = []
-    for qi, qj in pairs:
+    failed_rows = []
+    for idx, (qi, qj) in enumerate(pairs, 1):
         name = f"q{qi}_then_q{qj}"
         benchmark_dir = pair_root / name
-        benchmark_dirs.append(benchmark_dir)
         cmd = [
             "pixi",
             "run",
@@ -187,8 +248,20 @@ footprint.
             "--name",
             name,
         ]
-        run(cmd, env=env, cwd=REPO_ROOT, dry_run=args.dry_run)
-        manifest_rows.append({"previous_query": f"q{qi}", "second_query": f"q{qj}", "benchmark_dir": str(benchmark_dir)})
+        print(f"[{idx}/{len(pairs)}] q{qi}->q{qj}", flush=True)
+        ok = run_pair(cmd, env=env, cwd=REPO_ROOT, dry_run=args.dry_run)
+        if ok:
+            benchmark_dirs.append(benchmark_dir)
+            manifest_rows.append({"previous_query": f"q{qi}", "second_query": f"q{qj}", "benchmark_dir": str(benchmark_dir)})
+        else:
+            failed_rows.append({"previous_query": f"q{qi}", "second_query": f"q{qj}"})
+
+    if failed_rows:
+        with (run_root / "failed_pairs.csv").open("w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=["previous_query", "second_query"])
+            writer.writeheader()
+            writer.writerows(failed_rows)
+        print(f"[WARN] {len(failed_rows)} pair(s) failed. See {run_root / 'failed_pairs.csv'}", flush=True)
 
     with (run_root / "manifest.csv").open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["previous_query", "second_query", "benchmark_dir"])

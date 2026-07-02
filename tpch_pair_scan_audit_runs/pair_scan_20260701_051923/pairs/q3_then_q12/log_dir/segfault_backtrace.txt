@@ -1,0 +1,28 @@
+
+*** SIGABRT — backtrace from faulting thread ***
+Faulting thread id:493883
+  #0   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12f0816) [0x7d253a2f0816]
+  #1   /lib/x86_64-linux-gnu/libc.so.6(+0x45330) [0x7d2570245330]
+  #2   /lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x11c) [0x7d257029eb2c]
+  #3   /lib/x86_64-linux-gnu/libc.so.6(gsignal+0x1e) [0x7d257024527e]
+  #4   /lib/x86_64-linux-gnu/libc.so.6(abort+0xdf) [0x7d25702288ff]
+  #5   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(+0xaeaa4) [0x7d256b8aeaa4]
+  #6   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(+0xc0ffa) [0x7d256b8c0ffa]
+  #7   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(__cxa_call_terminate+0x2e) [0x7d256b8ae521]
+  #8   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(__gxx_personality_v0+0x2d1) [0x7d256b8c0871]
+  #9   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libgcc_s.so.1(+0x21d9b) [0x7d256f915d9b]
+  #10  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libgcc_s.so.1(_Unwind_RaiseException+0x31d) [0x7d256f9164bd]
+  #11  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(__cxa_throw+0x3a) [0x7d256b8c128a]
+  #12  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(+0x1e00e9b) [0x7d251e400e9b]
+  #13  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(+0x1e01579) [0x7d251e401579]
+  #14  cudf::hash_join::hash_join(cudf::table_view const&, cudf::nullable_join, cudf::null_equality, double, rmm::cuda_stream_view) at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(_ZN4cudf9hash_joinC2ERKNS_10table_viewENS_13nullable_joinENS_13null_equalityEdN3rmm16cuda_stream_viewE+0x4c) [0x7d251e3fff1c]
+  #15  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x11ca5a7) [0x7d253a1ca5a7]
+  #16  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x122d2e3) [0x7d253a22d2e3]
+  #17  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x123086e) [0x7d253a23086e]
+  #18  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x1220ab5) [0x7d253a220ab5]
+  #19  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x10426af) [0x7d253a0426af]
+  #20  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x103f3f9) [0x7d253a03f3f9]
+  #21  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(+0xef5e4) [0x7d256b8ef5e4]
+  #22  /lib/x86_64-linux-gnu/libc.so.6(+0x9caa4) [0x7d257029caa4]
+  #23  /lib/x86_64-linux-gnu/libc.so.6(+0x129c6c) [0x7d2570329c6c]
+*** end backtrace ***

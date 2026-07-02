@@ -1,0 +1,830 @@
+[2026-07-01 11:00:46.795] [warning] [sirius_config.cpp:459] sirius_config: use_sirius_datasource was false but 4 GPUs are configured; the sirius datasource is required for multi-GPU IO routing. Overriding use_sirius_datasource to true.
+[2026-07-01 11:00:46.795] [info] [sirius_context.cpp:1046] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency/configs/sirius_4gpu.yaml
+[2026-07-01 11:00:46.799] [info] [telemetry_context.cpp:67] Telemetry context initialized (engine=siriusDB)
+[2026-07-01 11:00:46.799] [info] [sirius_context.cpp:337] SiriusContext: topology summary — 4 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-01 11:00:46.799] [info] [sirius_context.cpp:342]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
+[2026-07-01 11:00:46.799] [info] [sirius_context.cpp:342]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:34:00.0)
+[2026-07-01 11:00:46.799] [info] [sirius_context.cpp:342]   GPU 2: NVIDIA RTX A5000 (numa=0, pci=00000000:AC:00.0)
+[2026-07-01 11:00:46.799] [info] [sirius_context.cpp:342]   GPU 3: NVIDIA RTX A5000 (numa=0, pci=00000000:CA:00.0)
+[2026-07-01 11:00:47.015] [warning] [sirius_context.cpp:352] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-01 11:00:47.015] [info] [sirius_context.cpp:364] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-01 11:00:47.018] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 1
+[2026-07-01 11:00:47.022] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 2
+[2026-07-01 11:00:47.025] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 3
+[2026-07-01 11:00:47.025] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 0
+[2026-07-01 11:00:47.032] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 2
+[2026-07-01 11:00:47.034] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 3
+[2026-07-01 11:00:47.034] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 2 -> 0
+[2026-07-01 11:00:47.034] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 2 -> 1
+[2026-07-01 11:00:47.037] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 2 -> 3
+[2026-07-01 11:00:47.037] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 3 -> 0
+[2026-07-01 11:00:47.037] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 3 -> 1
+[2026-07-01 11:00:47.037] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 3 -> 2
+[2026-07-01 11:00:47.068] [info] [sirius_context.cpp:477] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-01 11:00:47.268] [info] [sirius_context.cpp:1007] Connection opened.
+[2026-07-01 11:00:47.268] [info] [sirius_context.cpp:1020] Extension loaded: sirius
+[2026-07-01 11:00:47.268] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-01 11:00:47.276] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-01 11:00:47.276] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.276] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.276] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.276] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.276] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-01 11:00:47.276] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.276] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.276] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.276] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.276] [info] [sirius_context.cpp:242] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-01 11:00:47.276] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-01 11:00:47.286] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-01 11:00:47.286] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.286] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.286] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.286] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.286] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-01 11:00:47.286] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.286] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.286] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.286] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 11:00:47.287] [info] [sirius_context.cpp:242] QueryBegin: SQL: select c.c_custkey, c.c_name, sum(l.l_extendedprice * (1 - l.l_discount)) as revenue, c.c_acctbal, n.n_name, c.c_address, c.c_phone, c.c_comment from customer c, orders o, lineitem l, nation n where c.c_custkey = o.o_custkey and l.l_orderkey = o.o_orderkey and o.o_orderdate >= date '1994-03-01' and o.o_orderdate < date '1994-06-01' and l.l_returnflag = 'R' and c.c_nationkey = n.n_nationkey group by c.c_custkey, c.c_name, c.c_acctbal, c.c_phone, n.n_name, c.c_address, c.c_comment order by revenue desc limit 20
+[2026-07-01 11:00:47.589] [info] [sirius_context.cpp:954] Transparent execution: Sirius physical plan generated successfully
+[2026-07-01 11:00:47.603] [info] [sirius_context.cpp:966] Transparent execution: physical plan replaced with GPU operator
+[2026-07-01 11:00:47.603] [info] [physical_sirius_execution.cpp:96] Transparent GPU execution: executing query
+[2026-07-01 11:00:47.661] [info] [sirius_engine.cpp:400] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=23)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=25)
+  Input: <- Pipeline #0 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=24)
+  Input: <- Pipeline #1 [on: CONCAT (id=24), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=26)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #4: PARTITION (id=28)
+  Input: <- Pipeline #3 [on: PARTITION (id=28), port: default, barrier: FULL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=27)
+  Input: <- Pipeline #4 [on: CONCAT (id=27), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #6: GPU_SCAN (id=29)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #7: PARTITION (id=31)
+  Input: <- Pipeline #6 [on: PARTITION (id=31), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #8: CONCAT (id=30)
+  Input: <- Pipeline #7 [on: CONCAT (id=30), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #7
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #9: HASH_JOIN (id=16)
+  Input: <- Pipeline #8 [on: HASH_JOIN (id=16), port: default, barrier: FULL]
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=16), port: build, barrier: FULL]
+  Dependencies: Pipeline #5, Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=33)
+  Input: <- Pipeline #9 [on: PARTITION (id=33), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #11: CONCAT (id=32)
+  Input: <- Pipeline #10 [on: CONCAT (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #10
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #12: GPU_SCAN (id=34)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #13: PARTITION (id=36)
+  Input: <- Pipeline #12 [on: PARTITION (id=36), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #14: CONCAT (id=35)
+  Input: <- Pipeline #13 [on: CONCAT (id=35), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #13
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #15: HASH_JOIN (id=13)
+  Input: <- Pipeline #14 [on: HASH_JOIN (id=13), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=13), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #14
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #16: PARTITION (id=38)
+  Input: <- Pipeline #15 [on: PARTITION (id=38), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #15
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #17: CONCAT (id=37)
+  Input: <- Pipeline #16 [on: CONCAT (id=37), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #18: HASH_JOIN (id=17) -> PROJECTION (id=18) -> HASH_GROUP_BY (id=19)
+  Input: <- Pipeline #17 [on: HASH_JOIN (id=17), port: default, barrier: FULL]
+  Input: <- Pipeline #11 [on: HASH_JOIN (id=17), port: build, barrier: FULL]
+  Dependencies: Pipeline #11, Pipeline #17
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #19: PARTITION (id=39)
+  Input: <- Pipeline #18 [on: PARTITION (id=39), port: default, barrier: FULL]
+  Dependencies: Pipeline #18
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #20: MERGE_GROUP_BY (id=40)
+  Input: <- Pipeline #19 [on: MERGE_GROUP_BY (id=40), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #21: PROJECTION (id=20) -> TOP_N (id=21)
+  Input: <- Pipeline #20 [on: PROJECTION (id=20), port: default, barrier: FULL]
+  Dependencies: Pipeline #20
+  Output: -> MERGE_TOP_N [port: default, barrier: FULL]
+Pipeline #22: MERGE_TOP_N (id=41)
+  Input: <- Pipeline #21 [on: MERGE_TOP_N (id=41), port: default, barrier: FULL]
+  Dependencies: Pipeline #21
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #23: RESULT_COLLECTOR (id=22)
+  Input: <- Pipeline #22 [on: RESULT_COLLECTOR (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #22
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                                                                                    
+│ Pipeline #23             │                                                                                    
+│ RESULT_COLLECTOR (id=22) │                                                                                    
+│ Input(#22): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #22             │                                                                                    
+│ MERGE_TOP_N (id=41)      │                                                                                    
+│ Input(#21): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #21             │                                                                                    
+│ TOP_N (id=21)            │                                                                                    
+│ PROJECTION (id=20)       │                                                                                    
+│ Input(#20): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #20             │                                                                                    
+│ MERGE_GROUP_BY (id=40)   │                                                                                    
+│ Input(#19): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #19             │                                                                                    
+│ PARTITION (id=39)        │                                                                                    
+│ Input(#18): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #18             │                                                                                    
+│ HASH_GROUP_BY (id=19)    │                                                                                    
+│ PROJECTION (id=18)       │                                                                                    
+│ HASH_JOIN (id=17)        │                                                                                    
+│   type: INNER            │                                                                                    
+│ Input(#17): FULL         │                                                                                    
+│ Input(#11): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             ┌───────────────────────────────────────────────────────┐                                          
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #11             │                            │ Pipeline #17             │                            
+│ CONCAT (id=32)           │                            │ CONCAT (id=37)           │                            
+│ Input(#10): PARTIAL      │                            │ Input(#16): PARTIAL      │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #10             │                            │ Pipeline #16             │                            
+│ PARTITION (id=33)        │                            │ PARTITION (id=38)        │                            
+│ Input(#9): FULL          │                            │ Input(#15): PARTIAL      │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #9              │                            │ Pipeline #15             │                            
+│ HASH_JOIN (id=16)        │                            │ HASH_JOIN (id=13)        │                            
+│   type: INNER            │                            │   type: INNER            │                            
+│ Input(#8): FULL          │                            │ Input(#14): FULL         │                            
+│ Input(#5): FULL          │                            │ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             ┌───────────────────────────┐                           ┌───────────────────────────┐              
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #5              ││ Pipeline #8              ││ Pipeline #2              ││ Pipeline #14             │
+│ CONCAT (id=27)           ││ CONCAT (id=30)           ││ CONCAT (id=24)           ││ CONCAT (id=35)           │
+│ Input(#4): PARTIAL       ││ Input(#7): PARTIAL       ││ Input(#1): PARTIAL       ││ Input(#13): PARTIAL      │
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #4              ││ Pipeline #7              ││ Pipeline #1              ││ Pipeline #13             │
+│ PARTITION (id=28)        ││ PARTITION (id=31)        ││ PARTITION (id=25)        ││ PARTITION (id=36)        │
+│ Input(#3): FULL          ││ Input(#6): PARTIAL       ││ Input(#0): FULL          ││ Input(#12): PARTIAL      │
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #3              ││ Pipeline #6              ││ Pipeline #0              ││ Pipeline #12             │
+│ GPU_SCAN (id=26)         ││ GPU_SCAN (id=29)         ││ GPU_SCAN (id=23)         ││ GPU_SCAN (id=34)         │
+└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-01 11:00:47.662] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-07-01 11:00:47.662] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=0 preferred_device=0 actual_gpu=0
+[2026-07-01 11:00:47.663] [warning] [:] uring_reactor: device short read, retrying tail. slot=0 file_off=0 io_size=4096 bytes_read=2437 this_rd=2437
+[2026-07-01 11:00:47.698] [info] [parquet_gpu_ingestible.cpp:696] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/dataset/nation.parquet columns=n_nationkey,n_name row_groups=0 compressed_bytes=398 uncompressed_bytes=427 column_bytes=n_nationkey:125:125,n_name:273:302 output_rows=25 output_columns=2 split_count=1 duration_us=35977
+[2026-07-01 11:00:47.698] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=0 task_id=0 operator_id=23 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=0.000000 row_ratio=0.000000 duration_us=36055
+[2026-07-01 11:00:47.698] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=25 input_bytes=509 local_bytes=509 gpu_source_bytes=509 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-01 11:00:47.698] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=1
+[2026-07-01 11:00:47.698] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=1 preferred_device=0 actual_gpu=0
+[2026-07-01 11:00:47.699] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:47.699] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:47.699] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=1 task_id=1 operator_id=25 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=25 input_columns=2 input_bytes=509 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=1.000000 row_ratio=1.000000 duration_us=6
+[2026-07-01 11:00:47.699] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=2
+[2026-07-01 11:00:47.699] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=2 preferred_device=0 actual_gpu=0
+[2026-07-01 11:00:47.699] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:47.699] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:47.699] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=2 task_id=2 operator_id=24 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=25 input_columns=2 input_bytes=509 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=1.000000 row_ratio=1.000000 duration_us=7
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=3 preferred_device=1 actual_gpu=1
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=4
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=4 preferred_device=2 actual_gpu=2
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=5
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=5 preferred_device=3 actual_gpu=3
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=6
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=6 preferred_device=0 actual_gpu=0
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=7
+[2026-07-01 11:00:47.700] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=7 preferred_device=1 actual_gpu=1
+[2026-07-01 11:00:48.296] [info] [parquet_gpu_ingestible.cpp:696] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/dataset/customer.parquet columns=c_custkey,c_name,c_address,c_nationkey,c_phone,c_acctbal,c_comment row_groups=78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103 compressed_bytes=263325531 uncompressed_bytes=522922313 column_bytes=c_custkey:12831843:25646934,c_name:15923839:70527684,c_address:91651685:92958752,c_nationkey:2021573:2021315,c_phone:38007716:60910412,c_acctbal:15841939:25646934,c_comment:87046936:245210282 output_rows=3205766 output_columns=7 split_count=1 duration_us=594606
+[2026-07-01 11:00:48.296] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=12 task_id=6 operator_id=34 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=3205766 output_columns=7 output_bytes=536524436 byte_ratio=0.000000 row_ratio=0.000000 duration_us=596262
+[2026-07-01 11:00:48.296] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=36 input_bytes=536524436 local_bytes=536524436 gpu_source_bytes=536524436 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-01 11:00:48.296] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=8
+[2026-07-01 11:00:48.296] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=8 preferred_device=0 actual_gpu=0
+[2026-07-01 11:00:48.297] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=13 task_id=8 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=536524436 local_bytes=536524436 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.297] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=13 task_id=8 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=536524436 local_bytes=536524436 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.297] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=13 task_id=8 operator_id=36 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=3205766 input_columns=7 input_bytes=536524436 output_batches=1 output_rows=3205766 output_columns=7 output_bytes=536524436 byte_ratio=1.000000 row_ratio=1.000000 duration_us=7
+[2026-07-01 11:00:48.325] [info] [parquet_gpu_ingestible.cpp:696] [scan-audit] parquet_materialize target_gpu=2 files=/mnt/nvme/dataset/customer.parquet columns=c_custkey,c_name,c_address,c_nationkey,c_phone,c_acctbal,c_comment row_groups=26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51 compressed_bytes=262672747 uncompressed_bytes=521595221 column_bytes=c_custkey:12799918:25583238,c_name:15880093:70352520,c_address:91430442:92730135,c_nationkey:2016428:2016165,c_phone:37914576:60759134,c_acctbal:15802309:25583238,c_comment:86828981:244570791 output_rows=3197804 output_columns=7 split_count=1 duration_us=621206
+[2026-07-01 11:00:48.325] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=12 task_id=4 operator_id=34 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=2 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=3197804 output_columns=7 output_bytes=535163478 byte_ratio=0.000000 row_ratio=0.000000 duration_us=625514
+[2026-07-01 11:00:48.325] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=36 input_bytes=535163478 local_bytes=535163478 gpu_source_bytes=535163478 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=2
+[2026-07-01 11:00:48.326] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=9
+[2026-07-01 11:00:48.326] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=9 preferred_device=2 actual_gpu=2
+[2026-07-01 11:00:48.326] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=13 task_id=9 preferred_device=2 actual_gpu=2 target_tier=GPU target_device=2 input_bytes=535163478 local_bytes=535163478 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.326] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=13 task_id=9 preferred_device=2 actual_gpu=2 target_tier=GPU target_device=2 input_bytes=535163478 local_bytes=535163478 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.326] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=13 task_id=9 operator_id=36 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=2 pipeline_operator_count=1 input_batches=1 input_rows=3197804 input_columns=7 input_bytes=535163478 output_batches=1 output_rows=3197804 output_columns=7 output_bytes=535163478 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-01 11:00:48.326] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10
+[2026-07-01 11:00:48.326] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=10 preferred_device=0 actual_gpu=0
+[2026-07-01 11:00:48.326] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=11
+[2026-07-01 11:00:48.326] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=11 preferred_device=0 actual_gpu=0
+[2026-07-01 11:00:48.326] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=14 task_id=10 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=536524436 local_bytes=536524436 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.326] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=14 task_id=11 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=535163478 local_bytes=0 remote_gpu_bytes=535163478 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.326] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=14 task_id=10 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=536524436 local_bytes=536524436 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.326] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=14 task_id=10 operator_id=35 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=3205766 input_columns=7 input_bytes=536524436 output_batches=1 output_rows=3205766 output_columns=7 output_bytes=536524436 byte_ratio=1.000000 row_ratio=1.000000 duration_us=8
+[2026-07-01 11:00:48.326] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=12
+[2026-07-01 11:00:48.326] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=12 preferred_device=1 actual_gpu=1
+[2026-07-01 11:00:48.327] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=15 task_id=12 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=536524945 local_bytes=0 remote_gpu_bytes=536524945 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-01 11:00:48.332] [info] [parquet_gpu_ingestible.cpp:696] [scan-audit] parquet_materialize target_gpu=3 files=/mnt/nvme/dataset/customer.parquet columns=c_custkey,c_name,c_address,c_nationkey,c_phone,c_acctbal,c_comment row_groups=52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77 compressed_bytes=262652919 uncompressed_bytes=521632726 column_bytes=c_custkey:12801728:25585878,c_name:15880461:70359780,c_address:91393346:92735282,c_nationkey:2016590:2016322,c_phone:37919661:60765404,c_acctbal:15803923:25585878,c_comment:86837210:244584182 output_rows=3198134 output_columns=7 split_count=1 duration_us=629368
+[2026-07-01 11:00:48.332] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=12 task_id=5 operator_id=34 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=3 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=3198134 output_columns=7 output_bytes=535202594 byte_ratio=0.000000 row_ratio=0.000000 duration_us=632234
+[2026-07-01 11:00:48.332] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=36 input_bytes=535202594 local_bytes=535202594 gpu_source_bytes=535202594 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=3
+[2026-07-01 11:00:48.332] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=13
+[2026-07-01 11:00:48.332] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=13 preferred_device=3 actual_gpu=3
+[2026-07-01 11:00:48.332] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=13 task_id=13 preferred_device=3 actual_gpu=3 target_tier=GPU target_device=3 input_bytes=535202594 local_bytes=535202594 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.332] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=13 task_id=13 preferred_device=3 actual_gpu=3 target_tier=GPU target_device=3 input_bytes=535202594 local_bytes=535202594 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 11:00:48.332] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=13 task_id=13 operator_id=36 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=3 pipeline_operator_count=1 input_batches=1 input_rows=3198134 input_columns=7 input_bytes=535202594 output_batches=1 output_rows=3198134 output_columns=7 output_bytes=535202594 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-01 11:00:48.584] [warning] [gpu_pipeline_task.cpp:890] Pipeline 12: OOM at operator GPU_SCAN (id=34, index 0/1), requested 17573096 bytes (16.76 MB), global usage 8117829426 bytes (7741.77 MB), peak allocated 411058176 bytes (392.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2866730888 bytes (2733.93 MB), rescheduling task 7
+[2026-07-01 11:00:48.584] [error] [bounded_thread_pool.hpp:214] Exception in bounded_thread_pool task: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream.cpp:47: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.584] [error] [sirius_physical_operator.cpp:103] pipelineable_operator_data: Unknown error at batch 2 preparing for processing, state: 0: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.584] [error] [sirius_physical_operator.cpp:103] pipelineable_operator_data: Unknown error at batch 1 preparing for processing, state: 0: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.584] [error] [gpu_pipeline_task.cpp:1048] Unknown error in prepare_for_processing for pipeline 14: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.584] [error] [gpu_pipeline_task.cpp:1048] Unknown error in prepare_for_processing for pipeline 15: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.584] [error] [gpu_pipeline_executor.cpp:400] GPU Pipeline Executor: Exception during task execution: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.584] [error] [gpu_pipeline_executor.cpp:400] GPU Pipeline Executor: Exception during task execution: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.584] [error] [gpu_pipeline_executor.cpp:400] GPU Pipeline Executor: Exception during task execution: Fatal CUDA error encountered at: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/src/utilities/stream_pool.cpp:180: 700 cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.585] [error] [sirius_engine.cpp:178] Error executing query: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.585] [info] [task_scheduler.cpp:189] task_scheduler: draining after error
+[2026-07-01 11:00:48.585] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 11:00:48.585] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 11:00:48.586] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 11:00:48.586] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 11:00:48.586] [info] [task_scheduler.cpp:232] task_scheduler: DONE draining after error
+[2026-07-01 11:00:48.586] [error] [sirius_interface.cpp:201] Error in sirius_execute_pending_query_result: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.586] [error] [physical_sirius_execution.cpp:156] Transparent GPU execution error: Invalid Error: CUDA error at: /home/dy1013/sirius_multi-gpu/cucascade/src/data/representation_converter.cpp:703: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-01 11:00:48.643] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-01 11:00:48.680] [warning] [sirius_context.cpp:274] SiriusContext::QueryEnd: operator 35 port 'default' still had 1 un-consumed data batch(es) (memory leak).
+[2026-07-01 11:00:48.680] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=7340032 bytes free_blocks=507
+[2026-07-01 11:00:48.680] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=4183380296 bytes reserved=0 bytes
+[2026-07-01 11:00:48.680] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=8117829426 bytes reserved=0 bytes
+[2026-07-01 11:00:48.680] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=0 bytes peak=4172761768 bytes reserved=0 bytes
+[2026-07-01 11:00:48.680] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=0 bytes peak=4173061808 bytes reserved=0 bytes
+[2026-07-01 11:00:48.680] [info] [sirius_context.cpp:1013] Connection closed.
+[2026-07-01 11:00:48.687] [info] [task_scheduler.cpp:295] Task request channel closed, exiting management event loop.
+[2026-07-01 11:00:48.687] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 11:00:48.687] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 11:00:48.688] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 11:00:48.688] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.738] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered
+[2026-07-01 11:00:48.739] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal memory access was encountered

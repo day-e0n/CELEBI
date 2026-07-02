@@ -1,0 +1,1183 @@
+[2026-07-01 10:27:25.299] [warning] [sirius_config.cpp:459] sirius_config: use_sirius_datasource was false but 4 GPUs are configured; the sirius datasource is required for multi-GPU IO routing. Overriding use_sirius_datasource to true.
+[2026-07-01 10:27:25.299] [info] [sirius_context.cpp:1046] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency/configs/sirius_4gpu.yaml
+[2026-07-01 10:27:25.303] [info] [telemetry_context.cpp:67] Telemetry context initialized (engine=siriusDB)
+[2026-07-01 10:27:25.303] [info] [sirius_context.cpp:337] SiriusContext: topology summary — 4 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-01 10:27:25.303] [info] [sirius_context.cpp:342]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
+[2026-07-01 10:27:25.303] [info] [sirius_context.cpp:342]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:34:00.0)
+[2026-07-01 10:27:25.303] [info] [sirius_context.cpp:342]   GPU 2: NVIDIA RTX A5000 (numa=0, pci=00000000:AC:00.0)
+[2026-07-01 10:27:25.303] [info] [sirius_context.cpp:342]   GPU 3: NVIDIA RTX A5000 (numa=0, pci=00000000:CA:00.0)
+[2026-07-01 10:27:25.532] [warning] [sirius_context.cpp:352] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-01 10:27:25.532] [info] [sirius_context.cpp:364] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-01 10:27:25.534] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 1
+[2026-07-01 10:27:25.537] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 2
+[2026-07-01 10:27:25.539] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 3
+[2026-07-01 10:27:25.539] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 0
+[2026-07-01 10:27:25.541] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 2
+[2026-07-01 10:27:25.544] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 3
+[2026-07-01 10:27:25.544] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 2 -> 0
+[2026-07-01 10:27:25.544] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 2 -> 1
+[2026-07-01 10:27:25.546] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 2 -> 3
+[2026-07-01 10:27:25.546] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 3 -> 0
+[2026-07-01 10:27:25.546] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 3 -> 1
+[2026-07-01 10:27:25.546] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 3 -> 2
+[2026-07-01 10:27:25.566] [info] [sirius_context.cpp:477] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-01 10:27:25.812] [info] [sirius_context.cpp:1007] Connection opened.
+[2026-07-01 10:27:25.812] [info] [sirius_context.cpp:1020] Extension loaded: sirius
+[2026-07-01 10:27:25.812] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-01 10:27:25.820] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-01 10:27:25.820] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.820] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.820] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.820] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.820] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-01 10:27:25.820] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.820] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.820] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.820] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.820] [info] [sirius_context.cpp:242] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-01 10:27:25.820] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-01 10:27:25.830] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-01 10:27:25.830] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.830] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.830] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.830] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.830] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-01 10:27:25.830] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.830] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.830] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.830] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-01 10:27:25.830] [info] [sirius_context.cpp:242] QueryBegin: SQL: select o_year, sum(case when nation = 'EGYPT' then volume else 0 end) / sum(volume) as mkt_share from ( select extract(year from o.o_orderdate) as o_year, l.l_extendedprice * (1 - l.l_discount) as volume, n2.n_name as nation from lineitem l, part p, supplier s, orders o, customer c, nation n1, nation n2, region r where p.p_partkey = l.l_partkey and s.s_suppkey = l.l_suppkey and l.l_orderkey = o.o_orderkey and o.o_custkey = c.c_custkey and c.c_nationkey = n1.n_nationkey and n1.n_regionkey = r.r_regionkey and r.r_name = 'MIDDLE EAST' and s.s_nationkey = n2.n_nationkey and o.o_orderdate between date '1995-01-01' and date '1996-12-31' and p.p_type = 'PROMO BRUSHED COPPER' ) as all_nations group by o_year order by o_year
+[2026-07-01 10:27:26.140] [info] [sirius_context.cpp:954] Transparent execution: Sirius physical plan generated successfully
+[2026-07-01 10:27:26.154] [info] [sirius_context.cpp:966] Transparent execution: physical plan replaced with GPU operator
+[2026-07-01 10:27:26.154] [info] [physical_sirius_execution.cpp:96] Transparent GPU execution: executing query
+[2026-07-01 10:27:26.210] [info] [sirius_engine.cpp:400] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=41)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=43)
+  Input: <- Pipeline #0 [on: PARTITION (id=43), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=42)
+  Input: <- Pipeline #1 [on: CONCAT (id=42), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=44)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=46)
+  Input: <- Pipeline #3 [on: PARTITION (id=46), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=45)
+  Input: <- Pipeline #4 [on: CONCAT (id=45), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=25)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=25), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=25), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=48)
+  Input: <- Pipeline #6 [on: PARTITION (id=48), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #8: CONCAT (id=47)
+  Input: <- Pipeline #7 [on: CONCAT (id=47), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #7
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #9: GPU_SCAN (id=49)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #10: PARTITION (id=51)
+  Input: <- Pipeline #9 [on: PARTITION (id=51), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #9
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #11: CONCAT (id=50)
+  Input: <- Pipeline #10 [on: CONCAT (id=50), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #10
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #12: HASH_JOIN (id=26)
+  Input: <- Pipeline #11 [on: HASH_JOIN (id=26), port: default, barrier: FULL]
+  Input: <- Pipeline #8 [on: HASH_JOIN (id=26), port: build, barrier: FULL]
+  Dependencies: Pipeline #8, Pipeline #11
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #13: PARTITION (id=53)
+  Input: <- Pipeline #12 [on: PARTITION (id=53), port: default, barrier: FULL]
+  Dependencies: Pipeline #12
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #14: CONCAT (id=52)
+  Input: <- Pipeline #13 [on: CONCAT (id=52), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #13
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #15: GPU_SCAN (id=54)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #16: PARTITION (id=56)
+  Input: <- Pipeline #15 [on: PARTITION (id=56), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #15
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #17: CONCAT (id=55)
+  Input: <- Pipeline #16 [on: CONCAT (id=55), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #18: HASH_JOIN (id=27)
+  Input: <- Pipeline #17 [on: HASH_JOIN (id=27), port: default, barrier: FULL]
+  Input: <- Pipeline #14 [on: HASH_JOIN (id=27), port: build, barrier: FULL]
+  Dependencies: Pipeline #14, Pipeline #17
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #19: PARTITION (id=58)
+  Input: <- Pipeline #18 [on: PARTITION (id=58), port: default, barrier: FULL]
+  Dependencies: Pipeline #18
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #20: CONCAT (id=57)
+  Input: <- Pipeline #19 [on: CONCAT (id=57), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #19
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #21: GPU_SCAN (id=59)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #22: PARTITION (id=61)
+  Input: <- Pipeline #21 [on: PARTITION (id=61), port: default, barrier: FULL]
+  Dependencies: Pipeline #21
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #23: CONCAT (id=60)
+  Input: <- Pipeline #22 [on: CONCAT (id=60), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #22
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #24: GPU_SCAN (id=62)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #25: PARTITION (id=64)
+  Input: <- Pipeline #24 [on: PARTITION (id=64), port: default, barrier: FULL]
+  Dependencies: Pipeline #24
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #26: CONCAT (id=63)
+  Input: <- Pipeline #25 [on: CONCAT (id=63), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #25
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #27: GPU_SCAN (id=65)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #28: PARTITION (id=67)
+  Input: <- Pipeline #27 [on: PARTITION (id=67), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #27
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #29: CONCAT (id=66)
+  Input: <- Pipeline #28 [on: CONCAT (id=66), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #28
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #30: HASH_JOIN (id=33)
+  Input: <- Pipeline #29 [on: HASH_JOIN (id=33), port: default, barrier: FULL]
+  Input: <- Pipeline #26 [on: HASH_JOIN (id=33), port: build, barrier: FULL]
+  Dependencies: Pipeline #26, Pipeline #29
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #31: PARTITION (id=69)
+  Input: <- Pipeline #30 [on: PARTITION (id=69), port: default, barrier: FULL]
+  Dependencies: Pipeline #30
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #32: CONCAT (id=68)
+  Input: <- Pipeline #31 [on: CONCAT (id=68), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #31
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #33: GPU_SCAN (id=70)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #34: PARTITION (id=72)
+  Input: <- Pipeline #33 [on: PARTITION (id=72), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #33
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #35: CONCAT (id=71)
+  Input: <- Pipeline #34 [on: CONCAT (id=71), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #34
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #36: HASH_JOIN (id=28)
+  Input: <- Pipeline #35 [on: HASH_JOIN (id=28), port: default, barrier: FULL]
+  Input: <- Pipeline #20 [on: HASH_JOIN (id=28), port: build, barrier: FULL]
+  Dependencies: Pipeline #20, Pipeline #35
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #37: PARTITION (id=74)
+  Input: <- Pipeline #36 [on: PARTITION (id=74), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #36
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #38: CONCAT (id=73)
+  Input: <- Pipeline #37 [on: CONCAT (id=73), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #37
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #39: HASH_JOIN (id=30)
+  Input: <- Pipeline #38 [on: HASH_JOIN (id=30), port: default, barrier: FULL]
+  Input: <- Pipeline #23 [on: HASH_JOIN (id=30), port: build, barrier: FULL]
+  Dependencies: Pipeline #23, Pipeline #38
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #40: PARTITION (id=76)
+  Input: <- Pipeline #39 [on: PARTITION (id=76), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #39
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #41: CONCAT (id=75)
+  Input: <- Pipeline #40 [on: CONCAT (id=75), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #40
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #42: HASH_JOIN (id=34) -> PROJECTION (id=35) -> PROJECTION (id=36) -> HASH_GROUP_BY (id=37)
+  Input: <- Pipeline #41 [on: HASH_JOIN (id=34), port: default, barrier: FULL]
+  Input: <- Pipeline #32 [on: HASH_JOIN (id=34), port: build, barrier: FULL]
+  Dependencies: Pipeline #32, Pipeline #41
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #43: PARTITION (id=77)
+  Input: <- Pipeline #42 [on: PARTITION (id=77), port: default, barrier: FULL]
+  Dependencies: Pipeline #42
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #44: MERGE_GROUP_BY (id=78)
+  Input: <- Pipeline #43 [on: MERGE_GROUP_BY (id=78), port: default, barrier: FULL]
+  Dependencies: Pipeline #43
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #45: PROJECTION (id=38) -> ORDER_BY (id=39)
+  Input: <- Pipeline #44 [on: PROJECTION (id=38), port: default, barrier: FULL]
+  Dependencies: Pipeline #44
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #46: SORT_SAMPLE (id=79) -> SORT_PARTITION (id=80)
+  Input: <- Pipeline #45 [on: SORT_SAMPLE (id=79), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #45
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #47: MERGE_SORT (id=81)
+  Input: <- Pipeline #46 [on: MERGE_SORT (id=81), port: default, barrier: FULL]
+  Dependencies: Pipeline #46
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #48: RESULT_COLLECTOR (id=40)
+  Input: <- Pipeline #47 [on: RESULT_COLLECTOR (id=40), port: default, barrier: FULL]
+  Dependencies: Pipeline #47
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #48             │                                                                                                                                                                                                    
+│ RESULT_COLLECTOR (id=40) │                                                                                                                                                                                                    
+│ Input(#47): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #47             │                                                                                                                                                                                                    
+│ MERGE_SORT (id=81)       │                                                                                                                                                                                                    
+│ Input(#46): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #46             │                                                                                                                                                                                                    
+│ SORT_PARTITION (id=80)   │                                                                                                                                                                                                    
+│ SORT_SAMPLE (id=79)      │                                                                                                                                                                                                    
+│ Input(#45): PIPELINE     │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #45             │                                                                                                                                                                                                    
+│ ORDER_BY (id=39)         │                                                                                                                                                                                                    
+│ PROJECTION (id=38)       │                                                                                                                                                                                                    
+│ Input(#44): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #44             │                                                                                                                                                                                                    
+│ MERGE_GROUP_BY (id=78)   │                                                                                                                                                                                                    
+│ Input(#43): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #43             │                                                                                                                                                                                                    
+│ PARTITION (id=77)        │                                                                                                                                                                                                    
+│ Input(#42): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #42             │                                                                                                                                                                                                    
+│ HASH_GROUP_BY (id=37)    │                                                                                                                                                                                                    
+│ PROJECTION (id=36)       │                                                                                                                                                                                                    
+│ PROJECTION (id=35)       │                                                                                                                                                                                                    
+│ HASH_JOIN (id=34)        │                                                                                                                                                                                                    
+│   type: INNER            │                                                                                                                                                                                                    
+│ Input(#41): FULL         │                                                                                                                                                                                                    
+│ Input(#32): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             ┌───────────────────────────────────────────────────────┐                                                                                                                                                          
+             │                                                       │                                                                                                                                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                                                                                                                                            
+│ Pipeline #32             │                            │ Pipeline #41             │                                                                                                                                            
+│ CONCAT (id=68)           │                            │ CONCAT (id=75)           │                                                                                                                                            
+│ Input(#31): PARTIAL      │                            │ Input(#40): PARTIAL      │                                                                                                                                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                                                                                                                                            
+             │                                                       │                                                                                                                                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                                                                                                                                            
+│ Pipeline #31             │                            │ Pipeline #40             │                                                                                                                                            
+│ PARTITION (id=69)        │                            │ PARTITION (id=76)        │                                                                                                                                            
+│ Input(#30): FULL         │                            │ Input(#39): PARTIAL      │                                                                                                                                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                                                                                                                                            
+             │                                                       │                                                                                                                                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                                                                                                                                            
+│ Pipeline #30             │                            │ Pipeline #39             │                                                                                                                                            
+│ HASH_JOIN (id=33)        │                            │ HASH_JOIN (id=30)        │                                                                                                                                            
+│   type: INNER            │                            │   type: INNER            │                                                                                                                                            
+│ Input(#29): FULL         │                            │ Input(#38): FULL         │                                                                                                                                            
+│ Input(#26): FULL         │                            │ Input(#23): FULL         │                                                                                                                                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                                                                                                                                            
+             ┌───────────────────────────┐                           ┌───────────────────────────┐                                                                                                                              
+             │                           │                           │                           │                                                                                                                              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                                                
+│ Pipeline #26             ││ Pipeline #29             ││ Pipeline #23             ││ Pipeline #38             │                                                                                                                
+│ CONCAT (id=63)           ││ CONCAT (id=66)           ││ CONCAT (id=60)           ││ CONCAT (id=73)           │                                                                                                                
+│ Input(#25): PARTIAL      ││ Input(#28): PARTIAL      ││ Input(#22): PARTIAL      ││ Input(#37): PARTIAL      │                                                                                                                
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                                                                                                                
+             │                           │                           │                           │                                                                                                                              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                                                
+│ Pipeline #25             ││ Pipeline #28             ││ Pipeline #22             ││ Pipeline #37             │                                                                                                                
+│ PARTITION (id=64)        ││ PARTITION (id=67)        ││ PARTITION (id=61)        ││ PARTITION (id=74)        │                                                                                                                
+│ Input(#24): FULL         ││ Input(#27): PARTIAL      ││ Input(#21): FULL         ││ Input(#36): PARTIAL      │                                                                                                                
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                                                                                                                
+             │                           │                           │                           │                                                                                                                              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                                                
+│ Pipeline #24             ││ Pipeline #27             ││ Pipeline #21             ││ Pipeline #36             │                                                                                                                
+│ GPU_SCAN (id=62)         ││ GPU_SCAN (id=65)         ││ GPU_SCAN (id=59)         ││ HASH_JOIN (id=28)        │                                                                                                                
+│                          ││                          ││                          ││   type: INNER            │                                                                                                                
+│                          ││                          ││                          ││ Input(#35): FULL         │                                                                                                                
+│                          ││                          ││                          ││ Input(#20): FULL         │                                                                                                                
+└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘└────────────┬─────────────┘                                                                                                                
+                                                                                                 ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────┐              
+                                                                                                 │                                                                                                               │              
+                                                                                    ┌──────────────────────────┐                                                                                    ┌──────────────────────────┐
+                                                                                    │ Pipeline #20             │                                                                                    │ Pipeline #35             │
+                                                                                    │ CONCAT (id=57)           │                                                                                    │ CONCAT (id=71)           │
+                                                                                    │ Input(#19): PARTIAL      │                                                                                    │ Input(#34): PARTIAL      │
+                                                                                    └────────────┬─────────────┘                                                                                    └────────────┬─────────────┘
+                                                                                                 │                                                                                                               │              
+                                                                                    ┌──────────────────────────┐                                                                                    ┌──────────────────────────┐
+                                                                                    │ Pipeline #19             │                                                                                    │ Pipeline #34             │
+                                                                                    │ PARTITION (id=58)        │                                                                                    │ PARTITION (id=72)        │
+                                                                                    │ Input(#18): FULL         │                                                                                    │ Input(#33): PARTIAL      │
+                                                                                    └────────────┬─────────────┘                                                                                    └────────────┬─────────────┘
+                                                                                                 │                                                                                                               │              
+                                                                                    ┌──────────────────────────┐                                                                                    ┌──────────────────────────┐
+                                                                                    │ Pipeline #18             │                                                                                    │ Pipeline #33             │
+                                                                                    │ HASH_JOIN (id=27)        │                                                                                    │ GPU_SCAN (id=70)         │
+                                                                                    │   type: INNER            │                                                                                    │                          │
+                                                                                    │ Input(#17): FULL         │                                                                                    │                          │
+                                                                                    │ Input(#14): FULL         │                                                                                    │                          │
+                                                                                    └────────────┬─────────────┘                                                                                    └──────────────────────────┘
+                                                                                                 ┌───────────────────────────────────────────────────────────────────────────────────┐                                          
+                                                                                                 │                                                                                   │                                          
+                                                                                    ┌──────────────────────────┐                                                        ┌──────────────────────────┐                            
+                                                                                    │ Pipeline #14             │                                                        │ Pipeline #17             │                            
+                                                                                    │ CONCAT (id=52)           │                                                        │ CONCAT (id=55)           │                            
+                                                                                    │ Input(#13): PARTIAL      │                                                        │ Input(#16): PARTIAL      │                            
+                                                                                    └────────────┬─────────────┘                                                        └────────────┬─────────────┘                            
+                                                                                                 │                                                                                   │                                          
+                                                                                    ┌──────────────────────────┐                                                        ┌──────────────────────────┐                            
+                                                                                    │ Pipeline #13             │                                                        │ Pipeline #16             │                            
+                                                                                    │ PARTITION (id=53)        │                                                        │ PARTITION (id=56)        │                            
+                                                                                    │ Input(#12): FULL         │                                                        │ Input(#15): PARTIAL      │                            
+                                                                                    └────────────┬─────────────┘                                                        └────────────┬─────────────┘                            
+                                                                                                 │                                                                                   │                                          
+                                                                                    ┌──────────────────────────┐                                                        ┌──────────────────────────┐                            
+                                                                                    │ Pipeline #12             │                                                        │ Pipeline #15             │                            
+                                                                                    │ HASH_JOIN (id=26)        │                                                        │ GPU_SCAN (id=54)         │                            
+                                                                                    │   type: INNER            │                                                        │                          │                            
+                                                                                    │ Input(#11): FULL         │                                                        │                          │                            
+                                                                                    │ Input(#8): FULL          │                                                        │                          │                            
+                                                                                    └────────────┬─────────────┘                                                        └──────────────────────────┘                            
+                                                                                                 ┌───────────────────────────────────────────────────────┐                                                                      
+                                                                                                 │                                                       │                                                                      
+                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐                                                        
+                                                                                    │ Pipeline #8              │                            │ Pipeline #11             │                                                        
+                                                                                    │ CONCAT (id=47)           │                            │ CONCAT (id=50)           │                                                        
+                                                                                    │ Input(#7): PARTIAL       │                            │ Input(#10): PARTIAL      │                                                        
+                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘                                                        
+                                                                                                 │                                                       │                                                                      
+                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐                                                        
+                                                                                    │ Pipeline #7              │                            │ Pipeline #10             │                                                        
+                                                                                    │ PARTITION (id=48)        │                            │ PARTITION (id=51)        │                                                        
+                                                                                    │ Input(#6): FULL          │                            │ Input(#9): PARTIAL       │                                                        
+                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘                                                        
+                                                                                                 │                                                       │                                                                      
+                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐                                                        
+                                                                                    │ Pipeline #6              │                            │ Pipeline #9              │                                                        
+                                                                                    │ HASH_JOIN (id=25)        │                            │ GPU_SCAN (id=49)         │                                                        
+                                                                                    │   type: INNER            │                            │                          │                                                        
+                                                                                    │ Input(#5): FULL          │                            │                          │                                                        
+                                                                                    │ Input(#2): FULL          │                            │                          │                                                        
+                                                                                    └────────────┬─────────────┘                            └──────────────────────────┘                                                        
+                                                                                                 ┌───────────────────────────┐                                                                                                  
+                                                                                                 │                           │                                                                                                  
+                                                                                    ┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+                                                                                    │ Pipeline #2              ││ Pipeline #5              │                                                                                    
+                                                                                    │ CONCAT (id=42)           ││ CONCAT (id=45)           │                                                                                    
+                                                                                    │ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │                                                                                    
+                                                                                    └────────────┬─────────────┘└────────────┬─────────────┘                                                                                    
+                                                                                                 │                           │                                                                                                  
+                                                                                    ┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+                                                                                    │ Pipeline #1              ││ Pipeline #4              │                                                                                    
+                                                                                    │ PARTITION (id=43)        ││ PARTITION (id=46)        │                                                                                    
+                                                                                    │ Input(#0): FULL          ││ Input(#3): PARTIAL       │                                                                                    
+                                                                                    └────────────┬─────────────┘└────────────┬─────────────┘                                                                                    
+                                                                                                 │                           │                                                                                                  
+                                                                                    ┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+                                                                                    │ Pipeline #0              ││ Pipeline #3              │                                                                                    
+                                                                                    │ GPU_SCAN (id=41)         ││ GPU_SCAN (id=44)         │                                                                                    
+                                                                                    └──────────────────────────┘└──────────────────────────┘                                                                                    
+
+[2026-07-01 10:27:26.217] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-07-01 10:27:26.217] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=0 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:26.220] [warning] [:] uring_reactor: device short read, retrying tail. slot=0 file_off=0 io_size=4096 bytes_read=1060 this_rd=1060
+[2026-07-01 10:27:26.257] [info] [parquet_gpu_ingestible.cpp:696] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/dataset/region.parquet columns=r_regionkey,r_name row_groups=0 compressed_bytes=119 uncompressed_bytes=43 column_bytes=r_regionkey:44:43,r_name:75:77 output_rows=1 output_columns=2 split_count=1 duration_us=39576
+[2026-07-01 10:27:26.257] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=0 task_id=0 operator_id=41 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1 output_columns=1 output_bytes=68 byte_ratio=0.000000 row_ratio=0.000000 duration_us=39775
+[2026-07-01 10:27:26.257] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=43 input_bytes=68 local_bytes=68 gpu_source_bytes=68 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-01 10:27:26.257] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=1
+[2026-07-01 10:27:26.257] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=1 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:26.257] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=68 local_bytes=68 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.257] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=68 local_bytes=68 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.258] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=1 task_id=1 operator_id=43 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=1 input_columns=1 input_bytes=68 output_batches=1 output_rows=1 output_columns=1 output_bytes=68 byte_ratio=1.000000 row_ratio=1.000000 duration_us=5
+[2026-07-01 10:27:26.258] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=2
+[2026-07-01 10:27:26.258] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=2 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:26.258] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=68 local_bytes=68 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.258] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=68 local_bytes=68 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.258] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=2 task_id=2 operator_id=42 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=1 input_columns=1 input_bytes=68 output_batches=1 output_rows=1 output_columns=1 output_bytes=68 byte_ratio=1.000000 row_ratio=1.000000 duration_us=6
+[2026-07-01 10:27:26.258] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3
+[2026-07-01 10:27:26.258] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=3 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:26.260] [warning] [:] uring_reactor: device short read, retrying tail. slot=0 file_off=0 io_size=4096 bytes_read=2437 this_rd=2437
+[2026-07-01 10:27:26.260] [warning] [:] uring_reactor: device short read, retrying tail. slot=0 file_off=0 io_size=4096 bytes_read=2437 this_rd=2437
+[2026-07-01 10:27:26.263] [info] [parquet_gpu_ingestible.cpp:696] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/dataset/nation.parquet columns=n_nationkey,n_regionkey row_groups=0 compressed_bytes=205 uncompressed_bytes=280 column_bytes=n_nationkey:125:125,n_regionkey:80:155 output_rows=25 output_columns=2 split_count=1 duration_us=4552
+[2026-07-01 10:27:26.263] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=3 task_id=3 operator_id=44 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=25 output_columns=2 output_bytes=328 byte_ratio=0.000000 row_ratio=0.000000 duration_us=4603
+[2026-07-01 10:27:26.263] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=46 input_bytes=328 local_bytes=328 gpu_source_bytes=328 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-01 10:27:26.263] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4
+[2026-07-01 10:27:26.263] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=4 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:26.264] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=4 task_id=4 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=328 local_bytes=328 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.264] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=4 task_id=4 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=328 local_bytes=328 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.264] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=4 task_id=4 operator_id=46 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=25 input_columns=2 input_bytes=328 output_batches=1 output_rows=25 output_columns=2 output_bytes=328 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-01 10:27:26.264] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5
+[2026-07-01 10:27:26.264] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=5 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:26.264] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=5 task_id=5 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=328 local_bytes=328 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.264] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=5 task_id=5 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=328 local_bytes=328 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.264] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=5 task_id=5 operator_id=45 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=25 input_columns=2 input_bytes=328 output_batches=1 output_rows=25 output_columns=2 output_bytes=328 byte_ratio=1.000000 row_ratio=1.000000 duration_us=3
+[2026-07-01 10:27:26.264] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=6
+[2026-07-01 10:27:26.264] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=6 preferred_device=1 actual_gpu=1
+[2026-07-01 10:27:26.264] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=6 task_id=6 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=396 local_bytes=0 remote_gpu_bytes=396 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-01 10:27:26.897] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=6 task_id=6 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=396 local_bytes=396 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-01 10:27:26.905] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=6 task_id=6 operator_id=25 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=2 input_rows=26 input_columns=3 input_bytes=396 output_batches=1 output_rows=5 output_columns=2 output_bytes=168 byte_ratio=0.424242 row_ratio=0.192308 duration_us=8603
+[2026-07-01 10:27:26.906] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=48 input_bytes=168 local_bytes=168 gpu_source_bytes=168 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-01 10:27:26.906] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=7
+[2026-07-01 10:27:26.906] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=7 preferred_device=1 actual_gpu=1
+[2026-07-01 10:27:26.906] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=7 task_id=7 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=168 local_bytes=168 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.906] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=7 task_id=7 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=168 local_bytes=168 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.906] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=7 task_id=7 operator_id=48 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=5 input_columns=2 input_bytes=168 output_batches=1 output_rows=5 output_columns=2 output_bytes=168 byte_ratio=1.000000 row_ratio=1.000000 duration_us=8
+[2026-07-01 10:27:26.907] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=8
+[2026-07-01 10:27:26.907] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=8 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:26.907] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=8 task_id=8 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=168 local_bytes=0 remote_gpu_bytes=168 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.907] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=8 task_id=8 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=168 local_bytes=168 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.907] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=8 task_id=8 operator_id=47 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=5 input_columns=2 input_bytes=168 output_batches=1 output_rows=5 output_columns=2 output_bytes=168 byte_ratio=1.000000 row_ratio=1.000000 duration_us=7
+[2026-07-01 10:27:26.907] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=9
+[2026-07-01 10:27:26.907] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=9 preferred_device=3 actual_gpu=3
+[2026-07-01 10:27:26.979] [info] [parquet_gpu_ingestible.cpp:696] [scan-audit] parquet_materialize target_gpu=3 files=/mnt/nvme/dataset/customer.parquet columns=c_custkey,c_nationkey row_groups=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121 compressed_bytes=69499698 uncompressed_bytes=129460031 column_bytes=c_custkey:60042225:120003782,c_nationkey:9457473:9456249 output_rows=15000000 output_columns=2 split_count=1 duration_us=69515
+[2026-07-01 10:27:26.979] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=9 task_id=9 operator_id=49 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=3 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=15000000 output_columns=2 output_bytes=183750016 byte_ratio=0.000000 row_ratio=0.000000 duration_us=71535
+[2026-07-01 10:27:26.979] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=51 input_bytes=183750016 local_bytes=183750016 gpu_source_bytes=183750016 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=3
+[2026-07-01 10:27:26.980] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10
+[2026-07-01 10:27:26.980] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=10 preferred_device=3 actual_gpu=3
+[2026-07-01 10:27:26.980] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=10 task_id=10 preferred_device=3 actual_gpu=3 target_tier=GPU target_device=3 input_bytes=183750016 local_bytes=183750016 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.980] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=10 task_id=10 preferred_device=3 actual_gpu=3 target_tier=GPU target_device=3 input_bytes=183750016 local_bytes=183750016 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.980] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=10 task_id=10 operator_id=51 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=3 pipeline_operator_count=1 input_batches=1 input_rows=15000000 input_columns=2 input_bytes=183750016 output_batches=1 output_rows=15000000 output_columns=2 output_bytes=183750016 byte_ratio=1.000000 row_ratio=1.000000 duration_us=5
+[2026-07-01 10:27:26.981] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=11
+[2026-07-01 10:27:26.981] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=11 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:26.981] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=11 task_id=11 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=183750016 local_bytes=0 remote_gpu_bytes=183750016 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.997] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=11 task_id=11 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=183750016 local_bytes=183750016 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:26.997] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=11 task_id=11 operator_id=50 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=15000000 input_columns=2 input_bytes=183750016 output_batches=1 output_rows=15000000 output_columns=2 output_bytes=183750016 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-01 10:27:26.997] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=12
+[2026-07-01 10:27:26.997] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=12 preferred_device=2 actual_gpu=2
+[2026-07-01 10:27:26.998] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=12 task_id=12 preferred_device=2 actual_gpu=2 target_tier=GPU target_device=2 input_bytes=183750184 local_bytes=0 remote_gpu_bytes=183750184 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-01 10:27:27.007] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=12 task_id=12 preferred_device=2 actual_gpu=2 target_tier=GPU target_device=2 input_bytes=183750184 local_bytes=183750184 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-01 10:27:27.014] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=12 task_id=12 operator_id=26 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=2 pipeline_operator_count=1 input_batches=2 input_rows=15000005 input_columns=4 input_bytes=183750184 output_batches=1 output_rows=3001516 output_columns=3 output_bytes=49149952 byte_ratio=0.267482 row_ratio=0.200101 duration_us=7229
+[2026-07-01 10:27:27.014] [info] [task_creator.cpp:352] [locality-audit] task_create operator_id=53 input_bytes=49149952 local_bytes=49149952 gpu_source_bytes=49149952 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=2
+[2026-07-01 10:27:27.015] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=13
+[2026-07-01 10:27:27.015] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=13 preferred_device=2 actual_gpu=2
+[2026-07-01 10:27:27.015] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=13 task_id=13 preferred_device=2 actual_gpu=2 target_tier=GPU target_device=2 input_bytes=49149952 local_bytes=49149952 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:27.015] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=13 task_id=13 preferred_device=2 actual_gpu=2 target_tier=GPU target_device=2 input_bytes=49149952 local_bytes=49149952 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:27.015] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=13 task_id=13 operator_id=53 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=2 pipeline_operator_count=1 input_batches=1 input_rows=3001516 input_columns=3 input_bytes=49149952 output_batches=1 output_rows=3001516 output_columns=3 output_bytes=49149952 byte_ratio=1.000000 row_ratio=1.000000 duration_us=5
+[2026-07-01 10:27:27.015] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=14
+[2026-07-01 10:27:27.015] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=14 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:27.015] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_before pipeline_id=14 task_id=14 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=49149952 local_bytes=0 remote_gpu_bytes=49149952 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:27.020] [info] [gpu_pipeline_task.cpp:182] [locality-audit] prepare_after pipeline_id=14 task_id=14 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=49149952 local_bytes=49149952 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-01 10:27:27.020] [info] [gpu_pipeline_task.cpp:311] [stage-audit] pipeline_id=14 task_id=14 operator_id=52 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=3001516 input_columns=3 input_bytes=49149952 output_batches=1 output_rows=3001516 output_columns=3 output_bytes=49149952 byte_ratio=1.000000 row_ratio=1.000000 duration_us=7
+[2026-07-01 10:27:27.020] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=18
+[2026-07-01 10:27:27.020] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=18 preferred_device=1 actual_gpu=1
+[2026-07-01 10:27:27.020] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16
+[2026-07-01 10:27:27.020] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=16 preferred_device=3 actual_gpu=3
+[2026-07-01 10:27:27.020] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=15
+[2026-07-01 10:27:27.020] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=15 preferred_device=2 actual_gpu=2
+[2026-07-01 10:27:27.020] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=17
+[2026-07-01 10:27:27.020] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=17 preferred_device=0 actual_gpu=0
+[2026-07-01 10:27:27.021] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=19
+[2026-07-01 10:27:27.021] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=19 preferred_device=2 actual_gpu=2
+[2026-07-01 10:27:27.437] [error] [gpu_pipeline_executor.cpp:400] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-01 10:27:27.437] [error] [gpu_pipeline_executor.cpp:400] GPU Pipeline Executor: Exception during task execution: uring_reactor: cudaMemcpyAsync failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.437] [error] [gpu_pipeline_executor.cpp:400] GPU Pipeline Executor: Exception during task execution: uring_reactor: cudaMemcpyAsync failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.437] [error] [gpu_pipeline_executor.cpp:400] GPU Pipeline Executor: Exception during task execution: Fatal CUDA error encountered at: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/src/utilities/cuda_memcpy.cu:43: 715 cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-01 10:27:27.441] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=37 file_off=1656827904 io_size=1048576 data_off=1363 data_size=1047213 bytes_read=1048576 actual=1047213 ctx_failed=true
+[2026-07-01 10:27:27.443] [error] [sirius_engine.cpp:178] Error executing query: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-01 10:27:27.443] [info] [task_scheduler.cpp:189] task_scheduler: draining after error
+[2026-07-01 10:27:27.443] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 10:27:27.443] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=11 file_off=1668558848 io_size=98304 data_off=0 data_size=97808 bytes_read=98304 actual=97808 ctx_failed=true
+[2026-07-01 10:27:27.443] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 10:27:27.460] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=120 file_off=5143560192 io_size=110592 data_off=0 data_size=107953 bytes_read=110592 actual=107953 ctx_failed=true
+[2026-07-01 10:27:27.460] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=121 file_off=2446880768 io_size=1048576 data_off=974 data_size=1047602 bytes_read=1048576 actual=1047602 ctx_failed=true
+[2026-07-01 10:27:27.462] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=49 file_off=2457530368 io_size=1048576 data_off=3665 data_size=1044911 bytes_read=1048576 actual=1044911 ctx_failed=true
+[2026-07-01 10:27:27.463] [error] [gpu_pipeline_executor.cpp:400] GPU Pipeline Executor: Exception during task execution: uring_reactor: cudaMemcpyAsync failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.463] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 10:27:27.463] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=65 file_off=5154246656 io_size=102400 data_off=0 data_size=99230 bytes_read=102400 actual=99230 ctx_failed=true
+[2026-07-01 10:27:27.463] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 10:27:27.463] [info] [task_scheduler.cpp:232] task_scheduler: DONE draining after error
+[2026-07-01 10:27:27.463] [error] [sirius_interface.cpp:201] Error in sirius_execute_pending_query_result: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-01 10:27:27.463] [error] [physical_sirius_execution.cpp:156] Transparent GPU execution error: Invalid Error: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-01 10:27:27.464] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=69 file_off=2468216832 io_size=1048576 data_off=3384 data_size=1045192 bytes_read=1048576 actual=1045192 ctx_failed=true
+[2026-07-01 10:27:27.464] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=97 file_off=4341833728 io_size=1048576 data_off=542 data_size=1048034 bytes_read=1048576 actual=1048034 ctx_failed=true
+[2026-07-01 10:27:27.464] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=126 file_off=1971777536 io_size=1048576 data_off=3271 data_size=1045305 bytes_read=1048576 actual=1045305 ctx_failed=true
+[2026-07-01 10:27:27.464] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=104 file_off=5164933120 io_size=102400 data_off=0 data_size=100733 bytes_read=102400 actual=100733 ctx_failed=true
+[2026-07-01 10:27:27.465] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=123 file_off=2490605568 io_size=106496 data_off=0 data_size=106132 bytes_read=106496 actual=106132 ctx_failed=true
+[2026-07-01 10:27:27.466] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=65 file_off=4401590272 io_size=110592 data_off=0 data_size=107892 bytes_read=110592 actual=107892 ctx_failed=true
+[2026-07-01 10:27:27.467] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=84 file_off=4412272640 io_size=110592 data_off=0 data_size=107495 bytes_read=110592 actual=107495 ctx_failed=true
+[2026-07-01 10:27:27.468] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=125 file_off=2500235264 io_size=1048576 data_off=1048 data_size=1047528 bytes_read=1048576 actual=1047528 ctx_failed=true
+[2026-07-01 10:27:27.468] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=127 file_off=2506649600 io_size=102400 data_off=0 data_size=98583 bytes_read=102400 actual=98583 ctx_failed=true
+[2026-07-01 10:27:27.469] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=126 file_off=5175582720 io_size=110592 data_off=0 data_size=108476 bytes_read=110592 actual=108476 ctx_failed=true
+[2026-07-01 10:27:27.469] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=75 file_off=1982468096 io_size=1048576 data_off=2447 data_size=1046129 bytes_read=1048576 actual=1046129 ctx_failed=true
+[2026-07-01 10:27:27.469] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=16 file_off=5186265088 io_size=110592 data_off=0 data_size=108125 bytes_read=110592 actual=108125 ctx_failed=true
+[2026-07-01 10:27:27.469] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=88 file_off=4422963200 io_size=102400 data_off=0 data_size=98477 bytes_read=102400 actual=98477 ctx_failed=true
+[2026-07-01 10:27:27.470] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=124 file_off=4363198464 io_size=1048576 data_off=666 data_size=1047910 bytes_read=1048576 actual=1047910 ctx_failed=true
+[2026-07-01 10:27:27.470] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=89 file_off=4433641472 io_size=102400 data_off=0 data_size=98499 bytes_read=102400 actual=98499 ctx_failed=true
+[2026-07-01 10:27:27.471] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=83 file_off=2526937088 io_size=1048576 data_off=1163 data_size=1047413 bytes_read=1048576 actual=1047413 ctx_failed=true
+[2026-07-01 10:27:27.471] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=86 file_off=5196955648 io_size=98304 data_off=0 data_size=98127 bytes_read=98304 actual=98127 ctx_failed=true
+[2026-07-01 10:27:27.472] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=91 file_off=4444291072 io_size=110592 data_off=0 data_size=107018 bytes_read=110592 actual=107018 ctx_failed=true
+[2026-07-01 10:27:27.472] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=103 file_off=5207638016 io_size=102400 data_off=0 data_size=100546 bytes_read=102400 actual=100546 ctx_failed=true
+[2026-07-01 10:27:27.473] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=105 file_off=2543992832 io_size=102400 data_off=0 data_size=98418 bytes_read=102400 actual=98418 ctx_failed=true
+[2026-07-01 10:27:27.473] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=89 file_off=2532257792 io_size=1048576 data_off=2218 data_size=1046358 bytes_read=1048576 actual=1046358 ctx_failed=true
+[2026-07-01 10:27:27.473] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=93 file_off=4454969344 io_size=102400 data_off=0 data_size=100070 bytes_read=102400 actual=100070 ctx_failed=true
+[2026-07-01 10:27:27.473] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=30 file_off=1993121792 io_size=1048576 data_off=367 data_size=1048209 bytes_read=1048576 actual=1048209 ctx_failed=true
+[2026-07-01 10:27:27.475] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=5 file_off=4465655808 io_size=102400 data_off=0 data_size=100541 bytes_read=102400 actual=100541 ctx_failed=true
+[2026-07-01 10:27:27.475] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=97 file_off=2537619456 io_size=1048576 data_off=1393 data_size=1047183 bytes_read=1048576 actual=1047183 ctx_failed=true
+[2026-07-01 10:27:27.475] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=45 file_off=2586705920 io_size=102400 data_off=0 data_size=100332 bytes_read=102400 actual=100332 ctx_failed=true
+[2026-07-01 10:27:27.476] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=110 file_off=4485951488 io_size=1048576 data_off=455 data_size=1048121 bytes_read=1048576 actual=1048121 ctx_failed=true
+[2026-07-01 10:27:27.476] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=99 file_off=4476342272 io_size=102400 data_off=0 data_size=100111 bytes_read=102400 actual=100111 ctx_failed=true
+[2026-07-01 10:27:27.476] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=108 file_off=5218291712 io_size=110592 data_off=0 data_size=107008 bytes_read=110592 actual=107008 ctx_failed=true
+[2026-07-01 10:27:27.477] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=24 file_off=2581381120 io_size=102400 data_off=0 data_size=99927 bytes_read=102400 actual=99927 ctx_failed=true
+[2026-07-01 10:27:27.477] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=111 file_off=2003808256 io_size=1048576 data_off=3043 data_size=1045533 bytes_read=1048576 actual=1045533 ctx_failed=true
+[2026-07-01 10:27:27.478] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=15 file_off=5239660544 io_size=98304 data_off=0 data_size=97903 bytes_read=98304 actual=97903 ctx_failed=true
+[2026-07-01 10:27:27.478] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=109 file_off=2592030720 io_size=110592 data_off=0 data_size=108757 bytes_read=110592 actual=108757 ctx_failed=true
+[2026-07-01 10:27:27.479] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=44 file_off=5228982272 io_size=102400 data_off=0 data_size=99637 bytes_read=102400 actual=99637 ctx_failed=true
+[2026-07-01 10:27:27.480] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=52 file_off=2596343808 io_size=1048576 data_off=2354 data_size=1046222 bytes_read=1048576 actual=1046222 ctx_failed=true
+[2026-07-01 10:27:27.481] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=7 file_off=4496629760 io_size=1048576 data_off=3196 data_size=1045380 bytes_read=1048576 actual=1045380 ctx_failed=true
+[2026-07-01 10:27:27.481] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=83 file_off=2014494720 io_size=1048576 data_off=1119 data_size=1047457 bytes_read=1048576 actual=1047457 ctx_failed=true
+[2026-07-01 10:27:27.482] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=5 file_off=5250342912 io_size=102400 data_off=0 data_size=101330 bytes_read=102400 actual=101330 ctx_failed=true
+[2026-07-01 10:27:27.482] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=111 file_off=2601668608 io_size=1048576 data_off=3201 data_size=1045375 bytes_read=1048576 actual=1045375 ctx_failed=true
+[2026-07-01 10:27:27.483] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=30 file_off=2606993408 io_size=1048576 data_off=723 data_size=1047853 bytes_read=1048576 actual=1047853 ctx_failed=true
+[2026-07-01 10:27:27.484] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=90 file_off=4507316224 io_size=1048576 data_off=1197 data_size=1047379 bytes_read=1048576 actual=1047379 ctx_failed=true
+[2026-07-01 10:27:27.485] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=92 file_off=5260992512 io_size=110592 data_off=0 data_size=109383 bytes_read=110592 actual=109383 ctx_failed=true
+[2026-07-01 10:27:27.486] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=54 file_off=2612350976 io_size=1048576 data_off=3410 data_size=1045166 bytes_read=1048576 actual=1045166 ctx_failed=true
+[2026-07-01 10:27:27.486] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=64 file_off=2025177088 io_size=1048576 data_off=356 data_size=1048220 bytes_read=1048576 actual=1048220 ctx_failed=true
+[2026-07-01 10:27:27.487] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=110 file_off=2617675776 io_size=1048576 data_off=4083 data_size=1044493 bytes_read=1048576 actual=1044493 ctx_failed=true
+[2026-07-01 10:27:27.489] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=33 file_off=4517965824 io_size=1048576 data_off=2401 data_size=1046175 bytes_read=1048576 actual=1046175 ctx_failed=true
+[2026-07-01 10:27:27.489] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=56 file_off=2623037440 io_size=1048576 data_off=280 data_size=1048296 bytes_read=1048576 actual=1048296 ctx_failed=true
+[2026-07-01 10:27:27.489] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=88 file_off=2629410816 io_size=102400 data_off=0 data_size=99336 bytes_read=102400 actual=99336 ctx_failed=true
+[2026-07-01 10:27:27.489] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=28 file_off=5271678976 io_size=102400 data_off=0 data_size=101496 bytes_read=102400 actual=101496 ctx_failed=true
+[2026-07-01 10:27:27.490] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=112 file_off=2634735616 io_size=106496 data_off=0 data_size=106073 bytes_read=106496 actual=106073 ctx_failed=true
+[2026-07-01 10:27:27.490] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=56 file_off=2035826688 io_size=1048576 data_off=1489 data_size=1047087 bytes_read=1048576 actual=1047087 ctx_failed=true
+[2026-07-01 10:27:27.492] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=8 file_off=4528648192 io_size=1048576 data_off=2527 data_size=1046049 bytes_read=1048576 actual=1046049 ctx_failed=true
+[2026-07-01 10:27:27.493] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=17 file_off=1940811776 io_size=102400 data_off=0 data_size=100383 bytes_read=102400 actual=100383 ctx_failed=true
+[2026-07-01 10:27:27.493] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=34 file_off=2046509056 io_size=1048576 data_off=3084 data_size=1045492 bytes_read=1048576 actual=1045492 ctx_failed=true
+[2026-07-01 10:27:27.494] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=14 file_off=1930125312 io_size=102400 data_off=0 data_size=100902 bytes_read=102400 actual=100902 ctx_failed=true
+[2026-07-01 10:27:27.494] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=124 file_off=1919442944 io_size=106496 data_off=0 data_size=105263 bytes_read=106496 actual=105263 ctx_failed=true
+[2026-07-01 10:27:27.496] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=65 file_off=4539330560 io_size=1048576 data_off=2024 data_size=1046552 bytes_read=1048576 actual=1046552 ctx_failed=true
+[2026-07-01 10:27:27.496] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=20 file_off=1951461376 io_size=106496 data_off=0 data_size=106252 bytes_read=106496 actual=106252 ctx_failed=true
+[2026-07-01 10:27:27.496] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=114 file_off=2057195520 io_size=1048576 data_off=1074 data_size=1047502 bytes_read=1048576 actual=1047502 ctx_failed=true
+[2026-07-01 10:27:27.498] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=38 file_off=1962143744 io_size=110592 data_off=0 data_size=107151 bytes_read=110592 actual=107151 ctx_failed=true
+[2026-07-01 10:27:27.498] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=36 file_off=4550021120 io_size=1048576 data_off=3703 data_size=1044873 bytes_read=1048576 actual=1044873 ctx_failed=true
+[2026-07-01 10:27:27.499] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=61 file_off=936939520 io_size=102400 data_off=0 data_size=100196 bytes_read=102400 actual=100196 ctx_failed=true
+[2026-07-01 10:27:27.499] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=37 file_off=2067881984 io_size=1048576 data_off=3044 data_size=1045532 bytes_read=1048576 actual=1045532 ctx_failed=true
+[2026-07-01 10:27:27.501] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=72 file_off=4560670720 io_size=1048576 data_off=3077 data_size=1045499 bytes_read=1048576 actual=1045499 ctx_failed=true
+[2026-07-01 10:27:27.501] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=84 file_off=2078531584 io_size=1048576 data_off=3880 data_size=1044696 bytes_read=1048576 actual=1044696 ctx_failed=true
+[2026-07-01 10:27:27.503] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=115 file_off=4571357184 io_size=1048576 data_off=1014 data_size=1047562 bytes_read=1048576 actual=1047562 ctx_failed=true
+[2026-07-01 10:27:27.504] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=10 file_off=2089213952 io_size=1048576 data_off=3297 data_size=1045279 bytes_read=1048576 actual=1045279 ctx_failed=true
+[2026-07-01 10:27:27.506] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=40 file_off=2099900416 io_size=1048576 data_off=2020 data_size=1046556 bytes_read=1048576 actual=1046556 ctx_failed=true
+[2026-07-01 10:27:27.506] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=39 file_off=4582035456 io_size=1048576 data_off=4083 data_size=1044493 bytes_read=1048576 actual=1044493 ctx_failed=true
+[2026-07-01 10:27:27.508] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=67 file_off=4592726016 io_size=1048576 data_off=1667 data_size=1046909 bytes_read=1048576 actual=1046909 ctx_failed=true
+[2026-07-01 10:27:27.509] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=85 file_off=2110554112 io_size=1048576 data_off=462 data_size=1048114 bytes_read=1048576 actual=1048114 ctx_failed=true
+[2026-07-01 10:27:27.511] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=97 file_off=4603371520 io_size=1048576 data_off=1831 data_size=1046745 bytes_read=1048576 actual=1046745 ctx_failed=true
+[2026-07-01 10:27:27.511] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=116 file_off=2121232384 io_size=1048576 data_off=3928 data_size=1044648 bytes_read=1048576 actual=1044648 ctx_failed=true
+[2026-07-01 10:27:27.513] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=127 file_off=4614062080 io_size=1048576 data_off=421 data_size=1048155 bytes_read=1048576 actual=1048155 ctx_failed=true
+[2026-07-01 10:27:27.514] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=0 file_off=2131918848 io_size=1048576 data_off=2867 data_size=1045709 bytes_read=1048576 actual=1045709 ctx_failed=true
+[2026-07-01 10:27:27.516] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=11 file_off=4624744448 io_size=1048576 data_off=647 data_size=1047929 bytes_read=1048576 actual=1047929 ctx_failed=true
+[2026-07-01 10:27:27.516] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=12 file_off=2142605312 io_size=1048576 data_off=1605 data_size=1046971 bytes_read=1048576 actual=1046971 ctx_failed=true
+[2026-07-01 10:27:27.518] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=43 file_off=4635426816 io_size=1048576 data_off=2939 data_size=1045637 bytes_read=1048576 actual=1045637 ctx_failed=true
+[2026-07-01 10:27:27.520] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=44 file_off=2153254912 io_size=1048576 data_off=2305 data_size=1046271 bytes_read=1048576 actual=1046271 ctx_failed=true
+[2026-07-01 10:27:27.521] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=46 file_off=4646080512 io_size=1048576 data_off=35 data_size=1048541 bytes_read=1048576 actual=1048541 ctx_failed=true
+[2026-07-01 10:27:27.521] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-01 10:27:27.521] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=47 file_off=2163937280 io_size=1048576 data_off=2903 data_size=1045673 bytes_read=1048576 actual=1045673 ctx_failed=true
+[2026-07-01 10:27:27.523] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=57 file_off=4656766976 io_size=1048576 data_off=666 data_size=1047910 bytes_read=1048576 actual=1047910 ctx_failed=true
+[2026-07-01 10:27:27.525] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=68 file_off=2174623744 io_size=1048576 data_off=3892 data_size=1044684 bytes_read=1048576 actual=1044684 ctx_failed=true
+[2026-07-01 10:27:27.526] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=76 file_off=4667441152 io_size=1048576 data_off=3523 data_size=1045053 bytes_read=1048576 actual=1045053 ctx_failed=true
+[2026-07-01 10:27:27.527] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=86 file_off=2185314304 io_size=1048576 data_off=2983 data_size=1045593 bytes_read=1048576 actual=1045593 ctx_failed=true
+[2026-07-01 10:27:27.529] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=88 file_off=4678094848 io_size=1048576 data_off=2129 data_size=1046447 bytes_read=1048576 actual=1046447 ctx_failed=true
+[2026-07-01 10:27:27.530] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=98 file_off=2195963904 io_size=1048576 data_off=1390 data_size=1047186 bytes_read=1048576 actual=1047186 ctx_failed=true
+[2026-07-01 10:27:27.531] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=120 file_off=2206642176 io_size=1048576 data_off=2708 data_size=1045868 bytes_read=1048576 actual=1045868 ctx_failed=true
+[2026-07-01 10:27:27.531] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=119 file_off=4688777216 io_size=1048576 data_off=3789 data_size=1044787 bytes_read=1048576 actual=1044787 ctx_failed=true
+[2026-07-01 10:27:27.533] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=2 file_off=4699467776 io_size=1048576 data_off=3030 data_size=1045546 bytes_read=1048576 actual=1045546 ctx_failed=true
+[2026-07-01 10:27:27.534] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=13 file_off=2217328640 io_size=1048576 data_off=2857 data_size=1045719 bytes_read=1048576 actual=1045719 ctx_failed=true
+[2026-07-01 10:27:27.535] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=15 file_off=4710154240 io_size=1048576 data_off=906 data_size=1047670 bytes_read=1048576 actual=1047670 ctx_failed=true
+[2026-07-01 10:27:27.536] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=16 file_off=2228015104 io_size=1048576 data_off=341 data_size=1048235 bytes_read=1048576 actual=1048235 ctx_failed=true
+[2026-07-01 10:27:27.537] [warning] [sirius_context.cpp:274] SiriusContext::QueryEnd: operator 27 port 'build' still had 1 un-consumed data batch(es) (memory leak).
+[2026-07-01 10:27:27.537] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=125829120 bytes free_blocks=507
+[2026-07-01 10:27:27.537] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=4328917192 bytes reserved=0 bytes
+[2026-07-01 10:27:27.537] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=4279796920 bytes reserved=0 bytes
+[2026-07-01 10:27:27.537] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=0 bytes peak=8260861448 bytes reserved=0 bytes
+[2026-07-01 10:27:27.537] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=0 bytes peak=4279815312 bytes reserved=0 bytes
+[2026-07-01 10:27:27.537] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=49 file_off=753991680 io_size=1048576 data_off=3533 data_size=1045043 bytes_read=1048576 actual=1045043 ctx_failed=true
+[2026-07-01 10:27:27.537] [info] [sirius_context.cpp:1013] Connection closed.
+[2026-07-01 10:27:27.538] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=50 file_off=4720799744 io_size=1048576 data_off=2346 data_size=1046230 bytes_read=1048576 actual=1046230 ctx_failed=true
+[2026-07-01 10:27:27.538] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=51 file_off=2238664704 io_size=1048576 data_off=3732 data_size=1044844 bytes_read=1048576 actual=1044844 ctx_failed=true
+[2026-07-01 10:27:27.539] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=52 file_off=764641280 io_size=1048576 data_off=2885 data_size=1045691 bytes_read=1048576 actual=1045691 ctx_failed=true
+[2026-07-01 10:27:27.540] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=53 file_off=4731490304 io_size=1048576 data_off=2336 data_size=1046240 bytes_read=1048576 actual=1046240 ctx_failed=true
+[2026-07-01 10:27:27.540] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=54 file_off=2249351168 io_size=1048576 data_off=1977 data_size=1046599 bytes_read=1048576 actual=1046599 ctx_failed=true
+[2026-07-01 10:27:27.541] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=58 file_off=775364608 io_size=1048576 data_off=3575 data_size=1045001 bytes_read=1048576 actual=1045001 ctx_failed=true
+[2026-07-01 10:27:27.542] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=70 file_off=4742172672 io_size=1048576 data_off=3356 data_size=1045220 bytes_read=1048576 actual=1045220 ctx_failed=true
+[2026-07-01 10:27:27.543] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=73 file_off=2260033536 io_size=1048576 data_off=3553 data_size=1045023 bytes_read=1048576 actual=1045023 ctx_failed=true
+[2026-07-01 10:27:27.544] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=77 file_off=786083840 io_size=1048576 data_off=1170 data_size=1047406 bytes_read=1048576 actual=1047406 ctx_failed=true
+[2026-07-01 10:27:27.544] [info] [task_scheduler.cpp:295] Task request channel closed, exiting management event loop.
+[2026-07-01 10:27:27.544] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=78 file_off=4752859136 io_size=1048576 data_off=3304 data_size=1045272 bytes_read=1048576 actual=1045272 ctx_failed=true
+[2026-07-01 10:27:27.544] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 10:27:27.545] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 10:27:27.545] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 10:27:27.546] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=92 file_off=2270691328 io_size=1048576 data_off=347 data_size=1048229 bytes_read=1048576 actual=1048229 ctx_failed=true
+[2026-07-01 10:27:27.546] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-01 10:27:27.546] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=99 file_off=796803072 io_size=1048576 data_off=1338 data_size=1047238 bytes_read=1048576 actual=1047238 ctx_failed=true
+[2026-07-01 10:27:27.547] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=100 file_off=4763508736 io_size=1048576 data_off=3228 data_size=1045348 bytes_read=1048576 actual=1045348 ctx_failed=true
+[2026-07-01 10:27:27.548] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=122 file_off=2281373696 io_size=1048576 data_off=1745 data_size=1046831 bytes_read=1048576 actual=1046831 ctx_failed=true
+[2026-07-01 10:27:27.549] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=123 file_off=807456768 io_size=1048576 data_off=1221 data_size=1047355 bytes_read=1048576 actual=1047355 ctx_failed=true
+[2026-07-01 10:27:27.549] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=3 file_off=4774191104 io_size=1048576 data_off=2753 data_size=1045823 bytes_read=1048576 actual=1045823 ctx_failed=true
+[2026-07-01 10:27:27.551] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=4 file_off=2292056064 io_size=1048576 data_off=3478 data_size=1045098 bytes_read=1048576 actual=1045098 ctx_failed=true
+[2026-07-01 10:27:27.551] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=17 file_off=818176000 io_size=1048576 data_off=3572 data_size=1045004 bytes_read=1048576 actual=1045004 ctx_failed=true
+[2026-07-01 10:27:27.552] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=18 file_off=4784877568 io_size=1048576 data_off=2492 data_size=1046084 bytes_read=1048576 actual=1046084 ctx_failed=true
+[2026-07-01 10:27:27.553] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=19 file_off=2302738432 io_size=1048576 data_off=2945 data_size=1045631 bytes_read=1048576 actual=1045631 ctx_failed=true
+[2026-07-01 10:27:27.553] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=20 file_off=828895232 io_size=1048576 data_off=2457 data_size=1046119 bytes_read=1048576 actual=1046119 ctx_failed=true
+[2026-07-01 10:27:27.553] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=21 file_off=4795527168 io_size=1048576 data_off=2864 data_size=1045712 bytes_read=1048576 actual=1045712 ctx_failed=true
+[2026-07-01 10:27:27.554] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=22 file_off=2313388032 io_size=1048576 data_off=951 data_size=1047625 bytes_read=1048576 actual=1047625 ctx_failed=true
+[2026-07-01 10:27:27.555] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=55 file_off=839548928 io_size=1048576 data_off=1031 data_size=1047545 bytes_read=1048576 actual=1047545 ctx_failed=true
+[2026-07-01 10:27:27.555] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=59 file_off=4806217728 io_size=1048576 data_off=1165 data_size=1047411 bytes_read=1048576 actual=1047411 ctx_failed=true
+[2026-07-01 10:27:27.557] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=60 file_off=2324074496 io_size=1048576 data_off=2915 data_size=1045661 bytes_read=1048576 actual=1045661 ctx_failed=true
+[2026-07-01 10:27:27.558] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=79 file_off=850268160 io_size=1048576 data_off=1652 data_size=1046924 bytes_read=1048576 actual=1046924 ctx_failed=true
+[2026-07-01 10:27:27.558] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=80 file_off=4816908288 io_size=1048576 data_off=835 data_size=1047741 bytes_read=1048576 actual=1047741 ctx_failed=true
+[2026-07-01 10:27:27.559] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=89 file_off=2334760960 io_size=1048576 data_off=2866 data_size=1045710 bytes_read=1048576 actual=1045710 ctx_failed=true
+[2026-07-01 10:27:27.560] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=93 file_off=860987392 io_size=1048576 data_off=3717 data_size=1044859 bytes_read=1048576 actual=1044859 ctx_failed=true
+[2026-07-01 10:27:27.561] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=101 file_off=4827590656 io_size=1048576 data_off=3125 data_size=1045451 bytes_read=1048576 actual=1045451 ctx_failed=true
+[2026-07-01 10:27:27.561] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=102 file_off=2345451520 io_size=1048576 data_off=898 data_size=1047678 bytes_read=1048576 actual=1047678 ctx_failed=true
+[2026-07-01 10:27:27.563] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=74 file_off=2276044800 io_size=1048576 data_off=3754 data_size=1044822 bytes_read=1048576 actual=1044822 ctx_failed=true
+[2026-07-01 10:27:27.563] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=103 file_off=871710720 io_size=1048576 data_off=99 data_size=1048477 bytes_read=1048576 actual=1048477 ctx_failed=true
+[2026-07-01 10:27:27.563] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=116 file_off=2286731264 io_size=1048576 data_off=2731 data_size=1045845 bytes_read=1048576 actual=1045845 ctx_failed=true
+[2026-07-01 10:27:27.564] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=104 file_off=4838240256 io_size=1048576 data_off=3246 data_size=1045330 bytes_read=1048576 actual=1045330 ctx_failed=true
+[2026-07-01 10:27:27.564] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=124 file_off=2356101120 io_size=1048576 data_off=901 data_size=1047675 bytes_read=1048576 actual=1047675 ctx_failed=true
+[2026-07-01 10:27:27.565] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=125 file_off=882356224 io_size=1048576 data_off=1989 data_size=1046587 bytes_read=1048576 actual=1046587 ctx_failed=true
+[2026-07-01 10:27:27.566] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=119 file_off=2297376768 io_size=1048576 data_off=3550 data_size=1045026 bytes_read=1048576 actual=1045026 ctx_failed=true
+[2026-07-01 10:27:27.566] [warning] [:] uring_reactor: chunk completed with no H2D after retry. slot=5 file_off=4848922624 io_size=1048576 data_off=2700 data_size=1045876 bytes_read=1048576 actual=1045876 ctx_failed=true
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered
+[2026-07-01 10:27:27.600] [warning] [:] uring_reactor: cudaFreeHost failed: an illegal instruction was encountered

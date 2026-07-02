@@ -1475,6 +1475,37 @@ static void SetMarkJoinBuildSwitchRatio(ClientContext& context, SetScope scope, 
                    params->mark_join_build_switch_ratio);
 }
 
+// wdy start
+static void SetJoinOutputRetention(ClientContext& context, SetScope scope, Value& parameter)
+{
+  Config::JOIN_OUTPUT_RETENTION = BooleanValue::Get(parameter);
+  SIRIUS_LOG_DEBUG("Updated config JOIN_OUTPUT_RETENTION to {}",
+                   Config::JOIN_OUTPUT_RETENTION);
+}
+
+static void SetJoinOutputRetentionLimitBytes(ClientContext& context, SetScope scope, Value& parameter)
+{
+  Config::JOIN_OUTPUT_RETENTION_LIMIT_BYTES = UBigIntValue::Get(parameter);
+  SIRIUS_LOG_DEBUG("Updated config JOIN_OUTPUT_RETENTION_LIMIT_BYTES to {}",
+                   Config::JOIN_OUTPUT_RETENTION_LIMIT_BYTES);
+}
+
+static void SetJoinOutputRetentionMaxBatchBytes(ClientContext& context,
+                                                SetScope scope,
+                                                Value& parameter)
+{
+  Config::JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES = UBigIntValue::Get(parameter);
+  SIRIUS_LOG_DEBUG("Updated config JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES to {}",
+                   Config::JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES);
+}
+
+static void SetJoinOutputReuse(ClientContext& context, SetScope scope, Value& parameter)
+{
+  Config::JOIN_OUTPUT_REUSE = BooleanValue::Get(parameter);
+  SIRIUS_LOG_DEBUG("Updated config JOIN_OUTPUT_REUSE to {}", Config::JOIN_OUTPUT_REUSE);
+}
+// wdy end
+
 static void SetEnableGpuExecution(ClientContext& context, SetScope scope, Value& parameter)
 {
   SIRIUS_LOG_DEBUG("Updated gpu_execution to {}", BooleanValue::Get(parameter));
@@ -1656,6 +1687,32 @@ void SiriusExtension::InitialGPUConfigs(DBConfig& config)
     LogicalType::DOUBLE,
     Value::DOUBLE(sirius::operator_params{}.mark_join_build_switch_ratio),
     SetMarkJoinBuildSwitchRatio);
+
+  // wdy start
+  config.AddExtensionOption("join_output_retention",
+                            "Experimental: retain HASH_JOIN output batches after query end",
+                            LogicalType::BOOLEAN,
+                            Value::BOOLEAN(Config::JOIN_OUTPUT_RETENTION),
+                            SetJoinOutputRetention);
+
+  config.AddExtensionOption("join_output_retention_limit_bytes",
+                            "Maximum bytes retained by experimental HASH_JOIN output retention",
+                            LogicalType::UBIGINT,
+                            Value::UBIGINT(Config::JOIN_OUTPUT_RETENTION_LIMIT_BYTES),
+                            SetJoinOutputRetentionLimitBytes);
+
+  config.AddExtensionOption("join_output_retention_max_batch_bytes",
+                            "Maximum single HASH_JOIN output batch retained experimentally",
+                            LogicalType::UBIGINT,
+                            Value::UBIGINT(Config::JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES),
+                            SetJoinOutputRetentionMaxBatchBytes);
+
+  config.AddExtensionOption("join_output_reuse",
+                            "Experimental: reuse retained HASH_JOIN output batches on exact signature hit",
+                            LogicalType::BOOLEAN,
+                            Value::BOOLEAN(Config::JOIN_OUTPUT_REUSE),
+                            SetJoinOutputReuse);
+  // wdy end
 
   config.AddExtensionOption(
     "gpu_execution",

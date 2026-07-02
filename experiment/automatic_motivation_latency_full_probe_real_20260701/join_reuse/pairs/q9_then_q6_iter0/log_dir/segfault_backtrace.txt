@@ -1,0 +1,24 @@
+
+*** SIGSEGV — backtrace from faulting thread ***
+Faulting thread id:1853339
+  #0   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12f0816) [0x7885544f0816]
+  #1   /lib/x86_64-linux-gnu/libc.so.6(+0x45330) [0x788583245330]
+  #2   spdlog::sinks::sink::should_log(spdlog::level::level_enum) const at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libspdlog.so.1(_ZNK6spdlog5sinks4sink10should_logENS_5level10level_enumE+0) [0x788556c52640]
+  #3   spdlog::logger::sink_it_(spdlog::details::log_msg const&) at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libspdlog.so.1(_ZN6spdlog6logger8sink_it_ERKNS_7details7log_msgE+0x44) [0x788556c52694]
+  #4   spdlog::logger::log_it_(spdlog::details::log_msg const&, bool, bool) at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libspdlog.so.1(_ZN6spdlog6logger7log_it_ERKNS_7details7log_msgEbb+0x16) [0x788556c522c6]
+  #5   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12f07bb) [0x7885544f07bb]
+  #6   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12f08ec) [0x7885544f08ec]
+  #7   /lib/x86_64-linux-gnu/libc.so.6(+0x45330) [0x788583245330]
+  #8   /lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x11c) [0x78858329eb2c]
+  #9   /lib/x86_64-linux-gnu/libc.so.6(gsignal+0x1e) [0x78858324527e]
+  #10  /lib/x86_64-linux-gnu/libc.so.6(abort+0xdf) [0x7885832288ff]
+  #11  /lib/x86_64-linux-gnu/libc.so.6(+0x297b6) [0x7885832297b6]
+  #12  /lib/x86_64-linux-gnu/libc.so.6(+0xa8ff5) [0x7885832a8ff5]
+  #13  /lib/x86_64-linux-gnu/libc.so.6(+0xa9b7c) [0x7885832a9b7c]
+  #14  /lib/x86_64-linux-gnu/libc.so.6(+0xa9d2b) [0x7885832a9d2b]
+  #15  /lib/x86_64-linux-gnu/libc.so.6(+0xaada5) [0x7885832aada5]
+  #16  /lib/x86_64-linux-gnu/libc.so.6(+0xab43a) [0x7885832ab43a]
+  #17  /lib/x86_64-linux-gnu/libc.so.6(+0xae021) [0x7885832ae021]
+  #18  /lib/x86_64-linux-gnu/libc.so.6(+0x9c895) [0x78858329c895]
+  #19  /lib/x86_64-linux-gnu/libc.so.6(+0x129c6c) [0x788583329c6c]
+*** end backtrace ***

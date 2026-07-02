@@ -1,0 +1,5 @@
+variant,previous_query,second_query,repeats_completed,second_total_ms_mean,second_total_ms_std,second_load_ms_mean,second_load_ms_std,second_computation_ms_mean,second_computation_ms_std,pair_total_ms_mean,pair_load_ms_mean,pair_computation_ms_mean,second_join_reuse_hit_bytes_mean,reuse_hit_ratio_vs_first_retained_mean
+baseline,q11,q2,3,1564.3486666666668,62.158559356964886,2852.0223333333333,138.39575803590708,0.0,0.0,3137.98,5569.914666666667,0.0,0.0,
+baseline,q2,q11,2,1130.979,43.83779200644127,2565.3225,89.74811398854034,0.0,0.0,3096.6330000000003,5558.619000000001,0.0,0.0,
+join_reuse,q11,q2,3,1511.181,91.85268698845994,2659.1369999999997,245.6793615019383,0.0,0.0,3143.139,5267.697666666667,0.0,0.0,0.0
+join_reuse,q2,q11,1,1253.051,,2864.848,,0.0,,3232.848,5985.557,0.0,0.0,0.0

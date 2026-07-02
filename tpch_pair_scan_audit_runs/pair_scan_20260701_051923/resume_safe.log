@@ -1,0 +1,30 @@
+[FAILED-SKIP] q17_then_q1
+[RUN] q17->q2
+[07:41:37.512] Source:        /mnt/nvme/dataset
+[07:41:37.512] Mode:          sequential
+[07:41:37.512] Iterations:    1
+[07:41:37.512] Engine:        gpu
+[07:41:37.512] Queries:       [17, 2]
+[07:41:37.512] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:41:37.512] Pin:           none
+[07:41:37.512] DuckDB profiling: False
+[07:41:37.512] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q17_then_q2
+[07:41:37.512] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q17_then_q2/csv/runtimes.csv
+[07:41:37.512] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q17_then_q2/log_dir
+[07:41:37.512] Mode 'sequential': single connection per engine, round-robin iterations
+[07:41:37.512] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:41:37.525]   Registering view 'customer' over 1 file(s)
+[07:41:37.528]   Registering view 'lineitem' over 1 file(s)
+[07:41:37.611]   Registering view 'nation' over 1 file(s)
+[07:41:37.612]   Registering view 'orders' over 1 file(s)
+[07:41:37.622]   Registering view 'part' over 1 file(s)
+[07:41:37.624]   Registering view 'partsupp' over 1 file(s)
+[07:41:37.628]   Registering view 'region' over 1 file(s)
+[07:41:37.628]   Registering view 'supplier' over 1 file(s)
+[07:41:37.629] All TPC-H views registered
+[07:41:37.629] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:41:39.907] Sirius extension loaded
+[07:41:39.907] --- q17 iter0 engine=sirius ---
+[07:41:39.907]   SET gpu_execution = true (GPU/sirius)
+[07:41:39.917]   Executing q17 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 12 direction(s); cudaMemcpyPeer* will host-stage automatically.

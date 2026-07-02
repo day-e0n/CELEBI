@@ -1,0 +1,11 @@
+variant,previous_query,second_query,repeat,query_position,query,total_ms,load_ms,computation_ms,join_retained_bytes,join_skipped_bytes,join_cached_bytes,join_reuse_hit_bytes,join_reuse_hit_count,join_reuse_miss_count,benchmark_dir
+baseline,q11,q2,0,1,q11,1645.7630000000001,2731.1530000000002,0.0,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/baseline/pairs/q11_then_q2_iter0
+baseline,q11,q2,0,2,q2,1574.1609999999998,2539.63,0.0,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/baseline/pairs/q11_then_q2_iter0
+baseline,q2,q2,0,1,q2,2070.531,5931.119000000001,0.0,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/baseline/pairs/q2_then_q2_iter0
+baseline,q2,q2,0,2,q2,1544.139,5931.119000000001,0.0,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/baseline/pairs/q2_then_q2_iter0
+join_reuse,q11,q2,0,1,q11,1737.877,2794.207,0.0,655888,235065536,655888,0,0,8,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/join_reuse/pairs/q11_then_q2_iter0
+join_reuse,q11,q2,0,2,q2,1464.203,2865.5099999999998,0.0,36646430,2815666155,36646430,0,0,18,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/join_reuse/pairs/q11_then_q2_iter0
+join_reuse,q2,q11,0,1,q2,1949.1490000000001,3079.166,0.0,36646430,2815666155,36646430,0,0,18,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/join_reuse/pairs/q2_then_q11_iter0
+join_reuse,q2,q11,0,2,q11,1090.415,2657.439,0.0,655888,235065536,655888,0,0,8,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/join_reuse/pairs/q2_then_q11_iter0
+join_reuse,q2,q2,0,1,q2,1989.493,5793.445,0.0,73292860,5631332310,42100615,0,0,36,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/join_reuse/pairs/q2_then_q2_iter0
+join_reuse,q2,q2,0,2,q2,1515.616,5793.445,0.0,73292860,5631332310,42100615,0,0,36,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_join_smoke_20260701/join_reuse/pairs/q2_then_q2_iter0

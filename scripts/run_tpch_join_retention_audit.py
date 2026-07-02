@@ -27,6 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--host-capacity", default="64GB")
     parser.add_argument("--reservation-limit-fraction", default="0.8")
     parser.add_argument("--skip-build", action="store_true")
+    parser.add_argument("--query-dir", type=Path, default=Path("/home/dy1013/queries"), help="Directory containing q1.sql ... q22.sql for semantic JOIN graph analysis")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
@@ -81,7 +82,8 @@ def main() -> int:
     query_root = run_root / "queries"
     stage_summary_dir = run_root / "stage_summary"
     matrix_dir = run_root / "join_retention_matrix"
-    for path in (config_dir, query_root, stage_summary_dir, matrix_dir):
+    semantic_matrix_dir = run_root / "join_semantic_retention_matrix"
+    for path in (config_dir, query_root, stage_summary_dir, matrix_dir, semantic_matrix_dir):
         path.mkdir(parents=True, exist_ok=True)
 
     config_path = config_dir / f"sirius_{args.num_gpus}gpu.yaml"
@@ -100,9 +102,14 @@ Outputs:
 - `join_retention_matrix/join_retention_cost_gb_heatmap.png`
 - `join_retention_matrix/join_reuse_loss_gb_heatmap.png`
 - `join_retention_matrix/join_retention_efficiency_heatmap.png`
+- `join_semantic_retention_matrix/join_semantic_similarity_heatmap.png`
+- `join_semantic_retention_matrix/join_semantic_reuse_gb_heatmap.png`
+- `join_semantic_retention_matrix/join_semantic_useful_retention_cost_gb_heatmap.png`
 
-Method: each query is executed once independently. All ordered query-pair JOIN
-retention matrices are computed from per-query JOIN stage input/output bytes.
+Method: each query is executed once independently. The `join_retention_matrix`
+outputs are byte-capacity upper bounds from per-query JOIN input/output bytes.
+The `join_semantic_retention_matrix` outputs additionally require SQL JOIN graph
+overlap from the query files, so unrelated joins do not receive reuse credit.
 Diagonal cells and queries without JOIN output/input are blank.
 """
     )
@@ -175,10 +182,27 @@ Diagonal cells and queries without JOIN output/input are blank.
     ]
     run(matrix_cmd, env=env, cwd=REPO_ROOT, dry_run=args.dry_run)
 
+    if args.query_dir.is_dir():
+        semantic_matrix_cmd = [
+            "python3",
+            str(REPO_ROOT / "scripts" / "analyze_semantic_join_retention_matrix.py"),
+            "--stage-summary",
+            str(stage_summary_dir / "stage_audit_by_query_stage.csv"),
+            "--query-dir",
+            str(args.query_dir),
+            "--output-dir",
+            str(semantic_matrix_dir),
+        ]
+        run(semantic_matrix_cmd, env=env, cwd=REPO_ROOT, dry_run=args.dry_run)
+    else:
+        print(f"==> WARNING: query dir not found; skipped semantic JOIN matrix: {args.query_dir}")
+
     print(f"==> Done. Output root: {run_root}")
     if failed_rows:
         print("==> Failed queries: " + ", ".join(row["query"] for row in failed_rows))
-    print(f"==> JOIN matrix: {matrix_dir}")
+    print(f"==> JOIN byte upper-bound matrix: {matrix_dir}")
+    if args.query_dir.is_dir():
+        print(f"==> JOIN semantic matrix: {semantic_matrix_dir}")
     return 0
 
 

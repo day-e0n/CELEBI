@@ -42,6 +42,18 @@ class ColumnStats:
     type_name: str
 
 
+# wdy start
+@dataclass(frozen=True)
+class FixedWidthPage:
+    table: str
+    column: str
+    page_id: int
+    bytes: int
+
+
+# wdy end
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, type=Path, help="TPC-H parquet directory")
@@ -67,6 +79,14 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Mask Qi->Qi entries in heatmaps",
     )
+    # wdy start
+    parser.add_argument(
+        "--page-size-mib",
+        type=int,
+        default=64,
+        help="Fixed-width GPU page size used for page-level reuse opportunity estimates.",
+    )
+    # wdy end
     return parser.parse_args()
 
 
@@ -166,6 +186,65 @@ def bytes_for(
     return sum(getattr(stats[key], attr) for key in cols)
 
 
+# wdy start
+def fixed_width_pages_for_column(
+    stat: ColumnStats, metric: str, page_size_bytes: int
+) -> list[FixedWidthPage]:
+    total_bytes = stat.compressed_bytes if metric == "compressed" else stat.uncompressed_bytes
+    if total_bytes <= 0 or page_size_bytes <= 0:
+        return []
+    pages: list[FixedWidthPage] = []
+    page_count = math.ceil(total_bytes / page_size_bytes)
+    for page_id in range(page_count):
+        start = page_id * page_size_bytes
+        page_bytes = min(page_size_bytes, total_bytes - start)
+        pages.append(
+            FixedWidthPage(
+                table=stat.table,
+                column=stat.column,
+                page_id=page_id,
+                bytes=page_bytes,
+            )
+        )
+    return pages
+
+
+def build_fixed_width_page_inventory(
+    stats: dict[tuple[str, str], ColumnStats], metric: str, page_size_bytes: int
+) -> dict[tuple[str, str], list[FixedWidthPage]]:
+    inventory: dict[tuple[str, str], list[FixedWidthPage]] = {}
+    for key, stat in stats.items():
+        if not stat.is_fixed_width:
+            continue
+        inventory[key] = fixed_width_pages_for_column(stat, metric, page_size_bytes)
+    return inventory
+
+
+def query_pages(
+    cols: set[tuple[str, str]], page_inventory: dict[tuple[str, str], list[FixedWidthPage]]
+) -> set[tuple[str, str, int]]:
+    pages: set[tuple[str, str, int]] = set()
+    for table, column in cols:
+        for page in page_inventory.get((table, column), []):
+            pages.add((table, column, page.page_id))
+    return pages
+
+
+def bytes_for_pages(
+    pages: set[tuple[str, str, int]],
+    page_inventory: dict[tuple[str, str], list[FixedWidthPage]],
+) -> int:
+    lookup = {
+        (page.table, page.column, page.page_id): page.bytes
+        for column_pages in page_inventory.values()
+        for page in column_pages
+    }
+    return sum(lookup[page] for page in pages)
+
+
+# wdy end
+
+
 def matrix_to_csv(path: Path, matrix: pd.DataFrame) -> None:
     matrix.to_csv(path, index=True)
 
@@ -215,6 +294,9 @@ def main() -> int:
 
     stats = parquet_column_stats(args.input)
     qcols = query_columns(args.fixed_width_only, stats)
+    # wdy start
+    all_qcols = query_columns(False, stats)
+    # wdy end
     queries = sorted(qcols)
     labels = [f"q{q}" for q in queries]
 
@@ -222,10 +304,32 @@ def main() -> int:
         q: bytes_for(qcols[q], stats, args.metric)
         for q in queries
     }
+    # wdy start
+    page_size_bytes = args.page_size_mib * 1024 * 1024
+    page_inventory = build_fixed_width_page_inventory(stats, args.metric, page_size_bytes)
+    fixed_qcols = query_columns(True, stats)
+    fixed_query_pages = {q: query_pages(fixed_qcols[q], page_inventory) for q in queries}
+    fixed_page_footprints = {
+        q: bytes_for_pages(fixed_query_pages[q], page_inventory) for q in queries
+    }
+    variable_footprints = {
+        q: bytes_for({col for col in all_qcols[q] if not stats[col].is_fixed_width}, stats, args.metric)
+        for q in queries
+    }
+    # wdy end
     records: list[dict[str, object]] = []
+    # wdy start
+    page_records: list[dict[str, object]] = []
+    # wdy end
     overlap_bytes = pd.DataFrame(0.0, index=labels, columns=labels)
     overlap_ratio_next = pd.DataFrame(0.0, index=labels, columns=labels)
     reuse_per_retained = pd.DataFrame(0.0, index=labels, columns=labels)
+    # wdy start
+    fixed_page_overlap_gb = pd.DataFrame(0.0, index=labels, columns=labels)
+    fixed_page_overlap_ratio_next = pd.DataFrame(0.0, index=labels, columns=labels)
+    fixed_page_reuse_per_retained = pd.DataFrame(0.0, index=labels, columns=labels)
+    fixed_page_overlap_count = pd.DataFrame(0.0, index=labels, columns=labels)
+    # wdy end
 
     for qi in queries:
         for qj in queries:
@@ -233,6 +337,12 @@ def main() -> int:
                 overlap_bytes.loc[f"q{qi}", f"q{qj}"] = float("nan")
                 overlap_ratio_next.loc[f"q{qi}", f"q{qj}"] = float("nan")
                 reuse_per_retained.loc[f"q{qi}", f"q{qj}"] = float("nan")
+                # wdy start
+                fixed_page_overlap_gb.loc[f"q{qi}", f"q{qj}"] = float("nan")
+                fixed_page_overlap_ratio_next.loc[f"q{qi}", f"q{qj}"] = float("nan")
+                fixed_page_reuse_per_retained.loc[f"q{qi}", f"q{qj}"] = float("nan")
+                fixed_page_overlap_count.loc[f"q{qi}", f"q{qj}"] = float("nan")
+                # wdy end
                 continue
             overlap_cols = qcols[qi] & qcols[qj]
             overlap = bytes_for(overlap_cols, stats, args.metric)
@@ -254,6 +364,42 @@ def main() -> int:
                     "overlap_columns": " ".join(f"{t}.{c}" for t, c in sorted(overlap_cols)),
                 }
             )
+            # wdy start
+            overlap_pages = fixed_query_pages[qi] & fixed_query_pages[qj]
+            page_overlap = bytes_for_pages(overlap_pages, page_inventory)
+            page_fp_i = fixed_page_footprints[qi]
+            page_fp_j = fixed_page_footprints[qj]
+            fixed_page_overlap_gb.loc[f"q{qi}", f"q{qj}"] = page_overlap / 1e9
+            fixed_page_overlap_ratio_next.loc[f"q{qi}", f"q{qj}"] = (
+                page_overlap / page_fp_j if page_fp_j else 0.0
+            )
+            fixed_page_reuse_per_retained.loc[f"q{qi}", f"q{qj}"] = (
+                page_overlap / page_fp_i if page_fp_i else 0.0
+            )
+            fixed_page_overlap_count.loc[f"q{qi}", f"q{qj}"] = len(overlap_pages)
+            page_records.append(
+                {
+                    "previous_query": f"q{qi}",
+                    "second_query": f"q{qj}",
+                    "page_size_mib": args.page_size_mib,
+                    "fixed_width_overlap_pages": len(overlap_pages),
+                    "fixed_width_overlap_bytes": page_overlap,
+                    "fixed_width_overlap_gb": page_overlap / 1e9,
+                    "second_query_fixed_width_page_footprint_bytes": page_fp_j,
+                    "previous_query_fixed_width_page_footprint_bytes": page_fp_i,
+                    "variable_width_second_query_footprint_bytes": variable_footprints[qj],
+                    "fixed_width_page_overlap_ratio_of_second_query": (
+                        page_overlap / page_fp_j if page_fp_j else 0.0
+                    ),
+                    "fixed_width_page_reuse_benefit_per_retained_footprint": (
+                        page_overlap / page_fp_i if page_fp_i else 0.0
+                    ),
+                    "overlap_pages": " ".join(
+                        f"{t}.{c}:p{pid}" for t, c, pid in sorted(overlap_pages)
+                    ),
+                }
+            )
+            # wdy end
 
     prefix = "fixed_width_" if args.fixed_width_only else "all_columns_"
     metric_prefix = f"{prefix}{args.metric}_"
@@ -272,12 +418,36 @@ def main() -> int:
     ]
     write_long_csv(args.output / "parquet_column_stats.csv", column_rows)
     write_long_csv(args.output / f"{metric_prefix}query_pair_overlap_long.csv", records)
+    # wdy start
+    page_prefix = f"fixed_width_page_{args.page_size_mib}mib_{args.metric}_"
+    page_inventory_rows = [
+        {
+            "table": page.table,
+            "column": page.column,
+            "page_id": page.page_id,
+            "page_size_mib": args.page_size_mib,
+            "bytes": page.bytes,
+            "gb": page.bytes / 1e9,
+        }
+        for pages in page_inventory.values()
+        for page in pages
+    ]
+    write_long_csv(args.output / f"{page_prefix}page_inventory.csv", page_inventory_rows)
+    write_long_csv(args.output / f"{page_prefix}query_pair_page_overlap_long.csv", page_records)
+    # wdy end
     pd.DataFrame(
         [
             {
                 "query": f"q{q}",
                 "footprint_bytes": footprints[q],
                 "footprint_gb": footprints[q] / 1e9,
+                # wdy start
+                "fixed_width_page_footprint_bytes": fixed_page_footprints[q],
+                "fixed_width_page_footprint_gb": fixed_page_footprints[q] / 1e9,
+                "fixed_width_page_count": len(fixed_query_pages[q]),
+                "variable_width_footprint_bytes": variable_footprints[q],
+                "variable_width_footprint_gb": variable_footprints[q] / 1e9,
+                # wdy end
                 "columns": " ".join(f"{t}.{c}" for t, c in sorted(qcols[q])),
             }
             for q in queries
@@ -293,6 +463,18 @@ def main() -> int:
         args.output / f"{metric_prefix}reuse_benefit_per_retained_footprint_matrix.csv",
         reuse_per_retained,
     )
+    # wdy start
+    matrix_to_csv(args.output / f"{page_prefix}overlap_gb_matrix.csv", fixed_page_overlap_gb)
+    matrix_to_csv(
+        args.output / f"{page_prefix}overlap_ratio_of_second_query_matrix.csv",
+        fixed_page_overlap_ratio_next,
+    )
+    matrix_to_csv(
+        args.output / f"{page_prefix}reuse_benefit_per_retained_footprint_matrix.csv",
+        fixed_page_reuse_per_retained,
+    )
+    matrix_to_csv(args.output / f"{page_prefix}overlap_page_count_matrix.csv", fixed_page_overlap_count)
+    # wdy end
 
     plot_heatmap(
         args.output / f"{metric_prefix}overlap_gb_heatmap.png",
@@ -315,6 +497,36 @@ def main() -> int:
         "Overlap / Qi footprint",
         ".2f",
     )
+    # wdy start
+    plot_heatmap(
+        args.output / f"{page_prefix}overlap_gb_heatmap.png",
+        fixed_page_overlap_gb,
+        f"Fixed-width page overlap ({args.metric}, {args.page_size_mib} MiB pages)",
+        "Overlapped fixed-width page GB",
+        ".1f",
+    )
+    plot_heatmap(
+        args.output / f"{page_prefix}overlap_ratio_of_second_query_heatmap.png",
+        fixed_page_overlap_ratio_next,
+        f"Fixed-width page overlap ratio of second query ({args.metric})",
+        "Page overlap / Qj fixed-width footprint",
+        ".2f",
+    )
+    plot_heatmap(
+        args.output / f"{page_prefix}reuse_benefit_per_retained_footprint_heatmap.png",
+        fixed_page_reuse_per_retained,
+        f"Fixed-width page reuse benefit per retained footprint ({args.metric})",
+        "Page overlap / Qi fixed-width footprint",
+        ".2f",
+    )
+    plot_heatmap(
+        args.output / f"{page_prefix}overlap_page_count_heatmap.png",
+        fixed_page_overlap_count,
+        f"Fixed-width overlapped page count ({args.page_size_mib} MiB pages)",
+        "Pages",
+        ".0f",
+    )
+    # wdy end
 
     print(f"wrote heatmaps to {args.output}")
     return 0

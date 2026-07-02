@@ -1,0 +1,952 @@
+[SKIP] q18_then_q1
+[RUN] q18->q2
+[07:48:49.827] Source:        /mnt/nvme/dataset
+[07:48:49.827] Mode:          sequential
+[07:48:49.827] Iterations:    1
+[07:48:49.828] Engine:        gpu
+[07:48:49.828] Queries:       [18, 2]
+[07:48:49.828] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:48:49.828] Pin:           none
+[07:48:49.828] DuckDB profiling: False
+[07:48:49.828] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q2
+[07:48:49.828] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q2/csv/runtimes.csv
+[07:48:49.828] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q2/log_dir
+[07:48:49.828] Mode 'sequential': single connection per engine, round-robin iterations
+[07:48:49.828] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:48:49.837]   Registering view 'customer' over 1 file(s)
+[07:48:49.839]   Registering view 'lineitem' over 1 file(s)
+[07:48:49.912]   Registering view 'nation' over 1 file(s)
+[07:48:49.912]   Registering view 'orders' over 1 file(s)
+[07:48:49.922]   Registering view 'part' over 1 file(s)
+[07:48:49.924]   Registering view 'partsupp' over 1 file(s)
+[07:48:49.927]   Registering view 'region' over 1 file(s)
+[07:48:49.927]   Registering view 'supplier' over 1 file(s)
+[07:48:49.928] All TPC-H views registered
+[07:48:49.928] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:48:52.668] Sirius extension loaded
+[07:48:52.668] --- q18 iter0 engine=sirius ---
+[07:48:52.668]   SET gpu_execution = true (GPU/sirius)
+[07:48:52.679]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 6 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:48:55.384] Closing connection
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 779, in <module>
+    main()
+    ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 755, in main
+    RUNNERS[args.mode](
+    ~~~~~~~~~~~~~~~~~~^
+        source,
+        ^^^^^^^
+    ...<7 lines>...
+        duckdb_profiling=args.duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 402, in run_sequential
+    _run_one(
+    ~~~~~~~~^
+        writer,
+        ^^^^^^^
+    ...<6 lines>...
+        duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 326, in _run_one
+    elapsed, rows = time_query(con, qnum, use_gpu, profile_path=profile_path)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 292, in time_query
+    rows = con.execute(QUERIES[f"q{qnum}"]).fetchall()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+_duckdb.InternalException: INTERNAL Error: Sirius GPU execution failed: Invalid Error: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/build/_deps/cccl-src/lib/cmake/libcudacxx/../../../libcudacxx/include/cuda/__driver/driver_api.h:664 an illegal instruction was encountered(715): Failed to synchronize a stream
+
+Stack Trace:
+
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e0ba) [0x718fe2f5e0ba]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e1c3) [0x718fe2f5e1c3]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x2161522) [0x718fe2f61522]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12ec48a) [0x718fe20ec48a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor15FetchFromSourceERNS_9DataChunkE+0x8b) [0x71900f4d454b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor7ExecuteEm+0xed) [0x71900f4dfc5d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12PipelineTask11ExecuteTaskENS_17TaskExecutionModeE+0x183) [0x71900f4e0073]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12ExecutorTask7ExecuteENS_17TaskExecutionModeE+0xff) [0x71900f4d624f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8Executor11ExecuteTaskEb+0x8a) [0x71900f4e173a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb13ClientContext19ExecuteTaskInternalERNS_17ClientContextLockERNS_15BaseQueryResultEb+0x62) [0x71900f4b8a12]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18PendingQueryResult11ExecuteTaskEv+0x43) [0x71900f4b8c43]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection20CompletePendingQueryERNS_18PendingQueryResultE+0x64) [0x71900da21c04]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc240ff) [0x71900da240ff]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc4a7d3) [0x71900da4a7d3]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc3e5fb) [0x71900da3e5fb]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbaa534) [0x71900d9aa534]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyObject_Vectorcall+0x2e) [0x622004b04b7e]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(_PyEval_EvalFrameDefault+0xccb) [0x622004b16d8b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x1d5e88) [0x622004b12e88]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyEval_EvalCode+0xb5) [0x622004bef645]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f459d) [0x622004c3159d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f3818) [0x622004c30818]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f337f) [0x622004c3037f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f2fcd) [0x622004c2ffcd]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_RunMain+0x2b9) [0x622004bde959]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_BytesMain+0x37) [0x622004bd8ba7]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x71901142a1ca]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x71901142a28b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x29af7a) [0x622004bd7f7a]
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/stable/dev/internal_errors
+[FAILED] q18_then_q2
+[RUN] q18->q3
+[07:48:58.647] Source:        /mnt/nvme/dataset
+[07:48:58.647] Mode:          sequential
+[07:48:58.647] Iterations:    1
+[07:48:58.647] Engine:        gpu
+[07:48:58.647] Queries:       [18, 3]
+[07:48:58.647] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:48:58.647] Pin:           none
+[07:48:58.647] DuckDB profiling: False
+[07:48:58.647] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q3
+[07:48:58.647] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q3/csv/runtimes.csv
+[07:48:58.647] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q3/log_dir
+[07:48:58.648] Mode 'sequential': single connection per engine, round-robin iterations
+[07:48:58.648] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:48:58.656]   Registering view 'customer' over 1 file(s)
+[07:48:58.658]   Registering view 'lineitem' over 1 file(s)
+[07:48:58.736]   Registering view 'nation' over 1 file(s)
+[07:48:58.736]   Registering view 'orders' over 1 file(s)
+[07:48:58.746]   Registering view 'part' over 1 file(s)
+[07:48:58.748]   Registering view 'partsupp' over 1 file(s)
+[07:48:58.751]   Registering view 'region' over 1 file(s)
+[07:48:58.752]   Registering view 'supplier' over 1 file(s)
+[07:48:58.752] All TPC-H views registered
+[07:48:58.752] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:49:00.941] Sirius extension loaded
+[07:49:00.942] --- q18 iter0 engine=sirius ---
+[07:49:00.942]   SET gpu_execution = true (GPU/sirius)
+[07:49:00.952]   Executing q18 on GPU/sirius…
+[07:49:06.099]   q18 fetched 100 rows in 5.1468s
+[07:49:06.099] [sirius] q18 iter0: 5.1468s
+[07:49:06.100] --- q3 iter0 engine=sirius ---
+[07:49:06.100]   SET gpu_execution = true (GPU/sirius)
+[07:49:06.118]   Executing q3 on GPU/sirius…
+[07:49:09.760]   q3 fetched 10 rows in 3.6417s
+[07:49:09.760] [sirius] q3 iter0: 3.6417s
+[07:49:09.761] Closing connection
+[07:49:12.041] Benchmark run complete
+[07:49:12.041] Splitting /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q3/log_dir/sirius_2026-07-01.log per query
+[07:49:12.042] WARNING: expected 2 QueryBegin lines in /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q3/log_dir/sirius_2026-07-01.log, found 4; skipping per-query log split
+[OK] q18_then_q3
+[RUN] q18->q4
+[07:49:13.343] Source:        /mnt/nvme/dataset
+[07:49:13.343] Mode:          sequential
+[07:49:13.343] Iterations:    1
+[07:49:13.343] Engine:        gpu
+[07:49:13.343] Queries:       [18, 4]
+[07:49:13.344] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:49:13.344] Pin:           none
+[07:49:13.344] DuckDB profiling: False
+[07:49:13.344] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q4
+[07:49:13.344] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q4/csv/runtimes.csv
+[07:49:13.344] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q4/log_dir
+[07:49:13.344] Mode 'sequential': single connection per engine, round-robin iterations
+[07:49:13.344] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:49:13.353]   Registering view 'customer' over 1 file(s)
+[07:49:13.355]   Registering view 'lineitem' over 1 file(s)
+[07:49:13.430]   Registering view 'nation' over 1 file(s)
+[07:49:13.430]   Registering view 'orders' over 1 file(s)
+[07:49:13.439]   Registering view 'part' over 1 file(s)
+[07:49:13.440]   Registering view 'partsupp' over 1 file(s)
+[07:49:13.444]   Registering view 'region' over 1 file(s)
+[07:49:13.444]   Registering view 'supplier' over 1 file(s)
+[07:49:13.445] All TPC-H views registered
+[07:49:13.445] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:49:15.609] Sirius extension loaded
+[07:49:15.609] --- q18 iter0 engine=sirius ---
+[07:49:15.609]   SET gpu_execution = true (GPU/sirius)
+[07:49:15.619]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 6 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:49:18.313] Closing connection
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 779, in <module>
+    main()
+    ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 755, in main
+    RUNNERS[args.mode](
+    ~~~~~~~~~~~~~~~~~~^
+        source,
+        ^^^^^^^
+    ...<7 lines>...
+        duckdb_profiling=args.duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 402, in run_sequential
+    _run_one(
+    ~~~~~~~~^
+        writer,
+        ^^^^^^^
+    ...<6 lines>...
+        duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 326, in _run_one
+    elapsed, rows = time_query(con, qnum, use_gpu, profile_path=profile_path)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 292, in time_query
+    rows = con.execute(QUERIES[f"q{qnum}"]).fetchall()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+_duckdb.InternalException: INTERNAL Error: Sirius GPU execution failed: Invalid Error: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/build/_deps/cccl-src/lib/cmake/libcudacxx/../../../libcudacxx/include/cuda/__driver/driver_api.h:664 an illegal instruction was encountered(715): Failed to synchronize a stream
+
+Stack Trace:
+
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e0ba) [0x758e0ef5e0ba]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e1c3) [0x758e0ef5e1c3]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x2161522) [0x758e0ef61522]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12ec48a) [0x758e0e0ec48a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor15FetchFromSourceERNS_9DataChunkE+0x8b) [0x758e3aed454b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor7ExecuteEm+0xed) [0x758e3aedfc5d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12PipelineTask11ExecuteTaskENS_17TaskExecutionModeE+0x183) [0x758e3aee0073]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12ExecutorTask7ExecuteENS_17TaskExecutionModeE+0xff) [0x758e3aed624f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8Executor11ExecuteTaskEb+0x8a) [0x758e3aee173a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb13ClientContext19ExecuteTaskInternalERNS_17ClientContextLockERNS_15BaseQueryResultEb+0x62) [0x758e3aeb8a12]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18PendingQueryResult11ExecuteTaskEv+0x43) [0x758e3aeb8c43]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection20CompletePendingQueryERNS_18PendingQueryResultE+0x64) [0x758e39421c04]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc240ff) [0x758e394240ff]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc4a7d3) [0x758e3944a7d3]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc3e5fb) [0x758e3943e5fb]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbaa534) [0x758e393aa534]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyObject_Vectorcall+0x2e) [0x5d0484f20b7e]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(_PyEval_EvalFrameDefault+0xccb) [0x5d0484f32d8b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x1d5e88) [0x5d0484f2ee88]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyEval_EvalCode+0xb5) [0x5d048500b645]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f459d) [0x5d048504d59d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f3818) [0x5d048504c818]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f337f) [0x5d048504c37f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f2fcd) [0x5d048504bfcd]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_RunMain+0x2b9) [0x5d0484ffa959]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_BytesMain+0x37) [0x5d0484ff4ba7]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x758e3ce2a1ca]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x758e3ce2a28b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x29af7a) [0x5d0484ff3f7a]
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/stable/dev/internal_errors
+[FAILED] q18_then_q4
+[RUN] q18->q5
+[07:49:21.573] Source:        /mnt/nvme/dataset
+[07:49:21.573] Mode:          sequential
+[07:49:21.573] Iterations:    1
+[07:49:21.573] Engine:        gpu
+[07:49:21.573] Queries:       [18, 5]
+[07:49:21.573] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:49:21.573] Pin:           none
+[07:49:21.573] DuckDB profiling: False
+[07:49:21.573] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q5
+[07:49:21.573] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q5/csv/runtimes.csv
+[07:49:21.573] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q5/log_dir
+[07:49:21.573] Mode 'sequential': single connection per engine, round-robin iterations
+[07:49:21.573] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:49:21.581]   Registering view 'customer' over 1 file(s)
+[07:49:21.584]   Registering view 'lineitem' over 1 file(s)
+[07:49:21.662]   Registering view 'nation' over 1 file(s)
+[07:49:21.662]   Registering view 'orders' over 1 file(s)
+[07:49:21.672]   Registering view 'part' over 1 file(s)
+[07:49:21.674]   Registering view 'partsupp' over 1 file(s)
+[07:49:21.677]   Registering view 'region' over 1 file(s)
+[07:49:21.678]   Registering view 'supplier' over 1 file(s)
+[07:49:21.678] All TPC-H views registered
+[07:49:21.678] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:49:23.895] Sirius extension loaded
+[07:49:23.895] --- q18 iter0 engine=sirius ---
+[07:49:23.895]   SET gpu_execution = true (GPU/sirius)
+[07:49:23.905]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 6 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:49:26.571] Closing connection
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 779, in <module>
+    main()
+    ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 755, in main
+    RUNNERS[args.mode](
+    ~~~~~~~~~~~~~~~~~~^
+        source,
+        ^^^^^^^
+    ...<7 lines>...
+        duckdb_profiling=args.duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 402, in run_sequential
+    _run_one(
+    ~~~~~~~~^
+        writer,
+        ^^^^^^^
+    ...<6 lines>...
+        duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 326, in _run_one
+    elapsed, rows = time_query(con, qnum, use_gpu, profile_path=profile_path)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 292, in time_query
+    rows = con.execute(QUERIES[f"q{qnum}"]).fetchall()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+_duckdb.InternalException: INTERNAL Error: Sirius GPU execution failed: Invalid Error: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/build/_deps/cccl-src/lib/cmake/libcudacxx/../../../libcudacxx/include/cuda/__driver/driver_api.h:664 an illegal instruction was encountered(715): Failed to synchronize a stream
+
+Stack Trace:
+
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e0ba) [0x7700d715e0ba]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e1c3) [0x7700d715e1c3]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x2161522) [0x7700d7161522]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12ec48a) [0x7700d62ec48a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor15FetchFromSourceERNS_9DataChunkE+0x8b) [0x770108cd454b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor7ExecuteEm+0xed) [0x770108cdfc5d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12PipelineTask11ExecuteTaskENS_17TaskExecutionModeE+0x183) [0x770108ce0073]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12ExecutorTask7ExecuteENS_17TaskExecutionModeE+0xff) [0x770108cd624f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8Executor11ExecuteTaskEb+0x8a) [0x770108ce173a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb13ClientContext19ExecuteTaskInternalERNS_17ClientContextLockERNS_15BaseQueryResultEb+0x62) [0x770108cb8a12]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18PendingQueryResult11ExecuteTaskEv+0x43) [0x770108cb8c43]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection20CompletePendingQueryERNS_18PendingQueryResultE+0x64) [0x770107221c04]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc240ff) [0x7701072240ff]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc4a7d3) [0x77010724a7d3]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc3e5fb) [0x77010723e5fb]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbaa534) [0x7701071aa534]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyObject_Vectorcall+0x2e) [0x61bbc87a0b7e]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(_PyEval_EvalFrameDefault+0xccb) [0x61bbc87b2d8b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x1d5e88) [0x61bbc87aee88]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyEval_EvalCode+0xb5) [0x61bbc888b645]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f459d) [0x61bbc88cd59d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f3818) [0x61bbc88cc818]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f337f) [0x61bbc88cc37f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f2fcd) [0x61bbc88cbfcd]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_RunMain+0x2b9) [0x61bbc887a959]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_BytesMain+0x37) [0x61bbc8874ba7]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x77010ac2a1ca]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x77010ac2a28b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x29af7a) [0x61bbc8873f7a]
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/stable/dev/internal_errors
+[FAILED] q18_then_q5
+[RUN] q18->q6
+[07:49:29.816] Source:        /mnt/nvme/dataset
+[07:49:29.817] Mode:          sequential
+[07:49:29.817] Iterations:    1
+[07:49:29.817] Engine:        gpu
+[07:49:29.817] Queries:       [18, 6]
+[07:49:29.817] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:49:29.817] Pin:           none
+[07:49:29.817] DuckDB profiling: False
+[07:49:29.817] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q6
+[07:49:29.817] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q6/csv/runtimes.csv
+[07:49:29.817] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q6/log_dir
+[07:49:29.817] Mode 'sequential': single connection per engine, round-robin iterations
+[07:49:29.817] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:49:29.826]   Registering view 'customer' over 1 file(s)
+[07:49:29.828]   Registering view 'lineitem' over 1 file(s)
+[07:49:29.908]   Registering view 'nation' over 1 file(s)
+[07:49:29.908]   Registering view 'orders' over 1 file(s)
+[07:49:29.918]   Registering view 'part' over 1 file(s)
+[07:49:29.920]   Registering view 'partsupp' over 1 file(s)
+[07:49:29.923]   Registering view 'region' over 1 file(s)
+[07:49:29.924]   Registering view 'supplier' over 1 file(s)
+[07:49:29.924] All TPC-H views registered
+[07:49:29.924] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:49:32.146] Sirius extension loaded
+[07:49:32.146] --- q18 iter0 engine=sirius ---
+[07:49:32.146]   SET gpu_execution = true (GPU/sirius)
+[07:49:32.156]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 6 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:49:34.800] Closing connection
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 779, in <module>
+    main()
+    ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 755, in main
+    RUNNERS[args.mode](
+    ~~~~~~~~~~~~~~~~~~^
+        source,
+        ^^^^^^^
+    ...<7 lines>...
+        duckdb_profiling=args.duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 402, in run_sequential
+    _run_one(
+    ~~~~~~~~^
+        writer,
+        ^^^^^^^
+    ...<6 lines>...
+        duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 326, in _run_one
+    elapsed, rows = time_query(con, qnum, use_gpu, profile_path=profile_path)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 292, in time_query
+    rows = con.execute(QUERIES[f"q{qnum}"]).fetchall()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+_duckdb.InternalException: INTERNAL Error: Sirius GPU execution failed: Invalid Error: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/build/_deps/cccl-src/lib/cmake/libcudacxx/../../../libcudacxx/include/cuda/__driver/driver_api.h:664 an illegal instruction was encountered(715): Failed to synchronize a stream
+
+Stack Trace:
+
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e0ba) [0x738d8715e0ba]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e1c3) [0x738d8715e1c3]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x2161522) [0x738d87161522]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12ec48a) [0x738d862ec48a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor15FetchFromSourceERNS_9DataChunkE+0x8b) [0x738db8cd454b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor7ExecuteEm+0xed) [0x738db8cdfc5d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12PipelineTask11ExecuteTaskENS_17TaskExecutionModeE+0x183) [0x738db8ce0073]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12ExecutorTask7ExecuteENS_17TaskExecutionModeE+0xff) [0x738db8cd624f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8Executor11ExecuteTaskEb+0x8a) [0x738db8ce173a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb13ClientContext19ExecuteTaskInternalERNS_17ClientContextLockERNS_15BaseQueryResultEb+0x62) [0x738db8cb8a12]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18PendingQueryResult11ExecuteTaskEv+0x43) [0x738db8cb8c43]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection20CompletePendingQueryERNS_18PendingQueryResultE+0x64) [0x738db7221c04]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc240ff) [0x738db72240ff]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc4a7d3) [0x738db724a7d3]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc3e5fb) [0x738db723e5fb]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbaa534) [0x738db71aa534]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyObject_Vectorcall+0x2e) [0x5f978dc1eb7e]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(_PyEval_EvalFrameDefault+0xccb) [0x5f978dc30d8b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x1d5e88) [0x5f978dc2ce88]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyEval_EvalCode+0xb5) [0x5f978dd09645]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f459d) [0x5f978dd4b59d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f3818) [0x5f978dd4a818]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f337f) [0x5f978dd4a37f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f2fcd) [0x5f978dd49fcd]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_RunMain+0x2b9) [0x5f978dcf8959]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_BytesMain+0x37) [0x5f978dcf2ba7]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x738dbac2a1ca]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x738dbac2a28b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x29af7a) [0x5f978dcf1f7a]
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/stable/dev/internal_errors
+[FAILED] q18_then_q6
+[RUN] q18->q7
+[07:49:38.133] Source:        /mnt/nvme/dataset
+[07:49:38.133] Mode:          sequential
+[07:49:38.133] Iterations:    1
+[07:49:38.133] Engine:        gpu
+[07:49:38.133] Queries:       [18, 7]
+[07:49:38.133] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:49:38.133] Pin:           none
+[07:49:38.133] DuckDB profiling: False
+[07:49:38.133] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q7
+[07:49:38.134] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q7/csv/runtimes.csv
+[07:49:38.134] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q7/log_dir
+[07:49:38.134] Mode 'sequential': single connection per engine, round-robin iterations
+[07:49:38.134] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:49:38.142]   Registering view 'customer' over 1 file(s)
+[07:49:38.144]   Registering view 'lineitem' over 1 file(s)
+[07:49:38.225]   Registering view 'nation' over 1 file(s)
+[07:49:38.225]   Registering view 'orders' over 1 file(s)
+[07:49:38.235]   Registering view 'part' over 1 file(s)
+[07:49:38.236]   Registering view 'partsupp' over 1 file(s)
+[07:49:38.239]   Registering view 'region' over 1 file(s)
+[07:49:38.240]   Registering view 'supplier' over 1 file(s)
+[07:49:38.240] All TPC-H views registered
+[07:49:38.240] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:49:40.368] Sirius extension loaded
+[07:49:40.368] --- q18 iter0 engine=sirius ---
+[07:49:40.368]   SET gpu_execution = true (GPU/sirius)
+[07:49:40.378]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 3 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:49:43.012] Closing connection
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 779, in <module>
+    main()
+    ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 755, in main
+    RUNNERS[args.mode](
+    ~~~~~~~~~~~~~~~~~~^
+        source,
+        ^^^^^^^
+    ...<7 lines>...
+        duckdb_profiling=args.duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 402, in run_sequential
+    _run_one(
+    ~~~~~~~~^
+        writer,
+        ^^^^^^^
+    ...<6 lines>...
+        duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 326, in _run_one
+    elapsed, rows = time_query(con, qnum, use_gpu, profile_path=profile_path)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 292, in time_query
+    rows = con.execute(QUERIES[f"q{qnum}"]).fetchall()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+_duckdb.InternalException: INTERNAL Error: Sirius GPU execution failed: Invalid Error: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/build/_deps/cccl-src/lib/cmake/libcudacxx/../../../libcudacxx/include/cuda/__driver/driver_api.h:664 an illegal instruction was encountered(715): Failed to synchronize a stream
+
+Stack Trace:
+
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e0ba) [0x7475eb15e0ba]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e1c3) [0x7475eb15e1c3]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x2161522) [0x7475eb161522]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12ec48a) [0x7475ea2ec48a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor15FetchFromSourceERNS_9DataChunkE+0x8b) [0x74761e0d454b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor7ExecuteEm+0xed) [0x74761e0dfc5d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12PipelineTask11ExecuteTaskENS_17TaskExecutionModeE+0x183) [0x74761e0e0073]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12ExecutorTask7ExecuteENS_17TaskExecutionModeE+0xff) [0x74761e0d624f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8Executor11ExecuteTaskEb+0x8a) [0x74761e0e173a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb13ClientContext19ExecuteTaskInternalERNS_17ClientContextLockERNS_15BaseQueryResultEb+0x62) [0x74761e0b8a12]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18PendingQueryResult11ExecuteTaskEv+0x43) [0x74761e0b8c43]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection20CompletePendingQueryERNS_18PendingQueryResultE+0x64) [0x74761c621c04]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc240ff) [0x74761c6240ff]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc4a7d3) [0x74761c64a7d3]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc3e5fb) [0x74761c63e5fb]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbaa534) [0x74761c5aa534]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyObject_Vectorcall+0x2e) [0x5b88cd571b7e]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(_PyEval_EvalFrameDefault+0xccb) [0x5b88cd583d8b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x1d5e88) [0x5b88cd57fe88]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyEval_EvalCode+0xb5) [0x5b88cd65c645]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f459d) [0x5b88cd69e59d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f3818) [0x5b88cd69d818]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f337f) [0x5b88cd69d37f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f2fcd) [0x5b88cd69cfcd]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_RunMain+0x2b9) [0x5b88cd64b959]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_BytesMain+0x37) [0x5b88cd645ba7]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x74762002a1ca]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x74762002a28b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x29af7a) [0x5b88cd644f7a]
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/stable/dev/internal_errors
+[FAILED] q18_then_q7
+[RUN] q18->q8
+[07:49:46.325] Source:        /mnt/nvme/dataset
+[07:49:46.325] Mode:          sequential
+[07:49:46.325] Iterations:    1
+[07:49:46.325] Engine:        gpu
+[07:49:46.325] Queries:       [18, 8]
+[07:49:46.325] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:49:46.325] Pin:           none
+[07:49:46.325] DuckDB profiling: False
+[07:49:46.325] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q8
+[07:49:46.325] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q8/csv/runtimes.csv
+[07:49:46.325] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q8/log_dir
+[07:49:46.326] Mode 'sequential': single connection per engine, round-robin iterations
+[07:49:46.326] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:49:46.333]   Registering view 'customer' over 1 file(s)
+[07:49:46.335]   Registering view 'lineitem' over 1 file(s)
+[07:49:46.412]   Registering view 'nation' over 1 file(s)
+[07:49:46.412]   Registering view 'orders' over 1 file(s)
+[07:49:46.422]   Registering view 'part' over 1 file(s)
+[07:49:46.424]   Registering view 'partsupp' over 1 file(s)
+[07:49:46.427]   Registering view 'region' over 1 file(s)
+[07:49:46.427]   Registering view 'supplier' over 1 file(s)
+[07:49:46.428] All TPC-H views registered
+[07:49:46.428] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:49:48.682] Sirius extension loaded
+[07:49:48.682] --- q18 iter0 engine=sirius ---
+[07:49:48.682]   SET gpu_execution = true (GPU/sirius)
+[07:49:48.692]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 3 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:49:51.375] Closing connection
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 779, in <module>
+    main()
+    ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 755, in main
+    RUNNERS[args.mode](
+    ~~~~~~~~~~~~~~~~~~^
+        source,
+        ^^^^^^^
+    ...<7 lines>...
+        duckdb_profiling=args.duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 402, in run_sequential
+    _run_one(
+    ~~~~~~~~^
+        writer,
+        ^^^^^^^
+    ...<6 lines>...
+        duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 326, in _run_one
+    elapsed, rows = time_query(con, qnum, use_gpu, profile_path=profile_path)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 292, in time_query
+    rows = con.execute(QUERIES[f"q{qnum}"]).fetchall()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+_duckdb.InternalException: INTERNAL Error: Sirius GPU execution failed: Invalid Error: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/build/_deps/cccl-src/lib/cmake/libcudacxx/../../../libcudacxx/include/cuda/__driver/driver_api.h:664 an illegal instruction was encountered(715): Failed to synchronize a stream
+
+Stack Trace:
+
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e0ba) [0x7db2d715e0ba]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e1c3) [0x7db2d715e1c3]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x2161522) [0x7db2d7161522]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12ec48a) [0x7db2d62ec48a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor15FetchFromSourceERNS_9DataChunkE+0x8b) [0x7db309ad454b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor7ExecuteEm+0xed) [0x7db309adfc5d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12PipelineTask11ExecuteTaskENS_17TaskExecutionModeE+0x183) [0x7db309ae0073]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12ExecutorTask7ExecuteENS_17TaskExecutionModeE+0xff) [0x7db309ad624f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8Executor11ExecuteTaskEb+0x8a) [0x7db309ae173a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb13ClientContext19ExecuteTaskInternalERNS_17ClientContextLockERNS_15BaseQueryResultEb+0x62) [0x7db309ab8a12]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18PendingQueryResult11ExecuteTaskEv+0x43) [0x7db309ab8c43]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection20CompletePendingQueryERNS_18PendingQueryResultE+0x64) [0x7db308021c04]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc240ff) [0x7db3080240ff]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc4a7d3) [0x7db30804a7d3]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc3e5fb) [0x7db30803e5fb]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbaa534) [0x7db307faa534]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyObject_Vectorcall+0x2e) [0x623dbc6c2b7e]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(_PyEval_EvalFrameDefault+0xccb) [0x623dbc6d4d8b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x1d5e88) [0x623dbc6d0e88]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyEval_EvalCode+0xb5) [0x623dbc7ad645]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f459d) [0x623dbc7ef59d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f3818) [0x623dbc7ee818]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f337f) [0x623dbc7ee37f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f2fcd) [0x623dbc7edfcd]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_RunMain+0x2b9) [0x623dbc79c959]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_BytesMain+0x37) [0x623dbc796ba7]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x7db30ba2a1ca]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x7db30ba2a28b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x29af7a) [0x623dbc795f7a]
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/stable/dev/internal_errors
+[FAILED] q18_then_q8
+[RUN] q18->q9
+[07:49:54.708] Source:        /mnt/nvme/dataset
+[07:49:54.708] Mode:          sequential
+[07:49:54.708] Iterations:    1
+[07:49:54.708] Engine:        gpu
+[07:49:54.708] Queries:       [18, 9]
+[07:49:54.708] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:49:54.708] Pin:           none
+[07:49:54.708] DuckDB profiling: False
+[07:49:54.708] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q9
+[07:49:54.708] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q9/csv/runtimes.csv
+[07:49:54.708] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q9/log_dir
+[07:49:54.708] Mode 'sequential': single connection per engine, round-robin iterations
+[07:49:54.709] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:49:54.717]   Registering view 'customer' over 1 file(s)
+[07:49:54.719]   Registering view 'lineitem' over 1 file(s)
+[07:49:54.797]   Registering view 'nation' over 1 file(s)
+[07:49:54.798]   Registering view 'orders' over 1 file(s)
+[07:49:54.806]   Registering view 'part' over 1 file(s)
+[07:49:54.807]   Registering view 'partsupp' over 1 file(s)
+[07:49:54.810]   Registering view 'region' over 1 file(s)
+[07:49:54.811]   Registering view 'supplier' over 1 file(s)
+[07:49:54.811] All TPC-H views registered
+[07:49:54.811] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:49:57.050] Sirius extension loaded
+[07:49:57.050] --- q18 iter0 engine=sirius ---
+[07:49:57.050]   SET gpu_execution = true (GPU/sirius)
+[07:49:57.060]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 9 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:49:59.665] Closing connection
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 779, in <module>
+    main()
+    ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 755, in main
+    RUNNERS[args.mode](
+    ~~~~~~~~~~~~~~~~~~^
+        source,
+        ^^^^^^^
+    ...<7 lines>...
+        duckdb_profiling=args.duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 402, in run_sequential
+    _run_one(
+    ~~~~~~~~^
+        writer,
+        ^^^^^^^
+    ...<6 lines>...
+        duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 326, in _run_one
+    elapsed, rows = time_query(con, qnum, use_gpu, profile_path=profile_path)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 292, in time_query
+    rows = con.execute(QUERIES[f"q{qnum}"]).fetchall()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+_duckdb.InternalException: INTERNAL Error: Sirius GPU execution failed: Invalid Error: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+
+Stack Trace:
+
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e0ba) [0x7ffa0675e0ba]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e1c3) [0x7ffa0675e1c3]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x2161522) [0x7ffa06761522]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12ec48a) [0x7ffa058ec48a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor15FetchFromSourceERNS_9DataChunkE+0x8b) [0x7ffa36ed454b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor7ExecuteEm+0xed) [0x7ffa36edfc5d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12PipelineTask11ExecuteTaskENS_17TaskExecutionModeE+0x183) [0x7ffa36ee0073]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12ExecutorTask7ExecuteENS_17TaskExecutionModeE+0xff) [0x7ffa36ed624f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8Executor11ExecuteTaskEb+0x8a) [0x7ffa36ee173a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb13ClientContext19ExecuteTaskInternalERNS_17ClientContextLockERNS_15BaseQueryResultEb+0x62) [0x7ffa36eb8a12]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18PendingQueryResult11ExecuteTaskEv+0x43) [0x7ffa36eb8c43]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection20CompletePendingQueryERNS_18PendingQueryResultE+0x64) [0x7ffa35421c04]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc240ff) [0x7ffa354240ff]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc4a7d3) [0x7ffa3544a7d3]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc3e5fb) [0x7ffa3543e5fb]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbaa534) [0x7ffa353aa534]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyObject_Vectorcall+0x2e) [0x58f19e26fb7e]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(_PyEval_EvalFrameDefault+0xccb) [0x58f19e281d8b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x1d5e88) [0x58f19e27de88]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyEval_EvalCode+0xb5) [0x58f19e35a645]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f459d) [0x58f19e39c59d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f3818) [0x58f19e39b818]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f337f) [0x58f19e39b37f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f2fcd) [0x58f19e39afcd]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_RunMain+0x2b9) [0x58f19e349959]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_BytesMain+0x37) [0x58f19e343ba7]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x7ffa3902a1ca]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x7ffa3902a28b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x29af7a) [0x58f19e342f7a]
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/stable/dev/internal_errors
+[FAILED] q18_then_q9
+[RUN] q18->q10
+[07:50:03.002] Source:        /mnt/nvme/dataset
+[07:50:03.002] Mode:          sequential
+[07:50:03.002] Iterations:    1
+[07:50:03.002] Engine:        gpu
+[07:50:03.002] Queries:       [18, 10]
+[07:50:03.002] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:50:03.002] Pin:           none
+[07:50:03.002] DuckDB profiling: False
+[07:50:03.002] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q10
+[07:50:03.002] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q10/csv/runtimes.csv
+[07:50:03.002] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q10/log_dir
+[07:50:03.002] Mode 'sequential': single connection per engine, round-robin iterations
+[07:50:03.002] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:50:03.011]   Registering view 'customer' over 1 file(s)
+[07:50:03.014]   Registering view 'lineitem' over 1 file(s)
+[07:50:03.095]   Registering view 'nation' over 1 file(s)
+[07:50:03.095]   Registering view 'orders' over 1 file(s)
+[07:50:03.105]   Registering view 'part' over 1 file(s)
+[07:50:03.107]   Registering view 'partsupp' over 1 file(s)
+[07:50:03.110]   Registering view 'region' over 1 file(s)
+[07:50:03.110]   Registering view 'supplier' over 1 file(s)
+[07:50:03.111] All TPC-H views registered
+[07:50:03.111] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:50:05.340] Sirius extension loaded
+[07:50:05.340] --- q18 iter0 engine=sirius ---
+[07:50:05.340]   SET gpu_execution = true (GPU/sirius)
+[07:50:05.350]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 6 direction(s); cudaMemcpyPeer* will host-stage automatically.
+terminate called after throwing an instance of 'cuco::cuda_error'
+  what():  CUDA error at: /tmp/conda-bld-output/bld/rattler-build_libcudf/work/cpp/build/_deps/cuco-src/include/cuco/detail/storage/bucket_storage.inl156: cudaErrorIllegalInstruction an illegal instruction was encountered
+
+*** SIGABRT — backtrace from faulting thread ***
+Faulting thread id:661806
+  #0   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12f0816) [0x7c86918f0816]
+  #1   /lib/x86_64-linux-gnu/libc.so.6(+0x45330) [0x7c86c5845330]
+  #2   /lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x11c) [0x7c86c589eb2c]
+  #3   /lib/x86_64-linux-gnu/libc.so.6(gsignal+0x1e) [0x7c86c584527e]
+  #4   /lib/x86_64-linux-gnu/libc.so.6(abort+0xdf) [0x7c86c58288ff]
+  #5   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(+0xaeaa4) [0x7c86c0eaeaa4]
+  #6   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(+0xc0ffa) [0x7c86c0ec0ffa]
+  #7   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(__cxa_call_terminate+0x2e) [0x7c86c0eae521]
+  #8   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(__gxx_personality_v0+0x2d1) [0x7c86c0ec0871]
+  #9   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libgcc_s.so.1(+0x21d9b) [0x7c86c4f37d9b]
+  #10  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libgcc_s.so.1(_Unwind_RaiseException+0x31d) [0x7c86c4f384bd]
+  #11  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(__cxa_throw+0x3a) [0x7c86c0ec128a]
+  #12  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(+0x12741b2) [0x7c86750741b2]
+  #13  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(+0x1277c8f) [0x7c8675077c8f]
+  #14  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(+0x12884ea) [0x7c86750884ea]
+  #15  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(+0x128dc55) [0x7c867508dc55]
+  #16  cudf::groupby::groupby::dispatch_aggregation(cudf::host_span<cudf::groupby::aggregation_request const, 18446744073709551615ul>, rmm::cuda_stream_view, cuda::mr::__4::__version_bump_ver4_::resource_ref<cuda::mr::__4::device_accessible>) at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(_ZN4cudf7groupby7groupby20dispatch_aggregationENS_9host_spanIKNS0_19aggregation_requestELm18446744073709551615EEEN3rmm16cuda_stream_viewEN4cuda2mr3__420__version_bump_ver4_12resource_refIJNSA_17device_accessibleEEEE+0xf5) [0x7c8675035f15]
+  #17  cudf::groupby::groupby::aggregate(cudf::host_span<cudf::groupby::aggregation_request const, 18446744073709551615ul>, rmm::cuda_stream_view, cuda::mr::__4::__version_bump_ver4_::resource_ref<cuda::mr::__4::device_accessible>) at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/libcudf.so(_ZN4cudf7groupby7groupby9aggregateENS_9host_spanIKNS0_19aggregation_requestELm18446744073709551615EEEN3rmm16cuda_stream_viewEN4cuda2mr3__420__version_bump_ver4_12resource_refIJNSA_17device_accessibleEEEE+0x197e) [0x7c867505a1ae]
+  #18  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x113f018) [0x7c869173f018]
+  #19  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x11bd6b1) [0x7c86917bd6b1]
+  #20  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x122d2e3) [0x7c869182d2e3]
+  #21  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x123086e) [0x7c869183086e]
+  #22  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x1220ab5) [0x7c8691820ab5]
+  #23  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x10426af) [0x7c86916426af]
+  #24  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x103f3f9) [0x7c869163f3f9]
+  #25  /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/../../libstdc++.so.6(+0xef5e4) [0x7c86c0eef5e4]
+  #26  /lib/x86_64-linux-gnu/libc.so.6(+0x9caa4) [0x7c86c589caa4]
+  #27  /lib/x86_64-linux-gnu/libc.so.6(+0x129c6c) [0x7c86c5929c6c]
+*** end backtrace ***
+[FAILED] q18_then_q10
+[RUN] q18->q11
+[07:50:09.511] Source:        /mnt/nvme/dataset
+[07:50:09.511] Mode:          sequential
+[07:50:09.511] Iterations:    1
+[07:50:09.511] Engine:        gpu
+[07:50:09.511] Queries:       [18, 11]
+[07:50:09.511] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:50:09.511] Pin:           none
+[07:50:09.511] DuckDB profiling: False
+[07:50:09.511] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q11
+[07:50:09.511] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q11/csv/runtimes.csv
+[07:50:09.511] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q11/log_dir
+[07:50:09.511] Mode 'sequential': single connection per engine, round-robin iterations
+[07:50:09.511] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:50:09.519]   Registering view 'customer' over 1 file(s)
+[07:50:09.522]   Registering view 'lineitem' over 1 file(s)
+[07:50:09.599]   Registering view 'nation' over 1 file(s)
+[07:50:09.599]   Registering view 'orders' over 1 file(s)
+[07:50:09.608]   Registering view 'part' over 1 file(s)
+[07:50:09.609]   Registering view 'partsupp' over 1 file(s)
+[07:50:09.613]   Registering view 'region' over 1 file(s)
+[07:50:09.613]   Registering view 'supplier' over 1 file(s)
+[07:50:09.614] All TPC-H views registered
+[07:50:09.614] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:50:11.782] Sirius extension loaded
+[07:50:11.782] --- q18 iter0 engine=sirius ---
+[07:50:11.782]   SET gpu_execution = true (GPU/sirius)
+[07:50:11.792]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 12 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:50:14.487] Closing connection
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 779, in <module>
+    main()
+    ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 755, in main
+    RUNNERS[args.mode](
+    ~~~~~~~~~~~~~~~~~~^
+        source,
+        ^^^^^^^
+    ...<7 lines>...
+        duckdb_profiling=args.duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 402, in run_sequential
+    _run_one(
+    ~~~~~~~~^
+        writer,
+        ^^^^^^^
+    ...<6 lines>...
+        duckdb_profiling,
+        ^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 326, in _run_one
+    elapsed, rows = time_query(con, qnum, use_gpu, profile_path=profile_path)
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/test/tpch_performance/performance_test.py", line 292, in time_query
+    rows = con.execute(QUERIES[f"q{qnum}"]).fetchall()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+_duckdb.InternalException: INTERNAL Error: Sirius GPU execution failed: Invalid Error: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+
+Stack Trace:
+
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e0ba) [0x70fec275e0ba]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x215e1c3) [0x70fec275e1c3]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x2161522) [0x70fec2761522]
+/home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12ec48a) [0x70fec18ec48a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor15FetchFromSourceERNS_9DataChunkE+0x8b) [0x70fef2cd454b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16PipelineExecutor7ExecuteEm+0xed) [0x70fef2cdfc5d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12PipelineTask11ExecuteTaskENS_17TaskExecutionModeE+0x183) [0x70fef2ce0073]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb12ExecutorTask7ExecuteENS_17TaskExecutionModeE+0xff) [0x70fef2cd624f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8Executor11ExecuteTaskEb+0x8a) [0x70fef2ce173a]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb13ClientContext19ExecuteTaskInternalERNS_17ClientContextLockERNS_15BaseQueryResultEb+0x62) [0x70fef2cb8a12]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18PendingQueryResult11ExecuteTaskEv+0x43) [0x70fef2cb8c43]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection20CompletePendingQueryERNS_18PendingQueryResultE+0x64) [0x70fef1221c04]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc240ff) [0x70fef12240ff]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc4a7d3) [0x70fef124a7d3]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc3e5fb) [0x70fef123e5fb]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbaa534) [0x70fef11aa534]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyObject_Vectorcall+0x2e) [0x57ee50cc1b7e]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(_PyEval_EvalFrameDefault+0xccb) [0x57ee50cd3d8b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x1d5e88) [0x57ee50ccfe88]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(PyEval_EvalCode+0xb5) [0x57ee50dac645]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f459d) [0x57ee50dee59d]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f3818) [0x57ee50ded818]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f337f) [0x57ee50ded37f]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x2f2fcd) [0x57ee50decfcd]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_RunMain+0x2b9) [0x57ee50d9b959]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(Py_BytesMain+0x37) [0x57ee50d95ba7]
+/lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x70fef4c2a1ca]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x70fef4c2a28b]
+/home/dy1013/sirius_multi-gpu/.pixi/envs/default/bin/python(+0x29af7a) [0x57ee50d94f7a]
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/stable/dev/internal_errors
+[FAILED] q18_then_q11
+[RUN] q18->q12
+[07:50:17.802] Source:        /mnt/nvme/dataset
+[07:50:17.802] Mode:          sequential
+[07:50:17.803] Iterations:    1
+[07:50:17.803] Engine:        gpu
+[07:50:17.803] Queries:       [18, 12]
+[07:50:17.803] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:50:17.803] Pin:           none
+[07:50:17.803] DuckDB profiling: False
+[07:50:17.803] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q12
+[07:50:17.803] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q12/csv/runtimes.csv
+[07:50:17.803] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q12/log_dir
+[07:50:17.803] Mode 'sequential': single connection per engine, round-robin iterations
+[07:50:17.803] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:50:17.811]   Registering view 'customer' over 1 file(s)
+[07:50:17.814]   Registering view 'lineitem' over 1 file(s)
+[07:50:17.893]   Registering view 'nation' over 1 file(s)
+[07:50:17.894]   Registering view 'orders' over 1 file(s)
+[07:50:17.903]   Registering view 'part' over 1 file(s)
+[07:50:17.904]   Registering view 'partsupp' over 1 file(s)
+[07:50:17.907]   Registering view 'region' over 1 file(s)
+[07:50:17.908]   Registering view 'supplier' over 1 file(s)
+[07:50:17.908] All TPC-H views registered
+[07:50:17.908] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:50:20.134] Sirius extension loaded
+[07:50:20.134] --- q18 iter0 engine=sirius ---
+[07:50:20.134]   SET gpu_execution = true (GPU/sirius)
+[07:50:20.144]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 3 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:50:25.505]   q18 fetched 100 rows in 5.3607s
+[07:50:25.505] [sirius] q18 iter0: 5.3607s
+[07:50:25.506] --- q12 iter0 engine=sirius ---
+[07:50:25.506]   SET gpu_execution = true (GPU/sirius)
+[07:50:25.535]   Executing q12 on GPU/sirius…
+[07:50:28.209]   q12 fetched 2 rows in 2.6733s
+[07:50:28.209] [sirius] q12 iter0: 2.6733s
+[07:50:28.209] Closing connection
+[07:50:30.440] Benchmark run complete
+[07:50:30.440] Splitting /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q12/log_dir/sirius_2026-07-01.log per query
+[07:50:30.441] WARNING: expected 2 QueryBegin lines in /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q12/log_dir/sirius_2026-07-01.log, found 4; skipping per-query log split
+[OK] q18_then_q12
+[RUN] q18->q13
+[07:50:31.751] Source:        /mnt/nvme/dataset
+[07:50:31.751] Mode:          sequential
+[07:50:31.751] Iterations:    1
+[07:50:31.751] Engine:        gpu
+[07:50:31.751] Queries:       [18, 13]
+[07:50:31.751] Config:        /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/configs/sirius_4gpu.yaml
+[07:50:31.751] Pin:           none
+[07:50:31.751] DuckDB profiling: False
+[07:50:31.751] Benchmark dir: /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q13
+[07:50:31.751] Runtime CSV:   /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q13/csv/runtimes.csv
+[07:50:31.751] Log dir:       /home/dy1013/sirius_multi-gpu/tpch_pair_scan_audit_runs/pair_scan_20260701_051923/pairs/q18_then_q13/log_dir
+[07:50:31.751] Mode 'sequential': single connection per engine, round-robin iterations
+[07:50:31.751] Opening DuckDB connection over parquet dir /mnt/nvme/dataset
+[07:50:31.760]   Registering view 'customer' over 1 file(s)
+[07:50:31.762]   Registering view 'lineitem' over 1 file(s)
+[07:50:31.841]   Registering view 'nation' over 1 file(s)
+[07:50:31.841]   Registering view 'orders' over 1 file(s)
+[07:50:31.850]   Registering view 'part' over 1 file(s)
+[07:50:31.852]   Registering view 'partsupp' over 1 file(s)
+[07:50:31.855]   Registering view 'region' over 1 file(s)
+[07:50:31.856]   Registering view 'supplier' over 1 file(s)
+[07:50:31.856] All TPC-H views registered
+[07:50:31.856] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[07:50:33.974] Sirius extension loaded
+[07:50:33.974] --- q18 iter0 engine=sirius ---
+[07:50:33.974]   SET gpu_execution = true (GPU/sirius)
+[07:50:33.984]   Executing q18 on GPU/sirius…
+[cucascade] direct GPU↔GPU peer DMA broken on 6 direction(s); cudaMemcpyPeer* will host-stage automatically.
+[07:50:36.750] Closing connection

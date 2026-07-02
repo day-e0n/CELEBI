@@ -1,0 +1,13 @@
+
+*** SIGSEGV — backtrace from faulting thread ***
+Faulting thread id:1855776
+  #0   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x12f0816) [0x7419ca2f0816]
+  #1   /lib/x86_64-linux-gnu/libc.so.6(+0x45330) [0x7419ff045330]
+  #2   /lib/x86_64-linux-gnu/libc.so.6(+0xa9af7) [0x7419ff0a9af7]
+  #3   /lib/x86_64-linux-gnu/libc.so.6(+0xa9cda) [0x7419ff0a9cda]
+  #4   /lib/x86_64-linux-gnu/libc.so.6(+0xaada5) [0x7419ff0aada5]
+  #5   /lib/x86_64-linux-gnu/libc.so.6(+0xab43a) [0x7419ff0ab43a]
+  #6   /lib/x86_64-linux-gnu/libc.so.6(+0xae021) [0x7419ff0ae021]
+  #7   /lib/x86_64-linux-gnu/libc.so.6(+0x9c895) [0x7419ff09c895]
+  #8   /lib/x86_64-linux-gnu/libc.so.6(+0x129c6c) [0x7419ff129c6c]
+*** end backtrace ***

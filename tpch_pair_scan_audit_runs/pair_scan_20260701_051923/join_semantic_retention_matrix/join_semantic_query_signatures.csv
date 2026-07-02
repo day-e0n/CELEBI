@@ -1,0 +1,23 @@
+query,join_events,join_input_gb,join_output_gb,join_edge_count,join_edges
+q1,0,,,0,
+q2,22,6.92249788,2.864652392,4,nation.n_nationkey=supplier.s_nationkey nation.n_regionkey=region.r_regionkey part.p_partkey=partsupp.ps_partkey partsupp.ps_suppkey=supplier.s_suppkey
+q3,33,11.997904832,0.455818584,2,customer.c_custkey=orders.o_custkey lineitem.l_orderkey=orders.o_orderkey
+q4,16,3.451462736,0.416826514,1,lineitem.l_orderkey=orders.o_orderkey
+q5,66,22.089974,0.940063813,6,customer.c_custkey=orders.o_custkey customer.c_nationkey=supplier.s_nationkey lineitem.l_orderkey=orders.o_orderkey lineitem.l_suppkey=supplier.s_suppkey nation.n_nationkey=supplier.s_nationkey nation.n_regionkey=region.r_regionkey
+q6,0,,,0,
+q7,31,11.010631121,1.281402209,5,customer.c_custkey=orders.o_custkey customer.c_nationkey=nation.n_nationkey lineitem.l_orderkey=orders.o_orderkey lineitem.l_suppkey=supplier.s_suppkey nation.n_nationkey=supplier.s_nationkey
+q8,88,31.359760902,1.658426156,7,customer.c_custkey=orders.o_custkey customer.c_nationkey=nation.n_nationkey lineitem.l_orderkey=orders.o_orderkey lineitem.l_partkey=part.p_partkey lineitem.l_suppkey=supplier.s_suppkey nation.n_nationkey=supplier.s_nationkey nation.n_regionkey=region.r_regionkey
+q9,57,40.283519186,7.423850488,6,lineitem.l_orderkey=orders.o_orderkey lineitem.l_partkey=part.p_partkey lineitem.l_partkey=partsupp.ps_partkey lineitem.l_suppkey=partsupp.ps_suppkey lineitem.l_suppkey=supplier.s_suppkey nation.n_nationkey=supplier.s_nationkey
+q10,25,9.495798793,5.069237074,3,customer.c_custkey=orders.o_custkey customer.c_nationkey=nation.n_nationkey lineitem.l_orderkey=orders.o_orderkey
+q11,9,4.635966652,0.235721424,2,nation.n_nationkey=supplier.s_nationkey partsupp.ps_suppkey=supplier.s_suppkey
+q12,3,3.153619023,0.070191077,1,lineitem.l_orderkey=orders.o_orderkey
+q13,4,2.494117808,2.473293664,1,customer.c_custkey=orders.o_custkey
+q14,4,0.840147786,0.315026296,1,lineitem.l_partkey=part.p_partkey
+q15,5,0.102372744,3.37e-07,0,
+q16,6,2.004151018,1.171854632,1,part.p_partkey=partsupp.ps_partkey
+q17,49,24.416103696,0.068406448,1,lineitem.l_partkey=part.p_partkey
+q18,22,14.478401496,0.003107504,2,customer.c_custkey=orders.o_custkey lineitem.l_orderkey=orders.o_orderkey
+q19,4,1.402320089,1.110713812,1,lineitem.l_partkey=part.p_partkey
+q20,16,4.291152743,0.11362659,3,lineitem.l_partkey=partsupp.ps_partkey lineitem.l_suppkey=partsupp.ps_suppkey nation.n_nationkey=supplier.s_nationkey
+q21,105,32.344781416,6.269974402,3,lineitem.l_orderkey=orders.o_orderkey lineitem.l_suppkey=supplier.s_suppkey nation.n_nationkey=supplier.s_nationkey
+q22,9,1.700759544,0.493261054,1,customer.c_custkey=orders.o_custkey

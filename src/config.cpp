@@ -37,6 +37,13 @@ bool Config::ENABLE_FALLBACK_CHECK = false;
 
 bool Config::ENABLE_DUCKDB_FALLBACK = true;
 
+// wdy start
+bool Config::JOIN_OUTPUT_RETENTION = false;
+uint64_t Config::JOIN_OUTPUT_RETENTION_LIMIT_BYTES = 8ULL * 1024 * 1024 * 1024;
+uint64_t Config::JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES = 256ULL * 1024 * 1024;
+bool Config::JOIN_OUTPUT_REUSE = false;
+// wdy end
+
 bool Config::ENABLE_REGEX_JIT_IMPL = true;
 
 bool Config::MODIFIED_PIPELINE = false;
