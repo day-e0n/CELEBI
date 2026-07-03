@@ -1,0 +1,3 @@
+variant,previous_query,second_query,repeat,query_position,query,total_ms,load_ms,scan_materialize_wall_ms,scan_materialize_work_ms,computation_ms,join_retained_bytes,join_skipped_bytes,join_cached_bytes,join_reuse_hit_bytes,join_reuse_hit_count,join_reuse_miss_count,benchmark_dir
+baseline,q12,q4,0,1,q12,3727.844,2510.413818359375,2510.413818359375,16406.855000000003,1217.430181640625,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/fixed_width_page_pinned_hot_smoke_12gb_20260702/baseline/pairs/q12_then_q4_iter0
+baseline,q12,q4,0,2,q4,2233.4049999999997,1623.680908203125,1623.680908203125,8725.621000000001,609.7240917968747,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/fixed_width_page_pinned_hot_smoke_12gb_20260702/baseline/pairs/q12_then_q4_iter0

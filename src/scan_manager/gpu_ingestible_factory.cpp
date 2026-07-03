@@ -24,6 +24,7 @@
 #include "scan_manager/sirius_scan_manager.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -31,6 +32,18 @@
 #include <vector>
 
 namespace sirius::scan_manager {
+
+namespace {
+
+// wdy start
+bool partial_pin_reuse_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_ENABLE_PARTIAL_PIN_REUSE");
+  return value != nullptr && std::string_view(value) == "1";
+}
+// wdy end
+
+}  // namespace
 
 gpu_ingestible_factory::gpu_ingestible_factory(
   std::unordered_map<std::string, pinned_entry> const& pinned_entries) noexcept
@@ -78,16 +91,28 @@ std::shared_ptr<io::gpu_ingestible> gpu_ingestible_factory::try_cached(
     for (auto const& [pinned_name, entry] : _pinned_entries) {
       if (!matches_scan_info(entry)) { continue; }
       // A partial pin (pin_table(..., n_rows=N) capped below the full file
-      // content) MUST NOT serve cached reads — the incoming table_info
+      // content) MUST NOT serve cached reads by default — the incoming table_info
       // carries no n_rows budget, so a partial-entry hit would silently
-      // mask missing rows. Fall through to the per-format path.
+      // mask missing rows. The fixed-page prototype enables this only via an
+      // explicit experiment environment variable.
       if (entry.is_partial) {
-        SIRIUS_LOG_DEBUG(
-          "[gpu_ingestible_factory::try_cached] pinned entry '{}' matches op_id={} but is "
-          "partial (row-count budget at pin time); falling through to per-format ingestible",
+        // wdy start
+        if (!partial_pin_reuse_enabled()) {
+          SIRIUS_LOG_DEBUG(
+            "[gpu_ingestible_factory::try_cached] pinned entry '{}' matches op_id={} but is "
+            "partial (row-count budget at pin time); falling through to per-format ingestible",
+            pinned_name,
+            op_id);
+          break;
+        }
+        SIRIUS_LOG_INFO(
+          "[fixed-page-cache] partial_pin_reuse enabled pinned='{}' op_id={} cached_rows={} "
+          "tier={}",
           pinned_name,
-          op_id);
-        break;
+          op_id,
+          entry.num_rows,
+          entry.tier == cucascade::memory::Tier::GPU ? "gpu" : "host");
+        // wdy end
       }
 
       // Build the canonical scan_plan once. Everything downstream — cached

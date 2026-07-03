@@ -138,6 +138,28 @@ struct scan_manager_config {
   exec::thread_pool_config s3_thread_pool{.num_threads = 8, .thread_name_prefix = "s3_io"};
 };
 
+// wdy start
+/**
+ * @brief Logical page metadata for a fixed-width GPU column chunk.
+ *
+ * The first prototype keeps physical ownership in the existing cudf::column
+ * chunks and records page boundaries over those buffers. A later scan path can
+ * use this as the lookup unit for table/column/chunk/page reuse without first
+ * changing cudf buffer ownership.
+ */
+struct fixed_width_column_page {
+  std::size_t chunk_index{0};
+  std::size_t page_index{0};
+  std::size_t row_offset{0};
+  std::size_t num_rows{0};
+  std::size_t byte_offset{0};
+  std::size_t num_bytes{0};
+  std::size_t element_size_bytes{0};
+  cudf::type_id type_id{cudf::type_id::EMPTY};
+  cucascade::memory::memory_space* memory_space{nullptr};
+};
+// wdy end
+
 /**
  * @brief A single pinned-table entry, keyed by table name in the scan_manager.
  *
@@ -155,6 +177,14 @@ struct pinned_entry {
   /// @ref sirius_scan_manager::insert_pinned_entry. Empty when @ref tier is HOST.
   std::unordered_map<std::string, std::vector<std::shared_ptr<cudf::column>>>
     data_batches_by_column;
+  // wdy start
+  /// Prototype fixed-width page index. Keyed by column name; each entry is a
+  /// logical page over the corresponding cudf column chunk in
+  /// data_batches_by_column. Variable-width and nested columns are omitted.
+  std::unordered_map<std::string, std::vector<fixed_width_column_page>> fixed_width_pages_by_column;
+  /// Target page size used when fixed_width_pages_by_column was built.
+  std::size_t fixed_width_page_size_bytes{0};
+  // wdy end
   /// Per-chunk memory space placement. Parallel to the inner vectors of
   /// data_batches_by_column: chunk_memory_spaces[i] is the memory_space*
   /// for every column's chunk at index i. All columns at chunk index i

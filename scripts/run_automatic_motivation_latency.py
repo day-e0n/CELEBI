@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # wdy start
-"""Run automatic motivation latency experiments for JOIN-output reuse.
+"""Run automatic motivation latency experiments for reuse opportunities.
 
-This script runs two variants for every ordered TPC-H query pair:
+This script can run these variants for every ordered TPC-H query pair:
 
 1. baseline: normal Sirius execution.
 2. join_reuse: experimental JOIN output retention + exact-signature reuse.
+3. pinned_hot: upper-bound cached-scan experiment using existing pin_table.
 
 Each pair repeat is a separate performance_test.py process. That keeps the
 experiment simple and gives the GPU allocator/process a chance to release VRAM
@@ -69,7 +70,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--join-retention-max-batch-bytes", type=int, default=256 * 1024 * 1024)
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--only-variant", choices=("baseline", "join_reuse"), default=None)
+    parser.add_argument("--only-variant", choices=("baseline", "join_reuse", "pinned_hot"), default=None)
+    # wdy start
+    parser.add_argument(
+        "--variants",
+        default="",
+        help=(
+            "Comma-separated variant list, e.g. baseline,pinned_hot. "
+            "Default keeps the original baseline,join_reuse behavior."
+        ),
+    )
+    # wdy end
     parser.add_argument(
         "--pairs",
         default="",
@@ -155,6 +166,12 @@ def make_env(args: argparse.Namespace, config_path: Path, variant: str) -> dict[
         env["SIRIUS_JOIN_OUTPUT_REUSE"] = "1"
         env["SIRIUS_JOIN_OUTPUT_RETENTION_LIMIT_BYTES"] = str(args.join_retention_limit_bytes)
         env["SIRIUS_JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES"] = str(args.join_retention_max_batch_bytes)
+    # wdy start
+    if variant == "pinned_hot":
+        env["SIRIUS_PIN_ONLY_SECOND_QUERY"] = "1"
+    else:
+        env.pop("SIRIUS_PIN_ONLY_SECOND_QUERY", None)
+    # wdy end
     return env
 
 
@@ -163,6 +180,21 @@ def read_csv(path: Path) -> list[dict[str, str]]:
         return []
     with path.open(newline="") as f:
         return list(csv.DictReader(f))
+
+
+# wdy start
+def parse_variants(args: argparse.Namespace) -> list[str]:
+    valid = {"baseline", "join_reuse", "pinned_hot"}
+    if args.only_variant:
+        return [args.only_variant]
+    if not args.variants:
+        return ["baseline", "join_reuse"]
+    variants = [item.strip() for item in args.variants.split(",") if item.strip()]
+    bad = [item for item in variants if item not in valid]
+    if bad:
+        raise SystemExit(f"bad variant(s): {', '.join(bad)}; valid: {', '.join(sorted(valid))}")
+    return variants
+# wdy end
 
 
 def write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) -> None:
@@ -698,7 +730,9 @@ def main() -> int:
     if not args.input.is_dir():
         raise SystemExit(f"input directory does not exist: {args.input}")
     pairs = parse_pairs(args.pairs, args.allow_diagonal)
-    variants = [args.only_variant] if args.only_variant else ["baseline", "join_reuse"]
+    # wdy start
+    variants = parse_variants(args)
+    # wdy end
     run_root = args.output.resolve()
     config_dir = run_root / "configs"
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -758,6 +792,8 @@ Main outputs after/while the run:
                     print(f"[SKIP] {variant} {spec.name} ({current}/{total})", flush=True)
                     continue
                 print(f"[RUN] {variant} {spec.name} ({current}/{total})", flush=True)
+                # wdy start
+                perf_mode = "grouped" if variant == "pinned_hot" else "sequential"
                 cmd = [
                     "pixi",
                     "run",
@@ -768,7 +804,7 @@ Main outputs after/while the run:
                     "--engine",
                     "gpu",
                     "--mode",
-                    "sequential",
+                    perf_mode,
                     "--iterations",
                     "1",
                     "--queries",
@@ -780,6 +816,9 @@ Main outputs after/while the run:
                     "--name",
                     spec.name,
                 ]
+                if variant == "pinned_hot":
+                    cmd.extend(["--pin", "gpu"])
+                # wdy end
                 code = run_cmd(cmd, env=env, cwd=REPO_ROOT, timeout_s=args.pair_timeout, dry_run=args.dry_run)
                 if code != 0 or not runtime_csv_complete(csv_path):
                     with failed_path.open("a", newline="") as f:

@@ -88,6 +88,7 @@ extern "C" int cudaProfilerStop();
 #include "io/uring/uring_reactor.hpp"  // sirius::io::uring_io_object
 
 #include <cstdlib>
+#include <string_view>
 #include <unordered_map>
 
 namespace duckdb {
@@ -944,7 +945,12 @@ void SiriusExtension::PinTableFunction(ClientContext& context,
   // Per-call local counter (NOT std::atomic, NOT global). PinTableFunction is
   // single-threaded; new pin_table calls restart at chunk 0 → GPU 0 for
   // reproducibility.
-  std::size_t chunk_idx = 0;
+  std::size_t chunk_idx             = 0;
+  bool const round_robin_gpu_chunks = data.args.tier == "gpu" && [] {
+    auto const* value = std::getenv("SIRIUS_PIN_ROUND_ROBIN_CHUNKS");
+    return value != nullptr && std::string_view(value) == "1";
+  }();
+  std::size_t emitted_chunk_idx = 0;
 
   // For tier='host' the full table may not fit in GPU memory, so each batch is downgraded
   // to a pinned host_data_representation immediately and the GPU buffers are released
@@ -956,7 +962,9 @@ void SiriusExtension::PinTableFunction(ClientContext& context,
   // that land on GPU 1+.
   cucascade::representation_converter_registry* registry_ptr = nullptr;
   std::unordered_map<int, rmm::cuda_stream> pin_streams_by_gpu;
-  if (data.args.tier == "host") { registry_ptr = &sirius::converter_registry::get(); }
+  if (data.args.tier == "host" || round_robin_gpu_chunks) {
+    registry_ptr = &sirius::converter_registry::get();
+  }
 
   for (auto const& path : file_paths) {
     if (data.args.n_rows.has_value() && remaining_rows <= 0) { break; }
@@ -1022,8 +1030,45 @@ void SiriusExtension::PinTableFunction(ClientContext& context,
         target_stream.synchronize();
         host_chunks.emplace_back(std::move(host_repr));
       } else {
-        tables.emplace_back(std::move(chunk.tbl));
-        chunk_memory_spaces.push_back(target_space);  // parallel to tables
+        auto* storage_space = target_space;
+        if (round_robin_gpu_chunks) {
+          storage_space = const_cast<cucascade::memory::memory_space*>(
+            gpu_spaces[emitted_chunk_idx % gpu_spaces.size()]);
+        }
+
+        if (round_robin_gpu_chunks && storage_space != target_space) {
+          cucascade::gpu_table_representation source_repr(
+            std::move(chunk.tbl), *target_space, rmm::cuda_stream_default);
+          auto moved_repr = registry_ptr->convert<cucascade::gpu_table_representation>(
+            source_repr, storage_space, rmm::cuda_stream_default);
+          rmm::cuda_set_device_raii storage_guard{
+            rmm::cuda_device_id{storage_space->get_device_id()}};
+          auto release_stream = storage_space->acquire_stream();
+          tables.emplace_back(moved_repr->release_table(release_stream));
+          release_stream.synchronize();
+          SIRIUS_LOG_INFO(
+            "[fixed-page-cache] pin_table chunk_rr name='{}' chunk={} rows={} source_gpu={} "
+            "target_gpu={}",
+            data.args.name,
+            emitted_chunk_idx,
+            chunk_rows,
+            target_space->get_device_id(),
+            storage_space->get_device_id());
+        } else {
+          tables.emplace_back(std::move(chunk.tbl));
+          if (round_robin_gpu_chunks) {
+            SIRIUS_LOG_INFO(
+              "[fixed-page-cache] pin_table chunk_rr name='{}' chunk={} rows={} source_gpu={} "
+              "target_gpu={}",
+              data.args.name,
+              emitted_chunk_idx,
+              chunk_rows,
+              target_space->get_device_id(),
+              storage_space->get_device_id());
+          }
+        }
+        chunk_memory_spaces.push_back(storage_space);  // parallel to tables
+        ++emitted_chunk_idx;
       }
     }
     if (data.args.n_rows.has_value()) { remaining_rows -= file_rows_read; }
@@ -1479,11 +1524,12 @@ static void SetMarkJoinBuildSwitchRatio(ClientContext& context, SetScope scope, 
 static void SetJoinOutputRetention(ClientContext& context, SetScope scope, Value& parameter)
 {
   Config::JOIN_OUTPUT_RETENTION = BooleanValue::Get(parameter);
-  SIRIUS_LOG_DEBUG("Updated config JOIN_OUTPUT_RETENTION to {}",
-                   Config::JOIN_OUTPUT_RETENTION);
+  SIRIUS_LOG_DEBUG("Updated config JOIN_OUTPUT_RETENTION to {}", Config::JOIN_OUTPUT_RETENTION);
 }
 
-static void SetJoinOutputRetentionLimitBytes(ClientContext& context, SetScope scope, Value& parameter)
+static void SetJoinOutputRetentionLimitBytes(ClientContext& context,
+                                             SetScope scope,
+                                             Value& parameter)
 {
   Config::JOIN_OUTPUT_RETENTION_LIMIT_BYTES = UBigIntValue::Get(parameter);
   SIRIUS_LOG_DEBUG("Updated config JOIN_OUTPUT_RETENTION_LIMIT_BYTES to {}",
@@ -1707,11 +1753,12 @@ void SiriusExtension::InitialGPUConfigs(DBConfig& config)
                             Value::UBIGINT(Config::JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES),
                             SetJoinOutputRetentionMaxBatchBytes);
 
-  config.AddExtensionOption("join_output_reuse",
-                            "Experimental: reuse retained HASH_JOIN output batches on exact signature hit",
-                            LogicalType::BOOLEAN,
-                            Value::BOOLEAN(Config::JOIN_OUTPUT_REUSE),
-                            SetJoinOutputReuse);
+  config.AddExtensionOption(
+    "join_output_reuse",
+    "Experimental: reuse retained HASH_JOIN output batches on exact signature hit",
+    LogicalType::BOOLEAN,
+    Value::BOOLEAN(Config::JOIN_OUTPUT_REUSE),
+    SetJoinOutputReuse);
   // wdy end
 
   config.AddExtensionOption(

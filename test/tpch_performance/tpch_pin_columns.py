@@ -237,13 +237,19 @@ def emit_pin(query_num: int, parquet_dir: str) -> str:
     # (src/sirius_extension.cpp:681-683). Once host-tier support lands,
     # flip via SIRIUS_PIN_TIER=host.
     tier = os.environ.get("SIRIUS_PIN_TIER", "gpu")
+    # wdy start
+    pin_n_rows = os.environ.get("SIRIUS_PIN_N_ROWS", "").strip()
+    n_rows_clause = f", n_rows={int(pin_n_rows)}" if pin_n_rows else ""
+    # wdy end
     cols_by_table = QUERY_COLUMNS[query_num]
     lines = []
     for table, cols in cols_by_table.items():
         path = detect_pin_glob(parquet_dir, table)
         col_literals = ",".join(f"'{c}'" for c in cols)
         lines.append(
-            f"CALL pin_table('{path}', tier='{tier}', name='{table}', cols=[{col_literals}]);"
+            # wdy start
+            f"CALL pin_table('{path}', tier='{tier}', name='{table}', cols=[{col_literals}]{n_rows_clause});"
+            # wdy end
         )
     return "\n".join(lines) + "\n"
 

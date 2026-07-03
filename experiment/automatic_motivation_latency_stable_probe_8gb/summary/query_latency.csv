@@ -1,5 +1,0 @@
-variant,previous_query,second_query,repeat,query_position,query,total_ms,load_ms,computation_ms,join_retained_bytes,join_skipped_bytes,join_cached_bytes,join_reuse_hit_bytes,join_reuse_hit_count,join_reuse_miss_count,benchmark_dir
-join_reuse,q11,q2,0,1,q11,1504.254,2878.1450000000004,0.0,655888,235065536,655888,0,0,8,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_probe_8gb/join_reuse/pairs/q11_then_q2_iter0
-join_reuse,q11,q2,0,2,q2,1484.712,2694.306,0.0,36646430,2815666155,36646430,0,0,18,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_probe_8gb/join_reuse/pairs/q11_then_q2_iter0
-join_reuse,q2,q11,0,1,q2,1991.548,3005.356,0.0,36646430,2815666155,36646430,0,0,18,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_probe_8gb/join_reuse/pairs/q2_then_q11_iter0
-join_reuse,q2,q11,0,2,q11,1038.662,2401.0879999999997,0.0,655888,235065536,655888,0,0,8,/home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency_stable_probe_8gb/join_reuse/pairs/q2_then_q11_iter0

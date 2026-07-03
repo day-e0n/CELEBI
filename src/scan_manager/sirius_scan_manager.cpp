@@ -44,9 +44,15 @@
 
 #include <algorithm>
 #include <cstdint>
+// wdy start
+#include <cstdlib>
+// wdy end
 #include <exception>
 #include <memory>
 #include <stdexcept>
+// wdy start
+#include <string>
+// wdy end
 #include <utility>
 
 namespace sirius::scan_manager {
@@ -71,6 +77,81 @@ std::string normalize_path(std::string const& p)
   return p;
 }
 
+// wdy start
+std::size_t fixed_width_page_size_bytes()
+{
+  static constexpr std::size_t kDefaultPageBytes = 2ULL * 1024ULL * 1024ULL;
+  auto const* value                              = std::getenv("SIRIUS_FIXED_WIDTH_PAGE_BYTES");
+  if (value == nullptr || value[0] == '\0') { return kDefaultPageBytes; }
+  try {
+    auto parsed = static_cast<std::size_t>(std::stoull(value));
+    return parsed == 0 ? kDefaultPageBytes : parsed;
+  } catch (...) {
+    SIRIUS_LOG_WARN(
+      "[fixed-page-cache] invalid SIRIUS_FIXED_WIDTH_PAGE_BYTES='{}'; using default {}",
+      value,
+      kDefaultPageBytes);
+    return kDefaultPageBytes;
+  }
+}
+
+bool is_fixed_width_page_candidate(cudf::column_view const& col) noexcept
+{
+  switch (col.type().id()) {
+    case cudf::type_id::STRING:
+    case cudf::type_id::LIST:
+    case cudf::type_id::STRUCT:
+    case cudf::type_id::DICTIONARY32:
+    case cudf::type_id::EMPTY: return false;
+    default: return true;
+  }
+}
+
+void index_fixed_width_column_pages(pinned_entry& entry,
+                                    std::string const& column_name,
+                                    cudf::column const& column,
+                                    std::size_t chunk_index,
+                                    cucascade::memory::memory_space* memory_space,
+                                    std::size_t page_size_bytes)
+{
+  auto const view = column.view();
+  if (!is_fixed_width_page_candidate(view) || view.size() <= 0) { return; }
+
+  auto const element_size = cudf::size_of(view.type());
+  if (element_size == 0) { return; }
+
+  auto const rows = static_cast<std::size_t>(view.size());
+  auto const view_offset_rows =
+    static_cast<std::size_t>(std::max<cudf::size_type>(view.offset(), 0));
+  auto const rows_per_page = std::max<std::size_t>(1, page_size_bytes / element_size);
+  auto& pages              = entry.fixed_width_pages_by_column[column_name];
+
+  for (std::size_t row_offset = 0; row_offset < rows; row_offset += rows_per_page) {
+    auto const page_rows = std::min(rows_per_page, rows - row_offset);
+    fixed_width_column_page page;
+    page.chunk_index        = chunk_index;
+    page.page_index         = pages.size();
+    page.row_offset         = row_offset;
+    page.num_rows           = page_rows;
+    page.byte_offset        = (view_offset_rows + row_offset) * element_size;
+    page.num_bytes          = page_rows * element_size;
+    page.element_size_bytes = element_size;
+    page.type_id            = view.type().id();
+    page.memory_space       = memory_space;
+    pages.emplace_back(page);
+  }
+}
+
+std::size_t fixed_width_page_count(pinned_entry const& entry)
+{
+  std::size_t pages = 0;
+  for (auto const& [_, col_pages] : entry.fixed_width_pages_by_column) {
+    pages += col_pages.size();
+  }
+  return pages;
+}
+
+// wdy end
 }  // namespace
 
 sirius_scan_manager::sirius_scan_manager(
@@ -402,6 +483,10 @@ void sirius_scan_manager::insert_pinned_entry(
       for (std::size_t i = 0; i < column_names.size(); ++i) {
         is_new_col[i] = !entry.data_batches_by_column.contains(column_names[i]);
       }
+      // wdy start
+      if (entry.fixed_width_page_size_bytes == 0) {
+        entry.fixed_width_page_size_bytes = fixed_width_page_size_bytes();
+      }
       for (auto& table : data_tables) {
         if (!table) { continue; }
         auto cols = table->release();
@@ -417,7 +502,19 @@ void sirius_scan_manager::insert_pinned_entry(
             // duplicate chunk.
             continue;
           }
-          entry.data_batches_by_column[column_names[i]].emplace_back(std::move(cols[i]));
+          auto column            = std::move(cols[i]);
+          auto& chunks           = entry.data_batches_by_column[column_names[i]];
+          auto const chunk_index = chunks.size();
+          auto* chunk_space      = chunk_index < entry.chunk_memory_spaces.size()
+                                     ? entry.chunk_memory_spaces[chunk_index]
+                                     : nullptr;
+          index_fixed_width_column_pages(entry,
+                                         column_names[i],
+                                         *column,
+                                         chunk_index,
+                                         chunk_space,
+                                         entry.fixed_width_page_size_bytes);
+          chunks.emplace_back(std::move(column));
         }
       }
       // Append any new column names to the entry's column_names list so its
@@ -428,6 +525,16 @@ void sirius_scan_manager::insert_pinned_entry(
           entry.column_names.push_back(std::move(cn));
         }
       }
+      SIRIUS_LOG_INFO(
+        "[fixed-page-cache] indexed pinned table '{}' fixed_cols={} pages={} page_bytes={} "
+        "rows={} partial={}",
+        name,
+        entry.fixed_width_pages_by_column.size(),
+        fixed_width_page_count(entry),
+        entry.fixed_width_page_size_bytes,
+        entry.num_rows,
+        entry.is_partial);
+      // wdy end
       return;
     }
     // Row count or completeness contract differs → drop the stale entry and rebuild below.
@@ -435,12 +542,14 @@ void sirius_scan_manager::insert_pinned_entry(
   }
 
   pinned_entry entry;
-  entry.column_names        = std::move(column_names);
-  entry.file_paths          = std::move(file_paths);
-  entry.chunk_memory_spaces = std::move(chunk_memory_spaces);
-  entry.tier                = cucascade::memory::Tier::GPU;
-  entry.num_rows            = new_num_rows;
-  entry.is_partial          = is_partial;
+  entry.column_names                = std::move(column_names);
+  entry.file_paths                  = std::move(file_paths);
+  entry.chunk_memory_spaces         = std::move(chunk_memory_spaces);
+  entry.tier                        = cucascade::memory::Tier::GPU;
+  entry.num_rows                    = new_num_rows;
+  entry.is_partial                  = is_partial;
+  // wdy start
+  entry.fixed_width_page_size_bytes = fixed_width_page_size_bytes();
 
   for (auto& table : data_tables) {
     if (!table) { continue; }
@@ -451,9 +560,32 @@ void sirius_scan_manager::insert_pinned_entry(
                                std::to_string(entry.column_names.size()));
     }
     for (std::size_t i = 0; i < cols.size(); ++i) {
-      entry.data_batches_by_column[entry.column_names[i]].emplace_back(std::move(cols[i]));
+      auto column            = std::move(cols[i]);
+      auto& chunks           = entry.data_batches_by_column[entry.column_names[i]];
+      auto const chunk_index = chunks.size();
+      auto* chunk_space      = chunk_index < entry.chunk_memory_spaces.size()
+                                 ? entry.chunk_memory_spaces[chunk_index]
+                                 : nullptr;
+      index_fixed_width_column_pages(entry,
+                                     entry.column_names[i],
+                                     *column,
+                                     chunk_index,
+                                     chunk_space,
+                                     entry.fixed_width_page_size_bytes);
+      chunks.emplace_back(std::move(column));
     }
   }
+
+  SIRIUS_LOG_INFO(
+    "[fixed-page-cache] indexed pinned table '{}' fixed_cols={} pages={} page_bytes={} "
+    "rows={} partial={}",
+    name,
+    entry.fixed_width_pages_by_column.size(),
+    fixed_width_page_count(entry),
+    entry.fixed_width_page_size_bytes,
+    entry.num_rows,
+    entry.is_partial);
+  // wdy end
 
   _pinned_entries[name] = std::move(entry);
 }

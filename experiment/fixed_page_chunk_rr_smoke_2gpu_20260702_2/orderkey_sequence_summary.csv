@@ -1,0 +1,5 @@
+condition,metric,count,min_s,max_s,avg_s,delta_vs_no_pin_avg_s,speedup_vs_no_pin_avg
+key_only_pin,q3,1,4.079529,4.079529,4.079529,0.022311,0.9945
+key_only_pin,total,1,4.079529,4.079529,4.079529,0.022311,0.9945
+no_pin,q3,1,4.057218,4.057218,4.057218,,
+no_pin,total,1,4.057218,4.057218,4.057218,,

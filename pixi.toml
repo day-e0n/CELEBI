@@ -32,6 +32,9 @@ pkg-config = "*"
 mold = "*"
 libprotobuf = "*"
 rust = "*"
+ipykernel = ">=7.3.0,<8"
+pandas = ">=3.0.3,<4"
+matplotlib = ">=3.11.0,<4"
 
 [feature.dev-libs.dependencies]
 librmm = "*"

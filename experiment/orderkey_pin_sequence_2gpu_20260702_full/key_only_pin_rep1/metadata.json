@@ -1,0 +1,19 @@
+{
+  "condition": "key_only_pin",
+  "rep": 1,
+  "queries": [
+    3,
+    5,
+    7,
+    8,
+    9,
+    10,
+    18,
+    21
+  ],
+  "pin_rows": null,
+  "input": "/mnt/nvme/dataset",
+  "config": "experiment/orderkey_pin_sequence_2gpu_20260702_full/configs/sirius_2gpu.yaml",
+  "cuda_visible_devices": "0,1",
+  "date": "2026-07-02T06:44:09"
+}

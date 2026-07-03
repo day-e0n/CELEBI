@@ -45,6 +45,9 @@
 #include <vector>
 
 namespace sirius::scan_manager {
+// wdy start
+struct pinned_entry;
+// wdy end
 class sirius_scan_manager;
 }  // namespace sirius::scan_manager
 
@@ -105,6 +108,21 @@ class parquet_ingestible_table_info : public io::ingestible_table_info {
  */
 class parquet_split_info : public io::scan_info {
  public:
+  // wdy start
+  struct fixed_page_row_range {
+    std::size_t row_offset{0};
+    std::size_t num_rows{0};
+  };
+
+  struct fixed_page_reuse_info {
+    std::string pinned_name;
+    std::vector<fixed_page_row_range> row_ranges;
+    std::vector<std::size_t> cached_data_indices;
+    std::vector<std::size_t> parquet_data_indices;
+    int preferred_device_id{-1};
+  };
+
+  // wdy end
   /// Row-group slices for this batch — possibly across multiple parquet
   /// files when the per-file row groups don't fill the byte budget.
   std::vector<row_group_slice> rg_slices;
@@ -129,6 +147,14 @@ class parquet_split_info : public io::scan_info {
   /// Whether the scan plan needs post-decode assembly (hive partition
   /// injection or column reordering). Mirrors @c needs_output_assembly(*plan).
   bool needs_assembly = false;
+  // wdy start
+  /// Experimental fixed-width page reuse metadata. When present, the parquet
+  /// reader materializes only @c fixed_page_reuse->parquet_data_indices and
+  /// materialize_table splices cached fixed-width columns back into D-order.
+  std::unique_ptr<fixed_page_reuse_info> fixed_page_reuse;
+  /// Estimated bytes copied from fixed-width cached columns for this split.
+  std::size_t fixed_page_cached_bytes = 0;
+  // wdy end
 
   [[nodiscard]] std::size_t estimated_bytes() const noexcept override
   {
@@ -136,6 +162,9 @@ class parquet_split_info : public io::scan_info {
     for (auto const& s : rg_slices) {
       total += s.reserved_uncompressed_bytes;
     }
+    // wdy start
+    total += fixed_page_cached_bytes;
+    // wdy end
     return total;
   }
 };
@@ -208,7 +237,22 @@ class parquet_gpu_ingestible : public io::gpu_ingestible {
     std::vector<std::string> file_paths;
   };
 
+  // wdy start
+  struct fixed_page_cache_state {
+    std::string pinned_name;
+    scan_manager::pinned_entry const* entry{nullptr};
+    std::vector<bool> cached_by_data_index;
+    std::vector<std::size_t> cached_data_indices;
+    std::vector<std::size_t> parquet_data_indices;
+    std::vector<std::string> parquet_column_names;
+    std::size_t cached_row_width_bytes{0};
+  };
+
+  // wdy end
   void run_batch(file_batch const& batch, std::vector<std::unique_ptr<op::operator_data>>& out);
+  // wdy start
+  void initialize_fixed_page_cache();
+  // wdy end
 
   // Canonical scan plan — built once in the constructor, shared by every
   // emitted split via its parquet_split_info::plan member.
@@ -221,6 +265,9 @@ class parquet_gpu_ingestible : public io::gpu_ingestible {
   std::size_t _max_file_processed{};
   std::size_t _total_files{};
   scan_manager::sirius_scan_manager const* _scan_manager{nullptr};
+  // wdy start
+  std::optional<fixed_page_cache_state> _fixed_page_cache;
+  // wdy end
 
   std::vector<file_batch> _batches;
   std::atomic<std::size_t> _next_batch_idx{0};

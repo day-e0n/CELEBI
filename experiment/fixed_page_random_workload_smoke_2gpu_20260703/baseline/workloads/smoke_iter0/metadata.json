@@ -1,0 +1,15 @@
+{
+  "condition": "baseline",
+  "workload_id": "smoke",
+  "repeat": 0,
+  "queries": [
+    3,
+    8,
+    8
+  ],
+  "input": "/mnt/nvme/dataset",
+  "config": "/home/dy1013/sirius_multi-gpu/experiment/fixed_page_random_workload_smoke_2gpu_20260703/configs/sirius_2gpu.yaml",
+  "devices": "0,1",
+  "pin_rows": null,
+  "created_at": "2026-07-03T01:54:56"
+}

@@ -348,8 +348,17 @@ def run_grouped(
     for name, use_gpu in engine_modes:
         con = open_connection(source, gpu_execution=use_gpu)
         try:
+            # wdy start
+            pin_only_second_query = os.environ.get("SIRIUS_PIN_ONLY_SECOND_QUERY", "0") == "1"
+            second_query = queries[-1] if len(queries) >= 2 else None
+            # wdy end
             for qnum in queries:
-                if pin_enabled and use_gpu:
+                # wdy start
+                pin_this_query = pin_enabled and use_gpu and (
+                    not pin_only_second_query or qnum == second_query
+                )
+                # wdy end
+                if pin_this_query:
                     log(f"  Pinning tables for q{qnum}")
                     _execute_multi(con, emit_pin(qnum, parquet_dir))
                 try:
@@ -366,7 +375,7 @@ def run_grouped(
                             duckdb_profiling,
                         )
                 finally:
-                    if pin_enabled and use_gpu:
+                    if pin_this_query:
                         log(f"  Unpinning tables for q{qnum}")
                         _execute_multi(con, emit_unpin(qnum))
         finally:
