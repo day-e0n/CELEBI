@@ -106,6 +106,8 @@ int current_gpu_id()
 }
 
 // wdy start
+// locality audit: for each input batch, record the locality of the batch relative to the target memory space (if any) and accumulate the bytes in each category (local, remote GPU, host, disk). This is useful for understanding data movement and locality in GPU pipelines.
+// for breakdown
 const char* tier_name(cucascade::memory::Tier tier)
 {
   switch (tier) {

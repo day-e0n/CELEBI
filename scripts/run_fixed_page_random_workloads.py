@@ -50,6 +50,7 @@ from performance_test import _execute_multi, open_connection, time_query  # noqa
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run_fixed_page_pair_latency import (  # noqa: E402
     LOG_TS_RE,
+    PAGE_PRUNING_FIELDS,
     mean,
     parse_csv_list,
     parse_kv,
@@ -274,6 +275,35 @@ def run_case(args: argparse.Namespace) -> int:
     return 0
 
 
+
+STAGE_TIMING_FIELDS = [
+    "cache_column_view_ms",
+    "cache_column_materialize_ms",
+    "splice_view_build_ms",
+    "splice_materialize_ms",
+    "post_filter_select_ms",
+    "inline_assembly_ms",
+    "post_filter_project_assembly_ms",
+    "assembly_ms",
+    "fixed_page_extra_stage_ms",
+]
+
+FIXED_PAGE_EXTRA_STAGES = {
+    "splice_view_build": "splice_view_build_ms",
+    "splice_materialize": "splice_materialize_ms",
+}
+
+FIXED_PAGE_SUB_STAGES = {
+    "cache_column_view": "cache_column_view_ms",
+    "cache_column_materialize": "cache_column_materialize_ms",
+}
+
+OTHER_STAGE_FIELDS = {
+    "post_filter_select": "post_filter_select_ms",
+    "inline_assembly": "inline_assembly_ms",
+    "post_filter_project_assembly": "post_filter_project_assembly_ms",
+}
+
 def parse_log_timestamp_ms(line: str) -> float | None:
     match = LOG_TS_RE.match(line)
     if not match:
@@ -346,6 +376,10 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
     fixed_materialize_count_by_pos: dict[int, int] = defaultdict(int)
     fixed_materialize_view_count_by_pos: dict[int, int] = defaultdict(int)
     fixed_fallback_count_by_pos: dict[int, int] = defaultdict(int)
+    stage_ms_by_pos: dict[int, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    # wdy start
+    page_pruning_by_pos: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    # wdy end
 
     for position, _query, lines in segments:
         for line in lines:
@@ -366,6 +400,28 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
                 fixed_materialize_count_by_pos[position] += 1
             elif "[fixed-page-cache] hybrid_reuse_row_group_fallback" in line:
                 fixed_fallback_count_by_pos[position] += 1
+            # wdy start
+            elif "[fixed-page-cache] page_pruning_decision" in line:
+                fields = parse_kv(line)
+                pruning = page_pruning_by_pos[position]
+                pruning["page_pruning_matched_cols"] += to_int(fields.get("matched_cols"))
+                pruning["page_pruning_pages"] += to_int(fields.get("pages"))
+                pruning["page_pruning_all_fail_pages"] += to_int(fields.get("all_fail"))
+                pruning["page_pruning_all_pass_pages"] += to_int(fields.get("all_pass"))
+                pruning["page_pruning_partial_pages"] += to_int(fields.get("partial"))
+                pruning["page_pruning_unknown_pages"] += to_int(fields.get("unknown"))
+                action = fields.get("action", "")
+                if action == "skip_reuse_preserve_pushdown":
+                    pruning["page_pruning_skip_reuse_count"] += 1
+                elif action == "keep_reuse":
+                    pruning["page_pruning_keep_reuse_count"] += 1
+            # wdy end
+            elif "[fixed-page-cache] stage_timing" in line:
+                fields = parse_kv(line)
+                stage = fields.get("stage", "")
+                field = FIXED_PAGE_EXTRA_STAGES.get(stage) or FIXED_PAGE_SUB_STAGES.get(stage) or OTHER_STAGE_FIELDS.get(stage)
+                if field:
+                    stage_ms_by_pos[position][field] += to_int(fields.get("duration_us")) / 1000.0
 
     query_rows: list[dict[str, object]] = []
     cumulative_ms = 0.0
@@ -375,6 +431,16 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
         cumulative_ms += total_ms
         scan_wall_ms = union_interval_ms(scan_intervals_by_pos.get(position, []))
         load_ms = min(scan_wall_ms, total_ms)
+        stage_values = {field: stage_ms_by_pos[position].get(field, 0.0) for field in STAGE_TIMING_FIELDS}
+        stage_values["assembly_ms"] = (
+            stage_values["inline_assembly_ms"] + stage_values["post_filter_project_assembly_ms"]
+        )
+        stage_values["fixed_page_extra_stage_ms"] = sum(
+            stage_values[field] for field in FIXED_PAGE_EXTRA_STAGES.values()
+        )
+        # wdy start
+        pruning_values = {field: page_pruning_by_pos[position].get(field, 0) for field in PAGE_PRUNING_FIELDS}
+        # wdy end
         query_rows.append(
             {
                 "condition": condition,
@@ -395,6 +461,8 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
                 "fixed_page_materialize_count": fixed_materialize_count_by_pos.get(position, 0),
                 "fixed_page_materialize_view_count": fixed_materialize_view_count_by_pos.get(position, 0),
                 "fixed_page_fallback_count": fixed_fallback_count_by_pos.get(position, 0),
+                **pruning_values,
+                **stage_values,
                 "benchmark_dir": str(bench),
             }
         )
@@ -415,6 +483,8 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
         "fixed_page_reuse_split_count": sum(to_int(row.get("fixed_page_reuse_split_count")) for row in query_rows),
         "fixed_page_materialize_view_count": sum(to_int(row.get("fixed_page_materialize_view_count")) for row in query_rows),
         "fixed_page_fallback_count": sum(to_int(row.get("fixed_page_fallback_count")) for row in query_rows),
+        **{field: sum(to_int(row.get(field)) for row in query_rows) for field in PAGE_PRUNING_FIELDS},
+        **{field: sum(to_float(row.get(field)) for row in query_rows) for field in STAGE_TIMING_FIELDS},
         "benchmark_dir": str(bench),
     }
     return query_rows, workload_row
@@ -439,6 +509,8 @@ QUERY_FIELDS = [
     "fixed_page_materialize_count",
     "fixed_page_materialize_view_count",
     "fixed_page_fallback_count",
+    *PAGE_PRUNING_FIELDS,
+    *STAGE_TIMING_FIELDS,
     "benchmark_dir",
 ]
 
@@ -458,6 +530,8 @@ WORKLOAD_FIELDS = [
     "fixed_page_reuse_split_count",
     "fixed_page_materialize_view_count",
     "fixed_page_fallback_count",
+    *PAGE_PRUNING_FIELDS,
+    *STAGE_TIMING_FIELDS,
     "benchmark_dir",
 ]
 
@@ -486,6 +560,8 @@ def write_workload_latency_summary(path: Path, rows: list[dict[str, object]]) ->
         "fixed_page_reuse_split_count_mean",
         "fixed_page_materialize_view_count_mean",
         "fixed_page_fallback_count_mean",
+        *[f"{field}_mean" for field in PAGE_PRUNING_FIELDS],
+        *[f"{field}_mean" for field in STAGE_TIMING_FIELDS],
     ]
     out: list[dict[str, object]] = []
     for (condition, workload_id), group in sorted(groups.items()):
@@ -506,6 +582,8 @@ def write_workload_latency_summary(path: Path, rows: list[dict[str, object]]) ->
                 "fixed_page_reuse_split_count_mean": mean(vals(group, "fixed_page_reuse_split_count")),
                 "fixed_page_materialize_view_count_mean": mean(vals(group, "fixed_page_materialize_view_count")),
                 "fixed_page_fallback_count_mean": mean(vals(group, "fixed_page_fallback_count")),
+                **{f"{field}_mean": mean(vals(group, field)) for field in PAGE_PRUNING_FIELDS},
+                **{f"{field}_mean": mean(vals(group, field)) for field in STAGE_TIMING_FIELDS},
             }
         )
     write_csv(path, out, fields)
@@ -548,10 +626,24 @@ def write_baseline_vs_paging(summary_dir: Path, query_rows: list[dict[str, objec
         "baseline_computation_ms",
         "paging_computation_ms",
         "computation_ms_delta",
+        "baseline_fixed_page_extra_stage_ms",
+        "paging_fixed_page_extra_stage_ms",
+        "fixed_page_extra_stage_ms_delta",
+        "baseline_post_filter_select_ms",
+        "paging_post_filter_select_ms",
+        "post_filter_select_ms_delta",
+        "baseline_assembly_ms",
+        "paging_assembly_ms",
+        "assembly_ms_delta",
         "paging_fixed_page_cached_gb",
         "paging_fixed_page_reuse_split_count",
         "paging_fixed_page_materialize_view_count",
         "paging_fixed_page_fallback_count",
+        "paging_page_pruning_pages",
+        "paging_page_pruning_all_fail_pages",
+        "paging_page_pruning_partial_pages",
+        "paging_page_pruning_skip_reuse_count",
+        "paging_page_pruning_keep_reuse_count",
     ]
     workload_out: list[dict[str, object]] = []
     for paging in paging_conditions:
@@ -564,6 +656,12 @@ def write_baseline_vs_paging(summary_dir: Path, query_rows: list[dict[str, objec
             p_scan = avg(workload_groups, paging, workload_id, "scan_materialize_work_ms")
             b_comp = avg(workload_groups, "baseline", workload_id, "computation_ms")
             p_comp = avg(workload_groups, paging, workload_id, "computation_ms")
+            b_extra = avg(workload_groups, "baseline", workload_id, "fixed_page_extra_stage_ms")
+            p_extra = avg(workload_groups, paging, workload_id, "fixed_page_extra_stage_ms")
+            b_filter = avg(workload_groups, "baseline", workload_id, "post_filter_select_ms")
+            p_filter = avg(workload_groups, paging, workload_id, "post_filter_select_ms")
+            b_assembly = avg(workload_groups, "baseline", workload_id, "assembly_ms")
+            p_assembly = avg(workload_groups, paging, workload_id, "assembly_ms")
             group = workload_groups.get((paging, workload_id), []) or workload_groups.get(("baseline", workload_id), [])
             seq = group[0].get("query_sequence", "") if group else ""
             workload_out.append(
@@ -587,10 +685,24 @@ def write_baseline_vs_paging(summary_dir: Path, query_rows: list[dict[str, objec
                     "baseline_computation_ms": b_comp,
                     "paging_computation_ms": p_comp,
                     "computation_ms_delta": float(p_comp) - float(b_comp) if b_comp != "" and p_comp != "" else "",
+                    "baseline_fixed_page_extra_stage_ms": b_extra,
+                    "paging_fixed_page_extra_stage_ms": p_extra,
+                    "fixed_page_extra_stage_ms_delta": float(p_extra) - float(b_extra) if b_extra != "" and p_extra != "" else "",
+                    "baseline_post_filter_select_ms": b_filter,
+                    "paging_post_filter_select_ms": p_filter,
+                    "post_filter_select_ms_delta": float(p_filter) - float(b_filter) if b_filter != "" and p_filter != "" else "",
+                    "baseline_assembly_ms": b_assembly,
+                    "paging_assembly_ms": p_assembly,
+                    "assembly_ms_delta": float(p_assembly) - float(b_assembly) if b_assembly != "" and p_assembly != "" else "",
                     "paging_fixed_page_cached_gb": avg(workload_groups, paging, workload_id, "fixed_page_cached_gb"),
                     "paging_fixed_page_reuse_split_count": avg(workload_groups, paging, workload_id, "fixed_page_reuse_split_count"),
                     "paging_fixed_page_materialize_view_count": avg(workload_groups, paging, workload_id, "fixed_page_materialize_view_count"),
                     "paging_fixed_page_fallback_count": avg(workload_groups, paging, workload_id, "fixed_page_fallback_count"),
+                    "paging_page_pruning_pages": avg(workload_groups, paging, workload_id, "page_pruning_pages"),
+                    "paging_page_pruning_all_fail_pages": avg(workload_groups, paging, workload_id, "page_pruning_all_fail_pages"),
+                    "paging_page_pruning_partial_pages": avg(workload_groups, paging, workload_id, "page_pruning_partial_pages"),
+                    "paging_page_pruning_skip_reuse_count": avg(workload_groups, paging, workload_id, "page_pruning_skip_reuse_count"),
+                    "paging_page_pruning_keep_reuse_count": avg(workload_groups, paging, workload_id, "page_pruning_keep_reuse_count"),
                 }
             )
     write_csv(summary_dir / "baseline_vs_paging_workload.csv", workload_out, workload_fields)
@@ -783,7 +895,7 @@ def build_workloads(args: argparse.Namespace) -> list[Workload]:
 def run_orchestrator(args: argparse.Namespace) -> int:
     workloads = build_workloads(args)
     conditions = parse_csv_list(args.conditions)
-    valid_conditions = {"baseline", "paging_key_only", "paging_budget", "paging_full_fixed"}
+    valid_conditions = {"baseline", "paging_key_only", "paging_budget", "paging_filter_aware", "paging_full_fixed"}
     bad = [condition for condition in conditions if condition not in valid_conditions]
     if bad:
         raise SystemExit(f"bad condition(s): {', '.join(bad)}")

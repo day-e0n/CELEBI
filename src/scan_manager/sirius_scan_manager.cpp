@@ -33,12 +33,18 @@
 #include "scan_manager/split_connector.hpp"
 #include "scan_manager/split_provider.hpp"
 
+#include <cudf/copying.hpp>
 #include <cudf/io/datasource.hpp>
 #include <cudf/io/experimental/hybrid_scan.hpp>
 #include <cudf/io/parquet.hpp>
 #include <cudf/io/parquet_io_utils.hpp>
 #include <cudf/io/parquet_schema.hpp>
+#include <cudf/reduction.hpp>
+#include <cudf/scalar/scalar.hpp>
+#include <cudf/utilities/default_stream.hpp>
 #include <cudf/utilities/span.hpp>
+
+#include <rmm/cuda_device.hpp>
 
 #include <cucascade/memory/fixed_size_host_memory_resource.hpp>
 
@@ -107,6 +113,165 @@ bool is_fixed_width_page_candidate(cudf::column_view const& col) noexcept
   }
 }
 
+template <typename T>
+fixed_width_page_stats make_signed_page_stats(cudf::scalar const& min_scalar,
+                                              cudf::scalar const& max_scalar,
+                                              bool has_null,
+                                              rmm::cuda_stream_view stream)
+{
+  fixed_width_page_stats stats;
+  stats.valid      = true;
+  stats.has_null   = has_null;
+  stats.kind       = fixed_width_page_stat_kind::signed_int;
+  stats.min_signed = static_cast<int64_t>(
+    static_cast<cudf::numeric_scalar<T> const&>(min_scalar).value(stream));
+  stats.max_signed = static_cast<int64_t>(
+    static_cast<cudf::numeric_scalar<T> const&>(max_scalar).value(stream));
+  return stats;
+}
+
+template <typename T>
+fixed_width_page_stats make_unsigned_page_stats(cudf::scalar const& min_scalar,
+                                                cudf::scalar const& max_scalar,
+                                                bool has_null,
+                                                rmm::cuda_stream_view stream)
+{
+  fixed_width_page_stats stats;
+  stats.valid        = true;
+  stats.has_null     = has_null;
+  stats.kind         = fixed_width_page_stat_kind::unsigned_int;
+  stats.min_unsigned = static_cast<uint64_t>(
+    static_cast<cudf::numeric_scalar<T> const&>(min_scalar).value(stream));
+  stats.max_unsigned = static_cast<uint64_t>(
+    static_cast<cudf::numeric_scalar<T> const&>(max_scalar).value(stream));
+  return stats;
+}
+
+template <typename T>
+fixed_width_page_stats make_floating_page_stats(cudf::scalar const& min_scalar,
+                                                cudf::scalar const& max_scalar,
+                                                bool has_null,
+                                                rmm::cuda_stream_view stream)
+{
+  fixed_width_page_stats stats;
+  stats.valid       = true;
+  stats.has_null    = has_null;
+  stats.kind        = fixed_width_page_stat_kind::floating;
+  stats.min_floating = static_cast<double>(
+    static_cast<cudf::numeric_scalar<T> const&>(min_scalar).value(stream));
+  stats.max_floating = static_cast<double>(
+    static_cast<cudf::numeric_scalar<T> const&>(max_scalar).value(stream));
+  return stats;
+}
+
+template <typename Timestamp>
+fixed_width_page_stats make_timestamp_page_stats(cudf::scalar const& min_scalar,
+                                                 cudf::scalar const& max_scalar,
+                                                 bool has_null)
+{
+  fixed_width_page_stats stats;
+  stats.valid      = true;
+  stats.has_null   = has_null;
+  stats.kind       = fixed_width_page_stat_kind::signed_int;
+  stats.min_signed = static_cast<int64_t>(
+    static_cast<cudf::timestamp_scalar<Timestamp> const&>(min_scalar)
+      .value()
+      .time_since_epoch()
+      .count());
+  stats.max_signed = static_cast<int64_t>(
+    static_cast<cudf::timestamp_scalar<Timestamp> const&>(max_scalar)
+      .value()
+      .time_since_epoch()
+      .count());
+  return stats;
+}
+
+fixed_width_page_stats compute_fixed_width_page_stats(cudf::column_view const& page_view,
+                                                      rmm::cuda_stream_view stream)
+{
+  fixed_width_page_stats stats;
+  stats.has_null = page_view.has_nulls();
+  if (page_view.is_empty()) { return stats; }
+
+  switch (page_view.type().id()) {
+    case cudf::type_id::INT8:
+    case cudf::type_id::INT16:
+    case cudf::type_id::INT32:
+    case cudf::type_id::INT64:
+    case cudf::type_id::UINT8:
+    case cudf::type_id::UINT16:
+    case cudf::type_id::UINT32:
+    case cudf::type_id::UINT64:
+    case cudf::type_id::FLOAT32:
+    case cudf::type_id::FLOAT64:
+    case cudf::type_id::TIMESTAMP_DAYS:
+    case cudf::type_id::TIMESTAMP_SECONDS:
+    case cudf::type_id::TIMESTAMP_MILLISECONDS:
+    case cudf::type_id::TIMESTAMP_MICROSECONDS:
+    case cudf::type_id::TIMESTAMP_NANOSECONDS: break;
+    default: return stats;
+  }
+
+  auto [min_scalar, max_scalar] = cudf::minmax(page_view, stream);
+  if (!min_scalar || !max_scalar || !min_scalar->is_valid(stream) ||
+      !max_scalar->is_valid(stream)) {
+    return stats;
+  }
+
+  switch (page_view.type().id()) {
+    case cudf::type_id::INT8:
+      return make_signed_page_stats<int8_t>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::INT16:
+      return make_signed_page_stats<int16_t>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::INT32:
+      return make_signed_page_stats<int32_t>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::INT64:
+      return make_signed_page_stats<int64_t>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::UINT8:
+      return make_unsigned_page_stats<uint8_t>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::UINT16:
+      return make_unsigned_page_stats<uint16_t>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::UINT32:
+      return make_unsigned_page_stats<uint32_t>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::UINT64:
+      return make_unsigned_page_stats<uint64_t>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::FLOAT32:
+      return make_floating_page_stats<float>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::FLOAT64:
+      return make_floating_page_stats<double>(*min_scalar, *max_scalar, stats.has_null, stream);
+    case cudf::type_id::TIMESTAMP_DAYS:
+      return make_timestamp_page_stats<cudf::timestamp_D>(*min_scalar, *max_scalar, stats.has_null);
+    case cudf::type_id::TIMESTAMP_SECONDS:
+      return make_timestamp_page_stats<cudf::timestamp_s>(*min_scalar, *max_scalar, stats.has_null);
+    case cudf::type_id::TIMESTAMP_MILLISECONDS:
+      return make_timestamp_page_stats<cudf::timestamp_ms>(*min_scalar, *max_scalar, stats.has_null);
+    case cudf::type_id::TIMESTAMP_MICROSECONDS:
+      return make_timestamp_page_stats<cudf::timestamp_us>(*min_scalar, *max_scalar, stats.has_null);
+    case cudf::type_id::TIMESTAMP_NANOSECONDS:
+      return make_timestamp_page_stats<cudf::timestamp_ns>(*min_scalar, *max_scalar, stats.has_null);
+    default: return stats;
+  }
+}
+
+fixed_width_page_stats compute_fixed_width_page_stats_for_range(
+  cudf::column_view const& view,
+  cudf::size_type begin,
+  cudf::size_type end,
+  cucascade::memory::memory_space* memory_space)
+{
+  auto compute = [&]() {
+    auto page_views = cudf::slice(view, {begin, end});
+    if (page_views.empty()) { return fixed_width_page_stats{}; }
+    return compute_fixed_width_page_stats(page_views.front(), cudf::get_default_stream());
+  };
+
+  if (memory_space != nullptr && memory_space->get_device_id() >= 0) {
+    rmm::cuda_set_device_raii device_guard{rmm::cuda_device_id{memory_space->get_device_id()}};
+    return compute();
+  }
+  return compute();
+}
+
 void index_fixed_width_column_pages(pinned_entry& entry,
                                     std::string const& column_name,
                                     cudf::column const& column,
@@ -138,6 +303,10 @@ void index_fixed_width_column_pages(pinned_entry& entry,
     page.element_size_bytes = element_size;
     page.type_id            = view.type().id();
     page.memory_space       = memory_space;
+    auto const begin        = static_cast<cudf::size_type>(row_offset);
+    auto const end          = static_cast<cudf::size_type>(row_offset + page_rows);
+    page.stats             = compute_fixed_width_page_stats_for_range(
+      view, begin, end, memory_space);
     pages.emplace_back(page);
   }
 }
@@ -147,6 +316,17 @@ std::size_t fixed_width_page_count(pinned_entry const& entry)
   std::size_t pages = 0;
   for (auto const& [_, col_pages] : entry.fixed_width_pages_by_column) {
     pages += col_pages.size();
+  }
+  return pages;
+}
+
+std::size_t fixed_width_page_stats_count(pinned_entry const& entry)
+{
+  std::size_t pages = 0;
+  for (auto const& [_, col_pages] : entry.fixed_width_pages_by_column) {
+    for (auto const& page : col_pages) {
+      if (page.stats.valid) { ++pages; }
+    }
   }
   return pages;
 }
@@ -526,11 +706,12 @@ void sirius_scan_manager::insert_pinned_entry(
         }
       }
       SIRIUS_LOG_INFO(
-        "[fixed-page-cache] indexed pinned table '{}' fixed_cols={} pages={} page_bytes={} "
+        "[fixed-page-cache] indexed pinned table '{}' fixed_cols={} pages={} stats_pages={} page_bytes={} "
         "rows={} partial={}",
         name,
         entry.fixed_width_pages_by_column.size(),
         fixed_width_page_count(entry),
+        fixed_width_page_stats_count(entry),
         entry.fixed_width_page_size_bytes,
         entry.num_rows,
         entry.is_partial);
@@ -577,11 +758,12 @@ void sirius_scan_manager::insert_pinned_entry(
   }
 
   SIRIUS_LOG_INFO(
-    "[fixed-page-cache] indexed pinned table '{}' fixed_cols={} pages={} page_bytes={} "
+    "[fixed-page-cache] indexed pinned table '{}' fixed_cols={} pages={} stats_pages={} page_bytes={} "
     "rows={} partial={}",
     name,
     entry.fixed_width_pages_by_column.size(),
     fixed_width_page_count(entry),
+    fixed_width_page_stats_count(entry),
     entry.fixed_width_page_size_bytes,
     entry.num_rows,
     entry.is_partial);

@@ -41,6 +41,7 @@ namespace cucascade::memory {
 class fixed_size_host_memory_resource;
 }  // namespace cucascade::memory
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -139,6 +140,25 @@ struct scan_manager_config {
 };
 
 // wdy start
+enum class fixed_width_page_stat_kind : uint8_t {
+  none,
+  signed_int,
+  unsigned_int,
+  floating,
+};
+
+struct fixed_width_page_stats {
+  bool valid{false};
+  bool has_null{false};
+  fixed_width_page_stat_kind kind{fixed_width_page_stat_kind::none};
+  int64_t min_signed{0};
+  int64_t max_signed{0};
+  uint64_t min_unsigned{0};
+  uint64_t max_unsigned{0};
+  double min_floating{0.0};
+  double max_floating{0.0};
+};
+
 /**
  * @brief Logical page metadata for a fixed-width GPU column chunk.
  *
@@ -157,6 +177,7 @@ struct fixed_width_column_page {
   std::size_t element_size_bytes{0};
   cudf::type_id type_id{cudf::type_id::EMPTY};
   cucascade::memory::memory_space* memory_space{nullptr};
+  fixed_width_page_stats stats;
 };
 // wdy end
 

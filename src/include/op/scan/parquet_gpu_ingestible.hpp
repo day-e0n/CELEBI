@@ -119,7 +119,9 @@ class parquet_split_info : public io::scan_info {
     std::vector<fixed_page_row_range> row_ranges;
     std::vector<std::size_t> cached_data_indices;
     std::vector<std::size_t> parquet_data_indices;
+    std::vector<std::size_t> reader_extra_filter_data_indices;
     int preferred_device_id{-1};
+    bool filtered_reuse{false};
   };
 
   // wdy end

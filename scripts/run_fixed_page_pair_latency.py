@@ -41,6 +41,52 @@ DEFAULT_OUTPUT = REPO_ROOT / "experiment" / "fixed_page_pair_latency"
 DEFAULT_QUERIES = "3,5,7,8,9,10,18,21"
 DEFAULT_CONDITIONS = "baseline,paging_key_only"
 
+STAGE_TIMING_FIELDS = [
+    "cache_column_view_ms",
+    "cache_column_materialize_ms",
+    "splice_view_build_ms",
+    "splice_materialize_ms",
+    "filtered_splice_materialize_ms",
+    "cached_filter_select_ms",
+    "post_filter_select_ms",
+    "inline_assembly_ms",
+    "post_filter_project_assembly_ms",
+    "assembly_ms",
+    "fixed_page_extra_stage_ms",
+]
+
+# wdy start
+PAGE_PRUNING_FIELDS = [
+    "page_pruning_matched_cols",
+    "page_pruning_pages",
+    "page_pruning_all_fail_pages",
+    "page_pruning_all_pass_pages",
+    "page_pruning_partial_pages",
+    "page_pruning_unknown_pages",
+    "page_pruning_skip_reuse_count",
+    "page_pruning_keep_reuse_count",
+]
+# wdy end
+
+FIXED_PAGE_EXTRA_STAGES = {
+    "splice_view_build": "splice_view_build_ms",
+    "splice_materialize": "splice_materialize_ms",
+    "filtered_splice_materialize": "filtered_splice_materialize_ms",
+}
+
+FIXED_PAGE_SUB_STAGES = {
+    "cache_column_view": "cache_column_view_ms",
+    "cache_column_materialize": "cache_column_materialize_ms",
+}
+
+OTHER_STAGE_FIELDS = {
+    "cached_filter_select": "cached_filter_select_ms",
+    "post_filter_select": "post_filter_select_ms",
+    "inline_assembly": "inline_assembly_ms",
+    "post_filter_project_assembly": "post_filter_project_assembly_ms",
+}
+
+
 sys.path.insert(0, str(TPCH_DIR))
 from performance_test import _execute_multi, open_connection, time_query  # noqa: E402
 from tpch_pin_columns import QUERY_COLUMNS, detect_pin_glob  # noqa: E402
@@ -86,6 +132,25 @@ BUDGETED_FIXED_WIDTH_COLUMNS: dict[str, set[str]] = {
     "region": {"r_regionkey"},
     "supplier": {"s_suppkey", "s_nationkey"},
 }
+
+# wdy start
+# Filter-aware paging keeps the order-key reuse columns, then adds common
+# fixed-width range-filter columns so SIRIUS_FIXED_PAGE_PRUNING has page stats
+# for predicates such as o_orderdate/l_shipdate ranges without pinning every
+# fixed-width column in the workload.
+FILTER_AWARE_FIXED_WIDTH_COLUMNS: dict[str, set[str]] = {
+    "lineitem": {
+        "l_orderkey",
+        "l_shipdate",
+        "l_commitdate",
+        "l_receiptdate",
+        "l_quantity",
+        "l_discount",
+    },
+    "orders": {"o_orderkey", "o_orderdate"},
+    "part": {"p_size"},
+}
+# wdy end
 
 
 @dataclass(frozen=True)
@@ -183,6 +248,18 @@ def key_only_columns_for_queries(queries: list[int]) -> dict[str, list[str]]:
     return out
 
 
+# wdy start
+def filter_aware_columns_for_queries(queries: list[int]) -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
+    for table, cols in union_columns_for_queries(queries).items():
+        allowed = FILTER_AWARE_FIXED_WIDTH_COLUMNS.get(table, set())
+        selected = sorted(col for col in cols if col in allowed)
+        if selected:
+            out[table] = selected
+    return out
+
+
+# wdy end
 def pin_sql_for_condition(
     condition: str,
     parquet_dir: str,
@@ -195,6 +272,8 @@ def pin_sql_for_condition(
         cols_by_table = key_only_columns_for_queries(queries)
     elif condition == "paging_budget":
         cols_by_table = budgeted_fixed_width_columns_for_queries(queries)
+    elif condition == "paging_filter_aware":
+        cols_by_table = filter_aware_columns_for_queries(queries)
     elif condition == "paging_full_fixed":
         cols_by_table = fixed_width_columns_for_queries(queries)
     else:
@@ -337,6 +416,10 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
     fixed_materialize_count_by_query: dict[str, int] = defaultdict(int)
     fixed_materialize_view_count_by_query: dict[str, int] = defaultdict(int)
     fixed_fallback_count_by_query: dict[str, int] = defaultdict(int)
+    stage_ms_by_query: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    # wdy start
+    page_pruning_by_query: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    # wdy end
 
     for query, lines in segments:
         for line in lines:
@@ -353,10 +436,34 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
                 fixed_split_count_by_query[query] += 1
             elif "[fixed-page-cache] hybrid_reuse_materialize_view" in line:
                 fixed_materialize_view_count_by_query[query] += 1
+            elif "[fixed-page-cache] hybrid_reuse_materialize_filtered" in line:
+                fixed_materialize_count_by_query[query] += 1
             elif "[fixed-page-cache] hybrid_reuse_materialize " in line:
                 fixed_materialize_count_by_query[query] += 1
             elif "[fixed-page-cache] hybrid_reuse_row_group_fallback" in line:
                 fixed_fallback_count_by_query[query] += 1
+            # wdy start
+            elif "[fixed-page-cache] page_pruning_decision" in line:
+                fields = parse_kv(line)
+                pruning = page_pruning_by_query[query]
+                pruning["page_pruning_matched_cols"] += to_int(fields.get("matched_cols"))
+                pruning["page_pruning_pages"] += to_int(fields.get("pages"))
+                pruning["page_pruning_all_fail_pages"] += to_int(fields.get("all_fail"))
+                pruning["page_pruning_all_pass_pages"] += to_int(fields.get("all_pass"))
+                pruning["page_pruning_partial_pages"] += to_int(fields.get("partial"))
+                pruning["page_pruning_unknown_pages"] += to_int(fields.get("unknown"))
+                action = fields.get("action", "")
+                if action == "skip_reuse_preserve_pushdown":
+                    pruning["page_pruning_skip_reuse_count"] += 1
+                elif action == "keep_reuse":
+                    pruning["page_pruning_keep_reuse_count"] += 1
+            # wdy end
+            elif "[fixed-page-cache] stage_timing" in line:
+                fields = parse_kv(line)
+                stage = fields.get("stage", "")
+                field = FIXED_PAGE_EXTRA_STAGES.get(stage) or FIXED_PAGE_SUB_STAGES.get(stage) or OTHER_STAGE_FIELDS.get(stage)
+                if field:
+                    stage_ms_by_query[query][field] += to_int(fields.get("duration_us")) / 1000.0
 
     query_rows: list[dict[str, object]] = []
     for position, row in enumerate(runtime_rows[:2], 1):
@@ -365,6 +472,16 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
         scan_work_ms = scan_work_by_query.get(query, 0.0)
         scan_wall_ms = union_interval_ms(scan_intervals_by_query.get(query, []))
         load_ms = min(scan_wall_ms, total_ms)
+        stage_values = {field: stage_ms_by_query[query].get(field, 0.0) for field in STAGE_TIMING_FIELDS}
+        stage_values["assembly_ms"] = (
+            stage_values["inline_assembly_ms"] + stage_values["post_filter_project_assembly_ms"]
+        )
+        stage_values["fixed_page_extra_stage_ms"] = sum(
+            stage_values[field] for field in FIXED_PAGE_EXTRA_STAGES.values()
+        )
+        # wdy start
+        pruning_values = {field: page_pruning_by_query[query].get(field, 0) for field in PAGE_PRUNING_FIELDS}
+        # wdy end
         query_rows.append(
             {
                 "condition": condition,
@@ -384,6 +501,8 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
                 "fixed_page_materialize_count": fixed_materialize_count_by_query.get(query, 0),
                 "fixed_page_materialize_view_count": fixed_materialize_view_count_by_query.get(query, 0),
                 "fixed_page_fallback_count": fixed_fallback_count_by_query.get(query, 0),
+                **pruning_values,
+                **stage_values,
                 "benchmark_dir": str(bench),
             }
         )
@@ -402,6 +521,8 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
         "first_scan_uncompressed_gb": first.get("scan_uncompressed_gb", ""),
         "first_computation_ms": first.get("computation_ms", ""),
         "first_fixed_page_cached_gb": first.get("fixed_page_cached_gb", ""),
+        **{f"first_{field}": first.get(field, "") for field in PAGE_PRUNING_FIELDS},
+        **{f"first_{field}": first.get(field, "") for field in STAGE_TIMING_FIELDS},
         "second_total_ms": second.get("total_ms", ""),
         "second_load_ms": second.get("load_ms", ""),
         "second_scan_materialize_wall_ms": second.get("scan_materialize_wall_ms", ""),
@@ -413,9 +534,13 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
         "second_fixed_page_materialize_count": second.get("fixed_page_materialize_count", ""),
         "second_fixed_page_materialize_view_count": second.get("fixed_page_materialize_view_count", ""),
         "second_fixed_page_fallback_count": second.get("fixed_page_fallback_count", ""),
+        **{f"second_{field}": second.get(field, "") for field in PAGE_PRUNING_FIELDS},
+        **{f"second_{field}": second.get(field, "") for field in STAGE_TIMING_FIELDS},
         "pair_total_ms": to_float(first.get("total_ms", "")) + to_float(second.get("total_ms", "")),
         "pair_load_ms": to_float(first.get("load_ms", "")) + to_float(second.get("load_ms", "")),
         "pair_computation_ms": to_float(first.get("computation_ms", "")) + to_float(second.get("computation_ms", "")),
+        **{f"pair_{field}": to_float(first.get(field, "")) + to_float(second.get(field, "")) for field in PAGE_PRUNING_FIELDS},
+        **{f"pair_{field}": to_float(first.get(field, "")) + to_float(second.get(field, "")) for field in STAGE_TIMING_FIELDS},
         "benchmark_dir": str(bench),
     }
     return query_rows, pair_row
@@ -439,6 +564,8 @@ QUERY_FIELDS = [
     "fixed_page_materialize_count",
     "fixed_page_materialize_view_count",
     "fixed_page_fallback_count",
+    *PAGE_PRUNING_FIELDS,
+    *STAGE_TIMING_FIELDS,
     "benchmark_dir",
 ]
 
@@ -454,6 +581,8 @@ PAIR_FIELDS = [
     "first_scan_uncompressed_gb",
     "first_computation_ms",
     "first_fixed_page_cached_gb",
+    *[f"first_{field}" for field in PAGE_PRUNING_FIELDS],
+    *[f"first_{field}" for field in STAGE_TIMING_FIELDS],
     "second_total_ms",
     "second_load_ms",
     "second_scan_materialize_wall_ms",
@@ -465,9 +594,13 @@ PAIR_FIELDS = [
     "second_fixed_page_materialize_count",
     "second_fixed_page_materialize_view_count",
     "second_fixed_page_fallback_count",
+    *[f"second_{field}" for field in PAGE_PRUNING_FIELDS],
+    *[f"second_{field}" for field in STAGE_TIMING_FIELDS],
     "pair_total_ms",
     "pair_load_ms",
     "pair_computation_ms",
+    *[f"pair_{field}" for field in PAGE_PRUNING_FIELDS],
+    *[f"pair_{field}" for field in STAGE_TIMING_FIELDS],
     "benchmark_dir",
 ]
 
@@ -520,6 +653,8 @@ def write_pair_latency_summary(path: Path, rows: list[dict[str, object]]) -> Non
         "second_fixed_page_reuse_split_count_mean",
         "second_fixed_page_materialize_view_count_mean",
         "second_fixed_page_fallback_count_mean",
+        *[f"second_{field}_mean" for field in PAGE_PRUNING_FIELDS],
+        *[f"second_{field}_mean" for field in STAGE_TIMING_FIELDS],
         "pair_total_ms_mean",
         "pair_load_ms_mean",
         "pair_computation_ms_mean",
@@ -545,6 +680,8 @@ def write_pair_latency_summary(path: Path, rows: list[dict[str, object]]) -> Non
                 "second_fixed_page_reuse_split_count_mean": mean(vals(group, "second_fixed_page_reuse_split_count")),
                 "second_fixed_page_materialize_view_count_mean": mean(vals(group, "second_fixed_page_materialize_view_count")),
                 "second_fixed_page_fallback_count_mean": mean(vals(group, "second_fixed_page_fallback_count")),
+                **{f"second_{field}_mean": mean(vals(group, f"second_{field}")) for field in PAGE_PRUNING_FIELDS},
+                **{f"second_{field}_mean": mean(vals(group, f"second_{field}")) for field in STAGE_TIMING_FIELDS},
                 "pair_total_ms_mean": mean(vals(group, "pair_total_ms")),
                 "pair_load_ms_mean": mean(vals(group, "pair_load_ms")),
                 "pair_computation_ms_mean": mean(vals(group, "pair_computation_ms")),
@@ -596,10 +733,24 @@ def write_baseline_vs_paging(summary_dir: Path, rows: list[dict[str, object]], q
         "baseline_second_computation_ms",
         "paging_second_computation_ms",
         "computation_ms_delta",
+        "baseline_second_fixed_page_extra_stage_ms",
+        "paging_second_fixed_page_extra_stage_ms",
+        "fixed_page_extra_stage_ms_delta",
+        "baseline_second_post_filter_select_ms",
+        "paging_second_post_filter_select_ms",
+        "post_filter_select_ms_delta",
+        "baseline_second_assembly_ms",
+        "paging_second_assembly_ms",
+        "assembly_ms_delta",
         "paging_fixed_page_cached_gb",
         "paging_fixed_page_reuse_split_count",
         "paging_fixed_page_materialize_view_count",
         "paging_fixed_page_fallback_count",
+        "paging_page_pruning_pages",
+        "paging_page_pruning_all_fail_pages",
+        "paging_page_pruning_partial_pages",
+        "paging_page_pruning_skip_reuse_count",
+        "paging_page_pruning_keep_reuse_count",
     ]
     all_out: list[dict[str, object]] = []
     for paging in paging_conditions:
@@ -616,6 +767,12 @@ def write_baseline_vs_paging(summary_dir: Path, rows: list[dict[str, object]], q
                 p_scan = avg(groups, paging, qi, qj, "second_scan_materialize_work_ms")
                 b_comp = avg(groups, "baseline", qi, qj, "second_computation_ms")
                 p_comp = avg(groups, paging, qi, qj, "second_computation_ms")
+                b_extra = avg(groups, "baseline", qi, qj, "second_fixed_page_extra_stage_ms")
+                p_extra = avg(groups, paging, qi, qj, "second_fixed_page_extra_stage_ms")
+                b_filter = avg(groups, "baseline", qi, qj, "second_post_filter_select_ms")
+                p_filter = avg(groups, paging, qi, qj, "second_post_filter_select_ms")
+                b_assembly = avg(groups, "baseline", qi, qj, "second_assembly_ms")
+                p_assembly = avg(groups, paging, qi, qj, "second_assembly_ms")
                 row = {
                     "paging_condition": paging,
                     "previous_query": qi,
@@ -637,10 +794,24 @@ def write_baseline_vs_paging(summary_dir: Path, rows: list[dict[str, object]], q
                     "baseline_second_computation_ms": b_comp,
                     "paging_second_computation_ms": p_comp,
                     "computation_ms_delta": float(p_comp) - float(b_comp) if b_comp != "" and p_comp != "" else "",
+                    "baseline_second_fixed_page_extra_stage_ms": b_extra,
+                    "paging_second_fixed_page_extra_stage_ms": p_extra,
+                    "fixed_page_extra_stage_ms_delta": float(p_extra) - float(b_extra) if b_extra != "" and p_extra != "" else "",
+                    "baseline_second_post_filter_select_ms": b_filter,
+                    "paging_second_post_filter_select_ms": p_filter,
+                    "post_filter_select_ms_delta": float(p_filter) - float(b_filter) if b_filter != "" and p_filter != "" else "",
+                    "baseline_second_assembly_ms": b_assembly,
+                    "paging_second_assembly_ms": p_assembly,
+                    "assembly_ms_delta": float(p_assembly) - float(b_assembly) if b_assembly != "" and p_assembly != "" else "",
                     "paging_fixed_page_cached_gb": avg(groups, paging, qi, qj, "second_fixed_page_cached_gb"),
                     "paging_fixed_page_reuse_split_count": avg(groups, paging, qi, qj, "second_fixed_page_reuse_split_count"),
                     "paging_fixed_page_materialize_view_count": avg(groups, paging, qi, qj, "second_fixed_page_materialize_view_count"),
                     "paging_fixed_page_fallback_count": avg(groups, paging, qi, qj, "second_fixed_page_fallback_count"),
+                    "paging_page_pruning_pages": avg(groups, paging, qi, qj, "second_page_pruning_pages"),
+                    "paging_page_pruning_all_fail_pages": avg(groups, paging, qi, qj, "second_page_pruning_all_fail_pages"),
+                    "paging_page_pruning_partial_pages": avg(groups, paging, qi, qj, "second_page_pruning_partial_pages"),
+                    "paging_page_pruning_skip_reuse_count": avg(groups, paging, qi, qj, "second_page_pruning_skip_reuse_count"),
+                    "paging_page_pruning_keep_reuse_count": avg(groups, paging, qi, qj, "second_page_pruning_keep_reuse_count"),
                 }
                 out.append(row)
                 all_out.append(row)
@@ -816,6 +987,7 @@ def run_case(args: argparse.Namespace) -> int:
     return 0
 
 
+
 def run_cmd(cmd: list[str], env: dict[str, str], timeout_s: int | None, dry_run: bool) -> int:
     printable = " ".join(cmd)
     print(f"==> {printable}", flush=True)
@@ -831,7 +1003,7 @@ def run_orchestrator(args: argparse.Namespace) -> int:
     queries = list(range(1, 23)) if args.all_tpch else parse_query_list(args.queries)
     pairs = parse_pairs(args.pairs, queries, args.include_diagonal)
     conditions = parse_csv_list(args.conditions)
-    valid_conditions = {"baseline", "paging_key_only", "paging_budget", "paging_full_fixed"}
+    valid_conditions = {"baseline", "paging_key_only", "paging_budget", "paging_filter_aware", "paging_full_fixed"}
     bad = [condition for condition in conditions if condition not in valid_conditions]
     if bad:
         raise SystemExit(f"bad condition(s): {', '.join(bad)}")

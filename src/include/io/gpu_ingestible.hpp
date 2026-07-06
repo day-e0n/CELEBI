@@ -23,6 +23,9 @@
 #include <rmm/cuda_stream_view.hpp>
 
 // cucascade (forward-declare to keep this header light; full include in .cpp)
+namespace cucascade {
+class data_batch;
+}  // namespace cucascade
 namespace cucascade::memory {
 class memory_space;
 }  // namespace cucascade::memory
@@ -169,6 +172,12 @@ enum class filter_state {
 struct filtered_table {
   std::unique_ptr<cudf::table> table;
   filter_state state{filter_state::UNFILTERED};
+  // wdy start
+  /// Optional fast-path output for view-backed scan results. When populated,
+  /// the scan operator can forward the already-built data_batch without first
+  /// forcing a view-backed gpu_table_representation into an owning cudf::table.
+  std::shared_ptr<cucascade::data_batch> batch;
+  // wdy end
 };
 
 //===----------------------------------------------------------------------===//

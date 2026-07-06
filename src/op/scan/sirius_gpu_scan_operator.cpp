@@ -185,6 +185,18 @@ std::unique_ptr<op::operator_data> sirius_gpu_scan_operator::execute(
     }
     auto const& md    = *fresh->metadata;
     auto materialized = _ingestible->materialize_table(md.scan(), *fresh->gpu_memory_space, stream);
+    // wdy start
+    if (materialized.batch) {
+      if (md.has_filter()) {
+        throw std::runtime_error(
+          "[sirius_gpu_scan_operator::execute] ingestible returned a view-backed batch for a "
+          "split that still needs post filter/projection");
+      }
+      std::vector<std::shared_ptr<::cucascade::data_batch>> batches;
+      batches.push_back(std::move(materialized.batch));
+      return std::make_unique<pipelineable_operator_data>(std::move(batches));
+    }
+    // wdy end
     if (md.has_filter() && materialized.state != io::filter_state::ROW_FILTERED_AND_PROJECTED) {
       table = _ingestible->post_filter_and_project(
         std::move(materialized.table), md.filter_and_project(), *fresh->gpu_memory_space, stream);
