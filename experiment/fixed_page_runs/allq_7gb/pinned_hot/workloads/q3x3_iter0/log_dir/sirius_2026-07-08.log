@@ -1,0 +1,68 @@
+[2026-07-08 03:10:12.811] [warning] [sirius_config.cpp:459] sirius_config: use_sirius_datasource was false but 2 GPUs are configured; the sirius datasource is required for multi-GPU IO routing. Overriding use_sirius_datasource to true.
+[2026-07-08 03:10:12.811] [info] [sirius_context.cpp:1046] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/allq_7gb/configs/sirius_2gpu.yaml
+[2026-07-08 03:10:12.816] [info] [telemetry_context.cpp:67] Telemetry context initialized (engine=siriusDB)
+[2026-07-08 03:10:12.816] [info] [sirius_context.cpp:337] SiriusContext: topology summary — 2 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-08 03:10:12.816] [info] [sirius_context.cpp:342]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
+[2026-07-08 03:10:12.816] [info] [sirius_context.cpp:342]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:34:00.0)
+[2026-07-08 03:10:12.955] [warning] [sirius_context.cpp:352] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-08 03:10:12.955] [info] [sirius_context.cpp:364] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-08 03:10:12.956] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 1
+[2026-07-08 03:10:12.956] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 0
+[2026-07-08 03:10:12.972] [info] [sirius_context.cpp:477] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-08 03:10:13.137] [info] [sirius_context.cpp:1007] Connection opened.
+[2026-07-08 03:10:13.137] [info] [sirius_context.cpp:1020] Extension loaded: sirius
+[2026-07-08 03:10:13.137] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 03:10:13.146] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-08 03:10:13.146] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 03:10:13.146] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 03:10:13.147] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-08 03:10:13.147] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 03:10:13.147] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 03:10:13.147] [info] [sirius_context.cpp:242] QueryBegin: SQL: CALL pin_table('/mnt/nvme/dataset/customer*.parquet', tier='gpu', name='customer', cols=['c_custkey'])
+[2026-07-08 03:10:13.208] [info] [sirius_extension.cpp:1060] [fixed-page-cache] pin_table chunk_rr name='customer' chunk=0 rows=15000000 source_gpu=0 target_gpu=0
+[2026-07-08 03:10:13.242] [info] [sirius_scan_manager.cpp:892] [fixed-page-cache] page_directory indexed table='customer' fixed_cols=1 pages=58 resident_pages=58 resident_bytes=120000000 stats_pages=58 evicted_pages=0 eviction_count=0 page_bytes=2097152 rows=15000000 partial=false
+[2026-07-08 03:10:13.242] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 03:10:13.247] [info] [:] [host_pool] HOST:0 QueryEnd allocated=4194304 bytes peak=4194304 bytes free_blocks=508
+[2026-07-08 03:10:13.247] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=121875200 bytes peak=241876224 bytes reserved=0 bytes
+[2026-07-08 03:10:13.247] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 03:10:13.247] [info] [:] [host_pool] HOST:0 QueryBegin allocated=4194304 bytes peak=4194304 bytes free_blocks=508
+[2026-07-08 03:10:13.247] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=121875200 bytes peak=241876224 bytes reserved=0 bytes
+[2026-07-08 03:10:13.247] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 03:10:13.247] [info] [sirius_context.cpp:242] QueryBegin: SQL: CALL pin_table('/mnt/nvme/dataset/lineitem*.parquet', tier='gpu', name='lineitem', cols=['l_orderkey'])
+[2026-07-08 03:10:13.724] [info] [sirius_extension.cpp:1060] [fixed-page-cache] pin_table chunk_rr name='lineitem' chunk=0 rows=65976100 source_gpu=0 target_gpu=0
+[2026-07-08 03:10:13.873] [info] [sirius_extension.cpp:1049] [fixed-page-cache] pin_table chunk_rr name='lineitem' chunk=1 rows=65958060 source_gpu=0 target_gpu=1
+[2026-07-08 03:10:13.875] [info] [sirius_extension.cpp:1060] [fixed-page-cache] pin_table chunk_rr name='lineitem' chunk=2 rows=66014724 source_gpu=0 target_gpu=0
+[2026-07-08 03:10:13.924] [info] [sirius_extension.cpp:1049] [fixed-page-cache] pin_table chunk_rr name='lineitem' chunk=3 rows=66014514 source_gpu=0 target_gpu=1
+[2026-07-08 03:10:13.927] [info] [sirius_extension.cpp:1060] [fixed-page-cache] pin_table chunk_rr name='lineitem' chunk=4 rows=66016567 source_gpu=0 target_gpu=0
+[2026-07-08 03:10:13.934] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 03:10:13.953] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=533725184 bytes free_blocks=507
+[2026-07-08 03:10:13.953] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=121875200 bytes peak=6531027968 bytes reserved=0 bytes
+[2026-07-08 03:10:13.953] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=1072277760 bytes reserved=0 bytes
+[2026-07-08 03:10:13.954] [info] [:] [host_pool] HOST:0 QueryBegin allocated=5242880 bytes peak=533725184 bytes free_blocks=507
+[2026-07-08 03:10:13.954] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=121875200 bytes peak=6531027968 bytes reserved=0 bytes
+[2026-07-08 03:10:13.954] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=1072277760 bytes reserved=0 bytes
+[2026-07-08 03:10:13.954] [info] [sirius_context.cpp:242] QueryBegin: SQL: CALL unpin_table('customer')
+[2026-07-08 03:10:13.955] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 03:10:13.973] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=533725184 bytes free_blocks=507
+[2026-07-08 03:10:13.973] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6531027968 bytes reserved=0 bytes
+[2026-07-08 03:10:13.973] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=1072277760 bytes reserved=0 bytes
+[2026-07-08 03:10:13.973] [info] [:] [host_pool] HOST:0 QueryBegin allocated=5242880 bytes peak=533725184 bytes free_blocks=507
+[2026-07-08 03:10:13.973] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=6531027968 bytes reserved=0 bytes
+[2026-07-08 03:10:13.973] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=1072277760 bytes reserved=0 bytes
+[2026-07-08 03:10:13.973] [info] [sirius_context.cpp:242] QueryBegin: SQL: CALL unpin_table('lineitem')
+[2026-07-08 03:10:13.974] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 03:10:13.994] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=533725184 bytes free_blocks=507
+[2026-07-08 03:10:13.994] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6531027968 bytes reserved=0 bytes
+[2026-07-08 03:10:13.994] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=1072277760 bytes reserved=0 bytes
+[2026-07-08 03:10:13.994] [info] [:] [host_pool] HOST:0 QueryBegin allocated=5242880 bytes peak=533725184 bytes free_blocks=507
+[2026-07-08 03:10:13.994] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=6531027968 bytes reserved=0 bytes
+[2026-07-08 03:10:13.994] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=1072277760 bytes reserved=0 bytes
+[2026-07-08 03:10:13.994] [info] [sirius_context.cpp:242] QueryBegin: SQL: CALL unpin_table('orders')
+[2026-07-08 03:10:13.995] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 03:10:14.014] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=533725184 bytes free_blocks=507
+[2026-07-08 03:10:14.014] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6531027968 bytes reserved=0 bytes
+[2026-07-08 03:10:14.014] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=1072277760 bytes reserved=0 bytes
+[2026-07-08 03:10:14.014] [info] [sirius_context.cpp:1013] Connection closed.
+[2026-07-08 03:10:14.026] [info] [task_scheduler.cpp:295] Task request channel closed, exiting management event loop.
+[2026-07-08 03:10:14.026] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-08 03:10:14.026] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop

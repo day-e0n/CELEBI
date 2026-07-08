@@ -1,3 +1,0 @@
-experiment,query,phase,tasks,input_bytes,local_bytes,remote_gpu_bytes,host_bytes,disk_bytes,batch_count,locality_ratio,movement_candidate_bytes
-mgpu_smoke,unknown,prepare_after,4,352,352,0,0,0,22,1.0,0
-mgpu_smoke,unknown,prepare_before,4,352,160,128,64,0,22,0.45454545454545453,192

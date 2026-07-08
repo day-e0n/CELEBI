@@ -1,9 +1,0 @@
-sirius:
-  topology:
-    num_gpus: 4
-  memory:
-    gpu:
-      usage_limit_bytes: 4GB
-      reservation_limit_fraction: 0.8
-    host:
-      capacity_bytes: 16GB

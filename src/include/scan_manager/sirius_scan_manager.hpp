@@ -43,6 +43,7 @@ class fixed_size_host_memory_resource;
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -147,6 +148,20 @@ enum class fixed_width_page_stat_kind : uint8_t {
   floating,
 };
 
+enum class fixed_width_page_state : uint8_t {
+  resident,
+  evicted,
+};
+
+struct fixed_width_page_directory_key {
+  std::string table_name;
+  std::string file_path;
+  std::string column_name;
+  std::size_t chunk_index{0};
+  std::size_t page_index{0};
+  int device_id{-1};
+};
+
 struct fixed_width_page_stats {
   bool valid{false};
   bool has_null{false};
@@ -168,8 +183,11 @@ struct fixed_width_page_stats {
  * changing cudf buffer ownership.
  */
 struct fixed_width_column_page {
+  fixed_width_page_directory_key key;
+  fixed_width_page_state state{fixed_width_page_state::resident};
   std::size_t chunk_index{0};
   std::size_t page_index{0};
+  std::size_t global_row_offset{0};
   std::size_t row_offset{0};
   std::size_t num_rows{0};
   std::size_t byte_offset{0};
@@ -177,7 +195,31 @@ struct fixed_width_column_page {
   std::size_t element_size_bytes{0};
   cudf::type_id type_id{cudf::type_id::EMPTY};
   cucascade::memory::memory_space* memory_space{nullptr};
+  /// Optional page-owned storage. When set, this page can be materialized
+  /// without retaining the original full cuDF column chunk.
+  std::shared_ptr<cudf::column> owned_column;
   fixed_width_page_stats stats;
+};
+
+struct fixed_width_page_directory_metrics {
+  std::size_t resident_pages{0};
+  std::size_t resident_bytes{0};
+  std::size_t stats_pages{0};
+  std::size_t evicted_pages{0};
+  std::size_t eviction_count{0};
+};
+
+struct fixed_width_page_directory_entry {
+  std::string column_name;
+  std::size_t page_ordinal{0};
+};
+
+struct fixed_width_filter_mask_cache_entry {
+  std::shared_ptr<cudf::column> mask;
+  int device_id{-1};
+  std::size_t rows{0};
+  std::size_t bytes{0};
+  std::size_t hits{0};
 };
 // wdy end
 
@@ -203,8 +245,22 @@ struct pinned_entry {
   /// logical page over the corresponding cudf column chunk in
   /// data_batches_by_column. Variable-width and nested columns are omitted.
   std::unordered_map<std::string, std::vector<fixed_width_column_page>> fixed_width_pages_by_column;
+  /// Directory lookup keyed by table/file/column/chunk/page/device. Values point
+  /// back into fixed_width_pages_by_column without owning page storage.
+  std::unordered_map<std::string, fixed_width_page_directory_entry> fixed_width_page_directory;
   /// Target page size used when fixed_width_pages_by_column was built.
   std::size_t fixed_width_page_size_bytes{0};
+  /// Lightweight page-directory accounting for the current prototype. Pages are
+  /// still physically owned by cudf column chunks, but this is the metadata
+  /// surface that scan reuse and future page admission/eviction build on.
+  fixed_width_page_directory_metrics fixed_width_page_metrics;
+  /// Optional reusable boolean masks for fixed-page cached filter predicates.
+  /// Guarded by fixed_width_filter_mask_cache_mutex because scan splits can
+  /// materialize concurrently on different workers/devices.
+  mutable std::unordered_map<std::string, fixed_width_filter_mask_cache_entry>
+    fixed_width_filter_mask_cache;
+  mutable std::shared_ptr<std::mutex> fixed_width_filter_mask_cache_mutex{
+    std::make_shared<std::mutex>()};
   // wdy end
   /// Per-chunk memory space placement. Parallel to the inner vectors of
   /// data_batches_by_column: chunk_memory_spaces[i] is the memory_space*

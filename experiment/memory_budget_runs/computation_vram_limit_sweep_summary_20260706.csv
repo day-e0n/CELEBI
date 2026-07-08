@@ -1,0 +1,5 @@
+gpu_limit_gb_per_gpu,run_dir,queries_total,queries_ok,queries_failed_or_timeout,peak_total_gib_mean,peak_total_gib_p50,peak_total_gib_p95,peak_total_gib_max,runtime_s_mean
+8,experiment/memory_budget_runs/computation_vram_limit_8GB_tpch19_2gpu_20260706,19,18,1,17.099717881944443,17.072265625,18.38466796875,18.439453125,4.390953354221994
+10,experiment/memory_budget_runs/computation_vram_limit_10GB_tpch19_2gpu_20260706,19,17,2,20.993451286764707,21.09765625,22.2078125,22.28125,3.917589604646577
+11,experiment/memory_budget_runs/computation_vram_limit_11GB_q8_q17_2gpu_20260706,2,2,0,23.3701171875,23.3701171875,23.615332031250002,23.642578125,8.75640760549868
+12,experiment/memory_budget_runs/computation_vram_tpch_1_22_2gpu_20260706,22,19,3,25.01552220394737,24.95703125,26.353906249999998,26.533203125,4.264051129052907

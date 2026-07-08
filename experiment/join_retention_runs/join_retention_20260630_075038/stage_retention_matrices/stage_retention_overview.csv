@@ -1,9 +1,0 @@
-stage_kind,queries_with_output,total_output_gb,max_output_query,max_output_gb,directory
-FILTER,9,26.537789,q21,18.588473,/home/dy1013/sirius_multi-gpu/experiment/join_retention_runs/join_retention_20260630_075038/stage_retention_matrices/filter
-JOIN,18,31.912557,q9,7.423850,/home/dy1013/sirius_multi-gpu/experiment/join_retention_runs/join_retention_20260630_075038/stage_retention_matrices/join
-AGGREGATE,20,10.122624,q18,7.219595,/home/dy1013/sirius_multi-gpu/experiment/join_retention_runs/join_retention_20260630_075038/stage_retention_matrices/aggregate
-PARTITION,19,184.220703,q9,38.856955,/home/dy1013/sirius_multi-gpu/experiment/join_retention_runs/join_retention_20260630_075038/stage_retention_matrices/partition
-CONCAT,18,179.272545,q9,38.849681,/home/dy1013/sirius_multi-gpu/experiment/join_retention_runs/join_retention_20260630_075038/stage_retention_matrices/concat
-PROJECTION,20,62.244533,q1,37.252112,/home/dy1013/sirius_multi-gpu/experiment/join_retention_runs/join_retention_20260630_075038/stage_retention_matrices/projection
-SORT,12,0.009077,q16,0.005418,/home/dy1013/sirius_multi-gpu/experiment/join_retention_runs/join_retention_20260630_075038/stage_retention_matrices/sort
-LIMIT,4,0.000074,q2,0.000036,/home/dy1013/sirius_multi-gpu/experiment/join_retention_runs/join_retention_20260630_075038/stage_retention_matrices/limit

@@ -6,9 +6,10 @@ The experiment isolates every (condition, Qi -> Qj, repeat) in a separate
 process so the measured reuse is pair-local:
 
 - baseline: normal Sirius execution, no fixed-page reuse.
-- paging_key_only: pin reusable order-key columns and enable fixed-page reuse.
-- paging_budget: optional, more aggressive fixed-width key policy. This can
-  still OOM on large scale factors, so it is not in the default condition set.
+- paging_filter_aware: no-pin automatic fixed-page cache population on scan miss,
+  then reuse on later scans in the same process.
+- pinned_*: manual pin_table upper-bound variants, kept separate so they are not
+  confused with automatic paging.
 
 Outputs:
 - summary/query_latency.csv
@@ -39,7 +40,7 @@ TPCH_DIR = REPO_ROOT / "test" / "tpch_performance"
 DEFAULT_INPUT = Path("/mnt/nvme/dataset")
 DEFAULT_OUTPUT = REPO_ROOT / "experiment" / "fixed_page_pair_latency"
 DEFAULT_QUERIES = "3,5,7,8,9,10,18,21"
-DEFAULT_CONDITIONS = "baseline,paging_key_only"
+DEFAULT_CONDITIONS = "baseline,paging_filter_aware"
 
 STAGE_TIMING_FIELDS = [
     "cache_column_view_ms",
@@ -47,6 +48,10 @@ STAGE_TIMING_FIELDS = [
     "splice_view_build_ms",
     "splice_materialize_ms",
     "filtered_splice_materialize_ms",
+    "filtered_splice_materialize_single_mask_ms",
+    "partial_filter_cached_mask_ms",
+    "partial_filter_mask_splice_ms",
+    "single_mask_filter_apply_ms",
     "cached_filter_select_ms",
     "post_filter_select_ms",
     "inline_assembly_ms",
@@ -72,9 +77,13 @@ FIXED_PAGE_EXTRA_STAGES = {
     "splice_view_build": "splice_view_build_ms",
     "splice_materialize": "splice_materialize_ms",
     "filtered_splice_materialize": "filtered_splice_materialize_ms",
+    "filtered_splice_materialize_single_mask": "filtered_splice_materialize_single_mask_ms",
+    "partial_filter_cached_mask": "partial_filter_cached_mask_ms",
+    "partial_filter_mask_splice": "partial_filter_mask_splice_ms",
 }
 
 FIXED_PAGE_SUB_STAGES = {
+    "single_mask_filter_apply": "single_mask_filter_apply_ms",
     "cache_column_view": "cache_column_view_ms",
     "cache_column_materialize": "cache_column_materialize_ms",
 }
@@ -266,15 +275,15 @@ def pin_sql_for_condition(
     queries: list[int],
     pin_rows: int | None,
 ) -> tuple[str, list[str]]:
-    if condition == "baseline":
+    if condition == "baseline" or condition.startswith("paging_"):
         return "", []
-    if condition == "paging_key_only":
+    if condition == "pinned_key_only":
         cols_by_table = key_only_columns_for_queries(queries)
-    elif condition == "paging_budget":
+    elif condition == "pinned_budget":
         cols_by_table = budgeted_fixed_width_columns_for_queries(queries)
-    elif condition == "paging_filter_aware":
+    elif condition == "pinned_filter_aware":
         cols_by_table = filter_aware_columns_for_queries(queries)
-    elif condition == "paging_full_fixed":
+    elif condition == "pinned_full_fixed":
         cols_by_table = fixed_width_columns_for_queries(queries)
     else:
         raise ValueError(f"unknown condition: {condition}")
@@ -318,6 +327,21 @@ def runtime_csv_complete(path: Path) -> bool:
     if not path.exists():
         return False
     return len(read_csv(path)) >= 2
+
+
+def column_bytes_uncompressed_total(value: str | None) -> int:
+    if not value:
+        return 0
+    total = 0
+    for item in value.split(','):
+        parts = item.rsplit(':', 2)
+        if len(parts) != 3:
+            continue
+        try:
+            total += int(parts[2])
+        except ValueError:
+            continue
+    return total
 
 
 def parse_kv(line: str) -> dict[str, str]:
@@ -427,12 +451,12 @@ def summarize_one_case(condition: str, bench: Path) -> tuple[list[dict[str, obje
                 fields = parse_kv(line)
                 duration_ms = to_int(fields.get("duration_us")) / 1000.0
                 scan_work_by_query[query] += duration_ms
-                scan_uncompressed_by_query[query] += to_int(fields.get("uncompressed_bytes"))
+                scan_uncompressed_by_query[query] += column_bytes_uncompressed_total(fields.get("column_bytes")) or to_int(fields.get("uncompressed_bytes"))
                 end_ms = parse_log_timestamp_ms(line)
                 if end_ms is not None:
                     scan_intervals_by_query[query].append((end_ms - duration_ms, end_ms))
             elif "[fixed-page-cache] hybrid_reuse_split" in line:
-                fixed_cached_by_query[query] += to_int(parse_kv(line).get("cached_bytes"))
+                fixed_cached_by_query[query] += to_int((lambda fields: fields.get("useful_bytes") or fields.get("cached_bytes"))(parse_kv(line)))
                 fixed_split_count_by_query[query] += 1
             elif "[fixed-page-cache] hybrid_reuse_materialize_view" in line:
                 fixed_materialize_view_count_by_query[query] += 1
@@ -757,8 +781,6 @@ def write_baseline_vs_paging(summary_dir: Path, rows: list[dict[str, object]], q
         out: list[dict[str, object]] = []
         for qi in labels:
             for qj in labels:
-                if qi == qj:
-                    continue
                 b_total = avg(groups, "baseline", qi, qj, "second_total_ms")
                 p_total = avg(groups, paging, qi, qj, "second_total_ms")
                 b_load = avg(groups, "baseline", qi, qj, "second_load_ms")
@@ -924,13 +946,28 @@ def make_case_env(args: argparse.Namespace, config_path: Path, condition: str, l
     env["SIRIUS_CONFIG_FILE"] = str(config_path)
     env["SIRIUS_LOG_DIR"] = str(log_dir)
     env["SIRIUS_LOG_LEVEL"] = args.log_level
+    filter_aware = condition in {"paging_filter_aware", "pinned_filter_aware"}
     if condition == "baseline":
         env["SIRIUS_ENABLE_FIXED_PAGE_REUSE"] = "0"
+        env["SIRIUS_FIXED_PAGE_AUTO_CACHE"] = "0"
         env["SIRIUS_PIN_ROUND_ROBIN_CHUNKS"] = "0"
+        env["SIRIUS_FIXED_PAGE_FILTERED_REUSE"] = "0"
+        env["SIRIUS_FIXED_PAGE_FILTERED_REUSE_SINGLE_MASK"] = "0"
+        env["SIRIUS_FIXED_PAGE_PRUNING"] = "0"
+        env["SIRIUS_FIXED_PAGE_OWNED_PAGES"] = "0"
+        env["SIRIUS_FIXED_PAGE_DEMAND_LOAD"] = "0"
     else:
         env["SIRIUS_ENABLE_FIXED_PAGE_REUSE"] = "1"
+        env["SIRIUS_FIXED_PAGE_AUTO_CACHE"] = "1" if condition.startswith("paging_") else "0"
+        env["SIRIUS_FIXED_PAGE_AUTO_CACHE_ROUND_ROBIN_CHUNKS"] = "1"
         env["SIRIUS_PIN_ROUND_ROBIN_CHUNKS"] = "1"
         env["SIRIUS_PIN_TIER"] = "gpu"
+        env["SIRIUS_FIXED_PAGE_VIEW_ALIGNED_SPLITS"] = "1"
+        env["SIRIUS_FIXED_PAGE_FILTERED_REUSE"] = "1" if filter_aware else "0"
+        env["SIRIUS_FIXED_PAGE_FILTERED_REUSE_SINGLE_MASK"] = "1" if filter_aware else "0"
+        env["SIRIUS_FIXED_PAGE_PRUNING"] = "1" if filter_aware else "0"
+        env.setdefault("SIRIUS_FIXED_PAGE_OWNED_PAGES", "1")
+        env.setdefault("SIRIUS_FIXED_PAGE_DEMAND_LOAD", "1")
     return env
 
 
@@ -1003,7 +1040,17 @@ def run_orchestrator(args: argparse.Namespace) -> int:
     queries = list(range(1, 23)) if args.all_tpch else parse_query_list(args.queries)
     pairs = parse_pairs(args.pairs, queries, args.include_diagonal)
     conditions = parse_csv_list(args.conditions)
-    valid_conditions = {"baseline", "paging_key_only", "paging_budget", "paging_filter_aware", "paging_full_fixed"}
+    valid_conditions = {
+        "baseline",
+        "paging_key_only",
+        "paging_budget",
+        "paging_filter_aware",
+        "paging_full_fixed",
+        "pinned_key_only",
+        "pinned_budget",
+        "pinned_filter_aware",
+        "pinned_full_fixed",
+    }
     bad = [condition for condition in conditions if condition not in valid_conditions]
     if bad:
         raise SystemExit(f"bad condition(s): {', '.join(bad)}")

@@ -1,5 +1,0 @@
-variant,previous_query,second_query,repeat,query_position,query,total_ms,load_ms,scan_materialize_wall_ms,scan_materialize_work_ms,computation_ms,join_retained_bytes,join_skipped_bytes,join_cached_bytes,join_reuse_hit_bytes,join_reuse_hit_count,join_reuse_miss_count,benchmark_dir
-baseline,q11,q2,0,1,q11,2211.725,1567.27783203125,1567.27783203125,8277.571,644.4471679687499,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/fixed_width_page_pinned_hot_smoke_small_20260702/baseline/pairs/q11_then_q2_iter0
-baseline,q11,q2,0,2,q2,1544.549,949.96484375,949.96484375,2982.4499999999994,594.58415625,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/fixed_width_page_pinned_hot_smoke_small_20260702/baseline/pairs/q11_then_q2_iter0
-pinned_hot,q11,q2,0,1,q11,777.764,0.0,0.0,0.0,777.764,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/fixed_width_page_pinned_hot_smoke_small_20260702/pinned_hot/pairs/q11_then_q2_iter0
-pinned_hot,q11,q2,0,2,q2,576.462,0.0,0.0,0.0,576.462,0,0,0,0,0,0,/home/dy1013/sirius_multi-gpu/experiment/fixed_width_page_pinned_hot_smoke_small_20260702/pinned_hot/pairs/q11_then_q2_iter0

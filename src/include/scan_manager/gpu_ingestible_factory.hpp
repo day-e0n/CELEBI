@@ -81,7 +81,7 @@ class gpu_ingestible_factory {
    */
   std::shared_ptr<io::gpu_ingestible> produce(
     std::unique_ptr<io::ingestible_table_info> table_info,
-    sirius_scan_manager const& mgr,
+    sirius_scan_manager& mgr,
     std::unordered_map<int, cucascade::memory::memory_space*> const& gpu_memory_spaces,
     std::size_t op_id);
 

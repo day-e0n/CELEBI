@@ -1,0 +1,447 @@
+[2026-07-07 12:03:38.603] [warning] [sirius_config.cpp:459] sirius_config: use_sirius_datasource was false but 2 GPUs are configured; the sirius datasource is required for multi-GPU IO routing. Overriding use_sirius_datasource to true.
+[2026-07-07 12:03:38.603] [info] [sirius_context.cpp:1046] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/motivation_runs/random_cache_aware_workloads_paging_20260707/configs/sirius_2gpu.yaml
+[2026-07-07 12:03:38.607] [info] [telemetry_context.cpp:67] Telemetry context initialized (engine=siriusDB)
+[2026-07-07 12:03:38.607] [info] [sirius_context.cpp:337] SiriusContext: topology summary — 2 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-07 12:03:38.607] [info] [sirius_context.cpp:342]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
+[2026-07-07 12:03:38.607] [info] [sirius_context.cpp:342]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:34:00.0)
+[2026-07-07 12:03:38.759] [warning] [sirius_context.cpp:352] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-07 12:03:38.759] [info] [sirius_context.cpp:364] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-07 12:03:38.759] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 1
+[2026-07-07 12:03:38.759] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 0
+[2026-07-07 12:03:38.776] [info] [sirius_context.cpp:477] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-07 12:03:38.945] [info] [sirius_context.cpp:1007] Connection opened.
+[2026-07-07 12:03:38.945] [info] [sirius_context.cpp:1020] Extension loaded: sirius
+[2026-07-07 12:03:38.946] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-07 12:03:38.954] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-07 12:03:38.954] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-07 12:03:38.954] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-07 12:03:38.955] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-07 12:03:38.955] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-07 12:03:38.955] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-07 12:03:38.955] [info] [sirius_context.cpp:242] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-07 12:03:38.955] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-07 12:03:38.964] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-07 12:03:38.964] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-07 12:03:38.964] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-07 12:03:38.964] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-07 12:03:38.964] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-07 12:03:38.964] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-07 12:03:38.964] [info] [sirius_context.cpp:242] QueryBegin: SQL: select o.o_orderpriority, count(*) as order_count from orders o where o.o_orderdate >= date '1996-10-01' and o.o_orderdate < date '1997-01-01' and exists ( select * from lineitem l where l.l_orderkey = o.o_orderkey and l.l_commitdate < l.l_receiptdate ) group by o.o_orderpriority order by o.o_orderpriority
+[2026-07-07 12:03:39.264] [info] [sirius_context.cpp:954] Transparent execution: Sirius physical plan generated successfully
+[2026-07-07 12:03:39.273] [info] [sirius_context.cpp:966] Transparent execution: physical plan replaced with GPU operator
+[2026-07-07 12:03:39.278] [info] [physical_sirius_execution.cpp:96] Transparent GPU execution: executing query
+[2026-07-07 12:03:39.335] [info] [sirius_engine.cpp:400] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=27) -> LEFT_DELIM_JOIN (id=21)
+Pipeline #1: PARTITION (id=28)
+  Input: <- Pipeline #0 [on: PARTITION (id=28), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #2: MERGE_GROUP_BY (id=29)
+  Input: <- Pipeline #1 [on: MERGE_GROUP_BY (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #1
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #3: PARTITION (id=31)
+  Input: <- Pipeline #2 [on: PARTITION (id=31), port: default, barrier: FULL]
+  Dependencies: Pipeline #2
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #4: CONCAT (id=30)
+  Input: <- Pipeline #3 [on: CONCAT (id=30), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #5: GPU_SCAN (id=32) -> FILTER (id=15) -> PROJECTION (id=16)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #6: PARTITION (id=34)
+  Input: <- Pipeline #5 [on: PARTITION (id=34), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #5
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #7: CONCAT (id=33)
+  Input: <- Pipeline #6 [on: CONCAT (id=33), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #6
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #8: HASH_JOIN (id=18) -> PROJECTION (id=19)
+  Input: <- Pipeline #7 [on: HASH_JOIN (id=18), port: default, barrier: FULL]
+  Input: <- Pipeline #4 [on: HASH_JOIN (id=18), port: build, barrier: FULL]
+  Dependencies: Pipeline #4, Pipeline #7
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #9: PARTITION (id=36)
+  Input: <- Pipeline #8 [on: PARTITION (id=36), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #10: CONCAT (id=35)
+  Input: <- Pipeline #9 [on: CONCAT (id=35), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #9
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #11: PARTITION (id=38)
+  Input: <- Pipeline #0 [on: PARTITION (id=38), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #12: CONCAT (id=37)
+  Input: <- Pipeline #11 [on: CONCAT (id=37), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #11
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #13: HASH_JOIN (id=20) -> HASH_GROUP_BY (id=24)
+  Input: <- Pipeline #12 [on: HASH_JOIN (id=20), port: default, barrier: FULL]
+  Input: <- Pipeline #10 [on: HASH_JOIN (id=20), port: build, barrier: FULL]
+  Dependencies: Pipeline #10, Pipeline #12
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #14: PARTITION (id=39)
+  Input: <- Pipeline #13 [on: PARTITION (id=39), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #15: MERGE_GROUP_BY (id=40)
+  Input: <- Pipeline #14 [on: MERGE_GROUP_BY (id=40), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #16: ORDER_BY (id=25)
+  Input: <- Pipeline #15 [on: ORDER_BY (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #15
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #17: SORT_SAMPLE (id=41) -> SORT_PARTITION (id=42)
+  Input: <- Pipeline #16 [on: SORT_SAMPLE (id=41), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #16
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #18: MERGE_SORT (id=43)
+  Input: <- Pipeline #17 [on: MERGE_SORT (id=43), port: default, barrier: FULL]
+  Dependencies: Pipeline #17
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #19: RESULT_COLLECTOR (id=26)
+  Input: <- Pipeline #18 [on: RESULT_COLLECTOR (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #18
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                                                        
+│ Pipeline #19             │                                                        
+│ RESULT_COLLECTOR (id=26) │                                                        
+│ Input(#18): FULL         │                                                        
+└────────────┬─────────────┘                                                        
+             │                                                                      
+┌──────────────────────────┐                                                        
+│ Pipeline #18             │                                                        
+│ MERGE_SORT (id=43)       │                                                        
+│ Input(#17): FULL         │                                                        
+└────────────┬─────────────┘                                                        
+             │                                                                      
+┌──────────────────────────┐                                                        
+│ Pipeline #17             │                                                        
+│ SORT_PARTITION (id=42)   │                                                        
+│ SORT_SAMPLE (id=41)      │                                                        
+│ Input(#16): PIPELINE     │                                                        
+└────────────┬─────────────┘                                                        
+             │                                                                      
+┌──────────────────────────┐                                                        
+│ Pipeline #16             │                                                        
+│ ORDER_BY (id=25)         │                                                        
+│ Input(#15): FULL         │                                                        
+└────────────┬─────────────┘                                                        
+             │                                                                      
+┌──────────────────────────┐                                                        
+│ Pipeline #15             │                                                        
+│ MERGE_GROUP_BY (id=40)   │                                                        
+│ Input(#14): FULL         │                                                        
+└────────────┬─────────────┘                                                        
+             │                                                                      
+┌──────────────────────────┐                                                        
+│ Pipeline #14             │                                                        
+│ PARTITION (id=39)        │                                                        
+│ Input(#13): FULL         │                                                        
+└────────────┬─────────────┘                                                        
+             │                                                                      
+┌──────────────────────────┐                                                        
+│ Pipeline #13             │                                                        
+│ HASH_GROUP_BY (id=24)    │                                                        
+│ HASH_JOIN (id=20)        │                                                        
+│   type: SEMI             │                                                        
+│ Input(#12): FULL         │                                                        
+│ Input(#10): FULL         │                                                        
+└────────────┬─────────────┘                                                        
+             ┌───────────────────────────────────────────────────────┐              
+             │                                                       │              
+┌──────────────────────────┐                            ┌──────────────────────────┐
+│ Pipeline #10             │                            │ Pipeline #12             │
+│ CONCAT (id=35)           │                            │ CONCAT (id=37)           │
+│ Input(#9): PARTIAL       │                            │ Input(#11): PARTIAL      │
+└────────────┬─────────────┘                            └────────────┬─────────────┘
+             │                                                       │              
+┌──────────────────────────┐                            ┌──────────────────────────┐
+│ Pipeline #9              │                            │ Pipeline #11             │
+│ PARTITION (id=36)        │                            │ PARTITION (id=38)        │
+│ Input(#8): FULL          │                            │ Input(#0): PARTIAL       │
+└────────────┬─────────────┘                            └────────────┬─────────────┘
+             │                                                       │              
+┌──────────────────────────┐                            ┌──────────────────────────┐
+│ Pipeline #8              │                            │ (-> Pipeline #0)         │
+│ PROJECTION (id=19)       │                            │                          │
+│ HASH_JOIN (id=18)        │                            │                          │
+│   type: INNER            │                            │                          │
+│ Input(#7): FULL          │                            │                          │
+│ Input(#4): FULL          │                            │                          │
+└────────────┬─────────────┘                            └──────────────────────────┘
+             ┌───────────────────────────┐                                          
+             │                           │                                          
+┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #4              ││ Pipeline #7              │                            
+│ CONCAT (id=30)           ││ CONCAT (id=33)           │                            
+│ Input(#3): PARTIAL       ││ Input(#6): PARTIAL       │                            
+└────────────┬─────────────┘└────────────┬─────────────┘                            
+             │                           │                                          
+┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #3              ││ Pipeline #6              │                            
+│ PARTITION (id=31)        ││ PARTITION (id=34)        │                            
+│ Input(#2): FULL          ││ Input(#5): PARTIAL       │                            
+└────────────┬─────────────┘└────────────┬─────────────┘                            
+             │                           │                                          
+┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #2              ││ Pipeline #5              │                            
+│ MERGE_GROUP_BY (id=29)   ││ PROJECTION (id=16)       │                            
+│ Input(#1): FULL          ││ FILTER (id=15)           │                            
+│                          ││ GPU_SCAN (id=32)         │                            
+└────────────┬─────────────┘└──────────────────────────┘                            
+             │                                                                      
+┌──────────────────────────┐                                                        
+│ Pipeline #1              │                                                        
+│ PARTITION (id=28)        │                                                        
+│ Input(#0): FULL          │                                                        
+└────────────┬─────────────┘                                                        
+             │                                                                      
+┌──────────────────────────┐                                                        
+│ Pipeline #0              │                                                        
+│ LEFT_DELIM_JOIN (id=21)  │                                                        
+│ GPU_SCAN (id=27)         │                                                        
+└──────────────────────────┘                                                        
+
+[2026-07-07 12:03:39.367] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-07-07 12:03:39.367] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=0 preferred_device=0 actual_gpu=0
+[2026-07-07 12:03:39.367] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=1
+[2026-07-07 12:03:39.367] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=1 preferred_device=1 actual_gpu=1
+[2026-07-07 12:03:39.367] [info] [task_scheduler.cpp:367] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=2
+[2026-07-07 12:03:39.367] [info] [task_scheduler.cpp:369] [locality-audit] dispatch task_id=2 preferred_device=0 actual_gpu=0
+[2026-07-07 12:03:40.055] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 4294129152 bytes (4095.20 MB), rescheduling task 1
+[2026-07-07 12:03:40.055] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 1 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:40.081] [info] [parquet_gpu_ingestible.cpp:2502] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/dataset/orders.parquet columns=o_orderkey,o_orderpriority,o_orderdate row_groups=1039,1040,1041,1042,1043,1044,1045,1046,1047,1048,1049,1050,1051,1052,1053,1054,1055,1056,1057,1058,1059,1060,1061,1062,1063,1064,1065,1066,1067,1068,1069,1070,1071,1072,1073,1074,1075,1076,1077,1078,1079,1080,1081,1082,1083,1084,1085,1086,1087,1088,1089,1090,1091,1092,1093,1094,1095,1096,1097,1098,1099,1100,1101,1102,1103,1104,1105,1106,1107,1108,1109,1110,1111,1112,1113,1114,1115,1116,1117,1118,1119,1120,1121,1122,1123,1124,1125,1126,1127,1128,1129,1130,1131,1132,1133,1134,1135,1136,1137,1138,1139,1140,1141,1142,1143,1144,1145,1146,1147,1148,1149,1150,1151,1152,1153,1154,1155,1156,1157,1158,1159,1160,1161,1162,1163,1164,1165,1166,1167,1168,1169,1170,1171,1172,1173,1174,1175,1176,1177,1178,1179,1180,1181,1182,1183,1184,1185,1186,1187,1188,1189,1190,1191,1192,1193,1194,1195,1196,1197,1198,1199,1200,1201,1202,1203,1204,1205,1206,1207,1208,1209,1210,1211,1212,1213,1214,1215,1216,1217 compressed_bytes=130749450 uncompressed_bytes=184118872 column_bytes=o_orderkey:87612947:175770901,o_orderpriority:8349452:8347971,o_orderdate:34787051:34783896 output_rows=840104 output_columns=3 split_count=1 duration_us=704131
+[2026-07-07 12:03:40.081] [info] [parquet_gpu_ingestible.cpp:2605] [fixed-page-cache] stage_timing stage=inline_assembly target_gpu=0 input_rows=840104 output_rows=840104 input_columns=3 output_columns=2 duration_us=4
+[2026-07-07 12:03:40.081] [info] [gpu_pipeline_task.cpp:313] [stage-audit] pipeline_id=0 task_id=2 operator_id=27 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=840104 output_columns=2 output_bytes=17351568 byte_ratio=0.000000 row_ratio=0.000000 duration_us=713750
+[2026-07-07 12:03:40.081] [info] [gpu_pipeline_task.cpp:313] [stage-audit] pipeline_id=0 task_id=2 operator_id=21 operator_name=LEFT_DELIM_JOIN stage_kind=JOIN operator_type=37 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=840104 input_columns=2 input_bytes=17351568 output_batches=1 output_rows=840104 output_columns=2 output_bytes=17351568 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-07 12:03:40.081] [warning] [gpu_pipeline_task.cpp:67] gpu_pipeline_task: operator 'LEFT_DELIM_JOIN' (id=21) output batch 0 column count mismatch: got 2, expected 1
+[2026-07-07 12:03:40.085] [info] [parquet_gpu_ingestible.cpp:2502] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/dataset/orders.parquet columns=o_orderkey,o_orderpriority,o_orderdate row_groups=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,495,496,497,498,499,500,501,502,503,504,505,506,507,508,509,510,511,512,513,514,515,516,517,518 compressed_bytes=380720189 uncompressed_bytes=536148437 column_bytes=o_orderkey:255123030:511838601,o_orderpriority:24314027:24309836,o_orderdate:101283132:101273886 output_rows=2448350 output_columns=3 split_count=1 duration_us=710043
+[2026-07-07 12:03:40.085] [info] [parquet_gpu_ingestible.cpp:2605] [fixed-page-cache] stage_timing stage=inline_assembly target_gpu=0 input_rows=2448350 output_rows=2448350 input_columns=3 output_columns=2 duration_us=7
+[2026-07-07 12:03:40.086] [info] [gpu_pipeline_task.cpp:313] [stage-audit] pipeline_id=0 task_id=0 operator_id=27 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2448350 output_columns=2 output_bytes=50556408 byte_ratio=0.000000 row_ratio=0.000000 duration_us=718809
+[2026-07-07 12:03:40.086] [info] [gpu_pipeline_task.cpp:313] [stage-audit] pipeline_id=0 task_id=0 operator_id=21 operator_name=LEFT_DELIM_JOIN stage_kind=JOIN operator_type=37 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=2448350 input_columns=2 input_bytes=50556408 output_batches=1 output_rows=2448350 output_columns=2 output_bytes=50556408 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-07 12:03:40.086] [warning] [gpu_pipeline_task.cpp:67] gpu_pipeline_task: operator 'LEFT_DELIM_JOIN' (id=21) output batch 0 column count mismatch: got 2, expected 1
+[2026-07-07 12:03:40.305] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 3
+[2026-07-07 12:03:40.305] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 3 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:40.549] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 4
+[2026-07-07 12:03:40.549] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 4 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:40.802] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 5
+[2026-07-07 12:03:40.802] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 4/100) for task 5 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:41.047] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 6
+[2026-07-07 12:03:41.047] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 5/100) for task 6 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:41.293] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 7
+[2026-07-07 12:03:41.293] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 6/100) for task 7 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:41.538] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 8
+[2026-07-07 12:03:41.538] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 7/100) for task 8 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:41.783] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 9
+[2026-07-07 12:03:41.783] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 8/100) for task 9 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:42.025] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 10
+[2026-07-07 12:03:42.025] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 9/100) for task 10 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:42.269] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 11
+[2026-07-07 12:03:42.269] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 10/100) for task 11 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:42.515] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 12
+[2026-07-07 12:03:42.515] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 11/100) for task 12 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:42.760] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 13
+[2026-07-07 12:03:42.760] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 12/100) for task 13 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:43.005] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 14
+[2026-07-07 12:03:43.005] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 13/100) for task 14 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:43.251] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 15
+[2026-07-07 12:03:43.251] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 14/100) for task 15 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:43.495] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 16
+[2026-07-07 12:03:43.495] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 15/100) for task 16 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:43.740] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 17
+[2026-07-07 12:03:43.740] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 16/100) for task 17 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:43.986] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 18
+[2026-07-07 12:03:43.986] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 17/100) for task 18 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:44.233] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 19
+[2026-07-07 12:03:44.233] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 18/100) for task 19 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:44.478] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 20
+[2026-07-07 12:03:44.478] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 19/100) for task 20 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:44.725] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 21
+[2026-07-07 12:03:44.725] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 20/100) for task 21 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:44.971] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 22
+[2026-07-07 12:03:44.971] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 21/100) for task 22 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:45.214] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 23
+[2026-07-07 12:03:45.214] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 22/100) for task 23 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:45.463] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 24
+[2026-07-07 12:03:45.463] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 23/100) for task 24 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:45.706] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 25
+[2026-07-07 12:03:45.706] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 24/100) for task 25 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:45.952] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 26
+[2026-07-07 12:03:45.952] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 25/100) for task 26 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:46.197] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 27
+[2026-07-07 12:03:46.197] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 26/100) for task 27 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:46.445] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 28
+[2026-07-07 12:03:46.445] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 27/100) for task 28 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:46.689] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 29
+[2026-07-07 12:03:46.689] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 28/100) for task 29 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:46.932] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 30
+[2026-07-07 12:03:46.933] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 29/100) for task 30 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:47.177] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 31
+[2026-07-07 12:03:47.177] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 30/100) for task 31 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:47.425] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 32
+[2026-07-07 12:03:47.425] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 31/100) for task 32 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:47.672] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 33
+[2026-07-07 12:03:47.673] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 32/100) for task 33 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:47.923] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 34
+[2026-07-07 12:03:47.923] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 33/100) for task 34 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:48.168] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 35
+[2026-07-07 12:03:48.168] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 34/100) for task 35 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:48.411] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 36
+[2026-07-07 12:03:48.411] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 35/100) for task 36 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:48.655] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 37
+[2026-07-07 12:03:48.655] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 36/100) for task 37 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:48.904] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 38
+[2026-07-07 12:03:48.904] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 37/100) for task 38 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:49.151] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 39
+[2026-07-07 12:03:49.151] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 38/100) for task 39 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:49.398] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 40
+[2026-07-07 12:03:49.398] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 39/100) for task 40 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:49.645] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 41
+[2026-07-07 12:03:49.645] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 40/100) for task 41 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:49.892] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 42
+[2026-07-07 12:03:49.892] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 41/100) for task 42 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:50.141] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 43
+[2026-07-07 12:03:50.141] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 42/100) for task 43 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:50.387] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 44
+[2026-07-07 12:03:50.387] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 43/100) for task 44 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:50.637] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 45
+[2026-07-07 12:03:50.637] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 44/100) for task 45 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:50.887] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 46
+[2026-07-07 12:03:50.887] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 45/100) for task 46 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:51.134] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 47
+[2026-07-07 12:03:51.134] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 46/100) for task 47 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:51.379] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 48
+[2026-07-07 12:03:51.379] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 47/100) for task 48 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:51.628] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 49
+[2026-07-07 12:03:51.628] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 48/100) for task 49 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:51.878] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 50
+[2026-07-07 12:03:51.878] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 49/100) for task 50 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:52.124] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 51
+[2026-07-07 12:03:52.124] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 50/100) for task 51 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:52.371] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 52
+[2026-07-07 12:03:52.371] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 51/100) for task 52 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:52.620] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 53
+[2026-07-07 12:03:52.620] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 52/100) for task 53 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:52.867] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 54
+[2026-07-07 12:03:52.867] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 53/100) for task 54 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:53.115] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 55
+[2026-07-07 12:03:53.115] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 54/100) for task 55 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:53.360] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 56
+[2026-07-07 12:03:53.360] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 55/100) for task 56 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:53.604] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 57
+[2026-07-07 12:03:53.604] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 56/100) for task 57 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:53.849] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 58
+[2026-07-07 12:03:53.849] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 57/100) for task 58 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:54.097] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 59
+[2026-07-07 12:03:54.097] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 58/100) for task 59 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:54.345] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 60
+[2026-07-07 12:03:54.345] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 59/100) for task 60 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:54.588] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 61
+[2026-07-07 12:03:54.588] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 60/100) for task 61 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:54.831] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 62
+[2026-07-07 12:03:54.831] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 61/100) for task 62 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:55.073] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 63
+[2026-07-07 12:03:55.073] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 62/100) for task 63 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:55.315] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 64
+[2026-07-07 12:03:55.315] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 63/100) for task 64 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:55.558] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 65
+[2026-07-07 12:03:55.558] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 64/100) for task 65 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:55.801] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 66
+[2026-07-07 12:03:55.801] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 65/100) for task 66 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:56.046] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 67
+[2026-07-07 12:03:56.046] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 66/100) for task 67 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:56.290] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 68
+[2026-07-07 12:03:56.290] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 67/100) for task 68 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:56.536] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 69
+[2026-07-07 12:03:56.536] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 68/100) for task 69 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:56.782] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 70
+[2026-07-07 12:03:56.782] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 69/100) for task 70 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:57.024] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 71
+[2026-07-07 12:03:57.024] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 70/100) for task 71 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:57.268] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 72
+[2026-07-07 12:03:57.268] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 71/100) for task 72 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:57.511] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 73
+[2026-07-07 12:03:57.511] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 72/100) for task 73 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:57.754] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 74
+[2026-07-07 12:03:57.754] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 73/100) for task 74 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:58.000] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 75
+[2026-07-07 12:03:58.000] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 74/100) for task 75 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:58.245] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 76
+[2026-07-07 12:03:58.245] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 75/100) for task 76 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:58.488] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 77
+[2026-07-07 12:03:58.488] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 76/100) for task 77 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:58.731] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 78
+[2026-07-07 12:03:58.731] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 77/100) for task 78 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:58.974] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 79
+[2026-07-07 12:03:58.974] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 78/100) for task 79 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:59.216] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 80
+[2026-07-07 12:03:59.216] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 79/100) for task 80 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:59.461] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 81
+[2026-07-07 12:03:59.461] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 80/100) for task 81 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:59.703] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 82
+[2026-07-07 12:03:59.703] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 81/100) for task 82 (original task 1), resuming from operator index 0
+[2026-07-07 12:03:59.946] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 83
+[2026-07-07 12:03:59.946] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 82/100) for task 83 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:00.190] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 84
+[2026-07-07 12:04:00.190] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 83/100) for task 84 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:00.434] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 85
+[2026-07-07 12:04:00.434] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 84/100) for task 85 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:00.679] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 86
+[2026-07-07 12:04:00.679] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 85/100) for task 86 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:00.925] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 87
+[2026-07-07 12:04:00.925] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 86/100) for task 87 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:01.172] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 88
+[2026-07-07 12:04:01.172] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 87/100) for task 88 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:01.419] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 89
+[2026-07-07 12:04:01.419] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 88/100) for task 89 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:01.664] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 90
+[2026-07-07 12:04:01.664] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 89/100) for task 90 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:01.911] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 91
+[2026-07-07 12:04:01.911] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 90/100) for task 91 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:02.154] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 92
+[2026-07-07 12:04:02.154] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 91/100) for task 92 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:02.401] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 93
+[2026-07-07 12:04:02.401] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 92/100) for task 93 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:02.645] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 94
+[2026-07-07 12:04:02.645] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 93/100) for task 94 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:02.890] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 95
+[2026-07-07 12:04:02.890] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 94/100) for task 95 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:03.132] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 96
+[2026-07-07 12:04:03.132] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 95/100) for task 96 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:03.374] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 97
+[2026-07-07 12:04:03.374] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 96/100) for task 97 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:03.616] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 98
+[2026-07-07 12:04:03.616] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 97/100) for task 98 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:03.861] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 99
+[2026-07-07 12:04:03.861] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 98/100) for task 99 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:04.105] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 100
+[2026-07-07 12:04:04.105] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 99/100) for task 100 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:04.348] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 101
+[2026-07-07 12:04:04.348] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 100/100) for task 101 (original task 1), resuming from operator index 0
+[2026-07-07 12:04:04.591] [warning] [gpu_pipeline_task.cpp:892] Pipeline 0: OOM at operator GPU_SCAN (id=27, index 0/2), requested 0 bytes (0.00 MB), global usage 0 bytes (0.00 MB), peak allocated 2289067520 bytes (2183.02 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 2354062245 bytes (2245.01 MB), rescheduling task 102
+[2026-07-07 12:04:04.591] [error] [gpu_pipeline_executor.cpp:336] GPU Pipeline Executor: task 102 (original task 1) exceeded 100 OOM retries at operator index 0 — terminating query
+[2026-07-07 12:04:04.591] [error] [sirius_engine.cpp:178] Error executing query: GPU pipeline task exceeded maximum OOM retry limit (100) for original task 1
+[2026-07-07 12:04:04.591] [info] [task_scheduler.cpp:189] task_scheduler: draining after error
+[2026-07-07 12:04:04.595] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-07 12:04:04.595] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-07 12:04:04.596] [info] [task_scheduler.cpp:232] task_scheduler: DONE draining after error
+[2026-07-07 12:04:04.596] [error] [sirius_interface.cpp:201] Error in sirius_execute_pending_query_result: GPU pipeline task exceeded maximum OOM retry limit (100) for original task 1
+[2026-07-07 12:04:04.596] [error] [physical_sirius_execution.cpp:156] Transparent GPU execution error: Invalid Error: GPU pipeline task exceeded maximum OOM retry limit (100) for original task 1
+[2026-07-07 12:04:04.644] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-07 12:04:04.657] [warning] [sirius_context.cpp:274] SiriusContext::QueryEnd: operator 28 port 'default' still had 2 un-consumed data batch(es) (memory leak).
+[2026-07-07 12:04:04.657] [warning] [sirius_context.cpp:274] SiriusContext::QueryEnd: operator 38 port 'default' still had 2 un-consumed data batch(es) (memory leak).
+[2026-07-07 12:04:04.657] [info] [:] [host_pool] HOST:0 QueryEnd allocated=5242880 bytes peak=5242880 bytes free_blocks=507
+[2026-07-07 12:04:04.657] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=5762138472 bytes reserved=0 bytes
+[2026-07-07 12:04:04.657] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=4294129152 bytes reserved=0 bytes
+[2026-07-07 12:04:04.663] [info] [sirius_context.cpp:1013] Connection closed.
+[2026-07-07 12:04:04.666] [info] [task_scheduler.cpp:295] Task request channel closed, exiting management event loop.
+[2026-07-07 12:04:04.667] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-07 12:04:04.667] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop

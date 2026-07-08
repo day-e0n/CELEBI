@@ -1,0 +1,19 @@
+{
+  "condition": "baseline",
+  "workload_id": "w006",
+  "repeat": 0,
+  "queries": [
+    18,
+    9,
+    11,
+    17,
+    21,
+    14
+  ],
+  "input": "/mnt/nvme/dataset",
+  "config": "/home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/random_7gb/configs/sirius_2gpu.yaml",
+  "devices": "0,1",
+  "pin_rows": null,
+  "pinned_hot_scope": "budgeted_fixed",
+  "created_at": "2026-07-08T03:25:49"
+}

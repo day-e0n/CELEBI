@@ -1,0 +1,18 @@
+{
+  "condition": "baseline",
+  "workload_id": "q5x5",
+  "repeat": 0,
+  "queries": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "input": "/mnt/nvme/dataset",
+  "config": "/home/dy1013/sirius_multi-gpu/experiment/motivation_runs/figure1_all_queries_5x_paging_20260707/configs/sirius_2gpu.yaml",
+  "devices": "0,1",
+  "pin_rows": null,
+  "pinned_hot_scope": "budgeted_fixed",
+  "created_at": "2026-07-07T11:28:37"
+}

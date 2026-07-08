@@ -1,8 +1,0 @@
-[2026-07-01 13:12:22.304] [warning] [sirius_config.cpp:459] sirius_config: use_sirius_datasource was false but 4 GPUs are configured; the sirius datasource is required for multi-GPU IO routing. Overriding use_sirius_datasource to true.
-[2026-07-01 13:12:22.304] [info] [sirius_context.cpp:1046] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/automatic_motivation_latency/configs/sirius_4gpu.yaml
-[2026-07-01 13:12:22.308] [info] [telemetry_context.cpp:67] Telemetry context initialized (engine=siriusDB)
-[2026-07-01 13:12:22.308] [info] [sirius_context.cpp:337] SiriusContext: topology summary — 4 GPU(s), 1 NUMA node(s), host='hicys76'
-[2026-07-01 13:12:22.308] [info] [sirius_context.cpp:342]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
-[2026-07-01 13:12:22.308] [info] [sirius_context.cpp:342]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:34:00.0)
-[2026-07-01 13:12:22.308] [info] [sirius_context.cpp:342]   GPU 2: NVIDIA RTX A5000 (numa=0, pci=00000000:AC:00.0)
-[2026-07-01 13:12:22.308] [info] [sirius_context.cpp:342]   GPU 3: NVIDIA RTX A5000 (numa=0, pci=00000000:CA:00.0)

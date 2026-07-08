@@ -122,6 +122,8 @@ class parquet_split_info : public io::scan_info {
     std::vector<std::size_t> reader_extra_filter_data_indices;
     int preferred_device_id{-1};
     bool filtered_reuse{false};
+    bool filtered_reuse_single_mask{false};
+    bool partial_filter_mask{false};
   };
 
   // wdy end
@@ -132,6 +134,9 @@ class parquet_split_info : public io::scan_info {
   /// when AST translation succeeded). Shared across every split emitted
   /// by the same batch.
   std::shared_ptr<cudf::io::parquet_reader_options> reader_options;
+  /// D-space columns actually requested from the parquet reader for this split.
+  std::vector<std::size_t> reader_data_indices;
+  std::vector<std::string> reader_column_names;
   /// Canonical scan_plan for the table, shared across every split of
   /// this ingestible.
   std::shared_ptr<scan_plan const> plan;

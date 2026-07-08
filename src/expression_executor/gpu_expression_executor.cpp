@@ -320,7 +320,7 @@ std::unique_ptr<cudf::table> gpu_expression_executor::execute(cudf::table_view i
   return std::make_unique<cudf::table>(std::move(_output_columns), _stream, _mr);
 }
 
-std::unique_ptr<cudf::table> gpu_expression_executor::select(cudf::table_view input)
+std::unique_ptr<cudf::column> gpu_expression_executor::evaluate_filter_mask(cudf::table_view input)
 {
   D_ASSERT(_ast_expressions.size() == 1);
 #ifdef D_ASSERT_IS_ENABLED
@@ -331,11 +331,22 @@ std::unique_ptr<cudf::table> gpu_expression_executor::select(cudf::table_view in
   D_ASSERT(duck_expr->return_type == duckdb::LogicalType::BOOLEAN);
 #endif
 
-  // Call execute(input_batch) to set _input_table and produce the boolean mask as a single column
+  // Call execute(input_batch) to set _input_table and produce the boolean mask as a single column.
   auto mask_batch = execute(input);
-  auto mask_view  = mask_batch->view().column(0);
+  auto mask_cols  = mask_batch->release();
+  if (mask_cols.size() != 1) {
+    throw duckdb::InternalException(
+      "[gpu_expression_executor] filter expression produced an unexpected mask column count");
+  }
+  return std::move(mask_cols[0]);
+}
 
-  // Apply the boolean mask to filter the input batch
+std::unique_ptr<cudf::table> gpu_expression_executor::select(cudf::table_view input)
+{
+  auto mask      = evaluate_filter_mask(input);
+  auto mask_view = mask->view();
+
+  // Apply the boolean mask to filter the input batch.
   return cudf::apply_boolean_mask(input, mask_view, _stream, _mr);
 }
 

@@ -25,6 +25,7 @@
 #include <io/sirius_datasource.hpp>
 #include <log/logging.hpp>
 #include <op/scan/parquet_gpu_ingestible.hpp>
+#include <op/scan/fixed_page_filter_mask.hpp>
 #include <op/scan/parquet_schema_mapping.hpp>
 #include <op/scan/scan_utils.hpp>
 #include <op/scan/sirius_gpu_scan_operator_data.hpp>
@@ -32,6 +33,7 @@
 #include <scan_manager/sirius_scan_manager.hpp>
 
 // cudf
+#include <cudf/binaryop.hpp>
 #include <cudf/column/column.hpp>
 #include <cudf/concatenate.hpp>
 #include <cudf/copying.hpp>
@@ -39,6 +41,7 @@
 #include <cudf/io/parquet.hpp>
 #include <cudf/io/parquet_io_utils.hpp>
 #include <cudf/io/parquet_schema.hpp>
+#include <cudf/stream_compaction.hpp>
 #include <cudf/table/table.hpp>
 #include <cudf/utilities/default_stream.hpp>
 #include <cudf/utilities/memory_resource.hpp>
@@ -61,10 +64,11 @@
 #include <chrono>
 // wdy end
 #include <cctype>
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <optional>
 // wdy start
 #include <sstream>
@@ -195,19 +199,22 @@ std::optional<std::size_t> cached_chunk_index_for_range(
   if (cached_data_indices.empty()) { return std::nullopt; }
 
   auto const& column_name = plan.data_columns.at(cached_data_indices.front()).name;
-  auto chunks_it          = entry.data_batches_by_column.find(column_name);
-  if (chunks_it == entry.data_batches_by_column.end()) { return std::nullopt; }
+  auto pages_it           = entry.fixed_width_pages_by_column.find(column_name);
+  if (pages_it == entry.fixed_width_pages_by_column.end()) { return std::nullopt; }
 
-  auto const range_end    = range.row_offset + range.num_rows;
-  std::size_t chunk_start = 0;
-  for (std::size_t chunk_index = 0; chunk_index < chunks_it->second.size(); ++chunk_index) {
-    auto const& chunk = chunks_it->second[chunk_index];
-    if (!chunk) { throw std::runtime_error("[fixed-page-cache] null cached column chunk"); }
-    auto const chunk_end = chunk_start + static_cast<std::size_t>(chunk->size());
-    if (range.row_offset >= chunk_start && range_end <= chunk_end) { return chunk_index; }
-    chunk_start = chunk_end;
+  auto const range_end = range.row_offset + range.num_rows;
+  std::optional<std::size_t> matched_chunk;
+  for (auto const& page : pages_it->second) {
+    auto const page_start = page.global_row_offset;
+    auto const page_end   = page_start + page.num_rows;
+    if (range.row_offset >= page_end || range_end <= page_start) { continue; }
+    if (!matched_chunk) {
+      matched_chunk = page.chunk_index;
+    } else if (*matched_chunk != page.chunk_index) {
+      return std::nullopt;
+    }
   }
-  return std::nullopt;
+  return matched_chunk;
 }
 
 bool fixed_page_view_aligned_splits_enabled()
@@ -219,7 +226,7 @@ bool fixed_page_view_aligned_splits_enabled()
 bool fixed_page_zero_copy_output_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_ZERO_COPY_OUTPUT");
-  return value == nullptr || std::string_view(value) != "0";
+  return value != nullptr && std::string_view(value) == "1";
 }
 
 bool fixed_page_filtered_reuse_enabled()
@@ -228,13 +235,133 @@ bool fixed_page_filtered_reuse_enabled()
   return value != nullptr && std::string_view(value) == "1";
 }
 
+bool fixed_page_filtered_reuse_single_mask_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_FILTERED_REUSE_SINGLE_MASK");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
+bool fixed_page_partial_filter_mask_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_PARTIAL_FILTER_MASK");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
+bool fixed_page_filter_mask_cache_enabled()
+{
+  // Keeping GPU mask columns inside the scan-manager cache currently outlives
+  // some DuckDB/Sirius teardown paths and can crash during CUDA async free.
+  // Leave the implementation compiled for iteration, but keep it disabled
+  // until the cache has an explicit query/session-lifetime owner.
+  return false;
+}
+
+std::string fixed_page_value_fingerprint(sirius::value const& value)
+{
+  std::ostringstream out;
+  out << value.index() << ':';
+  std::visit(
+    [&](auto const& v) {
+      using T = std::decay_t<decltype(v)>;
+      if constexpr (std::is_same_v<T, sirius::null_value>) {
+        out << "null";
+      } else if constexpr (std::is_same_v<T, bool>) {
+        out << (v ? 1 : 0);
+      } else if constexpr (std::is_same_v<T, sirius::date_value>) {
+        out << v.days;
+      } else if constexpr (std::is_same_v<T, sirius::timestamp_sec_value> ||
+                           std::is_same_v<T, sirius::timestamp_ms_value> ||
+                           std::is_same_v<T, sirius::timestamp_us_value> ||
+                           std::is_same_v<T, sirius::timestamp_ns_value>) {
+        out << v.value;
+      } else if constexpr (std::is_same_v<T, sirius::decimal32> ||
+                           std::is_same_v<T, sirius::decimal64>) {
+        out << v.value << ':' << static_cast<int>(v.scale);
+      } else if constexpr (std::is_same_v<T, sirius::decimal128>) {
+        out << "decimal128:" << static_cast<int>(v.scale);
+      } else if constexpr (std::is_same_v<T, std::string>) {
+        out << v;
+      } else {
+        out << +v;
+      }
+    },
+    value);
+  return out.str();
+}
+
+std::string fixed_page_ast_fingerprint(sirius::ast::node const& node)
+{
+  return std::visit(
+    [&](auto const& alt) -> std::string {
+      using T = std::decay_t<decltype(alt)>;
+      std::ostringstream out;
+      if constexpr (std::is_same_v<T, sirius::ast::reference>) {
+        out << "ref(" << alt.column_index << ')';
+      } else if constexpr (std::is_same_v<T, sirius::ast::constant>) {
+        out << "const(" << alt.return_type.to_string() << ':'
+            << fixed_page_value_fingerprint(alt.payload) << ')';
+      } else if constexpr (std::is_same_v<T, sirius::ast::comparison>) {
+        out << "cmp(" << static_cast<int>(alt.op) << ',';
+        out << (alt.left ? fixed_page_ast_fingerprint(*alt.left) : "null") << ',';
+        out << (alt.right ? fixed_page_ast_fingerprint(*alt.right) : "null") << ')';
+      } else if constexpr (std::is_same_v<T, sirius::ast::conjunction>) {
+        out << "conj(" << static_cast<int>(alt.op);
+        for (auto const& child : alt.children) {
+          out << ',' << (child ? fixed_page_ast_fingerprint(*child) : "null");
+        }
+        out << ')';
+      } else if constexpr (std::is_same_v<T, sirius::ast::between>) {
+        out << "between(" << alt.lower_inclusive << ',' << alt.upper_inclusive << ','
+            << (alt.input ? fixed_page_ast_fingerprint(*alt.input) : "null") << ','
+            << (alt.lower ? fixed_page_ast_fingerprint(*alt.lower) : "null") << ','
+            << (alt.upper ? fixed_page_ast_fingerprint(*alt.upper) : "null") << ')';
+      } else {
+        out << "node(" << node.v.index() << ')';
+      }
+      return out.str();
+    },
+    node.v);
+}
+
+std::string fixed_page_filter_mask_cache_key(
+  int device_id,
+  sirius::ast::node const& cached_filter_ast,
+  std::vector<std::size_t> const& cached_filter_data_indices,
+  std::vector<parquet_split_info::fixed_page_row_range> const& row_ranges)
+{
+  std::ostringstream key;
+  key << "dev=" << device_id << ";cols=";
+  for (auto const data_idx : cached_filter_data_indices) { key << data_idx << ','; }
+  key << ";ranges=";
+  for (auto const& range : row_ranges) { key << range.row_offset << ':' << range.num_rows << ','; }
+  key << ";ast=" << fixed_page_ast_fingerprint(cached_filter_ast);
+  return key.str();
+}
+
 std::size_t fixed_page_min_filtered_split_cached_bytes()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_MIN_FILTERED_SPLIT_CACHED_BYTES");
   if (value == nullptr || *value == '\0') { return 0; }
-  char* end = nullptr;
+  char* end   = nullptr;
   auto parsed = std::strtoull(value, &end, 10);
   if (end == value) { return 0; }
+  return static_cast<std::size_t>(parsed);
+}
+
+bool fixed_page_demand_load_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_DEMAND_LOAD");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
+std::size_t fixed_page_demand_max_bytes_per_split()
+{
+  static constexpr std::size_t kDefault = 512ULL * 1024ULL * 1024ULL;
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_DEMAND_MAX_BYTES_PER_SPLIT");
+  if (value == nullptr || *value == '\0') { return kDefault; }
+  char* end   = nullptr;
+  auto parsed = std::strtoull(value, &end, 10);
+  if (end == value || parsed == 0) { return kDefault; }
   return static_cast<std::size_t>(parsed);
 }
 
@@ -247,7 +374,7 @@ bool fixed_page_pruning_enabled()
 bool fixed_page_pruning_skip_partial_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_PRUNING_SKIP_PARTIAL");
-  return value == nullptr || std::string_view(value) != "0";
+  return value != nullptr && std::string_view(value) == "1";
 }
 
 struct fixed_page_pruning_literal {
@@ -322,8 +449,8 @@ std::vector<std::unique_ptr<sirius::ast::node>> remap_filter_children(
 std::unique_ptr<sirius::ast::node> remap_filter_references(
   sirius::ast::node const& src, std::unordered_map<std::size_t, std::size_t> const& remap)
 {
-  auto xform = [&](std::unique_ptr<sirius::ast::node> const& child)
-    -> std::unique_ptr<sirius::ast::node> {
+  auto xform =
+    [&](std::unique_ptr<sirius::ast::node> const& child) -> std::unique_ptr<sirius::ast::node> {
     return child ? remap_filter_references(*child, remap) : nullptr;
   };
 
@@ -341,8 +468,8 @@ std::unique_ptr<sirius::ast::node> remap_filter_references(
         if (it->second > static_cast<std::size_t>(std::numeric_limits<uint32_t>::max())) {
           throw std::overflow_error("[fixed-page-cache] remapped filter reference exceeds uint32");
         }
-        return std::make_unique<sirius::ast::node>(sirius::ast::reference{
-          static_cast<uint32_t>(it->second), alt.return_type});
+        return std::make_unique<sirius::ast::node>(
+          sirius::ast::reference{static_cast<uint32_t>(it->second), alt.return_type});
       } else if constexpr (std::is_same_v<T, sirius::ast::constant>) {
         return std::make_unique<sirius::ast::node>(
           sirius::ast::constant{alt.payload, alt.return_type});
@@ -350,14 +477,14 @@ std::unique_ptr<sirius::ast::node> remap_filter_references(
         return std::make_unique<sirius::ast::node>(
           sirius::ast::comparison{alt.op, xform(alt.left), xform(alt.right)});
       } else if constexpr (std::is_same_v<T, sirius::ast::conjunction>) {
-        return std::make_unique<sirius::ast::node>(sirius::ast::conjunction{
-          alt.op, remap_filter_children(alt.children, xform)});
+        return std::make_unique<sirius::ast::node>(
+          sirius::ast::conjunction{alt.op, remap_filter_children(alt.children, xform)});
       } else if constexpr (std::is_same_v<T, sirius::ast::between>) {
         return std::make_unique<sirius::ast::node>(sirius::ast::between{xform(alt.input),
-                                                                       xform(alt.lower),
-                                                                       xform(alt.upper),
-                                                                       alt.lower_inclusive,
-                                                                       alt.upper_inclusive});
+                                                                        xform(alt.lower),
+                                                                        xform(alt.upper),
+                                                                        alt.lower_inclusive,
+                                                                        alt.upper_inclusive});
       } else if constexpr (std::is_same_v<T, sirius::ast::case_expr>) {
         std::vector<sirius::ast::case_expr::when_then> cases;
         cases.reserve(alt.cases.size());
@@ -370,11 +497,10 @@ std::unique_ptr<sirius::ast::node> remap_filter_references(
         return std::make_unique<sirius::ast::node>(
           sirius::ast::cast{xform(alt.child), alt.target_type, alt.try_cast});
       } else if constexpr (std::is_same_v<T, sirius::ast::unary_op>) {
-        return std::make_unique<sirius::ast::node>(
-          sirius::ast::unary_op{alt.op, xform(alt.child)});
+        return std::make_unique<sirius::ast::node>(sirius::ast::unary_op{alt.op, xform(alt.child)});
       } else if constexpr (std::is_same_v<T, sirius::ast::coalesce>) {
-        return std::make_unique<sirius::ast::node>(sirius::ast::coalesce{
-          remap_filter_children(alt.children, xform), alt.return_type()});
+        return std::make_unique<sirius::ast::node>(
+          sirius::ast::coalesce{remap_filter_children(alt.children, xform), alt.return_type()});
       } else if constexpr (std::is_same_v<T, sirius::ast::in_list>) {
         return std::make_unique<sirius::ast::node>(sirius::ast::in_list{
           xform(alt.probe), remap_filter_children(alt.values, xform), alt.negated});
@@ -382,11 +508,11 @@ std::unique_ptr<sirius::ast::node> remap_filter_references(
         return std::make_unique<sirius::ast::node>(sirius::ast::function_call{
           alt.function(), remap_filter_children(alt.arguments(), xform), alt.return_type()});
       } else if constexpr (std::is_same_v<T, sirius::ast::aggregate>) {
-        return std::make_unique<sirius::ast::node>(sirius::ast::aggregate{
-          alt.function(),
-          remap_filter_children(alt.arguments(), xform),
-          alt.return_type(),
-          alt.distinct()});
+        return std::make_unique<sirius::ast::node>(
+          sirius::ast::aggregate{alt.function(),
+                                 remap_filter_children(alt.arguments(), xform),
+                                 alt.return_type(),
+                                 alt.distinct()});
       } else {
         static_assert(sizeof(T) == 0,
                       "Unhandled sirius::ast alternative in remap_filter_references");
@@ -408,8 +534,7 @@ std::optional<long double> pruning_literal_value(fixed_page_pruning_literal cons
   }
 }
 
-std::optional<long double> pruning_stats_min(
-  scan_manager::fixed_width_page_stats const& stats)
+std::optional<long double> pruning_stats_min(scan_manager::fixed_width_page_stats const& stats)
 {
   if (!stats.valid) { return std::nullopt; }
   switch (stats.kind) {
@@ -423,8 +548,7 @@ std::optional<long double> pruning_stats_min(
   }
 }
 
-std::optional<long double> pruning_stats_max(
-  scan_manager::fixed_width_page_stats const& stats)
+std::optional<long double> pruning_stats_max(scan_manager::fixed_width_page_stats const& stats)
 {
   if (!stats.valid) { return std::nullopt; }
   switch (stats.kind) {
@@ -578,18 +702,10 @@ bool add_comparison_constraint(fixed_page_pruning_constraints& constraints,
       merge_lower_bound(constraint, literal, true);
       merge_upper_bound(constraint, literal, true);
       return true;
-    case sirius::comparison_type::lt:
-      merge_upper_bound(constraint, literal, false);
-      return true;
-    case sirius::comparison_type::le:
-      merge_upper_bound(constraint, literal, true);
-      return true;
-    case sirius::comparison_type::gt:
-      merge_lower_bound(constraint, literal, false);
-      return true;
-    case sirius::comparison_type::ge:
-      merge_lower_bound(constraint, literal, true);
-      return true;
+    case sirius::comparison_type::lt: merge_upper_bound(constraint, literal, false); return true;
+    case sirius::comparison_type::le: merge_upper_bound(constraint, literal, true); return true;
+    case sirius::comparison_type::gt: merge_lower_bound(constraint, literal, false); return true;
+    case sirius::comparison_type::ge: merge_lower_bound(constraint, literal, true); return true;
     default: return false;
   }
 }
@@ -604,14 +720,14 @@ bool extract_comparison_pruning_constraint(sirius::ast::comparison const& compar
 {
   if (!comparison.left || !comparison.right) { return false; }
 
-  auto const* left_ref = std::get_if<sirius::ast::reference>(&comparison.left->v);
-  auto const* right_ref = std::get_if<sirius::ast::reference>(&comparison.right->v);
-  auto const* left_const = std::get_if<sirius::ast::constant>(&comparison.left->v);
+  auto const* left_ref    = std::get_if<sirius::ast::reference>(&comparison.left->v);
+  auto const* right_ref   = std::get_if<sirius::ast::reference>(&comparison.right->v);
+  auto const* left_const  = std::get_if<sirius::ast::constant>(&comparison.left->v);
   auto const* right_const = std::get_if<sirius::ast::constant>(&comparison.right->v);
 
-  sirius::ast::reference const* ref      = nullptr;
-  sirius::ast::constant const* constant  = nullptr;
-  auto op                                = comparison.op;
+  sirius::ast::reference const* ref     = nullptr;
+  sirius::ast::constant const* constant = nullptr;
+  auto op                               = comparison.op;
   if (left_ref != nullptr && right_const != nullptr) {
     ref      = left_ref;
     constant = right_const;
@@ -636,7 +752,7 @@ bool extract_between_pruning_constraint(sirius::ast::between const& between,
                                         scan_plan const& plan)
 {
   if (!between.input || !between.lower || !between.upper) { return false; }
-  auto const* ref = std::get_if<sirius::ast::reference>(&between.input->v);
+  auto const* ref         = std::get_if<sirius::ast::reference>(&between.input->v);
   auto const* lower_const = std::get_if<sirius::ast::constant>(&between.lower->v);
   auto const* upper_const = std::get_if<sirius::ast::constant>(&between.upper->v);
   if (ref == nullptr || lower_const == nullptr || upper_const == nullptr) { return false; }
@@ -732,18 +848,12 @@ fixed_page_pruning_summary summarize_fixed_page_pruning(
     if (constraint_it == constraints.end()) { continue; }
 
     auto const& column_name = plan.data_columns.at(data_idx).name;
-    auto pages_it           = entry.fixed_width_pages_by_column.find(column_name);
-    auto chunks_it          = entry.data_batches_by_column.find(column_name);
-    if (pages_it == entry.fixed_width_pages_by_column.end() ||
-        chunks_it == entry.data_batches_by_column.end()) {
-      continue;
-    }
+    auto pages_it = entry.fixed_width_pages_by_column.find(column_name);
+    if (pages_it == entry.fixed_width_pages_by_column.end()) { continue; }
 
     ++summary.matched_columns;
-    auto const chunk_offsets = cached_chunk_start_offsets(chunks_it->second);
     for (auto const& page : pages_it->second) {
-      if (page.chunk_index + 1 >= chunk_offsets.size()) { continue; }
-      auto const page_row_offset = chunk_offsets[page.chunk_index] + page.row_offset;
+      auto const page_row_offset = page.global_row_offset;
       bool overlaps_split        = false;
       for (auto const& range : row_ranges) {
         if (row_range_overlap(page_row_offset, page.num_rows, range.row_offset, range.num_rows) !=
@@ -794,18 +904,12 @@ fixed_page_device_choice choose_fixed_page_device(
   for (auto const data_idx : cached_data_indices) {
     auto const& column_name = plan.data_columns.at(data_idx).name;
     auto pages_it           = entry.fixed_width_pages_by_column.find(column_name);
-    auto chunks_it          = entry.data_batches_by_column.find(column_name);
-    if (pages_it == entry.fixed_width_pages_by_column.end() ||
-        chunks_it == entry.data_batches_by_column.end()) {
-      continue;
-    }
+    if (pages_it == entry.fixed_width_pages_by_column.end()) { continue; }
 
-    auto const chunk_offsets = cached_chunk_start_offsets(chunks_it->second);
     for (auto const& page : pages_it->second) {
-      if (page.memory_space == nullptr || page.chunk_index + 1 >= chunk_offsets.size()) {
-        continue;
-      }
-      auto const page_row_offset = chunk_offsets[page.chunk_index] + page.row_offset;
+      if (page.state != scan_manager::fixed_width_page_state::resident) { continue; }
+      if (page.memory_space == nullptr) { continue; }
+      auto const page_row_offset = page.global_row_offset;
       for (auto const& range : row_ranges) {
         auto const overlap_rows =
           row_range_overlap(page_row_offset, page.num_rows, range.row_offset, range.num_rows);
@@ -839,6 +943,210 @@ std::size_t fixed_page_candidate_device_count(scan_manager::pinned_entry const& 
   return device_ids.size();
 }
 
+
+void recompute_fixed_page_directory_metrics(scan_manager::pinned_entry& entry)
+{
+  scan_manager::fixed_width_page_directory_metrics metrics;
+  auto const eviction_count = entry.fixed_width_page_metrics.eviction_count;
+  for (auto const& [_, pages] : entry.fixed_width_pages_by_column) {
+    for (auto const& page : pages) {
+      if (page.state == scan_manager::fixed_width_page_state::resident) {
+        ++metrics.resident_pages;
+        metrics.resident_bytes += page.num_bytes;
+      } else {
+        ++metrics.evicted_pages;
+      }
+      if (page.stats.valid) { ++metrics.stats_pages; }
+    }
+  }
+  metrics.eviction_count = eviction_count;
+  entry.fixed_width_page_metrics = metrics;
+}
+
+std::size_t fixed_page_missing_bytes_for_ranges(
+  scan_manager::pinned_entry const& entry,
+  std::vector<std::size_t> const& cached_data_indices,
+  scan_plan const& plan,
+  std::vector<parquet_split_info::fixed_page_row_range> const& row_ranges)
+{
+  std::size_t bytes = 0;
+  for (auto const data_idx : cached_data_indices) {
+    auto const& column_name = plan.data_columns.at(data_idx).name;
+    auto pages_it           = entry.fixed_width_pages_by_column.find(column_name);
+    if (pages_it == entry.fixed_width_pages_by_column.end()) { continue; }
+    for (auto const& page : pages_it->second) {
+      if (page.state == scan_manager::fixed_width_page_state::resident && page.owned_column) {
+        continue;
+      }
+      auto const page_start = page.global_row_offset;
+      for (auto const& range : row_ranges) {
+        if (row_range_overlap(page_start, page.num_rows, range.row_offset, range.num_rows) != 0) {
+          bytes += page.num_bytes;
+          break;
+        }
+      }
+    }
+  }
+  return bytes;
+}
+
+std::size_t demand_load_fixed_pages_for_ranges(
+  scan_manager::pinned_entry& entry,
+  std::string const& file_path,
+  scan_plan const& plan,
+  std::vector<std::size_t> const& cached_data_indices,
+  std::vector<parquet_split_info::fixed_page_row_range> const& row_ranges,
+  scan_manager::sirius_scan_manager const& scan_manager)
+{
+  if (!fixed_page_demand_load_enabled() || row_ranges.empty()) { return 0; }
+
+  std::unordered_map<std::string, std::vector<std::size_t>> missing_pages_by_column;
+  std::size_t missing_bytes = 0;
+  std::size_t missing_pages = 0;
+
+  for (auto const data_idx : cached_data_indices) {
+    auto const& column_name = plan.data_columns.at(data_idx).name;
+    auto pages_it           = entry.fixed_width_pages_by_column.find(column_name);
+    if (pages_it == entry.fixed_width_pages_by_column.end()) { continue; }
+
+    for (std::size_t page_ordinal = 0; page_ordinal < pages_it->second.size(); ++page_ordinal) {
+      auto const& page = pages_it->second[page_ordinal];
+      if (page.state == scan_manager::fixed_width_page_state::resident && page.owned_column) {
+        continue;
+      }
+      auto const page_start = page.global_row_offset;
+      bool needed           = false;
+      for (auto const& range : row_ranges) {
+        if (row_range_overlap(page_start, page.num_rows, range.row_offset, range.num_rows) != 0) {
+          needed = true;
+          break;
+        }
+      }
+      if (!needed) { continue; }
+      missing_pages_by_column[column_name].push_back(page_ordinal);
+      missing_bytes += page.num_bytes;
+      ++missing_pages;
+    }
+  }
+
+  if (missing_bytes == 0) { return 0; }
+
+  auto const max_bytes = fixed_page_demand_max_bytes_per_split();
+  if (missing_bytes > max_bytes) {
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] demand_load skipped reason=over_budget missing_pages={} "
+      "missing_bytes={} max_bytes={}",
+      missing_pages,
+      missing_bytes,
+      max_bytes);
+    return 0;
+  }
+
+  auto datasource = scan_manager.create_datasource(file_path);
+  std::unique_ptr<cudf::io::datasource> fallback_source;
+  cudf::io::datasource* source = datasource.get();
+  if (source == nullptr) {
+    auto const local_path = strip_file_uri(file_path);
+    if (has_uri_scheme(local_path)) {
+      SIRIUS_LOG_INFO("[fixed-page-cache] demand_load skipped reason=no_datasource path={}",
+                      file_path);
+      return 0;
+    }
+    fallback_source = cudf::io::datasource::create(local_path);
+    source          = fallback_source.get();
+  }
+  if (source == nullptr) { return 0; }
+
+  std::size_t loaded_pages = 0;
+  std::size_t loaded_bytes = 0;
+  std::size_t read_calls   = 0;
+  auto const start         = std::chrono::steady_clock::now();
+
+  for (auto& [column_name, page_ordinals] : missing_pages_by_column) {
+    auto pages_it = entry.fixed_width_pages_by_column.find(column_name);
+    if (pages_it == entry.fixed_width_pages_by_column.end()) { continue; }
+    auto& pages = pages_it->second;
+    std::sort(page_ordinals.begin(), page_ordinals.end(), [&](std::size_t lhs, std::size_t rhs) {
+      return pages[lhs].global_row_offset < pages[rhs].global_row_offset;
+    });
+
+    for (std::size_t pos = 0; pos < page_ordinals.size();) {
+      auto const run_begin_pos = pos;
+      auto run_end_pos         = pos + 1;
+      auto* first_page         = &pages[page_ordinals[run_begin_pos]];
+      auto run_start           = first_page->global_row_offset;
+      auto run_rows            = first_page->num_rows;
+      int run_device_id = first_page->memory_space != nullptr ? first_page->memory_space->get_device_id() : -1;
+
+      while (run_end_pos < page_ordinals.size()) {
+        auto& prev = pages[page_ordinals[run_end_pos - 1]];
+        auto& next = pages[page_ordinals[run_end_pos]];
+        auto const next_device_id = next.memory_space != nullptr ? next.memory_space->get_device_id() : -1;
+        bool const contiguous = prev.global_row_offset + prev.num_rows == next.global_row_offset;
+        if (!contiguous || next_device_id != run_device_id) { break; }
+        run_rows += next.num_rows;
+        ++run_end_pos;
+      }
+
+      auto read_run = [&]() {
+        auto opts = cudf::io::parquet_reader_options::builder(cudf::io::source_info{source}).build();
+        opts.set_column_names({column_name});
+        opts.set_skip_rows(static_cast<int64_t>(run_start));
+        opts.set_num_rows(static_cast<int64_t>(run_rows));
+        auto table = cudf::io::read_parquet(opts);
+        auto cols  = table.tbl->release();
+        if (cols.size() != 1 || !cols.front()) {
+          throw std::runtime_error("[fixed-page-cache] demand_load produced no column for " +
+                                   column_name);
+        }
+        auto const loaded_view = cols.front()->view();
+        for (std::size_t i = run_begin_pos; i < run_end_pos; ++i) {
+          auto& page = pages[page_ordinals[i]];
+          auto const local_begin = static_cast<cudf::size_type>(page.global_row_offset - run_start);
+          auto const local_end   = static_cast<cudf::size_type>(local_begin + page.num_rows);
+          auto sliced = cudf::slice(loaded_view, {local_begin, local_end}, cudf::get_default_stream());
+          if (sliced.empty()) {
+            throw std::runtime_error("[fixed-page-cache] demand_load failed to slice page for " +
+                                     column_name);
+          }
+          page.owned_column = std::make_shared<cudf::column>(
+            sliced.front(), cudf::get_default_stream(), cudf::get_current_device_resource_ref());
+          page.state = scan_manager::fixed_width_page_state::resident;
+          ++loaded_pages;
+          loaded_bytes += page.num_bytes;
+        }
+      };
+
+      if (run_device_id >= 0) {
+        rmm::cuda_set_device_raii device_guard{rmm::cuda_device_id{run_device_id}};
+        read_run();
+      } else {
+        read_run();
+      }
+      ++read_calls;
+      pos = run_end_pos;
+    }
+  }
+
+  if (loaded_pages != 0) {
+    recompute_fixed_page_directory_metrics(entry);
+    auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                               std::chrono::steady_clock::now() - start)
+                               .count();
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] demand_load loaded_pages={} loaded_bytes={} missing_pages={} "
+      "missing_bytes={} read_calls={} duration_us={} file={}",
+      loaded_pages,
+      loaded_bytes,
+      missing_pages,
+      missing_bytes,
+      read_calls,
+      duration_us,
+      file_path);
+  }
+  return loaded_bytes;
+}
+
 std::unique_ptr<cudf::column> materialize_cached_fixed_column(
   scan_manager::pinned_entry const& entry,
   std::string const& column_name,
@@ -854,7 +1162,7 @@ std::unique_ptr<cudf::column> materialize_cached_fixed_column(
                                .count();
     SIRIUS_LOG_INFO(
       "[fixed-page-cache] stage_timing stage=cache_column_materialize column={} rows={} "
-      "ranges={} pieces={} path={} duration_us={}",
+        "ranges={} pieces={} path={} duration_us={}",
       column_name,
       rows,
       row_ranges.size(),
@@ -863,6 +1171,69 @@ std::unique_ptr<cudf::column> materialize_cached_fixed_column(
       duration_us);
   };
   // wdy end
+  auto pages_it = entry.fixed_width_pages_by_column.find(column_name);
+  bool const has_owned_pages =
+    pages_it != entry.fixed_width_pages_by_column.end() &&
+    std::any_of(pages_it->second.begin(), pages_it->second.end(), [](auto const& page) {
+      return page.owned_column != nullptr;
+    });
+  if (has_owned_pages) {
+    std::vector<cudf::column_view> piece_views;
+    piece_views.reserve(row_ranges.size());
+
+    for (auto const& range : row_ranges) {
+      auto const range_end = range.row_offset + range.num_rows;
+      std::size_t cursor   = range.row_offset;
+
+      for (auto const& page : pages_it->second) {
+        if (page.state != scan_manager::fixed_width_page_state::resident || !page.owned_column) {
+          continue;
+        }
+        auto const page_start = page.global_row_offset;
+        auto const page_end   = page_start + page.num_rows;
+        if (cursor >= range_end) { break; }
+        if (cursor < page_start || cursor >= page_end) { continue; }
+
+        auto const local_start = cursor - page_start;
+        auto const rows        = std::min(range_end, page_end) - cursor;
+        auto const local_end   = local_start + rows;
+        if (local_end > static_cast<std::size_t>(std::numeric_limits<cudf::size_type>::max())) {
+          throw std::overflow_error("[fixed-page-cache] owned page slice exceeds cudf::size_type");
+        }
+        if (local_start == 0 && local_end == static_cast<std::size_t>(page.owned_column->size())) {
+          piece_views.push_back(page.owned_column->view());
+        } else {
+          auto sliced = cudf::slice(page.owned_column->view(),
+                                    {static_cast<cudf::size_type>(local_start),
+                                     static_cast<cudf::size_type>(local_end)},
+                                    stream);
+          if (!sliced.empty()) { piece_views.push_back(sliced.front()); }
+        }
+        cursor += rows;
+      }
+
+      if (cursor != range_end) {
+        throw std::runtime_error(
+          "[fixed-page-cache] owned pages do not cover requested rows for column '" +
+          column_name + "'");
+      }
+    }
+
+    if (piece_views.empty()) {
+      throw std::runtime_error("[fixed-page-cache] no owned page slices produced for column '" +
+                               column_name + "'");
+    }
+    if (piece_views.size() == 1) {
+      auto out = std::make_unique<cudf::column>(piece_views.front(), stream, mr);
+      log_stage(fixed_page_row_count(row_ranges), piece_views.size(), "owned_page_copy");
+      return out;
+    }
+    auto out = cudf::concatenate(
+      cudf::host_span<cudf::column_view const>(piece_views.data(), piece_views.size()), stream, mr);
+    log_stage(fixed_page_row_count(row_ranges), piece_views.size(), "owned_page_concatenate");
+    return out;
+  }
+
   auto chunks_it = entry.data_batches_by_column.find(column_name);
   if (chunks_it == entry.data_batches_by_column.end()) {
     throw std::runtime_error("[fixed-page-cache] cached column '" + column_name +
@@ -871,10 +1242,10 @@ std::unique_ptr<cudf::column> materialize_cached_fixed_column(
   auto const& chunks = chunks_it->second;
 
   if (!row_ranges.empty()) {
-    bool contiguous              = true;
-    auto const contiguous_start  = row_ranges.front().row_offset;
-    auto expected_row_offset     = contiguous_start;
-    std::size_t contiguous_rows  = 0;
+    bool contiguous             = true;
+    auto const contiguous_start = row_ranges.front().row_offset;
+    auto expected_row_offset    = contiguous_start;
+    std::size_t contiguous_rows = 0;
     for (auto const& range : row_ranges) {
       if (range.row_offset != expected_row_offset) {
         contiguous = false;
@@ -895,7 +1266,7 @@ std::unique_ptr<cudf::column> materialize_cached_fixed_column(
           auto const local_start = contiguous_start - chunk_base;
           auto const local_end   = contiguous_end - chunk_base;
           // wdy start
-          auto source_view = chunk->view();
+          auto source_view           = chunk->view();
           std::string_view copy_path = "full_chunk_copy";
           if (local_start != 0 || local_end != chunk_rows) {
             if (local_end > static_cast<std::size_t>(std::numeric_limits<cudf::size_type>::max())) {
@@ -907,7 +1278,7 @@ std::unique_ptr<cudf::column> materialize_cached_fixed_column(
               stream);
             if (sliced.empty()) { continue; }
             source_view = sliced.front();
-            copy_path = "contiguous_copy";
+            copy_path   = "contiguous_copy";
           }
           SIRIUS_LOG_DEBUG(
             "[fixed-page-cache] hybrid_reuse_fast_contiguous_slice column={} rows={}",
@@ -1007,12 +1378,18 @@ std::optional<cudf::column_view> contiguous_cached_fixed_column_view(
   auto const stage_start = std::chrono::steady_clock::now();
   // wdy end
   auto chunks_it = entry.data_batches_by_column.find(column_name);
-  if (chunks_it == entry.data_batches_by_column.end() || row_ranges.empty()) { return std::nullopt; }
+  if (chunks_it == entry.data_batches_by_column.end() || row_ranges.empty()) {
+    return std::nullopt;
+  }
+  auto const& chunks = chunks_it->second;
+  if (std::any_of(chunks.begin(), chunks.end(), [](auto const& chunk) { return !chunk; })) {
+    return std::nullopt;
+  }
 
-  bool contiguous             = true;
-  auto const start            = row_ranges.front().row_offset;
-  auto expected_row_offset    = start;
-  std::size_t total_rows      = 0;
+  bool contiguous          = true;
+  auto const start         = row_ranges.front().row_offset;
+  auto expected_row_offset = start;
+  std::size_t total_rows   = 0;
   for (auto const& range : row_ranges) {
     if (range.row_offset != expected_row_offset) {
       contiguous = false;
@@ -1023,9 +1400,9 @@ std::optional<cudf::column_view> contiguous_cached_fixed_column_view(
   }
   if (!contiguous || total_rows == 0) { return std::nullopt; }
 
-  auto const end = start + total_rows;
+  auto const end         = start + total_rows;
   std::size_t chunk_base = 0;
-  for (auto const& chunk : chunks_it->second) {
+  for (auto const& chunk : chunks) {
     if (!chunk) { throw std::runtime_error("[fixed-page-cache] null cached column chunk"); }
     auto const chunk_rows = static_cast<std::size_t>(chunk->size());
     auto const chunk_end  = chunk_base + chunk_rows;
@@ -1033,7 +1410,7 @@ std::optional<cudf::column_view> contiguous_cached_fixed_column_view(
       auto const local_start = start - chunk_base;
       auto const local_end   = end - chunk_base;
       // wdy start
-      auto source_view = chunk->view();
+      auto source_view           = chunk->view();
       std::string_view view_path = "full_chunk_view";
       if (local_start != 0 || local_end != chunk_rows) {
         if (local_end > static_cast<std::size_t>(std::numeric_limits<cudf::size_type>::max())) {
@@ -1045,7 +1422,7 @@ std::optional<cudf::column_view> contiguous_cached_fixed_column_view(
           stream);
         if (sliced.empty()) { return std::nullopt; }
         source_view = sliced.front();
-        view_path = "contiguous_view";
+        view_path   = "contiguous_view";
       }
       owners.push_back(chunk);
       auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -1073,7 +1450,7 @@ std::shared_ptr<::cucascade::data_batch> make_fixed_page_spliced_view_batch(
   rmm::cuda_stream_view stream)
 {
   // wdy start
-  auto owners = std::move(spliced.cached_column_owners);
+  auto owners            = std::move(spliced.cached_column_owners);
   std::size_t alloc_size = 0;
   for (auto const& owner : owners) {
     if (owner) { alloc_size += owner->alloc_size(); }
@@ -1116,8 +1493,11 @@ std::optional<fixed_page_spliced_view> try_splice_fixed_page_cached_columns_view
   for (std::size_t data_idx = 0; data_idx < cached_by_data_index.size(); ++data_idx) {
     if (cached_by_data_index[data_idx]) {
       auto const& column_name = split.plan->data_columns.at(data_idx).name;
-      auto cached_view = contiguous_cached_fixed_column_view(
-        entry, column_name, split.fixed_page_reuse->row_ranges, stream, result.cached_column_owners);
+      auto cached_view        = contiguous_cached_fixed_column_view(entry,
+                                                             column_name,
+                                                             split.fixed_page_reuse->row_ranges,
+                                                             stream,
+                                                             result.cached_column_owners);
       if (!cached_view) {
         // wdy start
         auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -1224,6 +1604,561 @@ std::unique_ptr<cudf::table> splice_fixed_page_cached_columns(
   return out;
 }
 
+
+struct split_filter_plan {
+  std::unique_ptr<sirius::ast::node> cached_filter;
+  std::unique_ptr<sirius::ast::node> reader_filter;
+  std::vector<std::size_t> cached_filter_data_indices;
+};
+
+std::unique_ptr<sirius::ast::node> make_and_filter(
+  std::vector<std::unique_ptr<sirius::ast::node>>&& children)
+{
+  if (children.empty()) { return nullptr; }
+  if (children.size() == 1) { return std::move(children.front()); }
+  return std::make_unique<sirius::ast::node>(
+    sirius::ast::conjunction{sirius::ast::conjunction::kind::op_and, std::move(children)});
+}
+
+std::optional<split_filter_plan> split_cached_and_reader_filter(
+  sirius::ast::node const& filter_ast,
+  std::vector<bool> const& cached_by_data_index,
+  std::vector<std::size_t> const& parquet_data_indices)
+{
+  if (!filter_ast.holds<sirius::ast::conjunction>()) { return std::nullopt; }
+  auto const& conj = filter_ast.get<sirius::ast::conjunction>();
+  if (conj.op != sirius::ast::conjunction::kind::op_and || conj.children.empty()) {
+    return std::nullopt;
+  }
+
+  std::vector<std::unique_ptr<sirius::ast::node>> cached_children;
+  std::vector<std::unique_ptr<sirius::ast::node>> reader_children;
+  std::unordered_set<std::size_t> cached_refs_set;
+  std::unordered_set<std::size_t> parquet_data_index_set(parquet_data_indices.begin(),
+                                                         parquet_data_indices.end());
+
+  for (auto const& child : conj.children) {
+    if (!child) { return std::nullopt; }
+    auto refs = filter_reference_data_indices(*child);
+    if (refs.empty()) { reader_children.push_back(sirius::ast::clone(*child)); continue; }
+
+    bool any_cached = false;
+    bool any_reader = false;
+    for (auto const data_idx : refs) {
+      bool const cached = data_idx < cached_by_data_index.size() && cached_by_data_index[data_idx];
+      bool const reader = parquet_data_index_set.count(data_idx) != 0;
+      any_cached = any_cached || cached;
+      any_reader = any_reader || reader;
+      if (!cached && !reader) { return std::nullopt; }
+    }
+    if (any_cached && any_reader) { return std::nullopt; }
+    if (any_cached) {
+      for (auto const data_idx : refs) { cached_refs_set.insert(data_idx); }
+      cached_children.push_back(sirius::ast::clone(*child));
+    } else {
+      reader_children.push_back(sirius::ast::clone(*child));
+    }
+  }
+
+  if (cached_children.empty() || reader_children.empty()) { return std::nullopt; }
+
+  split_filter_plan plan;
+  plan.cached_filter = make_and_filter(std::move(cached_children));
+  plan.reader_filter = make_and_filter(std::move(reader_children));
+  plan.cached_filter_data_indices.assign(cached_refs_set.begin(), cached_refs_set.end());
+  std::sort(plan.cached_filter_data_indices.begin(), plan.cached_filter_data_indices.end());
+  return plan;
+}
+
+std::optional<int64_t> fixed_page_literal_i64(sirius::value const& value)
+{
+  if (auto v = std::get_if<int8_t>(&value)) { return static_cast<int64_t>(*v); }
+  if (auto v = std::get_if<int16_t>(&value)) { return static_cast<int64_t>(*v); }
+  if (auto v = std::get_if<int32_t>(&value)) { return static_cast<int64_t>(*v); }
+  if (auto v = std::get_if<int64_t>(&value)) { return *v; }
+  if (auto v = std::get_if<uint8_t>(&value)) { return static_cast<int64_t>(*v); }
+  if (auto v = std::get_if<uint16_t>(&value)) { return static_cast<int64_t>(*v); }
+  if (auto v = std::get_if<uint32_t>(&value)) { return static_cast<int64_t>(*v); }
+  if (auto v = std::get_if<sirius::date_value>(&value)) { return static_cast<int64_t>(v->days); }
+  if (auto v = std::get_if<sirius::timestamp_sec_value>(&value)) { return v->value; }
+  if (auto v = std::get_if<sirius::timestamp_ms_value>(&value)) { return v->value; }
+  if (auto v = std::get_if<sirius::timestamp_us_value>(&value)) { return v->value; }
+  if (auto v = std::get_if<sirius::timestamp_ns_value>(&value)) { return v->value; }
+  if (auto v = std::get_if<sirius::decimal32>(&value)) { return static_cast<int64_t>(v->value); }
+  if (auto v = std::get_if<sirius::decimal64>(&value)) { return v->value; }
+  return std::nullopt;
+}
+
+std::optional<double> fixed_page_literal_f64(sirius::value const& value)
+{
+  if (auto v = std::get_if<float>(&value)) { return static_cast<double>(*v); }
+  if (auto v = std::get_if<double>(&value)) { return *v; }
+  if (auto v = fixed_page_literal_i64(value)) { return static_cast<double>(*v); }
+  return std::nullopt;
+}
+
+bool fixed_page_type_uses_float_bounds(cudf::type_id type_id)
+{
+  return type_id == cudf::type_id::FLOAT32 || type_id == cudf::type_id::FLOAT64;
+}
+
+bool apply_fixed_page_comparison_bound(fixed_page_simple_predicate& predicate,
+                                       sirius::comparison_type op,
+                                       sirius::ast::constant const& constant,
+                                       bool ref_on_left)
+{
+  if (!ref_on_left) {
+    switch (op) {
+      case sirius::comparison_type::lt: op = sirius::comparison_type::gt; break;
+      case sirius::comparison_type::le: op = sirius::comparison_type::ge; break;
+      case sirius::comparison_type::gt: op = sirius::comparison_type::lt; break;
+      case sirius::comparison_type::ge: op = sirius::comparison_type::le; break;
+      default: break;
+    }
+  }
+
+  auto const use_float = fixed_page_type_uses_float_bounds(predicate.type_id);
+  auto const i64_value = use_float ? std::optional<int64_t>{} : fixed_page_literal_i64(constant.payload);
+  auto const f64_value = use_float ? fixed_page_literal_f64(constant.payload) : std::optional<double>{};
+  if ((!use_float && !i64_value) || (use_float && !f64_value)) { return false; }
+
+  auto set_lower = [&](bool inclusive) {
+    predicate.has_lower      = true;
+    predicate.lower_inclusive = inclusive;
+    if (use_float) {
+      predicate.lower_f64 = *f64_value;
+    } else {
+      predicate.lower_i64 = *i64_value;
+    }
+  };
+  auto set_upper = [&](bool inclusive) {
+    predicate.has_upper      = true;
+    predicate.upper_inclusive = inclusive;
+    if (use_float) {
+      predicate.upper_f64 = *f64_value;
+    } else {
+      predicate.upper_i64 = *i64_value;
+    }
+  };
+
+  switch (op) {
+    case sirius::comparison_type::equal:
+      set_lower(true);
+      set_upper(true);
+      return true;
+    case sirius::comparison_type::gt: set_lower(false); return true;
+    case sirius::comparison_type::ge: set_lower(true); return true;
+    case sirius::comparison_type::lt: set_upper(false); return true;
+    case sirius::comparison_type::le: set_upper(true); return true;
+    default: return false;
+  }
+}
+
+bool extract_fixed_page_simple_predicate_impl(sirius::ast::node const& node,
+                                              std::size_t data_idx,
+                                              fixed_page_simple_predicate& predicate)
+{
+  if (auto const* conj = std::get_if<sirius::ast::conjunction>(&node.v)) {
+    if (conj->op != sirius::ast::conjunction::kind::op_and) { return false; }
+    for (auto const& child : conj->children) {
+      if (!child || !extract_fixed_page_simple_predicate_impl(*child, data_idx, predicate)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (auto const* between = std::get_if<sirius::ast::between>(&node.v)) {
+    if (!between->input || !between->lower || !between->upper) { return false; }
+    auto const* ref = std::get_if<sirius::ast::reference>(&between->input->v);
+    auto const* lower = std::get_if<sirius::ast::constant>(&between->lower->v);
+    auto const* upper = std::get_if<sirius::ast::constant>(&between->upper->v);
+    if (!ref || !lower || !upper || ref->column_index != data_idx) { return false; }
+    return apply_fixed_page_comparison_bound(predicate,
+                                             between->lower_inclusive ? sirius::comparison_type::ge
+                                                                      : sirius::comparison_type::gt,
+                                             *lower,
+                                             true) &&
+           apply_fixed_page_comparison_bound(predicate,
+                                             between->upper_inclusive ? sirius::comparison_type::le
+                                                                      : sirius::comparison_type::lt,
+                                             *upper,
+                                             true);
+  }
+
+  auto const* comparison = std::get_if<sirius::ast::comparison>(&node.v);
+  if (!comparison || !comparison->left || !comparison->right) { return false; }
+  auto const* left_ref = std::get_if<sirius::ast::reference>(&comparison->left->v);
+  auto const* right_ref = std::get_if<sirius::ast::reference>(&comparison->right->v);
+  auto const* left_const = std::get_if<sirius::ast::constant>(&comparison->left->v);
+  auto const* right_const = std::get_if<sirius::ast::constant>(&comparison->right->v);
+  if (left_ref && right_const && left_ref->column_index == data_idx) {
+    return apply_fixed_page_comparison_bound(predicate, comparison->op, *right_const, true);
+  }
+  if (right_ref && left_const && right_ref->column_index == data_idx) {
+    return apply_fixed_page_comparison_bound(predicate, comparison->op, *left_const, false);
+  }
+  return false;
+}
+
+std::optional<fixed_page_simple_predicate> extract_fixed_page_simple_predicate(
+  sirius::ast::node const& cached_filter_ast,
+  std::vector<std::size_t> const& cached_filter_data_indices,
+  scan_plan const& plan)
+{
+  if (cached_filter_data_indices.size() != 1) { return std::nullopt; }
+  auto const data_idx = cached_filter_data_indices.front();
+  if (data_idx >= plan.data_columns.size()) { return std::nullopt; }
+  fixed_page_simple_predicate predicate;
+  if (!extract_fixed_page_simple_predicate_impl(cached_filter_ast, data_idx, predicate)) {
+    return std::nullopt;
+  }
+  if (!predicate.has_lower && !predicate.has_upper) { return std::nullopt; }
+  return predicate;
+}
+
+void const* fixed_page_column_data_pointer(cudf::column_view const& view)
+{
+  switch (view.type().id()) {
+    case cudf::type_id::INT8: return view.data<int8_t>();
+    case cudf::type_id::INT16: return view.data<int16_t>();
+    case cudf::type_id::INT32:
+    case cudf::type_id::TIMESTAMP_DAYS:
+    case cudf::type_id::DECIMAL32: return view.data<int32_t>();
+    case cudf::type_id::INT64:
+    case cudf::type_id::TIMESTAMP_SECONDS:
+    case cudf::type_id::TIMESTAMP_MILLISECONDS:
+    case cudf::type_id::TIMESTAMP_MICROSECONDS:
+    case cudf::type_id::TIMESTAMP_NANOSECONDS:
+    case cudf::type_id::DECIMAL64: return view.data<int64_t>();
+    case cudf::type_id::UINT8: return view.data<uint8_t>();
+    case cudf::type_id::UINT16: return view.data<uint16_t>();
+    case cudf::type_id::UINT32: return view.data<uint32_t>();
+    case cudf::type_id::UINT64: return view.data<uint64_t>();
+    case cudf::type_id::FLOAT32: return view.data<float>();
+    case cudf::type_id::FLOAT64: return view.data<double>();
+    default: return nullptr;
+  }
+}
+
+std::optional<std::vector<fixed_page_mask_segment>> build_fixed_page_mask_segments(
+  scan_manager::pinned_entry const& entry,
+  scan_plan const& plan,
+  std::size_t data_idx,
+  std::vector<parquet_split_info::fixed_page_row_range> const& row_ranges)
+{
+  if (data_idx >= plan.data_columns.size()) { return std::nullopt; }
+  auto const& column_name = plan.data_columns[data_idx].name;
+  auto pages_it = entry.fixed_width_pages_by_column.find(column_name);
+  if (pages_it == entry.fixed_width_pages_by_column.end()) { return std::nullopt; }
+
+  std::vector<fixed_page_mask_segment> segments;
+  std::size_t output_base = 0;
+  for (auto const& range : row_ranges) {
+    auto const range_end = range.row_offset + range.num_rows;
+    std::size_t cursor = range.row_offset;
+    while (cursor < range_end) {
+      bool matched = false;
+      for (auto const& page : pages_it->second) {
+        if (page.state != scan_manager::fixed_width_page_state::resident || !page.owned_column ||
+            page.stats.has_null) {
+          continue;
+        }
+        auto const page_start = page.global_row_offset;
+        auto const page_end = page_start + page.num_rows;
+        if (cursor < page_start || cursor >= page_end) { continue; }
+        auto const rows = std::min(range_end, page_end) - cursor;
+        auto const local_start = cursor - page_start;
+        auto view = page.owned_column->view();
+        auto const* data = fixed_page_column_data_pointer(view);
+        if (data == nullptr) { return std::nullopt; }
+        segments.push_back(fixed_page_mask_segment{data,
+                                                   local_start,
+                                                   output_base + (cursor - range.row_offset),
+                                                   rows,
+                                                   view.type().id()});
+        cursor += rows;
+        matched = true;
+        break;
+      }
+      if (!matched) { return std::nullopt; }
+    }
+    output_base += range.num_rows;
+  }
+  return segments;
+}
+
+std::shared_ptr<cudf::column> try_evaluate_cached_filter_mask_page_native(
+  scan_manager::pinned_entry const& entry,
+  scan_plan const& plan,
+  sirius::ast::node const& cached_filter_ast,
+  std::vector<std::size_t> const& cached_filter_data_indices,
+  std::vector<parquet_split_info::fixed_page_row_range> const& row_ranges,
+  rmm::cuda_stream_view stream)
+{
+  auto predicate = extract_fixed_page_simple_predicate(cached_filter_ast,
+                                                       cached_filter_data_indices,
+                                                       plan);
+  if (!predicate) { return nullptr; }
+  auto segments = build_fixed_page_mask_segments(entry,
+                                                 plan,
+                                                 cached_filter_data_indices.front(),
+                                                 row_ranges);
+  if (!segments || segments->empty()) { return nullptr; }
+  auto const type_id = segments->front().type_id;
+  if (std::any_of(segments->begin(), segments->end(), [type_id](auto const& segment) {
+        return segment.type_id != type_id;
+      })) {
+    return nullptr;
+  }
+  predicate->type_id = type_id;
+
+  auto const stage_start = std::chrono::steady_clock::now();
+  auto mask = make_fixed_page_simple_filter_mask(*segments,
+                                                 *predicate,
+                                                 fixed_page_row_count(row_ranges),
+                                                 stream);
+  auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                             std::chrono::steady_clock::now() - stage_start)
+                             .count();
+  SIRIUS_LOG_INFO(
+    "[fixed-page-cache] stage_timing stage=partial_filter_cached_mask input_rows={} "
+    "ranges={} cached_filter_cols={} mask_pieces=1 path=page_native segments={} duration_us={}",
+    fixed_page_row_count(row_ranges),
+    row_ranges.size(),
+    cached_filter_data_indices.size(),
+    segments->size(),
+    duration_us);
+  return std::shared_ptr<cudf::column>(std::move(mask));
+}
+
+std::shared_ptr<cudf::column> evaluate_cached_filter_mask_batched(
+  scan_manager::pinned_entry const& entry,
+  scan_plan const& plan,
+  sirius::ast::node const& cached_filter_ast,
+  std::vector<std::size_t> const& cached_filter_data_indices,
+  std::vector<parquet_split_info::fixed_page_row_range> const& row_ranges,
+  int target_device_id,
+  rmm::cuda_stream_view stream,
+  rmm::device_async_resource_ref mr)
+{
+  if (row_ranges.empty()) {
+    throw std::runtime_error("[fixed-page-cache] partial filter mask requested for empty ranges");
+  }
+  if (cached_filter_data_indices.empty()) {
+    throw std::runtime_error("[fixed-page-cache] partial filter mask has no cached filter columns");
+  }
+
+  if (auto page_native_mask = try_evaluate_cached_filter_mask_page_native(entry,
+                                                                          plan,
+                                                                          cached_filter_ast,
+                                                                          cached_filter_data_indices,
+                                                                          row_ranges,
+                                                                          stream)) {
+    return page_native_mask;
+  }
+
+  std::unordered_map<std::size_t, std::size_t> ref_remap;
+  for (std::size_t pos = 0; pos < cached_filter_data_indices.size(); ++pos) {
+    ref_remap.emplace(cached_filter_data_indices[pos], pos);
+  }
+  auto remapped_filter = remap_filter_references(cached_filter_ast, ref_remap);
+  auto const expected_rows = fixed_page_row_count(row_ranges);
+  auto const cache_enabled = fixed_page_filter_mask_cache_enabled();
+  auto const cache_key = cache_enabled
+                           ? fixed_page_filter_mask_cache_key(target_device_id,
+                                                              cached_filter_ast,
+                                                              cached_filter_data_indices,
+                                                              row_ranges)
+                           : std::string{};
+
+  auto const stage_start = std::chrono::steady_clock::now();
+  if (cache_enabled && entry.fixed_width_filter_mask_cache_mutex) {
+    std::lock_guard<std::mutex> guard(*entry.fixed_width_filter_mask_cache_mutex);
+    auto it = entry.fixed_width_filter_mask_cache.find(cache_key);
+    if (it != entry.fixed_width_filter_mask_cache.end() && it->second.mask &&
+        it->second.rows == expected_rows) {
+      ++it->second.hits;
+      auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                                 std::chrono::steady_clock::now() - stage_start)
+                                 .count();
+      SIRIUS_LOG_INFO(
+        "[fixed-page-cache] stage_timing stage=partial_filter_cached_mask input_rows={} "
+        "ranges={} cached_filter_cols={} mask_pieces=1 path=mask_cache_hit hits={} "
+        "duration_us={}",
+        expected_rows,
+        row_ranges.size(),
+        cached_filter_data_indices.size(),
+        it->second.hits,
+        duration_us);
+      return it->second.mask;
+    }
+  }
+
+  std::vector<std::unique_ptr<cudf::column>> cols;
+  cols.reserve(cached_filter_data_indices.size());
+  for (auto const data_idx : cached_filter_data_indices) {
+    auto const& column_name = plan.data_columns.at(data_idx).name;
+    cols.push_back(materialize_cached_fixed_column(entry, column_name, row_ranges, stream, mr));
+  }
+
+  auto cached_table = std::make_unique<cudf::table>(std::move(cols));
+  auto const input_rows = static_cast<std::size_t>(cached_table->num_rows());
+  sirius::gpu_expression_executor exec(
+    remapped_filter.get(), cudf::get_current_device_resource_ref(), stream);
+  auto out = exec.evaluate_filter_mask(cached_table->view());
+  auto shared_mask = std::shared_ptr<cudf::column>(std::move(out));
+
+  if (cache_enabled && entry.fixed_width_filter_mask_cache_mutex) {
+    scan_manager::fixed_width_filter_mask_cache_entry cache_entry;
+    cache_entry.mask      = shared_mask;
+    cache_entry.device_id = target_device_id;
+    cache_entry.rows      = input_rows;
+    cache_entry.bytes     = shared_mask ? shared_mask->alloc_size() : 0;
+    std::lock_guard<std::mutex> guard(*entry.fixed_width_filter_mask_cache_mutex);
+    entry.fixed_width_filter_mask_cache[cache_key] = std::move(cache_entry);
+  }
+
+  auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                             std::chrono::steady_clock::now() - stage_start)
+                             .count();
+  SIRIUS_LOG_INFO(
+    "[fixed-page-cache] stage_timing stage=partial_filter_cached_mask input_rows={} "
+    "ranges={} cached_filter_cols={} mask_pieces=1 path={} duration_us={}",
+    input_rows,
+    row_ranges.size(),
+    cached_filter_data_indices.size(),
+    cache_enabled ? "mask_cache_store" : "batched",
+    duration_us);
+  return shared_mask;
+}
+
+std::unique_ptr<cudf::table> try_splice_partial_filter_mask_columns(
+  std::unique_ptr<cudf::table>& parquet_table,
+  parquet_split_info const& split,
+  scan_manager::pinned_entry const& entry,
+  std::vector<bool> const& cached_by_data_index,
+  ::cucascade::memory::memory_space const& mem_space,
+  rmm::cuda_stream_view stream,
+  rmm::device_async_resource_ref mr,
+  sirius::ast::node const& filter_ast)
+{
+  if (!fixed_page_partial_filter_mask_enabled() || !split.fixed_page_reuse || !parquet_table) {
+    return nullptr;
+  }
+  if (split.plan->has_partitions()) { return nullptr; }
+  auto const& reuse = *split.fixed_page_reuse;
+  if (reuse.preferred_device_id >= 0 && reuse.preferred_device_id != mem_space.get_device_id()) {
+    return nullptr;
+  }
+  auto split_plan = split_cached_and_reader_filter(
+    filter_ast, cached_by_data_index, reuse.parquet_data_indices);
+  if (!split_plan || !split_plan->cached_filter || !split_plan->reader_filter) { return nullptr; }
+
+  auto const stage_start = std::chrono::steady_clock::now();
+  auto cached_mask = evaluate_cached_filter_mask_batched(entry,
+                                                          *split.plan,
+                                                          *split_plan->cached_filter,
+                                                          split_plan->cached_filter_data_indices,
+                                                          reuse.row_ranges,
+                                                          mem_space.get_device_id(),
+                                                          stream,
+                                                          mr);
+
+  std::unordered_map<std::size_t, std::size_t> reader_ref_remap;
+  for (std::size_t pos = 0; pos < reuse.parquet_data_indices.size(); ++pos) {
+    reader_ref_remap.emplace(reuse.parquet_data_indices[pos], pos);
+  }
+  auto remapped_reader_filter = remap_filter_references(*split_plan->reader_filter, reader_ref_remap);
+  sirius::gpu_expression_executor reader_exec(
+    remapped_reader_filter.get(), cudf::get_current_device_resource_ref(), stream);
+  auto reader_mask = reader_exec.evaluate_filter_mask(parquet_table->view());
+  auto combined_mask = cudf::binary_operation(cached_mask->view(),
+                                              reader_mask->view(),
+                                              cudf::binary_operator::LOGICAL_AND,
+                                              cudf::data_type{cudf::type_id::BOOL8},
+                                              stream,
+                                              mr);
+
+  auto filtered_parquet = cudf::apply_boolean_mask(parquet_table->view(),
+                                                   combined_mask->view(),
+                                                   stream,
+                                                   mr);
+  auto parquet_cols = filtered_parquet->release();
+  std::unordered_map<std::size_t, std::unique_ptr<cudf::column>> parquet_by_data_idx;
+  for (std::size_t pos = 0; pos < reuse.parquet_data_indices.size(); ++pos) {
+    if (pos >= parquet_cols.size()) {
+      throw std::runtime_error("[fixed-page-cache] partial filter parquet output missing column");
+    }
+    parquet_by_data_idx.emplace(reuse.parquet_data_indices[pos], std::move(parquet_cols[pos]));
+  }
+
+  std::vector<std::unique_ptr<cudf::column>> output_cols;
+  if (split.needs_assembly && !split.plan->output_layout.empty()) {
+    output_cols.reserve(split.plan->output_layout.size());
+    for (auto const& entry_layout : split.plan->output_layout) {
+      if (entry_layout.source != scan_plan::output_entry::DATA) { return nullptr; }
+      auto const data_idx = entry_layout.idx;
+      if (cached_by_data_index.at(data_idx)) {
+        auto const& column_name = split.plan->data_columns.at(data_idx).name;
+        auto col = materialize_cached_fixed_column(entry, column_name, reuse.row_ranges, stream, mr);
+        std::vector<cudf::column_view> one_col_view{col->view()};
+        auto filtered = cudf::apply_boolean_mask(
+          cudf::table_view(one_col_view), combined_mask->view(), stream, mr);
+        auto filtered_cols = filtered->release();
+        if (filtered_cols.size() != 1) {
+          throw std::runtime_error("[fixed-page-cache] partial filter cached output failed");
+        }
+        output_cols.push_back(std::move(filtered_cols.front()));
+      } else {
+        auto it = parquet_by_data_idx.find(data_idx);
+        if (it == parquet_by_data_idx.end()) {
+          throw std::runtime_error("[fixed-page-cache] partial filter projected parquet column missing");
+        }
+        output_cols.push_back(std::move(it->second));
+      }
+    }
+  } else {
+    output_cols.resize(cached_by_data_index.size());
+    for (std::size_t data_idx = 0; data_idx < cached_by_data_index.size(); ++data_idx) {
+      if (cached_by_data_index[data_idx]) {
+        auto const& column_name = split.plan->data_columns.at(data_idx).name;
+        auto col = materialize_cached_fixed_column(entry, column_name, reuse.row_ranges, stream, mr);
+        std::vector<cudf::column_view> one_col_view{col->view()};
+        auto filtered = cudf::apply_boolean_mask(
+          cudf::table_view(one_col_view), combined_mask->view(), stream, mr);
+        auto filtered_cols = filtered->release();
+        if (filtered_cols.size() != 1) {
+          throw std::runtime_error("[fixed-page-cache] partial filter cached output failed");
+        }
+        output_cols[data_idx] = std::move(filtered_cols.front());
+      } else {
+        auto it = parquet_by_data_idx.find(data_idx);
+        if (it == parquet_by_data_idx.end()) {
+          throw std::runtime_error("[fixed-page-cache] partial filter parquet column missing");
+        }
+        output_cols[data_idx] = std::move(it->second);
+      }
+    }
+  }
+
+  auto out = std::make_unique<cudf::table>(std::move(output_cols));
+  auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                             std::chrono::steady_clock::now() - stage_start)
+                             .count();
+  SIRIUS_LOG_INFO(
+    "[fixed-page-cache] stage_timing stage=partial_filter_mask_splice target_gpu={} "
+    "cached_filter_cols={} cached_cols={} parquet_cols={} rows={} columns={} duration_us={}",
+    mem_space.get_device_id(),
+    split_plan->cached_filter_data_indices.size(),
+    reuse.cached_data_indices.size(),
+    reuse.parquet_data_indices.size(),
+    out->num_rows(),
+    out->num_columns(),
+    duration_us);
+  return out;
+}
+
 std::unique_ptr<cudf::table> splice_filtered_fixed_page_cached_columns(
   std::unique_ptr<cudf::table> parquet_table,
   parquet_split_info const& split,
@@ -1235,7 +2170,7 @@ std::unique_ptr<cudf::table> splice_filtered_fixed_page_cached_columns(
   sirius::ast::node const& filter_ast)
 {
   if (!split.fixed_page_reuse) { return parquet_table; }
-  auto const& reuse = *split.fixed_page_reuse;
+  auto const& reuse      = *split.fixed_page_reuse;
   auto const stage_start = std::chrono::steady_clock::now();
 
   if (reuse.preferred_device_id >= 0 && reuse.preferred_device_id != mem_space.get_device_id()) {
@@ -1243,6 +2178,117 @@ std::unique_ptr<cudf::table> splice_filtered_fixed_page_cached_columns(
                              std::to_string(mem_space.get_device_id()) +
                              " but cached pages prefer GPU " +
                              std::to_string(reuse.preferred_device_id));
+  }
+
+  if (reuse.filtered_reuse_single_mask) {
+    if (!parquet_table) {
+      throw std::runtime_error(
+        "[fixed-page-cache] single-mask filtered reuse requires a parquet table");
+    }
+    auto const parquet_rows       = parquet_table->num_rows();
+    auto const expected_full_rows = fixed_page_row_count(reuse.row_ranges);
+    if (static_cast<std::size_t>(parquet_rows) != expected_full_rows) {
+      throw std::runtime_error(
+        "[fixed-page-cache] single-mask parquet/cache row-count mismatch before filtering: " +
+        std::to_string(parquet_rows) + " vs " + std::to_string(expected_full_rows));
+    }
+
+    std::vector<std::unique_ptr<cudf::column>> cached_cols;
+    cached_cols.reserve(reuse.cached_data_indices.size());
+    std::unordered_map<std::size_t, std::size_t> filter_ref_remap;
+    for (std::size_t cached_pos = 0; cached_pos < reuse.cached_data_indices.size(); ++cached_pos) {
+      auto const data_idx     = reuse.cached_data_indices[cached_pos];
+      auto const& column_name = split.plan->data_columns.at(data_idx).name;
+      cached_cols.push_back(
+        materialize_cached_fixed_column(entry, column_name, reuse.row_ranges, stream, mr));
+      filter_ref_remap.emplace(data_idx, cached_pos);
+    }
+
+    auto cached_table    = std::make_unique<cudf::table>(std::move(cached_cols));
+    auto remapped_filter = remap_filter_references(filter_ast, filter_ref_remap);
+    sirius::gpu_expression_executor exec(
+      remapped_filter.get(), cudf::get_current_device_resource_ref(), stream);
+
+    auto const mask_start        = std::chrono::steady_clock::now();
+    auto const filter_input_rows = cached_table->num_rows();
+    auto mask                    = exec.evaluate_filter_mask(cached_table->view());
+    auto const mask_duration_us  = std::chrono::duration_cast<std::chrono::microseconds>(
+                                    std::chrono::steady_clock::now() - mask_start)
+                                    .count();
+
+    auto const apply_start = std::chrono::steady_clock::now();
+    auto filtered_cached_table =
+      cudf::apply_boolean_mask(cached_table->view(), mask->view(), stream, mr);
+    auto filtered_parquet_table =
+      cudf::apply_boolean_mask(parquet_table->view(), mask->view(), stream, mr);
+    auto const apply_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                                     std::chrono::steady_clock::now() - apply_start)
+                                     .count();
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] stage_timing stage=single_mask_filter_apply target_gpu={} "
+      "input_rows={} output_rows={} cached_columns={} parquet_columns={} mask_duration_us={} "
+      "apply_duration_us={} duration_us={}",
+      mem_space.get_device_id(),
+      filter_input_rows,
+      filtered_cached_table->num_rows(),
+      cached_table->num_columns(),
+      parquet_table->num_columns(),
+      mask_duration_us,
+      apply_duration_us,
+      mask_duration_us + apply_duration_us);
+
+    auto parquet_cols                = filtered_parquet_table->release();
+    auto const expected_parquet_cols = reuse.parquet_data_indices.size();
+    if (parquet_cols.size() != expected_parquet_cols) {
+      throw std::runtime_error(
+        "[fixed-page-cache] single-mask parquet reader returned unexpected column count: " +
+        std::to_string(parquet_cols.size()) + " vs " + std::to_string(expected_parquet_cols));
+    }
+
+    auto filtered_cached_cols = filtered_cached_table->release();
+    std::vector<std::unique_ptr<cudf::column>> output_cols(cached_by_data_index.size());
+    std::size_t cached_pos  = 0;
+    std::size_t parquet_pos = 0;
+
+    for (std::size_t data_idx = 0; data_idx < cached_by_data_index.size(); ++data_idx) {
+      if (cached_by_data_index[data_idx]) {
+        if (cached_pos >= filtered_cached_cols.size()) {
+          throw std::runtime_error(
+            "[fixed-page-cache] single-mask cached table returned fewer columns than expected");
+        }
+        output_cols[data_idx] = std::move(filtered_cached_cols[cached_pos++]);
+      } else {
+        if (parquet_pos >= parquet_cols.size()) {
+          throw std::runtime_error(
+            "[fixed-page-cache] single-mask parquet output consumed more columns than expected");
+        }
+        output_cols[data_idx] = std::move(parquet_cols[parquet_pos++]);
+      }
+    }
+
+    if (cached_pos != filtered_cached_cols.size()) {
+      throw std::runtime_error(
+        "[fixed-page-cache] single-mask cached table returned extra columns");
+    }
+    if (parquet_pos != parquet_cols.size()) {
+      throw std::runtime_error(
+        "[fixed-page-cache] single-mask parquet reader returned unused output columns");
+    }
+
+    auto out               = std::make_unique<cudf::table>(std::move(output_cols));
+    auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                               std::chrono::steady_clock::now() - stage_start)
+                               .count();
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] stage_timing stage=filtered_splice_materialize_single_mask "
+      "target_gpu={} cached_cols={} parquet_cols={} rows={} columns={} duration_us={}",
+      mem_space.get_device_id(),
+      reuse.cached_data_indices.size(),
+      reuse.parquet_data_indices.size(),
+      out->num_rows(),
+      out->num_columns(),
+      duration_us);
+    return out;
   }
 
   auto const parquet_rows = parquet_table ? parquet_table->num_rows() : 0;
@@ -1270,9 +2316,9 @@ std::unique_ptr<cudf::table> splice_filtered_fixed_page_cached_columns(
   sirius::gpu_expression_executor exec(
     remapped_filter.get(), cudf::get_current_device_resource_ref(), stream);
 
-  auto const filter_start      = std::chrono::steady_clock::now();
-  auto const filter_input_rows = cached_table->num_rows();
-  auto filtered_cached_table   = exec.select(cached_table->view());
+  auto const filter_start       = std::chrono::steady_clock::now();
+  auto const filter_input_rows  = cached_table->num_rows();
+  auto filtered_cached_table    = exec.select(cached_table->view());
   auto const filter_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
                                     std::chrono::steady_clock::now() - filter_start)
                                     .count();
@@ -1294,7 +2340,7 @@ std::unique_ptr<cudf::table> splice_filtered_fixed_page_cached_columns(
 
   auto filtered_cached_cols = filtered_cached_table->release();
   std::vector<std::unique_ptr<cudf::column>> output_cols(cached_by_data_index.size());
-  std::size_t cached_pos = 0;
+  std::size_t cached_pos  = 0;
   std::size_t parquet_pos = 0;
 
   for (std::size_t data_idx = 0; data_idx < cached_by_data_index.size(); ++data_idx) {
@@ -1317,10 +2363,11 @@ std::unique_ptr<cudf::table> splice_filtered_fixed_page_cached_columns(
     throw std::runtime_error("[fixed-page-cache] filtered cached table returned extra columns");
   }
   if (parquet_pos != expected_parquet_cols) {
-    throw std::runtime_error("[fixed-page-cache] filtered parquet reader returned unused output columns");
+    throw std::runtime_error(
+      "[fixed-page-cache] filtered parquet reader returned unused output columns");
   }
 
-  auto out = std::make_unique<cudf::table>(std::move(output_cols));
+  auto out               = std::make_unique<cudf::table>(std::move(output_cols));
   auto const duration_us = std::chrono::duration_cast<std::chrono::microseconds>(
                              std::chrono::steady_clock::now() - stage_start)
                              .count();
@@ -1561,11 +2608,13 @@ void parquet_gpu_ingestible::initialize_fixed_page_cache()
 
     SIRIUS_LOG_INFO(
       "[fixed-page-cache] hybrid candidate pinned='{}' cached_cols={} parquet_cols={} pages={} "
-      "page_bytes={} cached_devices={}",
+      "resident_pages={} resident_bytes={} page_bytes={} cached_devices={}",
       state.pinned_name,
       state.cached_data_indices.size(),
       state.parquet_data_indices.size(),
       fixed_page_count_for_columns(entry, state.cached_data_indices, *_plan),
+      entry.fixed_width_page_metrics.resident_pages,
+      entry.fixed_width_page_metrics.resident_bytes,
       entry.fixed_width_page_size_bytes,
       fixed_page_candidate_device_count(entry));
     _fixed_page_cache = std::move(state);
@@ -1735,30 +2784,35 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
   }
 
   std::vector<std::size_t> fixed_page_filter_reference_data_indices;
-  bool fixed_page_filtered_reuse_possible = false;
+  bool fixed_page_filtered_reuse_possible    = false;
+  bool fixed_page_filtered_reuse_single_mask = false;
   if (_fixed_page_cache && fixed_page_filtered_reuse_enabled() && sirius_filter_ast &&
       ast_expression && !skip_pushdown_due_to_flba) {
     fixed_page_filter_reference_data_indices = filter_reference_data_indices(*sirius_filter_ast);
-    fixed_page_filtered_reuse_possible = filter_references_are_cached(
+    fixed_page_filtered_reuse_possible       = filter_references_are_cached(
       fixed_page_filter_reference_data_indices, _fixed_page_cache->cached_by_data_index);
 
     if (fixed_page_filtered_reuse_possible) {
-      std::unordered_set<std::size_t> reader_data_index_set(reader_data_indices.begin(),
-                                                            reader_data_indices.end());
-      for (auto const data_idx : fixed_page_filter_reference_data_indices) {
-        if (reader_data_index_set.insert(data_idx).second) {
-          reader_data_indices.push_back(data_idx);
-          reader_column_names.push_back(_plan->data_columns.at(data_idx).name);
+      fixed_page_filtered_reuse_single_mask = fixed_page_filtered_reuse_single_mask_enabled();
+      if (!fixed_page_filtered_reuse_single_mask) {
+        std::unordered_set<std::size_t> reader_data_index_set(reader_data_indices.begin(),
+                                                              reader_data_indices.end());
+        for (auto const data_idx : fixed_page_filter_reference_data_indices) {
+          if (reader_data_index_set.insert(data_idx).second) {
+            reader_data_indices.push_back(data_idx);
+            reader_column_names.push_back(_plan->data_columns.at(data_idx).name);
+          }
         }
+        reader_options->set_column_names(reader_column_names);
       }
-      reader_options->set_column_names(reader_column_names);
       SIRIUS_LOG_INFO(
         "[fixed-page-cache] filtered_reuse_enabled pinned='{}' filter_refs={} "
-        "reader_output_cols={} reader_extra_filter_cols={}",
+        "reader_output_cols={} reader_extra_filter_cols={} single_mask={}",
         _fixed_page_cache->pinned_name,
         fixed_page_filter_reference_data_indices.size(),
         _fixed_page_cache->parquet_data_indices.size(),
-        reader_column_names.size() - _fixed_page_cache->parquet_data_indices.size());
+        reader_column_names.size() - _fixed_page_cache->parquet_data_indices.size(),
+        fixed_page_filtered_reuse_single_mask ? 1 : 0);
     } else {
       SIRIUS_LOG_INFO(
         "[fixed-page-cache] filtered_reuse_disabled pinned='{}' reason=filter_refs_not_all_cached "
@@ -1771,6 +2825,7 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
 
   rg_accumulator accum;
   std::optional<int> accum_fixed_page_device_id;
+  bool accum_force_full_reader_options = false;
   // wdy start
   std::optional<std::size_t> accum_fixed_page_chunk_index;
   std::optional<std::size_t> accum_fixed_page_next_row_offset;
@@ -1803,11 +2858,45 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
                                                     _fixed_page_cache->cached_data_indices,
                                                     *_plan,
                                                     accum.fixed_page_row_ranges);
-      if (device_choice.device_id < 0 || device_choice.cached_bytes == 0) {
-        throw std::runtime_error(
-          "[fixed-page-cache] hybrid split has row ranges but no overlapping cached pages");
+      auto const expected_cached_bytes =
+        fixed_page_row_count(accum.fixed_page_row_ranges) * _fixed_page_cache->cached_row_width_bytes;
+      if (device_choice.cached_bytes < expected_cached_bytes && fixed_page_demand_load_enabled() &&
+          _scan_manager != nullptr && !_file_paths.empty()) {
+        auto* mutable_entry = const_cast<scan_manager::pinned_entry*>(_fixed_page_cache->entry);
+        auto const loaded_bytes = demand_load_fixed_pages_for_ranges(*mutable_entry,
+                                                                     _file_paths.front(),
+                                                                     *_plan,
+                                                                     _fixed_page_cache->cached_data_indices,
+                                                                     accum.fixed_page_row_ranges,
+                                                                     *_scan_manager);
+        if (loaded_bytes != 0) {
+          device_choice = choose_fixed_page_device(*_fixed_page_cache->entry,
+                                                   _fixed_page_cache->cached_data_indices,
+                                                   *_plan,
+                                                   accum.fixed_page_row_ranges);
+          if (device_choice.cached_bytes >= expected_cached_bytes) {
+            accum_force_full_reader_options = false;
+          }
+        }
       }
-      if (device_choice.device_count > 1) {
+      if (device_choice.device_id < 0 || device_choice.cached_bytes == 0) {
+        skip_fixed_page_reuse_for_filter = true;
+        SIRIUS_LOG_INFO(
+          "[fixed-page-cache] hybrid_reuse_skip pinned='{}' reason=no_resident_pages "
+          "resident_useful_bytes={} expected_bytes={}",
+          _fixed_page_cache->pinned_name,
+          device_choice.cached_bytes,
+          expected_cached_bytes);
+      } else if (device_choice.cached_bytes < expected_cached_bytes) {
+        skip_fixed_page_reuse_for_filter = true;
+        SIRIUS_LOG_INFO(
+          "[fixed-page-cache] hybrid_reuse_skip pinned='{}' reason=partial_resident_pages "
+          "resident_useful_bytes={} expected_bytes={}",
+          _fixed_page_cache->pinned_name,
+          device_choice.cached_bytes,
+          expected_cached_bytes);
+      }
+      if (!skip_fixed_page_reuse_for_filter && device_choice.device_count > 1) {
         throw std::runtime_error(
           "[fixed-page-cache] hybrid split spans multiple cached GPUs; split construction should "
           "flush at cached-device boundaries");
@@ -1829,12 +2918,12 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
       if (!skip_fixed_page_reuse_for_filter && !fixed_page_filtered_reuse_possible &&
           _duckdb_filter_expression && ast_expression && !skip_pushdown_due_to_flba &&
           fixed_page_pruning_enabled() && !fixed_page_pruning_constraints_by_data_index.empty()) {
-        auto const pruning_summary = summarize_fixed_page_pruning(
-          *_fixed_page_cache->entry,
-          _fixed_page_cache->cached_data_indices,
-          *_plan,
-          accum.fixed_page_row_ranges,
-          fixed_page_pruning_constraints_by_data_index);
+        auto const pruning_summary =
+          summarize_fixed_page_pruning(*_fixed_page_cache->entry,
+                                       _fixed_page_cache->cached_data_indices,
+                                       *_plan,
+                                       accum.fixed_page_row_ranges,
+                                       fixed_page_pruning_constraints_by_data_index);
         bool const skip_partial = fixed_page_pruning_skip_partial_enabled();
         bool const should_preserve_pushdown =
           pruning_summary.pages_considered != 0 &&
@@ -1857,22 +2946,25 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
 
       if (!skip_fixed_page_reuse_for_filter) {
         auto reuse                  = std::make_unique<parquet_split_info::fixed_page_reuse_info>();
-        reuse->pinned_name                       = _fixed_page_cache->pinned_name;
-        reuse->row_ranges                        = std::move(accum.fixed_page_row_ranges);
-        reuse->cached_data_indices               = _fixed_page_cache->cached_data_indices;
-        reuse->parquet_data_indices              = _fixed_page_cache->parquet_data_indices;
-        reuse->reader_extra_filter_data_indices  = fixed_page_filtered_reuse_possible
-                                                     ? fixed_page_filter_reference_data_indices
-                                                     : std::vector<std::size_t>{};
-        reuse->preferred_device_id               = device_choice.device_id;
-        reuse->filtered_reuse                    = fixed_page_filtered_reuse_possible;
+        reuse->pinned_name          = _fixed_page_cache->pinned_name;
+        reuse->row_ranges           = std::move(accum.fixed_page_row_ranges);
+        reuse->cached_data_indices  = _fixed_page_cache->cached_data_indices;
+        reuse->parquet_data_indices = _fixed_page_cache->parquet_data_indices;
+        reuse->reader_extra_filter_data_indices =
+          fixed_page_filtered_reuse_possible
+            ? (fixed_page_filtered_reuse_single_mask ? std::vector<std::size_t>{}
+                                                     : fixed_page_filter_reference_data_indices)
+            : std::vector<std::size_t>{};
+        reuse->preferred_device_id          = device_choice.device_id;
+        reuse->filtered_reuse               = fixed_page_filtered_reuse_possible;
+        reuse->filtered_reuse_single_mask   = fixed_page_filtered_reuse_single_mask;
         split_info->fixed_page_cached_bytes = device_choice.cached_bytes;
         preferred_device_id                 = reuse->preferred_device_id;
         split_info->fixed_page_reuse        = std::move(reuse);
         SIRIUS_LOG_INFO(
           "[fixed-page-cache] hybrid_reuse_split pinned='{}' cached_cols={} parquet_cols={} "
-          "reader_extra_filter_cols={} filtered_reuse={} row_ranges={} cached_bytes={} "
-          "best_device_bytes={} cached_devices={} preferred_gpu={}",
+          "reader_extra_filter_cols={} filtered_reuse={} row_ranges={} useful_bytes={} "
+          "resident_bytes={} best_device_bytes={} cached_devices={} preferred_gpu={}",
           _fixed_page_cache->pinned_name,
           _fixed_page_cache->cached_data_indices.size(),
           _fixed_page_cache->parquet_data_indices.size(),
@@ -1880,18 +2972,33 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
           split_info->fixed_page_reuse->filtered_reuse ? 1 : 0,
           split_info->fixed_page_reuse->row_ranges.size(),
           split_info->fixed_page_cached_bytes,
+          _fixed_page_cache->entry->fixed_width_page_metrics.resident_bytes,
           device_choice.best_device_bytes,
           device_choice.device_count,
           device_choice.device_id);
       }
     }
 
-    split_info->reader_options =
-      skip_fixed_page_reuse_for_filter ? full_reader_options : std::move(shared_opts);
+    bool const use_full_reader_options = skip_fixed_page_reuse_for_filter || accum_force_full_reader_options;
+    split_info->reader_options = use_full_reader_options ? full_reader_options : std::move(shared_opts);
+    if (use_full_reader_options) {
+      split_info->reader_column_names = data_column_names;
+      split_info->reader_data_indices.reserve(data_column_names.size());
+      for (std::size_t i = 0; i < data_column_names.size(); ++i) {
+        split_info->reader_data_indices.push_back(i);
+      }
+    } else {
+      split_info->reader_column_names = reader_column_names;
+      split_info->reader_data_indices = reader_data_indices;
+    }
     bool const fixed_page_reuse_needs_post_filter =
       split_info->fixed_page_reuse != nullptr && !split_info->fixed_page_reuse->filtered_reuse;
-    split_info->disable_filter_pushdown =
-      skip_pushdown_due_to_flba || fixed_page_reuse_needs_post_filter;
+    bool const fixed_page_reuse_single_mask_filter =
+      split_info->fixed_page_reuse != nullptr &&
+      split_info->fixed_page_reuse->filtered_reuse_single_mask;
+    split_info->disable_filter_pushdown = skip_pushdown_due_to_flba ||
+                                          fixed_page_reuse_needs_post_filter ||
+                                          fixed_page_reuse_single_mask_filter;
     auto metadata = std::make_unique<io::scan_and_filter_metadata>(std::move(split_info),
                                                                    build_post_filter_info());
     auto input    = std::make_unique<scan_operator_input>(std::move(metadata));
@@ -1901,6 +3008,7 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
     accum.fixed_page_row_ranges.clear();
     accum.total_uncompressed_bytes = 0;
     accum_fixed_page_device_id.reset();
+    accum_force_full_reader_options = false;
     // wdy start
     accum_fixed_page_chunk_index.reset();
     accum_fixed_page_next_row_offset.reset();
@@ -2141,12 +3249,23 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
           *_fixed_page_cache->entry, _fixed_page_cache->cached_data_indices, *_plan, single_range);
         if (device_choice.device_id >= 0 && device_choice.cached_bytes != 0 &&
             device_choice.device_count == 1) {
-          rg_fixed_page_device_id = device_choice.device_id;
-        } else {
-          if (!accum.slices.empty() || !cur_rgs.empty()) {
+          if (accum_force_full_reader_options && (!accum.slices.empty() || !cur_rgs.empty())) {
             seal_current_file();
             flush(reader_options, _plan);
           }
+          rg_fixed_page_device_id = device_choice.device_id;
+        } else {
+          if (!accum_force_full_reader_options && (!accum.slices.empty() || !cur_rgs.empty())) {
+            seal_current_file();
+            flush(reader_options, _plan);
+          }
+          if (accum_force_full_reader_options && (!accum.slices.empty() || !cur_rgs.empty()) &&
+              accum.total_uncompressed_bytes + cur_uncompressed_bytes + rg_unc >
+                _approximate_batch_size) {
+            seal_current_file();
+            flush(reader_options, _plan);
+          }
+          accum_force_full_reader_options = true;
           SIRIUS_LOG_INFO(
             "[fixed-page-cache] hybrid_reuse_row_group_fallback pinned='{}' row_group={} "
             "cached_devices={} cached_bytes={}",
@@ -2157,8 +3276,6 @@ void parquet_gpu_ingestible::run_batch(file_batch const& batch,
           cur_uncompressed_bytes += rg_unc;
           cur_compressed_bytes += rg_comp;
           cur_rgs.push_back(rg_idx);
-          seal_current_file();
-          flush(reader_options, _plan);
           continue;
         }
       }
@@ -2299,17 +3416,20 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
     split.fixed_page_reuse && fixed_page_zero_copy_output_enabled() && !_duckdb_filter_expression &&
     !split.needs_assembly;
   // wdy end
+  bool fixed_page_reuse_filter_applied = false;
+  bool fixed_page_reuse_filter_projected = false;
   if (split.fixed_page_reuse) {
     if (!_fixed_page_cache || _fixed_page_cache->entry == nullptr) {
       throw std::runtime_error(
         "[fixed-page-cache] split requested hybrid reuse but ingestible has no cache state");
     }
     if (split.fixed_page_reuse->filtered_reuse) {
-      if (!sirius_filter_ast || !ast_expression) {
+      if (!sirius_filter_ast ||
+          (!ast_expression && !split.fixed_page_reuse->filtered_reuse_single_mask)) {
         throw std::runtime_error(
-          "[fixed-page-cache] filtered reuse split reached materialize without reader filter");
+          "[fixed-page-cache] filtered reuse split reached materialize without a usable filter");
       }
-      table = splice_filtered_fixed_page_cached_columns(std::move(table),
+      table                           = splice_filtered_fixed_page_cached_columns(std::move(table),
                                                         split,
                                                         *_fixed_page_cache->entry,
                                                         _fixed_page_cache->cached_by_data_index,
@@ -2317,32 +3437,69 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
                                                         stream,
                                                         mr_ref,
                                                         *sirius_filter_ast);
+      fixed_page_reuse_filter_applied = true;
       SIRIUS_LOG_INFO(
         "[fixed-page-cache] hybrid_reuse_materialize_filtered pinned={} target_gpu={} "
-        "cached_cols={} parquet_cols={} reader_extra_filter_cols={} rows={} columns={}",
+        "cached_cols={} parquet_cols={} reader_extra_filter_cols={} single_mask={} "
+        "useful_bytes={} resident_bytes={} rows={} columns={}",
         split.fixed_page_reuse->pinned_name,
         mem_space.get_device_id(),
         split.fixed_page_reuse->cached_data_indices.size(),
         split.fixed_page_reuse->parquet_data_indices.size(),
         split.fixed_page_reuse->reader_extra_filter_data_indices.size(),
+        split.fixed_page_reuse->filtered_reuse_single_mask ? 1 : 0,
+        split.fixed_page_cached_bytes,
+        _fixed_page_cache->entry->fixed_width_page_metrics.resident_bytes,
         table->num_rows(),
         table->num_columns());
     } else {
-      if ((sirius_filter_ast && !ast_expression) || can_emit_zero_copy_fixed_page_batch) {
+      if (sirius_filter_ast) {
+        auto partial_filtered = try_splice_partial_filter_mask_columns(table,
+                                                                       split,
+                                                                       *_fixed_page_cache->entry,
+                                                                       _fixed_page_cache->cached_by_data_index,
+                                                                       mem_space,
+                                                                       stream,
+                                                                       mr_ref,
+                                                                       *sirius_filter_ast);
+        if (partial_filtered) {
+          table = std::move(partial_filtered);
+          fixed_page_reuse_filter_applied = true;
+          fixed_page_reuse_filter_projected =
+            split.needs_assembly && !split.plan->output_layout.empty() && !split.plan->has_partitions();
+          SIRIUS_LOG_INFO(
+            "[fixed-page-cache] hybrid_reuse_materialize_partial_filter pinned={} "
+            "target_gpu={} cached_cols={} parquet_cols={} projected={} useful_bytes={} "
+            "resident_bytes={} rows={} columns={}",
+            split.fixed_page_reuse->pinned_name,
+            mem_space.get_device_id(),
+            split.fixed_page_reuse->cached_data_indices.size(),
+            split.fixed_page_reuse->parquet_data_indices.size(),
+            fixed_page_reuse_filter_projected ? 1 : 0,
+            split.fixed_page_cached_bytes,
+            _fixed_page_cache->entry->fixed_width_page_metrics.resident_bytes,
+            table->num_rows(),
+            table->num_columns());
+        }
+      }
+      if (!fixed_page_reuse_filter_applied &&
+          ((sirius_filter_ast && !ast_expression) || can_emit_zero_copy_fixed_page_batch)) {
         fast_spliced_view = try_splice_fixed_page_cached_columns_view(
           table, split, *_fixed_page_cache->entry, _fixed_page_cache->cached_by_data_index, stream);
       }
-      if (fast_spliced_view) {
+      if (!fixed_page_reuse_filter_applied && fast_spliced_view) {
         SIRIUS_LOG_INFO(
           "[fixed-page-cache] hybrid_reuse_materialize_view pinned={} target_gpu={} "
-          "cached_cols={} parquet_cols={} rows={} columns={}",
+          "cached_cols={} parquet_cols={} useful_bytes={} resident_bytes={} rows={} columns={}",
           split.fixed_page_reuse->pinned_name,
           mem_space.get_device_id(),
           split.fixed_page_reuse->cached_data_indices.size(),
           split.fixed_page_reuse->parquet_data_indices.size(),
+          split.fixed_page_cached_bytes,
+          _fixed_page_cache->entry->fixed_width_page_metrics.resident_bytes,
           fast_spliced_view->view.num_rows(),
           fast_spliced_view->view.num_columns());
-      } else {
+      } else if (!fixed_page_reuse_filter_applied) {
         table = splice_fixed_page_cached_columns(std::move(table),
                                                  split,
                                                  *_fixed_page_cache->entry,
@@ -2352,11 +3509,13 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
                                                  mr_ref);
         SIRIUS_LOG_INFO(
           "[fixed-page-cache] hybrid_reuse_materialize pinned={} target_gpu={} cached_cols={} "
-          "parquet_cols={} rows={} columns={}",
+          "parquet_cols={} useful_bytes={} resident_bytes={} rows={} columns={}",
           split.fixed_page_reuse->pinned_name,
           mem_space.get_device_id(),
           split.fixed_page_reuse->cached_data_indices.size(),
           split.fixed_page_reuse->parquet_data_indices.size(),
+          split.fixed_page_cached_bytes,
+          _fixed_page_cache->entry->fixed_width_page_metrics.resident_bytes,
           table->num_rows(),
           table->num_columns());
       }
@@ -2375,11 +3534,15 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
     "split_count={} duration_us={}",
     mem_space.get_device_id(),
     scan_audit_file_paths(split.rg_slices),
-    join_strings(split.plan->data_column_names(), ','),
+    join_strings(split.reader_column_names.empty() ? split.plan->data_column_names()
+                                                   : split.reader_column_names,
+                 ','),
     scan_audit_row_groups(split.rg_slices),
     scan_audit_compressed_bytes(split.rg_slices),
     scan_audit_uncompressed_bytes(split.rg_slices),
-    scan_audit_column_bytes(split.rg_slices, split.plan->data_column_names()),
+    scan_audit_column_bytes(split.rg_slices,
+                            split.reader_column_names.empty() ? split.plan->data_column_names()
+                                                              : split.reader_column_names),
     materialized_rows,
     materialized_columns,
     split.rg_slices.size(),
@@ -2396,15 +3559,14 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
 
   // wdy start
   if (can_emit_zero_copy_fixed_page_batch && fast_spliced_view) {
-    auto batch = make_fixed_page_spliced_view_batch(
-      std::move(*fast_spliced_view),
-      const_cast<::cucascade::memory::memory_space&>(mem_space),
-      stream);
-    SIRIUS_LOG_INFO(
-      "[fixed-page-cache] zero_copy_output_batch target_gpu={} rows={} columns={}",
-      mem_space.get_device_id(),
-      materialized_rows,
-      materialized_columns);
+    auto batch =
+      make_fixed_page_spliced_view_batch(std::move(*fast_spliced_view),
+                                         const_cast<::cucascade::memory::memory_space&>(mem_space),
+                                         stream);
+    SIRIUS_LOG_INFO("[fixed-page-cache] zero_copy_output_batch target_gpu={} rows={} columns={}",
+                    mem_space.get_device_id(),
+                    materialized_rows,
+                    materialized_columns);
     return io::filtered_table{nullptr, io::filter_state::UNFILTERED, std::move(batch)};
   }
   // wdy end
@@ -2414,16 +3576,19 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
   // outlive `exec` — the executor only borrows the AST.
   io::filter_state state = io::filter_state::UNFILTERED;
   if (sirius_filter_ast) {
-    if (!ast_expression) {
+    if (fixed_page_reuse_filter_applied) {
+      state = fixed_page_reuse_filter_projected ? io::filter_state::ROW_FILTERED_AND_PROJECTED
+                                                : io::filter_state::ROW_FILTERED;
+    } else if (!ast_expression) {
       sirius::gpu_expression_executor exec(
         sirius_filter_ast.get(), cudf::get_current_device_resource_ref(), stream);
       // wdy start
-      auto const filter_start       = std::chrono::steady_clock::now();
-      auto const filter_input_rows  = fast_spliced_view ? fast_spliced_view->view.num_rows()
-                                                        : table->num_rows();
-      auto const filter_input_cols  = fast_spliced_view ? fast_spliced_view->view.num_columns()
-                                                        : table->num_columns();
-      bool const filter_input_view  = fast_spliced_view.has_value();
+      auto const filter_start = std::chrono::steady_clock::now();
+      auto const filter_input_rows =
+        fast_spliced_view ? fast_spliced_view->view.num_rows() : table->num_rows();
+      auto const filter_input_cols =
+        fast_spliced_view ? fast_spliced_view->view.num_columns() : table->num_columns();
+      bool const filter_input_view = fast_spliced_view.has_value();
       // wdy end
       if (fast_spliced_view) {
         table = exec.select(fast_spliced_view->view);
@@ -2451,8 +3616,9 @@ io::filtered_table parquet_gpu_ingestible::materialize_table(
       SIRIUS_LOG_DEBUG(
         "[parquet_gpu_ingestible::materialize_table] Applied duckdb filter expression "
         "post-decode.");
+      state = io::filter_state::ROW_FILTERED;
     }
-    state = io::filter_state::ROW_FILTERED;
+    if (state == io::filter_state::UNFILTERED) { state = io::filter_state::ROW_FILTERED; }
   }
 
   // Reader-side pushdown succeeded and the plan needs assembly — inline it

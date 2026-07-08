@@ -1,3 +1,0 @@
-experiment,query,iteration,runtime_ms,load_ms,non_load_ms,load_ratio,non_load_ratio,scan_stage_ms,non_scan_operator_ms,unaccounted_ms,benchmark_dir
-q2_then_q16,q2,0,3169.8650000000002,2948.075,221.79000000000042,0.9300317205937791,0.0699682794062209,2997.426,295.221,-73.43099999999959,/home/dy1013/sirius_multi-gpu/experiment/tpch_pair_scan_audit_runs/pair_scan_20260701_043953/pairs/q2_then_q16
-q2_then_q16,q16,0,1496.681,638.337,858.344,0.42650170610838245,0.5734982938916175,664.447,1585.2549999999999,-726.9109999999998,/home/dy1013/sirius_multi-gpu/experiment/tpch_pair_scan_audit_runs/pair_scan_20260701_043953/pairs/q2_then_q16

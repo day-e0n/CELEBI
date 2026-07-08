@@ -1,0 +1,3 @@
+query,status,returncode,runtime_s,row_count,wall_s,samples,peak_total_mib,peak_total_gib,peak_max_gpu_mib,peak_by_gpu_mib,avg_sample_total_mib,error
+q8,ok,0,9.520595100999344,2,12.150354145000165,72,23652,23.09765625,11828,"{""0"": 11828, ""1"": 11824}",20213.63888888889,
+q17,ok,0,7.992220109998016,1,10.152023155002098,62,24210,23.642578125,12108,"{""0"": 12108, ""1"": 12102}",20302.451612903227,

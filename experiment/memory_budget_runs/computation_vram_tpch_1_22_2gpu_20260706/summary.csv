@@ -1,0 +1,15 @@
+metric,value,unit
+queries_total,22,count
+queries_ok,19,count
+queries_failed_or_timeout,3,count
+configured_gpu_limit_per_gpu,12.0,GiB
+configured_gpu_limit_total,24.0,GiB
+peak_total_mean,25.01552220394737,GiB
+peak_total_p50,24.95703125,GiB
+peak_total_p95,26.353906249999998,GiB
+peak_total_max,26.533203125,GiB
+headroom_mean_vs_configured_total,-1.01552220394737,GiB
+headroom_p95_vs_configured_total,-2.353906249999998,GiB
+runtime_mean,4.264051129052907,s
+runtime_p50,3.8726792140005273,s
+runtime_p95,9.665717169999695,s

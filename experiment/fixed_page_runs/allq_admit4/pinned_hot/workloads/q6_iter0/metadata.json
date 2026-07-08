@@ -1,0 +1,14 @@
+{
+  "condition": "pinned_hot",
+  "workload_id": "q6",
+  "repeat": 0,
+  "queries": [
+    6
+  ],
+  "input": "/mnt/nvme/dataset",
+  "config": "/home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/allq_admit4/configs/sirius_2gpu.yaml",
+  "devices": "0,1",
+  "pin_rows": null,
+  "pinned_hot_scope": "budgeted_fixed",
+  "created_at": "2026-07-08T04:12:24"
+}

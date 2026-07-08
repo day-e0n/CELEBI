@@ -1,0 +1,6 @@
+page_bytes,page_label,suite_name,workload_id,query_count,queries,query_labels
+1048576,1m,page_1m,fig3,6,"3,5,7,8,10,21","q3,q5,q7,q8,q10,q21"
+4194304,4m,page_4m,fig3,6,"3,5,7,8,10,21","q3,q5,q7,q8,q10,q21"
+8388608,8m,page_8m,fig3,6,"3,5,7,8,10,21","q3,q5,q7,q8,q10,q21"
+16777216,16m,page_16m,fig3,6,"3,5,7,8,10,21","q3,q5,q7,q8,q10,q21"
+67108864,64m,page_64m,fig3,6,"3,5,7,8,10,21","q3,q5,q7,q8,q10,q21"
