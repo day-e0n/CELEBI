@@ -16,33 +16,49 @@
 
 #include "op/sirius_physical_hash_join.hpp"
 
+#include "cudf/aggregation.hpp"
 #include "cudf/copying.hpp"
 #include "cudf/join/distinct_hash_join.hpp"
 #include "cudf/join/filtered_join.hpp"
 #include "cudf/join/join.hpp"
 #include "cudf/join/mark_join.hpp"
 #include "cudf/join/mixed_join.hpp"
+#include "cudf/reduction.hpp"
 #include "cudf/table/table_view.hpp"
 #include "cudf/types.hpp"
 #include "cudf/unary.hpp"
 #include "cudf/utilities/memory_resource.hpp"
 #include "cudf/version_config.hpp"
 #include "data/data_batch_utils.hpp"
+#include "duckdb/execution/operator/join/join_filter_pushdown.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression/bound_reference_expression.hpp"
 #include "duckdb/planner/expression_iterator.hpp"
-#include "duckdb/planner/joinside.hpp"
 #include "expression/ast/to_duckdb.hpp"
-#include "expression_executor/gpu_expression_translator_internal.hpp"
+#include "expression_evaluator/gpu_expression_translator_internal.hpp"
 #include "helper/type_conversions.hpp"
 #include "log/logging.hpp"
+#include "op/dynamic_filter_publisher.hpp"
+#include "op/sirius_dynamic_filter.hpp"
 #include "pipeline/sirius_meta_pipeline.hpp"
 #include "pipeline/sirius_pipeline.hpp"
 #include "sirius/exception.hpp"
 
+#include <rmm/cuda_device.hpp>
+
+#include <cuda_runtime_api.h>
 #include <nvtx3/nvtx3.hpp>
 
+#include <cucascade/memory/common.hpp>
+#include <cucascade/memory/memory_space.hpp>
+
+#include <algorithm>
+#include <cstdint>
 #include <cstdio>
+#include <limits>
+#include <optional>
+#include <stdexcept>
+#include <string_view>
 #include <unordered_set>
 
 namespace sirius {
@@ -68,7 +84,7 @@ static bool is_equality(sirius::comparison_type c)
 static cudf::filtered_join make_right_filtered_join(cudf::table_view const& right_keys,
                                                     rmm::cuda_stream_view stream)
 {
-#if CUDF_VERSION_MAJOR > 26 || (CUDF_VERSION_MAJOR == 26 && CUDF_VERSION_MINOR >= 8)
+#if CUDF_VERSION_MAJOR > 26 || (CUDF_VERSION_MAJOR == 26 && CUDF_VERSION_MINOR >= 6)
   return cudf::filtered_join(right_keys, cudf::null_equality::UNEQUAL, stream);
 #else
   return cudf::filtered_join(
@@ -81,7 +97,7 @@ static cudf::filtered_join make_right_filtered_join(cudf::table_view const& righ
 static std::unique_ptr<cudf::filtered_join> make_right_filtered_join_ptr(
   cudf::table_view const& right_keys, rmm::cuda_stream_view stream)
 {
-#if CUDF_VERSION_MAJOR > 26 || (CUDF_VERSION_MAJOR == 26 && CUDF_VERSION_MINOR >= 8)
+#if CUDF_VERSION_MAJOR > 26 || (CUDF_VERSION_MAJOR == 26 && CUDF_VERSION_MINOR >= 6)
   return std::make_unique<cudf::filtered_join>(right_keys, cudf::null_equality::UNEQUAL, stream);
 #else
   return std::make_unique<cudf::filtered_join>(
@@ -196,18 +212,25 @@ sirius_physical_hash_join::sirius_physical_hash_join(
   duckdb::vector<sirius::logical_type> delim_types,
   std::size_t estimated_cardinality,
   duckdb::unique_ptr<duckdb::JoinFilterPushdownInfo> pushdown_info_p,
-  uint64_t max_build_hash_table_bytes)
+  uint64_t max_build_hash_table_bytes,
+  dynamic_filter_publish_plan dynamic_filter_plan)
   : sirius_physical_partition_consumer_operator(SiriusPhysicalOperatorType::HASH_JOIN,
                                                 sirius::from_duckdb_vec(op.types),
                                                 estimated_cardinality),
     conditions(std::move(cond)),
     join_type(join_type),
-    delim_types(std::move(delim_types))
+    delim_types(std::move(delim_types)),
+    _dynamic_filter_plan(std::move(dynamic_filter_plan))
 {
   _max_build_hash_table_bytes = max_build_hash_table_bytes;
   reorder_join_conditions(conditions);
 
   filter_pushdown = std::move(pushdown_info_p);
+  if (_dynamic_filter_plan.enabled() && !filter_pushdown) {
+    throw std::invalid_argument(
+      "[sirius_physical_hash_join] An enabled dynamic-filter publication plan requires join "
+      "filter-pushdown metadata");
+  }
 
   children.push_back(std::move(left));
   children.push_back(std::move(right));
@@ -258,8 +281,7 @@ sirius_physical_hash_join::sirius_physical_hash_join(
     rhs_output_columns.col_types.push_back(rhs_col_type);
   }
 
-  for (std::size_t cond_idx = 0; cond_idx < conditions.size(); cond_idx++) {
-    auto& condition        = conditions[cond_idx];
+  for (auto& condition : conditions) {
     auto left_owned        = sirius::ast::to_duckdb(*condition.left);
     auto right_owned       = sirius::ast::to_duckdb(*condition.right);
     auto const* left_expr  = left_owned.get();
@@ -342,7 +364,8 @@ sirius_physical_hash_join::sirius_physical_hash_join(
                               {},
                               estimated_cardinality,
                               nullptr,
-                              max_build_hash_table_bytes)
+                              max_build_hash_table_bytes,
+                              {})
 {
 }
 
@@ -413,12 +436,14 @@ void sirius_physical_hash_join::update_join_exec_mode(int num_partitions,
                                                       bool build_foldable_to_single_batch)
 {
   std::lock_guard<std::mutex> lg(op_state_mutex);
-  // MARK joins are eligible for BUILD_PROBE: a persistent cudf::filtered_join is built once on the
-  // right (filter) side and reused across streamed left probe batches via semi_join.
-  // SEMI/ANTI/RIGHT remain excluded (handled in STANDARD mode for now).
+  // MARK/SEMI/ANTI joins are eligible for BUILD_PROBE: a persistent cudf::filtered_join is built
+  // once on the right (filter) side and reused across streamed left probe batches via
+  // semi_join/anti_join, which return probe-side (left) match indices.
+  // RIGHT_SEMI/RIGHT_ANTI/RIGHT remain excluded: they emit build-side (right) output, which would
+  // require the persistent table on the left plus cross-batch accumulation, incompatible with the
+  // build-on-right / stream-left model.
   if (num_partitions == 1 && build_side_bytes < _max_build_hash_table_bytes &&
-      build_foldable_to_single_batch && join_type != duckdb::JoinType::SEMI &&
-      join_type != duckdb::JoinType::RIGHT_SEMI && join_type != duckdb::JoinType::ANTI &&
+      build_foldable_to_single_batch && join_type != duckdb::JoinType::RIGHT_SEMI &&
       join_type != duckdb::JoinType::RIGHT_ANTI && join_type != duckdb::JoinType::RIGHT &&
       _join_mode != HASH_JOIN_MODE::MIXED_JOIN) {
     // Switch to a more efficient join strategy for small datasets. The
@@ -694,9 +719,9 @@ static join_side_keys_result prepare_join_keys(
 
   // Slow path: iterate over key columns and cast where needed
   for (size_t i = 0; i < key_col_indices.size(); i++) {
-    const auto& cast_info = key_casts[i];
-    cudf::column_view col = table.column(key_col_indices[i]);
-    bool needs_cast       = is_left_side ? cast_info.cast_left : cast_info.cast_right;
+    const auto& cast_info        = key_casts[i];
+    const cudf::column_view& col = table.column(key_col_indices[i]);
+    bool needs_cast              = is_left_side ? cast_info.cast_left : cast_info.cast_right;
     cudf::data_type target_type =
       is_left_side ? cast_info.left_target_type : cast_info.right_target_type;
 
@@ -721,8 +746,8 @@ static join_side_keys_result prepare_join_keys(
 /// @param memory_space   Memory space of the input batch used to tag the output data batch.
 static std::unique_ptr<operator_data> gather_join_output(
   duckdb::JoinType join_type,
-  cudf::table_view left_full,
-  cudf::table_view right_full,
+  const cudf::table_view& left_full,
+  const cudf::table_view& right_full,
   std::vector<cudf::size_type> const& lhs_col_idxs,
   std::vector<cudf::size_type> const& rhs_col_idxs,
   std::unique_ptr<rmm::device_uvector<cudf::size_type>> left_indices,
@@ -784,8 +809,8 @@ static std::unique_ptr<operator_data> gather_join_output(
 /// distinct_hash_join::left_join returns only build indices (one per probe row, in probe order).
 /// Left (probe) columns are copied directly; right (build) columns are gathered with NULLIFY.
 static std::unique_ptr<operator_data> gather_distinct_left_join_output(
-  cudf::table_view left_full,
-  cudf::table_view right_full,
+  const cudf::table_view& left_full,
+  const cudf::table_view& right_full,
   std::vector<cudf::size_type> const& lhs_col_idxs,
   std::vector<cudf::size_type> const& rhs_col_idxs,
   std::unique_ptr<rmm::device_uvector<cudf::size_type>> build_indices,
@@ -919,13 +944,15 @@ std::unique_ptr<operator_data> sirius_physical_hash_join::execute(const operator
         std::lock_guard<std::mutex> lg(op_state_mutex);
         _built_table_cast_columns = std::move(build_keys_result.owned_cast_columns);
         _build_table              = build_batch_ro;
-        if (join_type == duckdb::JoinType::MARK) {
-          // MARK: build a reusable filtered_join on the right (filter) keys; each probe batch's
-          // semi_join returns left-row match indices for resolve_mark_join_result.
+        if (join_type == duckdb::JoinType::MARK || join_type == duckdb::JoinType::SEMI ||
+            join_type == duckdb::JoinType::ANTI) {
+          // MARK/SEMI/ANTI: build a reusable filtered_join on the right (filter) keys; each probe
+          // batch's semi_join/anti_join returns left-row match indices (scattered into a BOOL8 mark
+          // for MARK, gathered as the output rows for SEMI/ANTI).
           _filtered_table = make_right_filtered_join_ptr(build_keys, stream);
-          SIRIUS_LOG_DEBUG(
-            "sirius_physical_hash_join id {}: using filtered_join (BUILD_PROBE MARK)",
-            this->get_operator_id());
+          SIRIUS_LOG_DEBUG("sirius_physical_hash_join id {}: using filtered_join (BUILD_PROBE {})",
+                           this->get_operator_id(),
+                           duckdb::JoinTypeToString(join_type));
         } else if (unique_build_keys &&
                    (join_type == duckdb::JoinType::INNER || join_type == duckdb::JoinType::LEFT)) {
           _distinct_hash_table = std::make_unique<cudf::distinct_hash_join>(
@@ -963,44 +990,54 @@ std::unique_ptr<operator_data> sirius_physical_hash_join::execute(const operator
           *semi_indices, left_full, lhs_output_columns.col_idxs, input_batches[0], stream);
       }
 
-      right_full = _build_table.value()
-                     .get_data()
-                     ->cast<cucascade::gpu_table_representation>()
-                     .get_table_view();
-
-      if (_distinct_hash_table) {
-        // Distinct hash join path (unique build keys, INNER or LEFT only).
-        if (join_type == duckdb::JoinType::INNER) {
-          auto result   = _distinct_hash_table->inner_join(probe_keys, stream);
-          left_indices  = std::move(result.first);
-          right_indices = std::move(result.second);
-        } else {
-          // LEFT: returns only build indices; probe indices are implicit [0..N-1].
-          auto build_indices = _distinct_hash_table->left_join(probe_keys, stream);
-          return gather_distinct_left_join_output(left_full,
-                                                  right_full,
-                                                  lhs_output_columns.col_idxs,
-                                                  rhs_output_columns.col_idxs,
-                                                  std::move(build_indices),
-                                                  *input_batches[0].get_memory_space(),
-                                                  stream);
-        }
+      if (join_type == duckdb::JoinType::SEMI || join_type == duckdb::JoinType::ANTI) {
+        // Reuse the persistent filtered_join (built on the right/filter side): probe with this left
+        // batch to get the matched (SEMI) / unmatched (ANTI) left-row indices, then fall through to
+        // gather_join_output, which collects the left side only (collect_right is false).
+        // right_full stays default-constructed since it is never dereferenced for these join types.
+        left_indices = (join_type == duckdb::JoinType::SEMI)
+                         ? _filtered_table->semi_join(probe_keys, stream)
+                         : _filtered_table->anti_join(probe_keys, stream);
       } else {
-        if (join_type == duckdb::JoinType::INNER) {
-          auto result   = _hash_table->inner_join(probe_keys, {}, stream);
-          left_indices  = std::move(result.first);
-          right_indices = std::move(result.second);
-        } else if (join_type == duckdb::JoinType::LEFT) {
-          auto result   = _hash_table->left_join(probe_keys, {}, stream);
-          left_indices  = std::move(result.first);
-          right_indices = std::move(result.second);
-        } else if (join_type == duckdb::JoinType::OUTER) {
-          auto result   = _hash_table->full_join(probe_keys, {}, stream);
-          left_indices  = std::move(result.first);
-          right_indices = std::move(result.second);
+        right_full = _build_table.value()
+                       .get_data()
+                       ->cast<cucascade::gpu_table_representation>()
+                       .get_table_view();
+
+        if (_distinct_hash_table) {
+          // Distinct hash join path (unique build keys, INNER or LEFT only).
+          if (join_type == duckdb::JoinType::INNER) {
+            auto result   = _distinct_hash_table->inner_join(probe_keys, stream);
+            left_indices  = std::move(result.first);
+            right_indices = std::move(result.second);
+          } else {
+            // LEFT: returns only build indices; probe indices are implicit [0..N-1].
+            auto build_indices = _distinct_hash_table->left_join(probe_keys, stream);
+            return gather_distinct_left_join_output(left_full,
+                                                    right_full,
+                                                    lhs_output_columns.col_idxs,
+                                                    rhs_output_columns.col_idxs,
+                                                    std::move(build_indices),
+                                                    *input_batches[0].get_memory_space(),
+                                                    stream);
+          }
         } else {
-          throw std::runtime_error("Unsupported join type in BUILD_PROBE mode: " +
-                                   duckdb::JoinTypeToString(join_type));
+          if (join_type == duckdb::JoinType::INNER) {
+            auto result   = _hash_table->inner_join(probe_keys, {}, stream);
+            left_indices  = std::move(result.first);
+            right_indices = std::move(result.second);
+          } else if (join_type == duckdb::JoinType::LEFT) {
+            auto result   = _hash_table->left_join(probe_keys, {}, stream);
+            left_indices  = std::move(result.first);
+            right_indices = std::move(result.second);
+          } else if (join_type == duckdb::JoinType::OUTER) {
+            auto result   = _hash_table->full_join(probe_keys, {}, stream);
+            left_indices  = std::move(result.first);
+            right_indices = std::move(result.second);
+          } else {
+            throw std::runtime_error("Unsupported join type in BUILD_PROBE mode: " +
+                                     duckdb::JoinTypeToString(join_type));
+          }
         }
       }
 
@@ -1276,9 +1313,110 @@ std::unique_ptr<operator_data> sirius_physical_hash_join::execute(const operator
                             stream);
 }
 
+//===----------------------------------------------------------------------===//
+// Dynamic Filters
+//===----------------------------------------------------------------------===//
+void sirius_physical_hash_join::publish_dynamic_filters(cudf::table_view const& build_view,
+                                                        rmm::cuda_stream_view stream)
+{
+  // Publication is independent of the join state machine.
+  auto expected = dynamic_filter_publication_state::OPEN;
+  if (!_dynamic_filter_publication_state.compare_exchange_strong(
+        expected,
+        dynamic_filter_publication_state::PUBLISHING,
+        std::memory_order_acq_rel,
+        std::memory_order_acquire)) {
+    return;
+  }
+
+  try {
+    if (filter_pushdown && _dynamic_filter_plan.enabled()) {
+      dynamic_filter_publisher{
+        *filter_pushdown, _dynamic_filter_plan, key_casts, right_key_col_indices}
+        .publish(build_view, stream);
+    }
+    _dynamic_filter_publication_state.store(dynamic_filter_publication_state::FINISHED,
+                                            std::memory_order_release);
+  } catch (...) {
+    _dynamic_filter_publication_state.store(dynamic_filter_publication_state::FAILED,
+                                            std::memory_order_release);
+    throw;
+  }
+}
+//===----------------------------------------------------------------------===//
+
+void sirius_physical_hash_join::push_data_batch_partitioned(
+  std::string_view port_id,
+  std::shared_ptr<::cucascade::data_batch> batch,
+  std::size_t partition_idx)
+{
+  //===----------Dynamic Table Filters----------===//
+  // Build-side dynamic-filter publish: the moment the (single, concat-folded) build batch arrives,
+  // compute and publish the filter from the build keys. Only meaningful for the build port of a
+  // BUILD_PROBE join currently.
+  std::optional<::cucascade::read_only_data_batch> build_ro;
+  if (port_id == "build" && batch) {
+    bool claim = false;
+    {
+      std::scoped_lock lg(op_state_mutex);
+      claim = _dynamic_filter_publication_state.load(std::memory_order_acquire) ==
+                dynamic_filter_publication_state::OPEN &&
+              _join_mode == HASH_JOIN_MODE::BUILD_PROBE && filter_pushdown &&
+              _dynamic_filter_plan.enabled();
+    }
+    if (claim) { build_ro.emplace(batch->to_read_only()); }
+  }
+
+  // Route the batch to the target port exactly as the base does.
+  sirius_physical_partition_consumer_operator::push_data_batch_partitioned(
+    port_id, batch, partition_idx);
+
+  if (!build_ro) { return; }
+
+  nvtx3::scoped_range nvtx_range{"dynfilter::publish_hook"};
+  auto* ms = build_ro->get_data() ? build_ro->get_memory_space() : nullptr;
+  // Non-GPU residency here means the batch was already downgraded before this delivery (it can be
+  // shared with an earlier consumer, e.g. CTE fan-out). Publication is best-effort: skip it.
+  if (!ms || build_ro->get_current_tier() != ::cucascade::memory::Tier::GPU) { return; }
+
+  // The build batch was produced on a different stream than the publication stream. Order the
+  // publication stream after the batch's writer event.
+  rmm::cuda_set_device_raii device_guard{rmm::cuda_device_id{ms->get_device_id()}};
+  auto publish_stream = ms->acquire_stream();
+  if (auto const writer_event = build_ro->get_writer_event(); writer_event != nullptr) {
+    auto const status = cudaStreamWaitEvent(publish_stream.value(), writer_event, 0);
+    if (status != cudaSuccess) {
+      throw std::runtime_error(
+        std::string("[sirius_physical_hash_join::push_data_batch_partitioned] dynamic-filter "
+                    "writer-event wait failed: ") +
+        cudaGetErrorString(status));
+    }
+  } else {
+    // Defense-in-depth for older representations that predate mandatory writer events.
+    auto const status = cudaDeviceSynchronize();
+    if (status != cudaSuccess) {
+      throw std::runtime_error(
+        std::string("[sirius_physical_hash_join::push_data_batch_partitioned] dynamic-filter "
+                    "source synchronization failed: ") +
+        cudaGetErrorString(status));
+    }
+  }
+  publish_dynamic_filters(sirius::get_cudf_table_view(*build_ro), publish_stream);
+}
+
 void sirius_physical_hash_join::on_finalize_operator()
 {
-  std::lock_guard<std::mutex> lg(op_state_mutex);
+  std::scoped_lock lg(op_state_mutex);
+
+  // Close an unclaimed publication window before BUILD_PROBE state is released. If publication
+  // already started, its explicit PUBLISHING -> FINISHED/FAILED transition remains authoritative.
+  auto expected = dynamic_filter_publication_state::OPEN;
+  _dynamic_filter_publication_state.compare_exchange_strong(
+    expected,
+    dynamic_filter_publication_state::CLOSED,
+    std::memory_order_acq_rel,
+    std::memory_order_acquire);
+
   if (_join_mode == HASH_JOIN_MODE::BUILD_PROBE) {
     _hash_table.reset();
     _distinct_hash_table.reset();

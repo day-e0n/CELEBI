@@ -20,6 +20,7 @@
 #include <op/result/host_table_chunk_reader.hpp>
 
 // cucascade
+#include <cucascade/cudf/host_data_representation.hpp>
 #include <cucascade/memory/fixed_size_host_memory_resource.hpp>
 
 // duckdb
@@ -43,25 +44,43 @@ host_table_chunk_reader::column_reader::column_reader(
   }
   size       = static_cast<size_t>(col.num_rows);
   null_count = static_cast<size_t>(col.null_count);
+  // cucascade's column_metadata::type_id is now a generic int32_t tag (PR #150
+  // decoupled the core from cudf); cast it back to the cudf::type_id it encodes.
+  auto const cudf_type_id = static_cast<cudf::type_id>(col.type_id);
   cudf_col_type =
-    col.scale != 0 ? cudf::data_type(col.type_id, col.scale) : cudf::data_type(col.type_id);
+    col.scale != 0 ? cudf::data_type(cudf_type_id, col.scale) : cudf::data_type(cudf_type_id);
   if (!col.has_null_mask) { null_count = 0; }
 
   data_accessor.initialize(col.data_offset, allocation);
 
   if (null_count > 0) { mask_accessor.initialize(col.null_mask_offset, allocation); }
 
-  if (col.type_id == cudf::type_id::STRING) {
+  if (cudf_type_id == cudf::type_id::STRING) {
     if (col.children.size() != 1) {
       throw std::runtime_error(
         "[host_table_chunk_reader::column_reader::initialize_accessors] STRING type must have one "
         "child node for offsets.");
     }
-    use_int64_offsets = (col.children[0].type_id == cudf::type_id::INT64);
+    use_int64_offsets =
+      (static_cast<cudf::type_id>(col.children[0].type_id) == cudf::type_id::INT64);
     if (use_int64_offsets) {
       offset_accessor_64.initialize(col.children[0].data_offset, allocation);
     } else {
       offset_accessor_32.initialize(col.children[0].data_offset, allocation);
+    }
+  } else if (cudf_type_id == cudf::type_id::LIST) {
+    if (col.children.size() != 2) {
+      throw std::runtime_error(
+        "[host_table_chunk_reader::column_reader::column_reader] LIST/ARRAY type must have two "
+        "child nodes (offsets, values).");
+    }
+    data_accessor.initialize(col.children[1].data_offset, allocation);
+    // Element-level (child) validity: the values child carries its own null mask.
+    auto const& values_child = col.children[1];
+    child_null_count =
+      values_child.has_null_mask ? static_cast<size_t>(values_child.null_count) : 0;
+    if (child_null_count > 0) {
+      child_mask_accessor.initialize(values_child.null_mask_offset, allocation);
     }
   }
 }
@@ -216,6 +235,43 @@ void host_table_chunk_reader::column_reader::copy_string(
   }
 }
 
+void host_table_chunk_reader::column_reader::copy_array(
+  duckdb::Vector& vector,
+  size_t row_offset,
+  size_t count,
+  std::shared_ptr<multiple_blocks_allocation> const& allocation)
+{
+  assert(vector.GetType().id() == duckdb::LogicalTypeId::ARRAY);
+  assert(row_offset + count <= static_cast<size_t>(size));
+  vector.SetVectorType(duckdb::VectorType::FLAT_VECTOR);
+
+  auto const array_size = static_cast<size_t>(duckdb::ArrayType::GetSize(vector.GetType()));
+  auto& child_vec       = duckdb::ArrayVector::GetEntry(vector);
+  child_vec.SetVectorType(duckdb::VectorType::FLAT_VECTOR);
+  auto const child_width =
+    static_cast<size_t>(duckdb::GetTypeIdSize(child_vec.GetType().InternalType()));
+  auto* child_dest = duckdb::FlatVector::GetData(child_vec);
+  data_accessor.memcpy_to(allocation, child_dest, count * array_size * child_width);
+
+  // List-level validity
+  if (null_count != 0) {
+    auto& validity = duckdb::FlatVector::Validity(vector);
+    copy_mask_to_validity(validity, row_offset, count, allocation);
+  }
+
+  // Element-level validity: the values child has count*array_size elements
+  // laid out row-major, so its null mask maps straight onto the array's
+  // child vector validity.
+  if (child_null_count != 0) {
+    auto const child_count = count * array_size;
+    assert(utils::mod_8(row_offset * array_size) == 0);  // byte-aligned start
+    auto& child_validity = duckdb::FlatVector::Validity(child_vec);
+    child_validity.Initialize(child_count);
+    auto* child_validity_ptr = reinterpret_cast<uint8_t*>(child_validity.GetData());
+    child_mask_accessor.memcpy_to(allocation, child_validity_ptr, utils::ceil_div_8(child_count));
+  }
+}
+
 host_table_chunk_reader::host_table_chunk_reader(
   duckdb::ClientContext& client_ctx,
   cucascade::host_data_representation const& host_table,
@@ -321,6 +377,12 @@ bool host_table_chunk_reader::get_next_chunk(duckdb::DataChunk& chunk)
         _column_readers[col_idx].copy_string(temp_vec, _row_offset, count, _allocation);
         duckdb::VectorOperations::Cast(_client_ctx, temp_vec, vec, count);
       }
+    } else if (actual_id == cudf::type_id::LIST) {
+      if (vec.GetType().id() != duckdb::LogicalTypeId::ARRAY) {
+        throw duckdb::NotImplementedException(
+          "[host_table_chunk_reader] LIST output is only supported for fixed-size ARRAY columns.");
+      }
+      _column_readers[col_idx].copy_array(vec, _row_offset, count, _allocation);
     } else {
       // Stored data is fixed-width: read with copy_fixed_width, then cast if needed.
       auto src_duckdb_type = cudf_type_to_duckdb(_column_readers[col_idx].cudf_col_type);

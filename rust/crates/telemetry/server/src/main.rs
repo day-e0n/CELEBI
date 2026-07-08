@@ -1,24 +1,14 @@
-use std::{
-    net::ToSocketAddrs,
-    path::{Path, PathBuf},
-};
+use std::{net::ToSocketAddrs, path::PathBuf};
 
 use clap::Parser;
-use instrumentation_model::SiriusEvent;
-use quent_collector::server::CollectorServiceOptions;
-use quent_exporter::{
-    ExporterOptions, ImporterOptions, MsgpackExporterOptions, MsgpackImporterOptions,
-    NdjsonExporterOptions, NdjsonImporterOptions, PostcardExporterOptions, PostcardImporterOptions,
-    create_importer,
-};
+use instrumentation_model::{Sirius, SiriusContext};
+use quent_exporter::{ExporterOptions, FileSystemExporterOptions, FileSystemFormat};
 use quent_query_engine_server::{
-    analyzer_service_router, collector_service,
-    error::{ServerError, ServerResult},
+    analyzer_cache::index_query_engines, analyzer_service_router, collector_service,
     initialize_tracing,
 };
 use sirius_telemetry_analyzer::SiriusUiAnalyzer;
 use tokio::net::TcpListener;
-use uuid::Uuid;
 
 mod defaults {
     pub(crate) const QUENT_COLLECTOR_ADDRESS: &str = "[::]:7836";
@@ -32,8 +22,6 @@ mod env {
     pub(crate) const QUENT_ANALYZER_ADDRESS: &str = "QUENT_ANALYZER_ADDRESS";
     pub(crate) const QUENT_ANALYZER_CORS_ADDRESS: &str = "QUENT_ANALYZER_CORS_ADDRESS";
 }
-
-const TELEMETRY_EXTENSIONS: [&str; 3] = ["ndjson", "msgpack", "postcard"];
 
 #[derive(Parser)]
 struct Args {
@@ -81,32 +69,40 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let importer_output_dir = output_dir.clone();
     let lister_output_dir = output_dir.clone();
 
-    let exporter = match exporter.as_str() {
-        "ndjson" => ExporterOptions::Ndjson(NdjsonExporterOptions { output_dir }),
-        "msgpack" => ExporterOptions::Msgpack(MsgpackExporterOptions { output_dir }),
-        "postcard" => ExporterOptions::Postcard(PostcardExporterOptions { output_dir }),
+    let format = match exporter.as_str() {
+        "ndjson" => FileSystemFormat::Ndjson,
+        "msgpack" => FileSystemFormat::Msgpack,
+        "postcard" => FileSystemFormat::Postcard,
         other => return Err(format!("unknown exporter: {other}").into()),
     };
+    // Each context exports under `output_dir/<context-id>/<entity>/`, so the
+    // collector writes per-entity streams beneath output_dir.
+    let exporter_kind = ExporterOptions::FileSystem(FileSystemExporterOptions {
+        format,
+        root: output_dir,
+    });
 
+    // The collector builds a fresh sink per incoming context, replaying each
+    // remote source's events under that source's own context id.
     let collector = async {
-        collector_service::<SiriusEvent>(CollectorServiceOptions { exporter })?
-            .serve(collector_addr)
-            .await
-            .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })
+        collector_service::<SiriusContext, _>(move |id| {
+            SiriusContext::try_with_id(id, Some(exporter_kind.clone())).map_err(|e| e.to_string())
+        })?
+        .serve(collector_addr)
+        .await
+        .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })
     };
 
-    let lister = move || {
-        let mut ids = std::collections::HashSet::new();
-        for path in telemetry_file_paths(&lister_output_dir)? {
-            let id = extract_engine_id(&path)?.or_else(|| telemetry_file_stem_uuid(&path));
-            ids.extend(id);
-        }
-        Ok(ids.into_iter().collect())
-    };
+    // Index the exported contexts by engine instance: each engine's telemetry is
+    // the engine's own context plus its workers' contexts.
+    let lister = move || index_query_engines(&lister_output_dir);
 
-    let importer = move |engine_id| {
-        let importer = importer_options_for_engine(&importer_output_dir, engine_id)?;
-        Ok(Box::new(create_importer::<SiriusEvent>(&importer)?) as Box<dyn Iterator<Item = _>>)
+    // Reconstruct one context's umbrella event stream from its per-entity
+    // subdirectories; the analyzer cache chains this across all the contexts that
+    // make up an engine instance.
+    let importer = move |context_id| {
+        let dir = importer_output_dir.join(format!("{context_id}"));
+        Ok(Sirius::import_events(&dir)?)
     };
 
     let analyzer = async {
@@ -126,75 +122,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("listening on {collector_addr} and {analyzer_addr}");
     tokio::try_join!(collector, analyzer)?;
     Ok(())
-}
-
-fn telemetry_file_paths(output_dir: &Path) -> ServerResult<Vec<PathBuf>> {
-    let mut paths = Vec::new();
-    for entry in std::fs::read_dir(output_dir)? {
-        let path = entry?.path();
-        if path.is_file()
-            && path
-                .extension()
-                .and_then(|extension| extension.to_str())
-                .is_some_and(|extension| TELEMETRY_EXTENSIONS.contains(&extension))
-        {
-            paths.push(path);
-        }
-    }
-    paths.sort();
-    Ok(paths)
-}
-
-fn telemetry_file_stem_uuid(path: &Path) -> Option<Uuid> {
-    path.file_stem()
-        .and_then(|stem| stem.to_str())
-        .and_then(|stem| Uuid::parse_str(stem).ok())
-}
-
-fn importer_options_for_path(path: PathBuf) -> Option<ImporterOptions> {
-    match path.extension().and_then(|extension| extension.to_str()) {
-        Some("postcard") => Some(ImporterOptions::Postcard(PostcardImporterOptions { path })),
-        Some("msgpack") => Some(ImporterOptions::Msgpack(MsgpackImporterOptions { path })),
-        Some("ndjson") => Some(ImporterOptions::Ndjson(NdjsonImporterOptions { path })),
-        _ => None,
-    }
-}
-
-fn extract_engine_id(path: &Path) -> ServerResult<Option<Uuid>> {
-    let Some(importer) = importer_options_for_path(path.to_path_buf()) else {
-        return Ok(None);
-    };
-    for event in create_importer::<SiriusEvent>(&importer)? {
-        if let SiriusEvent::Engine(_) = event.data {
-            return Ok(Some(event.id));
-        }
-    }
-    Ok(None)
-}
-
-fn importer_options_for_engine(
-    output_dir: &Path,
-    engine_id: Uuid,
-) -> ServerResult<ImporterOptions> {
-    for path in telemetry_file_paths(output_dir)? {
-        if extract_engine_id(&path)? == Some(engine_id) {
-            return importer_options_for_path(path).ok_or_else(|| {
-                ServerError::Cache("telemetry file has no supported extension".to_string())
-            });
-        }
-    }
-
-    for extension in ["postcard", "msgpack", "ndjson"] {
-        let path = output_dir.join(format!("{engine_id}.{extension}"));
-        if path.exists() {
-            return importer_options_for_path(path).ok_or_else(|| {
-                ServerError::Cache("telemetry file has no supported extension".to_string())
-            });
-        }
-    }
-
-    Err(ServerError::Io(std::io::Error::new(
-        std::io::ErrorKind::NotFound,
-        format!("no telemetry file found for engine {engine_id}"),
-    )))
 }

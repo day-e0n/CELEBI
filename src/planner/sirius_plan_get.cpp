@@ -20,6 +20,7 @@
 #include "expression/ast/from_duckdb.hpp"
 #include "expression/ast/node.hpp"
 #include "helper/type_conversions.hpp"
+#include "log/logging.hpp"
 #include "op/sirius_physical_filter.hpp"
 #include "op/sirius_physical_table_scan.hpp"
 #include "planner/sirius_physical_plan_generator.hpp"
@@ -209,7 +210,7 @@ sirius_physical_plan_generator::create_plan(duckdb::LogicalGet& op)
         // in that case we just return the node
         if (filter) {
           filter->children.push_back(std::move(node));
-          return std::move(filter);
+          return filter;
         }
         return std::move(node);
       }
@@ -217,14 +218,20 @@ sirius_physical_plan_generator::create_plan(duckdb::LogicalGet& op)
     // push a projection on top that does the projection
     duckdb::vector<duckdb::LogicalType> types;
     duckdb::vector<duckdb::unique_ptr<duckdb::Expression>> expressions;
-    for (auto& column_id : column_ids) {
+    for (std::size_t i = 0; i < column_ids.size(); ++i) {
+      auto& column_id = column_ids[i];
       if (column_id.IsVirtualColumn()) {
         throw duckdb::NotImplementedException("Virtual columns require projection pushdown");
       } else {
         auto col_id = column_id.GetPrimaryIndex();
         auto type   = op.returned_types[col_id];
         types.push_back(type);
-        expressions.push_back(duckdb::make_uniq<duckdb::BoundReferenceExpression>(type, col_id));
+        // The Sirius scan emits exactly the column_ids columns, in order, at
+        // positions 0..M-1 (build_scan_plan with empty projection_ids) — unlike
+        // DuckDB's native full-width scan this branch was modeled on.  So
+        // reference the column by its position i in the scan output, not by its
+        // original parquet index col_id, which can exceed the M-column width.
+        expressions.push_back(duckdb::make_uniq<duckdb::BoundReferenceExpression>(type, i));
       }
     }
     duckdb::unique_ptr<sirius::op::sirius_physical_operator> scan_child;
@@ -255,9 +262,14 @@ sirius_physical_plan_generator::create_plan(duckdb::LogicalGet& op)
     std::move(op.virtual_columns));
   node->named_parameters = std::move(op.named_parameters);
   node->dynamic_filters  = op.dynamic_filters;
+  if (op.dynamic_filters) {
+    node->sirius_dynamic_filters = get_or_create_dynamic_filter_channel(op.dynamic_filters.get());
+    SIRIUS_LOG_INFO("[sirius_plan_get] LogicalGet has dynamic_filters attached (channel key={}).",
+                    static_cast<void const*>(op.dynamic_filters.get()));
+  }
   if (filter) {
     filter->children.push_back(std::move(node));
-    return std::move(filter);
+    return filter;
   }
   return std::move(node);
 }

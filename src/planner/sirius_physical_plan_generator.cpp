@@ -16,6 +16,7 @@
 
 #include "planner/sirius_physical_plan_generator.hpp"
 
+#include "duckdb/common/type_visitor.hpp"
 #include "duckdb/common/types/column/column_data_collection.hpp"
 #include "duckdb/execution/column_binding_resolver.hpp"
 #include "duckdb/main/client_context.hpp"
@@ -24,10 +25,24 @@
 #include "duckdb/main/settings.hpp"
 #include "duckdb/planner/operator/list.hpp"
 #include "duckdb/planner/operator/logical_extension_operator.hpp"
+#include "duckdb/planner/table_filter.hpp"
 #include "log/logging.hpp"
+#include "op/sirius_dynamic_filter.hpp"
 #include "planner/sirius_plan_projection_utils.hpp"
+#include "sirius_context.hpp"
 
 namespace sirius::planner {
+
+namespace {
+/// Read the dynamic-filter-pushdown enable flag from the active SiriusContext config. Defaults to
+/// disabled when the state is unavailable (no config to consult outside a configured query).
+bool dynamic_filter_pushdown_enabled(duckdb::ClientContext& context)
+{
+  auto state = context.registered_state->Get<duckdb::SiriusContext>("sirius_state");
+  if (!state) { return false; }
+  return state->get_config().get_operator_params().enable_dynamic_filter_pushdown;
+}
+}  // namespace
 
 sirius_physical_plan_generator::sirius_physical_plan_generator(duckdb::ClientContext& context)
   : context(context)
@@ -35,6 +50,19 @@ sirius_physical_plan_generator::sirius_physical_plan_generator(duckdb::ClientCon
 }
 
 sirius_physical_plan_generator::~sirius_physical_plan_generator() {}
+
+std::shared_ptr<sirius::op::sirius_dynamic_filter_set>
+sirius_physical_plan_generator::get_or_create_dynamic_filter_channel(
+  duckdb::DynamicTableFilterSet const* key)
+{
+  if (!key) { return nullptr; }
+  // Central gate: when dynamic-filter pushdown is disabled, return no channel so neither the
+  // producer (join) nor the consumer (scan) wires anything.
+  if (!dynamic_filter_pushdown_enabled(context)) { return nullptr; }
+  auto [it, inserted] = dynamic_filter_channels.try_emplace(key, nullptr);
+  if (inserted) { it->second = std::make_shared<sirius::op::sirius_dynamic_filter_set>(); }
+  return it->second;
+}
 
 sirius::OrderPreservationType sirius_physical_plan_generator::order_preservation_recursive(
   sirius::op::sirius_physical_operator& op)
@@ -116,6 +144,16 @@ sirius_physical_plan_generator::create_plan(duckdb::LogicalOperator& op)
                    duckdb::LogicalOperatorToString(op.type));
   op.estimated_cardinality                                      = op.EstimateCardinality(context);
   duckdb::unique_ptr<sirius::op::sirius_physical_operator> plan = nullptr;
+
+  // SQLNULL-typed columns (e.g. an uncast NULL in VALUES) have no cuDF
+  // representation — get_cudf_type() / fixed_width_byte_size() reject them at
+  // execution time, after the GPU plan is already running. Reject the plan
+  // here instead so transparent execution falls back to DuckDB CPU.
+  for (const auto& type : op.types) {
+    if (duckdb::TypeVisitor::Contains(type, duckdb::LogicalTypeId::SQLNULL)) {
+      throw duckdb::NotImplementedException("SQLNULL-typed column not supported");
+    }
+  }
 
   switch (op.type) {
     case duckdb::LogicalOperatorType::LOGICAL_GET:

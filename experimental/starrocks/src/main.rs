@@ -1,11 +1,16 @@
-use std::{num::NonZeroU32, time::Duration};
+use std::{num::NonZeroU32, path::PathBuf, sync::Arc, time::Duration};
 
 use anyhow::{Result, anyhow};
 use backon::{ExponentialBuilder, Retryable};
 use clap::Parser;
+#[cfg(feature = "sirius-engine")]
+use sirius_starrocks_cn::SiriusEngine;
+#[cfg(not(feature = "sirius-engine"))]
+use sirius_starrocks_cn::StubExecutor;
 use sirius_starrocks_cn::{
-    BackendServer, BrpcServer, ComputeNodeConfig, FeConfig, HeartbeatServer, SharedHeartbeatState,
-    register_node, report_to_frontend_once, start_backend_server, start_heartbeat_server,
+    BackendServer, BrpcServer, ComputeNodeConfig, FeConfig, FragmentExecutor, HeartbeatServer,
+    SharedHeartbeatState, register_node, report_to_frontend_once, start_backend_server,
+    start_heartbeat_server,
 };
 use tokio::task::{JoinError, JoinSet};
 use tokio_util::sync::CancellationToken;
@@ -34,6 +39,10 @@ struct Args {
     /// FE registration retry settings.
     #[command(flatten, next_help_heading = "Registration")]
     registration: RegistrationConfig,
+
+    /// Sirius engine bring-up settings.
+    #[command(flatten, next_help_heading = "Engine")]
+    engine: EngineConfig,
 }
 
 #[derive(Clone, Debug, clap::Args)]
@@ -43,10 +52,32 @@ struct RegistrationConfig {
     registration_max_attempts: NonZeroU32,
 }
 
+#[derive(Clone, Debug, clap::Args)]
+/// Sirius engine bring-up settings.
+struct EngineConfig {
+    /// Path to a Sirius YAML config file. When unset, built-in engine defaults are used.
+    #[arg(long)]
+    sirius_config: Option<PathBuf>,
+}
+
 impl Args {
     /// Starts the CN listeners, registers with FE, and waits for shutdown.
     #[instrument(name = "compute_node", skip_all)]
     async fn run(self) -> Result<()> {
+        // Build the fragment executor before serving any RPC. Compiled with the engine, this brings
+        // up the GPU engine on its dedicated thread (fail-fast: a bad config or GPU failure exits
+        // before FE can route work here); otherwise it is a stub. The handle is held for the
+        // process lifetime and torn down after the servers stop, below.
+        #[cfg(feature = "sirius-engine")]
+        let executor: Arc<dyn FragmentExecutor> = Arc::new(
+            SiriusEngine::start(self.engine.sirius_config.clone()).map_err(|err| anyhow!(err))?,
+        );
+        #[cfg(not(feature = "sirius-engine"))]
+        let executor: Arc<dyn FragmentExecutor> = {
+            warn_engine_disabled(&self.engine);
+            Arc::new(StubExecutor)
+        };
+
         let state = SharedHeartbeatState::new();
 
         // HeartbeatService tells FE this process is alive and captures FE identity. The configured
@@ -59,7 +90,7 @@ impl Args {
         // BackendService exposes the shallow CN RPC skeleton on the normal thrift port.
         let backend_server = start_backend_server(&self.compute_node)?;
         // BRPC PInternalService dispatches plan fragments on the brpc port.
-        let brpc_runtime = BrpcRuntime::start(&self.compute_node)?;
+        let brpc_runtime = BrpcRuntime::start(&self.compute_node, executor.clone())?;
         self.registration
             .register_node_with_retries(&self.fe, &self.compute_node)
             .await?;
@@ -73,7 +104,7 @@ impl Args {
             tokio::spawn(RegistrationMonitor::new(self.fe, self.compute_node, state).run());
 
         info!("compute node registered; waiting for FE heartbeats");
-        RunningComputeNode {
+        let result = RunningComputeNode {
             heartbeat_server,
             backend_server,
             brpc_runtime,
@@ -81,7 +112,24 @@ impl Args {
             report_task,
         }
         .wait_until_shutdown()
-        .await
+        .await;
+
+        // The servers have stopped by the time `wait_until_shutdown` returns, so no in-flight RPC
+        // can touch the engine. Drop the executor last for an ordered teardown — the engine closes
+        // its thread and tears down the context (joined) here.
+        #[cfg(feature = "sirius-engine")]
+        info!("tearing down Sirius engine");
+        drop(executor);
+        result
+    }
+}
+
+/// Warns when an engine config is supplied but the engine was compiled out, so the flag is
+/// silently ignored rather than honored.
+#[cfg(not(feature = "sirius-engine"))]
+fn warn_engine_disabled(engine: &EngineConfig) {
+    if engine.sirius_config.is_some() {
+        warn!("--sirius-config ignored: built without the `sirius-engine` feature");
     }
 }
 
@@ -213,8 +261,12 @@ struct BrpcRuntime {
 }
 
 impl BrpcRuntime {
-    /// Binds the BRPC listener and starts serving it on a dedicated runtime.
-    fn start(compute_node: &ComputeNodeConfig) -> Result<Self> {
+    /// Binds the BRPC listener and starts serving it on a dedicated runtime, dispatching fragments
+    /// to `executor`.
+    fn start(
+        compute_node: &ComputeNodeConfig,
+        executor: Arc<dyn FragmentExecutor>,
+    ) -> Result<Self> {
         let listener = BrpcServer::bind(compute_node.bind_host.as_str(), compute_node.brpc_port)?;
         let shutdown = CancellationToken::new();
         let server_shutdown = shutdown.clone();
@@ -224,7 +276,7 @@ impl BrpcRuntime {
                 .build()
                 .map_err(|err| anyhow!("failed to create BRPC service runtime: {err}"))?;
             runtime.block_on(
-                BrpcServer::new()
+                BrpcServer::with_executor(executor)
                     .serve_with_listener_shutdown(listener, server_shutdown.cancelled_owned()),
             )
         });

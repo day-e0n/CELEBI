@@ -301,35 +301,71 @@ If you cannot satisfy the contract — for example, your operator legitimately n
 
 **File:** `src/include/pipeline/task_scheduler.hpp`, `src/pipeline/task_scheduler.cpp`
 
-The `task_scheduler` is the top-level orchestrator that owns GPU and scan sub-executors.
+The `task_scheduler` is the top-level GPU-pipeline orchestrator. It owns the shared pipeline-task
+queue, one `gpu_pipeline_executor` per active GPU, and the management thread that matches queued
+tasks to ready devices. Scan execution is reached through `task_creator`; there is no scan
+sub-executor or scan-priority queue owned here.
 
 ### Key Methods
 
 | Method | Purpose |
 |--------|---------|
-| `start()` | Initializes scan executor, GPU executors, launches management thread |
-| `stop()` | Stops all sub-executors, joins threads |
-| `prepare_for_query(query)` | Drains leftover tasks, prepares scan cache, populates priority scan queue |
-| `start_query()` | Creates completion handler, distributes to executors, schedules initial scans, returns future |
+| `start()` | Starts every GPU executor, then launches the management thread |
+| `stop()` | Interrupts/closes scheduler channels, joins the management thread, then stops GPU executors |
+| `prepare_for_query(query)` | Drains executor leftovers, installs query/completion state, and marks dynamic-filter build subtrees |
+| `start_query()` | Schedules `query.get_scan_operators().front()` through `task_creator` and returns the completion future |
 | `terminate_query(exception)` | Reports error to completion handler |
 | `drain_after_error()` | Multi-stage drain for clean shutdown |
 
 ### Management Event Loop
 
-`management_eventloop()` runs on a dedicated thread:
+`management_eventloop()` is a pull-signal matcher on a dedicated thread. GPU executors publish
+`device_ready` when a worker is available; `schedule()` publishes `task_available` after adding a
+task. Ready devices remain recorded until a compatible task arrives:
 
 ```
 while running:
-    1. task_request_channel.get()  -- block for GPU executor request
-    2. task_queue.pop()            -- dequeue a pipeline task
-    3. Route to GPU executor by device_id
+    1. Wait for device_ready or task_available; drain the current event burst
+    2. For each ready device, select a compatible queued task:
+       a. dynamic-filter build-subtree task, if available
+       b. exact preferred-device match
+       c. unpreferred task (or one with a stale preference)
+    3. Dispatch the selected task to that device's GPU executor
 ```
 
-The event loop bridges task creation (which pushes to `_task_queue`) with GPU executors (which pull via task requests).
+Tasks stay in the top-level queue until a ready device can accept them, preserving visibility to
+the downgrade machinery. A live preferred device is binding because the task may reference
+device-local data.
 
 ### Initial Scan Scheduling
 
-`schedule_next_scan_tasks()` pops scan operators from `_priority_scans` and calls `task_creator->schedule(scan_op)` for each. This kicks off the first wave of scan tasks.
+`start_query()` schedules exactly the first operator in `query.get_scan_operators()`. Subsequent
+work is exposed by task hints and completion-driven downstream scheduling; there is no
+`schedule_next_scan_tasks()` or `_priority_scans` walk.
+
+### Build-subtree task prioritization
+
+During `prepare_for_query`, the scheduler finds every hash join with a plan-wired dynamic-filter
+publication plan. From each join's `build` port it walks incoming pipeline edges backward and marks
+the complete build subtree, including both inputs needed by any intervening join. This is a
+different transitive walk from DuckDB's consumer routing, which walks down a producer join's probe
+subtree to attach a channel to a base scan.
+
+For every ready device, the management matcher first searches the queue for a marked task that is
+compatible with that device. If none is queued, it immediately resumes normal locality-aware
+dispatch, so the preference cannot starve unrelated work. With no wired filter publisher, the
+marked set is empty and dispatch is unchanged. The preference does not create work, preempt a
+running task, or make a scan wait for filter readiness.
+
+The producing join already strictly orders its own immediate probe producer after synchronous
+build-CONCAT publication, so priority is redundant for that direct shape. It matters when DuckDB
+has pushed the filter through an intervening join to a deeper base scan: that transitive scan can
+have ordinary tasks queued or running before the outer build exists. Once build-subtree tasks are
+also queued, priority lets them overtake undispatched scan tasks and can make the filter available
+to later splits. Early splits are not revisited, and an intervening join that emits no partial
+output before its input drains can still expose the outer build too late. See
+[Transitive scan targets and build-task priority](dynamic-filters.md#transitive-scan-targets-and-build-task-priority)
+for the concrete join example and the scan's channel-snapshot checkpoints.
 
 ## GPU Pipeline Executor
 
@@ -339,7 +375,7 @@ One `gpu_pipeline_executor` exists per GPU device. It manages a thread pool for 
 
 ### Executor Class Hierarchy
 
-All executors (`gpu_pipeline_executor`, `downgrade_executor`, `duckdb_scan_executor`) inherit from `itask_executor`, which provides shared infrastructure: thread pool, task queue, `_running` flag, and `start/stop/schedule/drain_and_wait` lifecycle methods. Subclasses implement `manager_loop()` (required) and optional hooks `get_per_thread_init`, `on_start`, `on_stop`.
+`gpu_pipeline_executor` inherits from `itask_executor`, which provides shared infrastructure: thread pool, task queue, `_running` flag, and `start/stop/schedule/drain_and_wait` lifecycle methods. Subclasses implement `manager_loop()` (required) and optional hooks `get_per_thread_init`, `on_start`, `on_stop`.
 
 Concurrency is managed via `exec::bounded_thread_pool`, which uses a two-phase `reserve() -> pool.dispatch(slot, fn)` model with RAII slot release.
 
@@ -363,16 +399,19 @@ while running:
     1. thread_pool.reserve()              -- block until a worker slot is available (RAII)
     2. task_request_publisher.send()      -- tell pipeline executor we can accept work
     3. task_queue.pop()                   -- block until a task is available
-    4. memory_space.make_reservation()    -- reserve GPU memory for the task
-    5. task.set_reservation(reservation)  -- attach reservation to task
-    6. stream_pool.acquire_stream()       -- get a CUDA stream
-    7. thread_pool.dispatch(slot, lambda): -- dispatch to worker (slot released on completion)
+    4. clamp request to get_max_memory()  -- bound the history-based estimate by the space limit
+    5. memory_space.make_reservation()    -- reserve GPU memory for the task
+    6. task.set_reservation(reservation)  -- attach reservation to task
+    7. stream_pool.acquire_stream()       -- get a CUDA stream
+    8. thread_pool.dispatch(slot, lambda): -- dispatch to worker (slot released on completion)
          a. task.execute(stream)
          b. On OOM: retry (see below)
          c. On success: check query completion
          d. Schedule downstream consumers via task_creator
          e. Or: completion_handler.mark_completed()
 ```
+
+The reservation request size comes from the task's memory-history estimate (`peak_memory_estimate + bytes_to_materialize_input`). Before reserving, the manager loop clamps this request to the memory space's reservation limit (`memory_space::get_max_memory()`). The estimate can extrapolate far past GPU capacity — a small input that once drove a near-capacity peak yields a large `peak/estimated` ratio. An unclamped over-limit request would receive only a partial reservation from `make_reservation()`, while the predicate-based downgrade that follows requires reserving the **full** requested size, which the space can never grant — livelocking the task through the OOM-reschedule loop until the retry cap trips. Clamping to `get_max_memory()` loses no reservable memory (`make_reservation()` already caps there) and keeps both the reservation and the downgrade target achievable; per-batch overflow during execution is still handled by the OOM-reschedule + tiering path.
 
 ### Downstream Scheduling
 

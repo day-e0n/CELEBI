@@ -34,7 +34,7 @@
 
 #include <cuda_runtime_api.h>
 
-#include <cucascade/data/gpu_data_representation.hpp>
+#include <cucascade/cudf/gpu_data_representation.hpp>
 #include <cucascade/memory/reservation_manager_configurator.hpp>
 #include <data/data_batch_utils.hpp>
 #include <data/sirius_converter_registry.hpp>
@@ -46,8 +46,7 @@
 
 namespace sirius::test::operator_utils {
 
-using data_repository_mgr =
-  cucascade::data_repository_manager<std::shared_ptr<cucascade::data_batch>>;
+using data_repository_mgr = cucascade::data_repository_manager;
 inline std::unique_ptr<sirius::memory::sirius_memory_reservation_manager> initialize_memory_manager(
   std::size_t n_gpus = 1)
 {
@@ -129,7 +128,7 @@ inline std::shared_ptr<cucascade::data_batch> concatenate_batches_horizontal(
   auto gpu_repr = std::make_unique<cucascade::gpu_table_representation>(
     std::move(concatenated_table), space, stream);
   auto batch_id = ::sirius::get_next_batch_id();
-  return std::make_shared<cucascade::data_batch>(batch_id, std::move(gpu_repr));
+  return cucascade::data_batch::make(batch_id, std::move(gpu_repr));
 }
 
 template <typename T>
@@ -209,7 +208,7 @@ inline std::shared_ptr<cucascade::data_batch> make_numeric_batch(
   auto gpu_repr =
     std::make_unique<cucascade::gpu_table_representation>(std::move(table), space, stream);
   auto batch_id = ::sirius::get_next_batch_id();
-  return std::make_shared<cucascade::data_batch>(batch_id, std::move(gpu_repr));
+  return cucascade::data_batch::make(batch_id, std::move(gpu_repr));
 }
 
 inline std::unique_ptr<cudf::column> make_string_column(const std::vector<std::string>& values,
@@ -275,7 +274,7 @@ inline std::shared_ptr<cucascade::data_batch> make_string_batch(
   auto gpu_repr =
     std::make_unique<cucascade::gpu_table_representation>(std::move(table), space, stream);
   auto batch_id = ::sirius::get_next_batch_id();
-  return std::make_shared<cucascade::data_batch>(batch_id, std::move(gpu_repr));
+  return cucascade::data_batch::make(batch_id, std::move(gpu_repr));
 }
 
 inline std::shared_ptr<cucascade::data_batch> make_decimal64_batch(
@@ -302,7 +301,7 @@ inline std::shared_ptr<cucascade::data_batch> make_decimal64_batch(
   auto gpu_repr =
     std::make_unique<cucascade::gpu_table_representation>(std::move(table), space, stream);
   auto batch_id = ::sirius::get_next_batch_id();
-  return std::make_shared<cucascade::data_batch>(batch_id, std::move(gpu_repr));
+  return cucascade::data_batch::make(batch_id, std::move(gpu_repr));
 }
 
 template <typename T>
@@ -336,7 +335,7 @@ inline std::shared_ptr<cucascade::data_batch> make_timestamp_batch(
   auto gpu_repr =
     std::make_unique<cucascade::gpu_table_representation>(std::move(table), space, stream);
   auto batch_id = ::sirius::get_next_batch_id();
-  return std::make_shared<cucascade::data_batch>(batch_id, std::move(gpu_repr));
+  return cucascade::data_batch::make(batch_id, std::move(gpu_repr));
 }
 
 template <typename TFirst, typename TSecond>
@@ -433,7 +432,7 @@ inline std::shared_ptr<cucascade::data_batch> make_two_column_batch(
   auto gpu_repr =
     std::make_unique<cucascade::gpu_table_representation>(std::move(table), space, stream);
   auto batch_id = ::sirius::get_next_batch_id();
-  return std::make_shared<cucascade::data_batch>(batch_id, std::move(gpu_repr));
+  return cucascade::data_batch::make(batch_id, std::move(gpu_repr));
 }
 
 }  // namespace sirius::test::operator_utils

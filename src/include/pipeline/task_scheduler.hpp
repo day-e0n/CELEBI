@@ -32,6 +32,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace sirius::parallel {
 class downgrade_executor;
@@ -66,12 +67,16 @@ class task_scheduler {
    *
    * @param gpu_executor_config Configuration for the GPU pipeline executor thread pool
    * @param mem_mgr Reference to the memory reservation manager
+   * @param telemetry_context Shared pointer to the telemetry context
+   * @param task_queue_ordering Pop ordering for the pipeline-level task queue
+   *        (FIFO = oldest-first, LIFO = newest-first). Configured via sirius_config.
    * @param sys_topology Optional system topology info for CPU affinity
    * @param downgrade_executors Optional vector of downgrade executors
    */
   explicit task_scheduler(const exec::thread_pool_config& gpu_executor_config,
                           sirius::memory::sirius_memory_reservation_manager& mem_mgr,
                           std::shared_ptr<const telemetry::telemetry_context> telemetry_context,
+                          exec::queue_ordering task_queue_ordering = exec::queue_ordering::FIFO,
                           const cucascade::memory::system_topology_info* sys_topology = nullptr,
                           const std::vector<std::unique_ptr<sirius::parallel::downgrade_executor>>*
                             downgrade_executors = nullptr);
@@ -203,6 +208,12 @@ class task_scheduler {
 
   std::mutex _query_mutex;
   duckdb::shared_ptr<planner::query> _query;
+
+  /// Pipelines that transitively feed a plan-wired dynamic-filter join's build input. The
+  /// management loop gives compatible queued tasks from these pipelines soft priority so later
+  /// splits of a transitive scan target are more likely to observe the filter. Immediate probes are
+  /// ordered independently by the join hint. Set once in prepare_for_query; read-only thereafter.
+  std::unordered_set<const sirius_pipeline*> _filter_build_pipelines;
 
   exec::inspectable_mpsc<sirius::parallel::itask> _task_queue;  ///< Queue for GPU pipeline tasks
   exec::channel<std::unique_ptr<task_request>> _task_request_channel;
