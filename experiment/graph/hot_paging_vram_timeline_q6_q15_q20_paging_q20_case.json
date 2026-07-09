@@ -1,0 +1,43 @@
+{
+  "query": "q20",
+  "condition": "paging",
+  "status": "ok",
+  "executions": [
+    {
+      "execution": 1,
+      "runtime_s": 7.233729429019149,
+      "wall_start_s": 264010.440523654,
+      "wall_end_s": 264017.689948978,
+      "row_count": 17690
+    },
+    {
+      "execution": 2,
+      "runtime_s": 0.7097575620282441,
+      "wall_start_s": 264017.689955297,
+      "wall_end_s": 264018.424129721,
+      "row_count": 17690
+    },
+    {
+      "execution": 3,
+      "runtime_s": 0.7286296929814853,
+      "wall_start_s": 264018.424137915,
+      "wall_end_s": 264019.161035736,
+      "row_count": 17690
+    },
+    {
+      "execution": 4,
+      "runtime_s": 0.7202485629823059,
+      "wall_start_s": 264019.161040002,
+      "wall_end_s": 264019.89127267,
+      "row_count": 17690
+    },
+    {
+      "execution": 5,
+      "runtime_s": 0.7082842579693533,
+      "wall_start_s": 264019.891279621,
+      "wall_end_s": 264020.606814012,
+      "row_count": 17690
+    }
+  ],
+  "error": ""
+}

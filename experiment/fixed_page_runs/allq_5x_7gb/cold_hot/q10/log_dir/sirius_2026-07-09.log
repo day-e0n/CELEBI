@@ -1,0 +1,1070 @@
+[2026-07-09 03:30:53.782] [info] [sirius_context.cpp:957] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/allq_5x_7gb/configs/sirius_2gpu.yaml
+[2026-07-09 03:30:53.789] [info] [telemetry_context.cpp:78] Telemetry context initialized (engine=siriusDB)
+[2026-07-09 03:30:53.789] [info] [sirius_context.cpp:296] SiriusContext: topology summary — 2 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-09 03:30:53.789] [info] [sirius_context.cpp:301]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:AC:00.0)
+[2026-07-09 03:30:53.789] [info] [sirius_context.cpp:301]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:CA:00.0)
+[2026-07-09 03:30:53.932] [warning] [sirius_context.cpp:311] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-09 03:30:53.932] [info] [sirius_context.cpp:323] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-09 03:30:53.934] [info] [sirius_context.cpp:376] SiriusContext: P2P enabled 0 -> 1
+[2026-07-09 03:30:53.934] [info] [sirius_context.cpp:376] SiriusContext: P2P enabled 1 -> 0
+[2026-07-09 03:30:53.953] [info] [sirius_context.cpp:436] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-09 03:30:53.956] [info] [sirius_context.cpp:918] Connection opened.
+[2026-07-09 03:30:53.956] [info] [sirius_context.cpp:931] Extension loaded: sirius
+[2026-07-09 03:30:53.956] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 03:30:53.965] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 03:30:53.965] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:30:53.965] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:30:53.965] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 03:30:53.965] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:30:53.965] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:30:53.965] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-09 03:30:53.966] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 03:30:53.975] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 03:30:53.975] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:30:53.975] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:30:53.975] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 03:30:53.975] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:30:53.975] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:30:53.975] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c.c_custkey, c.c_name, sum(l.l_extendedprice * (1 - l.l_discount)) as revenue, c.c_acctbal, n.n_name, c.c_address, c.c_phone, c.c_comment from customer c, orders o, lineitem l, nation n where c.c_custkey = o.o_custkey and l.l_orderkey = o.o_orderkey and o.o_orderdate >= date '1994-03-01' and o.o_orderdate < date '1994-06-01' and l.l_returnflag = 'R' and c.c_nationkey = n.n_nationkey group by c.c_custkey, c.c_name, c.c_acctbal, c.c_phone, n.n_name, c.c_address, c.c_comment order by revenue desc limit 20
+[2026-07-09 03:30:54.248] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x59e174f72770).
+[2026-07-09 03:30:54.249] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 25 rows).
+[2026-07-09 03:30:54.249] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x59e174f6f620).
+[2026-07-09 03:30:54.249] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 150000000 rows).
+[2026-07-09 03:30:54.249] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 600037902 rows).
+[2026-07-09 03:30:54.263] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-09 03:30:54.277] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-09 03:30:54.277] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-09 03:30:54.332] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x59e174f72770).
+[2026-07-09 03:30:54.332] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 25 rows).
+[2026-07-09 03:30:54.332] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x59e174f6f620).
+[2026-07-09 03:30:54.332] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 150000000 rows).
+[2026-07-09 03:30:54.332] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 600037902 rows).
+[2026-07-09 03:30:54.333] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=23)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=25)
+  Input: <- Pipeline #0 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=24)
+  Input: <- Pipeline #1 [on: CONCAT (id=24), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=26)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #4: PARTITION (id=28)
+  Input: <- Pipeline #3 [on: PARTITION (id=28), port: default, barrier: FULL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=27)
+  Input: <- Pipeline #4 [on: CONCAT (id=27), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #6: GPU_SCAN (id=29) -> DYNAMIC_FILTER (id=30)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #7: PARTITION (id=32)
+  Input: <- Pipeline #6 [on: PARTITION (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #8: CONCAT (id=31)
+  Input: <- Pipeline #7 [on: CONCAT (id=31), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #7
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #9: HASH_JOIN (id=16)
+  Input: <- Pipeline #8 [on: HASH_JOIN (id=16), port: default, barrier: FULL]
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=16), port: build, barrier: FULL]
+  Dependencies: Pipeline #5, Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=34)
+  Input: <- Pipeline #9 [on: PARTITION (id=34), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #11: CONCAT (id=33)
+  Input: <- Pipeline #10 [on: CONCAT (id=33), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #10
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #12: GPU_SCAN (id=35) -> DYNAMIC_FILTER (id=36)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #13: PARTITION (id=38)
+  Input: <- Pipeline #12 [on: PARTITION (id=38), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #14: CONCAT (id=37)
+  Input: <- Pipeline #13 [on: CONCAT (id=37), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #13
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #15: HASH_JOIN (id=13)
+  Input: <- Pipeline #14 [on: HASH_JOIN (id=13), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=13), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #14
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #16: PARTITION (id=40)
+  Input: <- Pipeline #15 [on: PARTITION (id=40), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #15
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #17: CONCAT (id=39)
+  Input: <- Pipeline #16 [on: CONCAT (id=39), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #18: HASH_JOIN (id=17) -> PROJECTION (id=18) -> HASH_GROUP_BY (id=19)
+  Input: <- Pipeline #17 [on: HASH_JOIN (id=17), port: default, barrier: FULL]
+  Input: <- Pipeline #11 [on: HASH_JOIN (id=17), port: build, barrier: FULL]
+  Dependencies: Pipeline #11, Pipeline #17
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #19: PARTITION (id=41)
+  Input: <- Pipeline #18 [on: PARTITION (id=41), port: default, barrier: FULL]
+  Dependencies: Pipeline #18
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #20: MERGE_GROUP_BY (id=42)
+  Input: <- Pipeline #19 [on: MERGE_GROUP_BY (id=42), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #21: PROJECTION (id=20) -> TOP_N (id=21)
+  Input: <- Pipeline #20 [on: PROJECTION (id=20), port: default, barrier: FULL]
+  Dependencies: Pipeline #20
+  Output: -> MERGE_TOP_N [port: default, barrier: FULL]
+Pipeline #22: MERGE_TOP_N (id=43)
+  Input: <- Pipeline #21 [on: MERGE_TOP_N (id=43), port: default, barrier: FULL]
+  Dependencies: Pipeline #21
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #23: RESULT_COLLECTOR (id=22)
+  Input: <- Pipeline #22 [on: RESULT_COLLECTOR (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #22
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                                                                                    
+│ Pipeline #23             │                                                                                    
+│ RESULT_COLLECTOR (id=22) │                                                                                    
+│ Input(#22): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #22             │                                                                                    
+│ MERGE_TOP_N (id=43)      │                                                                                    
+│ Input(#21): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #21             │                                                                                    
+│ TOP_N (id=21)            │                                                                                    
+│ PROJECTION (id=20)       │                                                                                    
+│ Input(#20): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #20             │                                                                                    
+│ MERGE_GROUP_BY (id=42)   │                                                                                    
+│ Input(#19): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #19             │                                                                                    
+│ PARTITION (id=41)        │                                                                                    
+│ Input(#18): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #18             │                                                                                    
+│ HASH_GROUP_BY (id=19)    │                                                                                    
+│ PROJECTION (id=18)       │                                                                                    
+│ HASH_JOIN (id=17)        │                                                                                    
+│   type: INNER            │                                                                                    
+│ Input(#17): FULL         │                                                                                    
+│ Input(#11): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             ┌───────────────────────────────────────────────────────┐                                          
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #11             │                            │ Pipeline #17             │                            
+│ CONCAT (id=33)           │                            │ CONCAT (id=39)           │                            
+│ Input(#10): PARTIAL      │                            │ Input(#16): PARTIAL      │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #10             │                            │ Pipeline #16             │                            
+│ PARTITION (id=34)        │                            │ PARTITION (id=40)        │                            
+│ Input(#9): FULL          │                            │ Input(#15): PARTIAL      │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #9              │                            │ Pipeline #15             │                            
+│ HASH_JOIN (id=16)        │                            │ HASH_JOIN (id=13)        │                            
+│   type: INNER            │                            │   type: INNER            │                            
+│ Input(#8): FULL          │                            │ Input(#14): FULL         │                            
+│ Input(#5): FULL          │                            │ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             ┌───────────────────────────┐                           ┌───────────────────────────┐              
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #5              ││ Pipeline #8              ││ Pipeline #2              ││ Pipeline #14             │
+│ CONCAT (id=27)           ││ CONCAT (id=31)           ││ CONCAT (id=24)           ││ CONCAT (id=37)           │
+│ Input(#4): PARTIAL       ││ Input(#7): PARTIAL       ││ Input(#1): PARTIAL       ││ Input(#13): PARTIAL      │
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #4              ││ Pipeline #7              ││ Pipeline #1              ││ Pipeline #13             │
+│ PARTITION (id=28)        ││ PARTITION (id=32)        ││ PARTITION (id=25)        ││ PARTITION (id=38)        │
+│ Input(#3): FULL          ││ Input(#6): PARTIAL       ││ Input(#0): FULL          ││ Input(#12): PARTIAL      │
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #3              ││ Pipeline #6              ││ Pipeline #0              ││ Pipeline #12             │
+│ GPU_SCAN (id=26)         ││ DYNAMIC_FILTER (id=30)   ││ GPU_SCAN (id=23)         ││ DYNAMIC_FILTER (id=36)   │
+│                          ││ GPU_SCAN (id=29)         ││                          ││ GPU_SCAN (id=35)         │
+└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-09 03:30:54.333] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=508, cap=536870912
+[2026-07-09 03:30:54.333] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-09 03:30:54.334] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-07-09 03:30:54.334] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=0 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:54.364] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=535232606, cap=536870912
+[2026-07-09 03:30:54.364] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=536429546, cap=536870912
+[2026-07-09 03:30:54.364] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=536433706, cap=536870912
+[2026-07-09 03:30:54.364] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=536434838, cap=536870912
+[2026-07-09 03:30:54.364] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 1
+[2026-07-09 03:30:54.367] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=0 task_id=0 operator_id=23 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=0.000000 row_ratio=0.000000 duration_us=32554
+[2026-07-09 03:30:54.368] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=25 input_bytes=509 local_bytes=509 gpu_source_bytes=509 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:30:54.368] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=1
+[2026-07-09 03:30:54.368] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=1 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:54.368] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:54.368] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:54.368] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=1 task_id=1 operator_id=25 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=25 input_columns=2 input_bytes=509 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:54.368] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=2
+[2026-07-09 03:30:54.368] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=2 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:54.368] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:54.368] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:54.368] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=2 task_id=2 operator_id=24 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=25 input_columns=2 input_bytes=509 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=1.000000 row_ratio=1.000000 duration_us=7
+[2026-07-09 03:30:54.384] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-09 03:30:54.411] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 1
+[2026-07-09 03:30:54.438] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-09 03:30:54.470] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=292968950, cap=536870912
+[2026-07-09 03:30:54.470] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 1
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=533977932, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=535582455, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=535597956, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=535592925, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=534714072, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=534355278, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=534344190, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=534338091, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=534353301, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=534344529, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=534347898, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=534345993, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=534350985, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=534357051, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=534368322, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=534363459, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=534354894, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=534321966, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=534353292, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #20: 1 slice(s), acc_bytes=534347898, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #21: 1 slice(s), acc_bytes=534359454, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #22: 1 slice(s), acc_bytes=534347424, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #23: 1 slice(s), acc_bytes=534352200, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #24: 1 slice(s), acc_bytes=534349068, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #25: 1 slice(s), acc_bytes=534344919, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #26: 1 slice(s), acc_bytes=534341433, cap=536870912
+[2026-07-09 03:30:54.499] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #27: 1 slice(s), acc_bytes=534361548, cap=536870912
+[2026-07-09 03:30:54.499] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:54.592] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:54.711] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:54.841] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:54.981] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:55.132] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:55.289] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:55.446] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:55.608] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:55.769] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:55.931] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:56.094] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:56.259] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:56.433] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:56.587] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:56.742] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:56.908] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:57.070] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:57.221] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:57.389] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:57.514] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:57.641] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:57.788] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:57.920] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:58.087] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:58.247] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:58.381] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:30:58.545] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #28: 1 slice(s), acc_bytes=194749065, cap=536870912
+[2026-07-09 03:30:58.545] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:30:58.719] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=519418085, cap=536870912
+[2026-07-09 03:30:58.719] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=518667493, cap=536870912
+[2026-07-09 03:30:58.719] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=518761035, cap=536870912
+[2026-07-09 03:30:58.719] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=519492340, cap=536870912
+[2026-07-09 03:30:58.719] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=519101525, cap=536870912
+[2026-07-09 03:30:58.719] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 0
+[2026-07-09 03:30:58.723] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 1
+[2026-07-09 03:30:58.726] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3
+[2026-07-09 03:30:58.726] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=3 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:58.727] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 0
+[2026-07-09 03:30:58.728] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=4
+[2026-07-09 03:30:58.728] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=4 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:58.733] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 1
+[2026-07-09 03:30:58.735] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5
+[2026-07-09 03:30:58.735] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=5 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:58.738] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 0
+[2026-07-09 03:30:58.738] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=6
+[2026-07-09 03:30:58.738] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=6 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:58.743] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=154968236, cap=536870912
+[2026-07-09 03:30:58.743] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 1
+[2026-07-09 03:30:59.031] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=3 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=474090391 byte_ratio=0.000000 row_ratio=0.000000 duration_us=303125
+[2026-07-09 03:30:59.031] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=3 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=2832801 input_columns=7 input_bytes=474090391 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=474090391 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.031] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=7
+[2026-07-09 03:30:59.031] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=7 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.031] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=474090391 local_bytes=474090391 gpu_source_bytes=474090391 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:30:59.031] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9
+[2026-07-09 03:30:59.031] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=9 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.040] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=4 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=473407097 byte_ratio=0.000000 row_ratio=0.000000 duration_us=309307
+[2026-07-09 03:30:59.040] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=4 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=1 input_rows=2828601 input_columns=7 input_bytes=473407097 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=473407097 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.040] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=473407097 local_bytes=473407097 gpu_source_bytes=473407097 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:30:59.040] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=8
+[2026-07-09 03:30:59.040] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=8 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.040] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10
+[2026-07-09 03:30:59.040] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=10 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.040] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=10 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473407097 local_bytes=473407097 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.040] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=10 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473407097 local_bytes=473407097 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.040] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=10 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2828601 input_columns=7 input_bytes=473407097 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=473407097 byte_ratio=1.000000 row_ratio=1.000000 duration_us=2
+[2026-07-09 03:30:59.370] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=8 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=844957 output_columns=7 output_bytes=141448338 byte_ratio=0.000000 row_ratio=0.000000 duration_us=327915
+[2026-07-09 03:30:59.370] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=8 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=1 input_rows=844957 input_columns=7 input_bytes=141448338 output_batches=1 output_rows=844957 output_columns=7 output_bytes=141448338 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.371] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=141448338 local_bytes=141448338 gpu_source_bytes=141448338 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:30:59.371] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=11
+[2026-07-09 03:30:59.371] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=11 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.371] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=11 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=141448338 local_bytes=141448338 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.371] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=11 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=141448338 local_bytes=141448338 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.371] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=11 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=844957 input_columns=7 input_bytes=141448338 output_batches=1 output_rows=844957 output_columns=7 output_bytes=141448338 byte_ratio=1.000000 row_ratio=1.000000 duration_us=8
+[2026-07-09 03:30:59.433] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=6 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=474160465 byte_ratio=0.000000 row_ratio=0.000000 duration_us=392306
+[2026-07-09 03:30:59.433] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=6 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=1 input_rows=2833075 input_columns=7 input_bytes=474160465 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=474160465 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.433] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=474160465 local_bytes=474160465 gpu_source_bytes=474160465 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:30:59.433] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=14
+[2026-07-09 03:30:59.433] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=14 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.433] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=14 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474160465 local_bytes=474160465 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.433] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=14 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474160465 local_bytes=474160465 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.433] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=14 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2833075 input_columns=7 input_bytes=474160465 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=474160465 byte_ratio=1.000000 row_ratio=1.000000 duration_us=6
+[2026-07-09 03:30:59.437] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=7 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=473802173 byte_ratio=0.000000 row_ratio=0.000000 duration_us=404234
+[2026-07-09 03:30:59.437] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=7 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=2831041 input_columns=7 input_bytes=473802173 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=473802173 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.438] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=473802173 local_bytes=473802173 gpu_source_bytes=473802173 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:30:59.438] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=5 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=473485939 byte_ratio=0.000000 row_ratio=0.000000 duration_us=406461
+[2026-07-09 03:30:59.438] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=5 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=2829525 input_columns=7 input_bytes=473485939 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=473485939 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.438] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=473485939 local_bytes=473485939 gpu_source_bytes=473485939 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:30:59.438] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=12
+[2026-07-09 03:30:59.438] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=12 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.438] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=13
+[2026-07-09 03:30:59.438] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=13 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.438] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=12 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473407097 local_bytes=0 remote_gpu_bytes=473407097 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.438] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=9 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474090391 local_bytes=474090391 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.438] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=9 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474090391 local_bytes=474090391 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.438] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=9 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2832801 input_columns=7 input_bytes=474090391 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=474090391 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=15
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=15 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=13 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=141448338 local_bytes=0 remote_gpu_bytes=141448338 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=15 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=16 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=15 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=15 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2831041 input_columns=7 input_bytes=473802173 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=473802173 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=16 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=17
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=17 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=16 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=16 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2829525 input_columns=7 input_bytes=473485939 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=473485939 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=17 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474160465 local_bytes=0 remote_gpu_bytes=474160465 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=18
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=18 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=18 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474090391 local_bytes=474090391 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=18 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474090391 local_bytes=474090391 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=18 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2832801 input_columns=7 input_bytes=474090391 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=474090391 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=19
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=19 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=21
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=21 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=19 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=19 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=19 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2831041 input_columns=7 input_bytes=473802173 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=473802173 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=21 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474090900 local_bytes=0 remote_gpu_bytes=474090900 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=20
+[2026-07-09 03:30:59.439] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=20 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=20 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=20 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.439] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=20 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2829525 input_columns=7 input_bytes=473485939 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=473485939 byte_ratio=1.000000 row_ratio=1.000000 duration_us=0
+[2026-07-09 03:30:59.611] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=21 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474090900 local_bytes=474090900 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-09 03:30:59.617] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=12 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473407097 local_bytes=473407097 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.617] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=12 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2828601 input_columns=7 input_bytes=473407097 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=473407097 byte_ratio=1.000000 row_ratio=1.000000 duration_us=2
+[2026-07-09 03:30:59.617] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=22
+[2026-07-09 03:30:59.617] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=22 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.617] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=23
+[2026-07-09 03:30:59.617] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=23 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.617] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=24
+[2026-07-09 03:30:59.617] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=24 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.617] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=22 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473802173 local_bytes=0 remote_gpu_bytes=473802173 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.617] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=24 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473407097 local_bytes=0 remote_gpu_bytes=473407097 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.617] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=23 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473485939 local_bytes=0 remote_gpu_bytes=473485939 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.620] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=13 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=141448338 local_bytes=141448338 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.620] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=13 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=844957 input_columns=7 input_bytes=141448338 output_batches=1 output_rows=844957 output_columns=7 output_bytes=141448338 byte_ratio=1.000000 row_ratio=1.000000 duration_us=2
+[2026-07-09 03:30:59.634] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=21 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=2 input_rows=2832826 input_columns=9 input_bytes=474090900 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=494154405 byte_ratio=1.042320 row_ratio=0.999991 duration_us=23550
+[2026-07-09 03:30:59.635] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=25
+[2026-07-09 03:30:59.635] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=25 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.635] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=25 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=141448338 local_bytes=0 remote_gpu_bytes=141448338 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.637] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=17 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474160465 local_bytes=474160465 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.637] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=17 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2833075 input_columns=7 input_bytes=474160465 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=474160465 byte_ratio=1.000000 row_ratio=1.000000 duration_us=2
+[2026-07-09 03:30:59.656] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=28
+[2026-07-09 03:30:59.656] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=28 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.681] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=30
+[2026-07-09 03:30:59.681] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=30 preferred_device=0 actual_gpu=0
+[2026-07-09 03:30:59.772] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=23 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.780] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=23 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2829525 input_columns=7 input_bytes=473485939 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=493515544 byte_ratio=1.042302 row_ratio=1.000000 duration_us=7859
+[2026-07-09 03:30:59.780] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=27
+[2026-07-09 03:30:59.780] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=27 preferred_device=1 actual_gpu=1
+[2026-07-09 03:30:59.789] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=22 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.798] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=24 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473407097 local_bytes=473407097 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.799] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=22 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2831041 input_columns=7 input_bytes=473802173 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=493844300 byte_ratio=1.042301 row_ratio=1.000000 duration_us=10062
+[2026-07-09 03:30:59.804] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=25 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=141448338 local_bytes=141448338 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:30:59.806] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=24 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2828601 input_columns=7 input_bytes=473407097 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=493428602 byte_ratio=1.042292 row_ratio=1.000000 duration_us=8268
+[2026-07-09 03:30:59.808] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=25 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=844957 input_columns=7 input_bytes=141448338 output_batches=1 output_rows=844957 output_columns=7 output_bytes=147432996 byte_ratio=1.042310 row_ratio=1.000000 duration_us=4132
+[2026-07-09 03:31:00.064] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=28 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1263437 output_columns=2 output_bytes=20530896 byte_ratio=0.000000 row_ratio=0.000000 duration_us=355071
+[2026-07-09 03:31:00.076] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=29
+[2026-07-09 03:31:00.076] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=29 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:00.402] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=30 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1262015 output_columns=2 output_bytes=20507760 byte_ratio=0.000000 row_ratio=0.000000 duration_us=329329
+[2026-07-09 03:31:00.402] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=27 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1259044 output_columns=2 output_bytes=20459584 byte_ratio=0.000000 row_ratio=0.000000 duration_us=317593
+[2026-07-09 03:31:00.402] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=31
+[2026-07-09 03:31:00.402] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=31 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:00.402] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=26
+[2026-07-09 03:31:00.402] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=26 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:00.402] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=26 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474160480 local_bytes=0 remote_gpu_bytes=0 host_bytes=474160480 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.433] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=26 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=519489681 local_bytes=519489681 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.440] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=26 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2833075 input_columns=7 input_bytes=519489681 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=494214322 byte_ratio=0.951346 row_ratio=1.000000 duration_us=7629
+[2026-07-09 03:31:00.660] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=31 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=689568 output_columns=2 output_bytes=11205504 byte_ratio=0.000000 row_ratio=0.000000 duration_us=247435
+[2026-07-09 03:31:00.663] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=29 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1263359 output_columns=2 output_bytes=20529648 byte_ratio=0.000000 row_ratio=0.000000 duration_us=251935
+[2026-07-09 03:31:00.663] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=20530896 local_bytes=20530896 gpu_source_bytes=20530896 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:31:00.663] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=20507760 local_bytes=20507760 gpu_source_bytes=20507760 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:31:00.663] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=20459584 local_bytes=20459584 gpu_source_bytes=20459584 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=32
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=32 preferred_device=0 actual_gpu=0
+[2026-07-09 03:31:00.663] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=11205504 local_bytes=11205504 gpu_source_bytes=11205504 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=34
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=34 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:00.663] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=20529648 local_bytes=20529648 gpu_source_bytes=20529648 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=35
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=35 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=36
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=36 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:00.663] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=34 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=20459584 local_bytes=20459584 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.663] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=34 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=20459584 local_bytes=20459584 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.663] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=36 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=20529648 local_bytes=20529648 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.663] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=36 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=20529648 local_bytes=20529648 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.663] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=35 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=11205504 local_bytes=11205504 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=33
+[2026-07-09 03:31:00.663] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=33 preferred_device=0 actual_gpu=0
+[2026-07-09 03:31:00.663] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=32 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=20530896 local_bytes=20530896 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.664] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=33 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=20507760 local_bytes=20507760 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.667] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=35 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=11205504 local_bytes=11205504 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.667] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=32 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=20530896 local_bytes=20530896 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.667] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=33 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=20507760 local_bytes=20507760 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:31:00.676] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=34 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=1259044 input_columns=2 input_bytes=20459584 output_batches=2 output_rows=1259044 output_columns=4 output_bytes=20144704 byte_ratio=0.984610 row_ratio=1.000000 duration_us=13114
+[2026-07-09 03:31:00.676] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=35 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=689568 input_columns=2 input_bytes=11205504 output_batches=2 output_rows=689568 output_columns=4 output_bytes=11033088 byte_ratio=0.984613 row_ratio=1.000000 duration_us=9060
+[2026-07-09 03:31:00.676] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=36 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=1263359 input_columns=2 input_bytes=20529648 output_batches=2 output_rows=1263359 output_columns=4 output_bytes=20213744 byte_ratio=0.984612 row_ratio=1.000000 duration_us=13208
+[2026-07-09 03:31:00.677] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=33 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=1262015 input_columns=2 input_bytes=20507760 output_batches=2 output_rows=1262015 output_columns=4 output_bytes=20192240 byte_ratio=0.984615 row_ratio=1.000000 duration_us=9286
+[2026-07-09 03:31:00.677] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=32 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=1263437 input_columns=2 input_bytes=20530896 output_batches=2 output_rows=1263437 output_columns=4 output_bytes=20214992 byte_ratio=0.984613 row_ratio=1.000000 duration_us=9421
+[2026-07-09 03:31:00.677] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=38
+[2026-07-09 03:31:00.677] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=38 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:00.677] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=37
+[2026-07-09 03:31:00.677] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=37 preferred_device=0 actual_gpu=0
+[2026-07-09 03:31:00.677] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=5 task_id=38 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=45951328 local_bytes=25729616 remote_gpu_bytes=20221712 host_bytes=0 disk_bytes=0 batch_count=5
+[2026-07-09 03:31:00.677] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=5 task_id=37 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=45847440 local_bytes=20185520 remote_gpu_bytes=25661920 host_bytes=0 disk_bytes=0 batch_count=5
+[2026-07-09 03:31:00.680] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=5 task_id=38 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=45951328 local_bytes=45951328 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=5
+[2026-07-09 03:31:00.681] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=5 task_id=38 operator_id=27 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=1 pipeline_operator_count=1 input_batches=5 input_rows=2871958 input_columns=10 input_bytes=45951328 output_batches=1 output_rows=2871958 output_columns=2 output_bytes=45951328 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1158
+[2026-07-09 03:31:00.681] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=5 task_id=37 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=45847440 local_bytes=45847440 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=5
+[2026-07-09 03:31:00.682] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=5 task_id=37 operator_id=27 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=5 input_rows=2865465 input_columns=10 input_bytes=45847440 output_batches=1 output_rows=2865465 output_columns=2 output_bytes=45847440 byte_ratio=1.000000 row_ratio=1.000000 duration_us=728
+[2026-07-09 03:31:00.733] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=39
+[2026-07-09 03:31:00.733] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=39 preferred_device=0 actual_gpu=0
+[2026-07-09 03:31:00.836] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=40
+[2026-07-09 03:31:00.836] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=40 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:00.932] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=41
+[2026-07-09 03:31:00.932] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=41 preferred_device=0 actual_gpu=0
+[2026-07-09 03:31:00.983] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.014] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=42
+[2026-07-09 03:31:01.014] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=42 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:01.033] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.033] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.039] [warning] [gpu_pipeline_task.cpp:904] Pipeline 6: OOM at operator GPU_SCAN (id=29, index 0/2), requested 1 bytes (0.00 MB), global usage 5318985400 bytes (5072.58 MB), peak allocated 256 bytes (0.00 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 4284659640 bytes (4086.17 MB), rescheduling task 40
+[2026-07-09 03:31:01.039] [error] [bounded_thread_pool.hpp:214] Exception in bounded_thread_pool task: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream.cpp:47: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.075] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.075] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.085] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=43
+[2026-07-09 03:31:01.085] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=43 preferred_device=0 actual_gpu=0
+[2026-07-09 03:31:01.121] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.122] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.154] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=44
+[2026-07-09 03:31:01.154] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=44 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:01.194] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.194] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.226] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=45
+[2026-07-09 03:31:01.226] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=45 preferred_device=0 actual_gpu=0
+[2026-07-09 03:31:01.265] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.265] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.298] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=46
+[2026-07-09 03:31:01.298] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=46 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:01.333] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:01.333] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:02.911] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=48
+[2026-07-09 03:31:02.911] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=48 preferred_device=1 actual_gpu=1
+[2026-07-09 03:31:02.912] [error] [sirius_engine.cpp:172] Error executing query: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:02.912] [info] [task_scheduler.cpp:262] task_scheduler: draining after error
+[2026-07-09 03:31:02.912] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-09 03:31:02.925] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:02.925] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:02.925] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-09 03:31:02.926] [info] [task_scheduler.cpp:305] task_scheduler: DONE draining after error
+[2026-07-09 03:31:02.926] [error] [sirius_interface.cpp:201] Error in sirius_execute_pending_query_result: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:02.926] [error] [physical_sirius_execution.cpp:161] Transparent GPU execution error: Invalid Error: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:31:02.963] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 03:31:02.979] [warning] [sirius_context.cpp:233] SiriusContext::QueryEnd: operator 16 port 'build' still had 2 un-consumed data batch(es) (memory leak).
+[2026-07-09 03:31:02.979] [warning] [sirius_context.cpp:233] SiriusContext::QueryEnd: operator 40 port 'default' still had 6 un-consumed data batch(es) (memory leak).
+[2026-07-09 03:31:02.979] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=3312451584 bytes free_blocks=2107
+[2026-07-09 03:31:02.979] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=5950000000 bytes reserved=0 bytes
+[2026-07-09 03:31:02.979] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=5950000000 bytes reserved=0 bytes
+[2026-07-09 03:31:02.979] [info] [sirius_context.cpp:924] Connection closed.
+[2026-07-09 03:31:03.027] [info] [task_scheduler.cpp:368] Task request channel closed, exiting management event loop.
+[2026-07-09 03:31:03.027] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-09 03:31:03.028] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-09 03:37:22.999] [info] [sirius_context.cpp:957] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/allq_5x_7gb/configs/sirius_2gpu.yaml
+[2026-07-09 03:37:23.006] [info] [telemetry_context.cpp:78] Telemetry context initialized (engine=siriusDB)
+[2026-07-09 03:37:23.006] [info] [sirius_context.cpp:296] SiriusContext: topology summary — 2 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-09 03:37:23.006] [info] [sirius_context.cpp:301]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:AC:00.0)
+[2026-07-09 03:37:23.006] [info] [sirius_context.cpp:301]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:CA:00.0)
+[2026-07-09 03:37:23.149] [warning] [sirius_context.cpp:311] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-09 03:37:23.149] [info] [sirius_context.cpp:323] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-09 03:37:23.151] [info] [sirius_context.cpp:376] SiriusContext: P2P enabled 0 -> 1
+[2026-07-09 03:37:23.151] [info] [sirius_context.cpp:376] SiriusContext: P2P enabled 1 -> 0
+[2026-07-09 03:37:23.170] [info] [sirius_context.cpp:436] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-09 03:37:23.173] [info] [sirius_context.cpp:918] Connection opened.
+[2026-07-09 03:37:23.173] [info] [sirius_context.cpp:931] Extension loaded: sirius
+[2026-07-09 03:37:23.173] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 03:37:23.182] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 03:37:23.182] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:37:23.182] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:37:23.183] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 03:37:23.183] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:37:23.183] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:37:23.183] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-09 03:37:23.183] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 03:37:23.192] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 03:37:23.193] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:37:23.193] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:37:23.193] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 03:37:23.193] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:37:23.193] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 03:37:23.193] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c.c_custkey, c.c_name, sum(l.l_extendedprice * (1 - l.l_discount)) as revenue, c.c_acctbal, n.n_name, c.c_address, c.c_phone, c.c_comment from customer c, orders o, lineitem l, nation n where c.c_custkey = o.o_custkey and l.l_orderkey = o.o_orderkey and o.o_orderdate >= date '1994-03-01' and o.o_orderdate < date '1994-06-01' and l.l_returnflag = 'R' and c.c_nationkey = n.n_nationkey group by c.c_custkey, c.c_name, c.c_acctbal, c.c_phone, n.n_name, c.c_address, c.c_comment order by revenue desc limit 20
+[2026-07-09 03:37:23.490] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5930716ddb20).
+[2026-07-09 03:37:23.490] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 25 rows).
+[2026-07-09 03:37:23.490] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5930716da960).
+[2026-07-09 03:37:23.490] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 150000000 rows).
+[2026-07-09 03:37:23.490] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 600037902 rows).
+[2026-07-09 03:37:23.516] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-09 03:37:23.541] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-09 03:37:23.541] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-09 03:37:23.594] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5930716ddb20).
+[2026-07-09 03:37:23.594] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 25 rows).
+[2026-07-09 03:37:23.594] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5930716da960).
+[2026-07-09 03:37:23.594] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 150000000 rows).
+[2026-07-09 03:37:23.594] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 600037902 rows).
+[2026-07-09 03:37:23.595] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=23)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=25)
+  Input: <- Pipeline #0 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=24)
+  Input: <- Pipeline #1 [on: CONCAT (id=24), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=26)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #4: PARTITION (id=28)
+  Input: <- Pipeline #3 [on: PARTITION (id=28), port: default, barrier: FULL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=27)
+  Input: <- Pipeline #4 [on: CONCAT (id=27), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #6: GPU_SCAN (id=29) -> DYNAMIC_FILTER (id=30)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #7: PARTITION (id=32)
+  Input: <- Pipeline #6 [on: PARTITION (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #8: CONCAT (id=31)
+  Input: <- Pipeline #7 [on: CONCAT (id=31), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #7
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #9: HASH_JOIN (id=16)
+  Input: <- Pipeline #8 [on: HASH_JOIN (id=16), port: default, barrier: FULL]
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=16), port: build, barrier: FULL]
+  Dependencies: Pipeline #5, Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=34)
+  Input: <- Pipeline #9 [on: PARTITION (id=34), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #11: CONCAT (id=33)
+  Input: <- Pipeline #10 [on: CONCAT (id=33), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #10
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #12: GPU_SCAN (id=35) -> DYNAMIC_FILTER (id=36)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #13: PARTITION (id=38)
+  Input: <- Pipeline #12 [on: PARTITION (id=38), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #14: CONCAT (id=37)
+  Input: <- Pipeline #13 [on: CONCAT (id=37), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #13
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #15: HASH_JOIN (id=13)
+  Input: <- Pipeline #14 [on: HASH_JOIN (id=13), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=13), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #14
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #16: PARTITION (id=40)
+  Input: <- Pipeline #15 [on: PARTITION (id=40), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #15
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #17: CONCAT (id=39)
+  Input: <- Pipeline #16 [on: CONCAT (id=39), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #18: HASH_JOIN (id=17) -> PROJECTION (id=18) -> HASH_GROUP_BY (id=19)
+  Input: <- Pipeline #17 [on: HASH_JOIN (id=17), port: default, barrier: FULL]
+  Input: <- Pipeline #11 [on: HASH_JOIN (id=17), port: build, barrier: FULL]
+  Dependencies: Pipeline #11, Pipeline #17
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #19: PARTITION (id=41)
+  Input: <- Pipeline #18 [on: PARTITION (id=41), port: default, barrier: FULL]
+  Dependencies: Pipeline #18
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #20: MERGE_GROUP_BY (id=42)
+  Input: <- Pipeline #19 [on: MERGE_GROUP_BY (id=42), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #21: PROJECTION (id=20) -> TOP_N (id=21)
+  Input: <- Pipeline #20 [on: PROJECTION (id=20), port: default, barrier: FULL]
+  Dependencies: Pipeline #20
+  Output: -> MERGE_TOP_N [port: default, barrier: FULL]
+Pipeline #22: MERGE_TOP_N (id=43)
+  Input: <- Pipeline #21 [on: MERGE_TOP_N (id=43), port: default, barrier: FULL]
+  Dependencies: Pipeline #21
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #23: RESULT_COLLECTOR (id=22)
+  Input: <- Pipeline #22 [on: RESULT_COLLECTOR (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #22
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                                                                                    
+│ Pipeline #23             │                                                                                    
+│ RESULT_COLLECTOR (id=22) │                                                                                    
+│ Input(#22): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #22             │                                                                                    
+│ MERGE_TOP_N (id=43)      │                                                                                    
+│ Input(#21): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #21             │                                                                                    
+│ TOP_N (id=21)            │                                                                                    
+│ PROJECTION (id=20)       │                                                                                    
+│ Input(#20): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #20             │                                                                                    
+│ MERGE_GROUP_BY (id=42)   │                                                                                    
+│ Input(#19): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #19             │                                                                                    
+│ PARTITION (id=41)        │                                                                                    
+│ Input(#18): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             │                                                                                                  
+┌──────────────────────────┐                                                                                    
+│ Pipeline #18             │                                                                                    
+│ HASH_GROUP_BY (id=19)    │                                                                                    
+│ PROJECTION (id=18)       │                                                                                    
+│ HASH_JOIN (id=17)        │                                                                                    
+│   type: INNER            │                                                                                    
+│ Input(#17): FULL         │                                                                                    
+│ Input(#11): FULL         │                                                                                    
+└────────────┬─────────────┘                                                                                    
+             ┌───────────────────────────────────────────────────────┐                                          
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #11             │                            │ Pipeline #17             │                            
+│ CONCAT (id=33)           │                            │ CONCAT (id=39)           │                            
+│ Input(#10): PARTIAL      │                            │ Input(#16): PARTIAL      │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #10             │                            │ Pipeline #16             │                            
+│ PARTITION (id=34)        │                            │ PARTITION (id=40)        │                            
+│ Input(#9): FULL          │                            │ Input(#15): PARTIAL      │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                       │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #9              │                            │ Pipeline #15             │                            
+│ HASH_JOIN (id=16)        │                            │ HASH_JOIN (id=13)        │                            
+│   type: INNER            │                            │   type: INNER            │                            
+│ Input(#8): FULL          │                            │ Input(#14): FULL         │                            
+│ Input(#5): FULL          │                            │ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             ┌───────────────────────────┐                           ┌───────────────────────────┐              
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #5              ││ Pipeline #8              ││ Pipeline #2              ││ Pipeline #14             │
+│ CONCAT (id=27)           ││ CONCAT (id=31)           ││ CONCAT (id=24)           ││ CONCAT (id=37)           │
+│ Input(#4): PARTIAL       ││ Input(#7): PARTIAL       ││ Input(#1): PARTIAL       ││ Input(#13): PARTIAL      │
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #4              ││ Pipeline #7              ││ Pipeline #1              ││ Pipeline #13             │
+│ PARTITION (id=28)        ││ PARTITION (id=32)        ││ PARTITION (id=25)        ││ PARTITION (id=38)        │
+│ Input(#3): FULL          ││ Input(#6): PARTIAL       ││ Input(#0): FULL          ││ Input(#12): PARTIAL      │
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │                           │                           │              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #3              ││ Pipeline #6              ││ Pipeline #0              ││ Pipeline #12             │
+│ GPU_SCAN (id=26)         ││ DYNAMIC_FILTER (id=30)   ││ GPU_SCAN (id=23)         ││ DYNAMIC_FILTER (id=36)   │
+│                          ││ GPU_SCAN (id=29)         ││                          ││ GPU_SCAN (id=35)         │
+└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-09 03:37:23.597] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=508, cap=536870912
+[2026-07-09 03:37:23.597] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-09 03:37:23.598] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-07-09 03:37:23.598] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=0 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:23.648] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=535232606, cap=536870912
+[2026-07-09 03:37:23.648] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=536429546, cap=536870912
+[2026-07-09 03:37:23.648] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=536433706, cap=536870912
+[2026-07-09 03:37:23.648] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=536434838, cap=536870912
+[2026-07-09 03:37:23.648] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 1
+[2026-07-09 03:37:23.655] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=0 task_id=0 operator_id=23 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=0.000000 row_ratio=0.000000 duration_us=56711
+[2026-07-09 03:37:23.655] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=25 input_bytes=509 local_bytes=509 gpu_source_bytes=509 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:37:23.656] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=1
+[2026-07-09 03:37:23.656] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=1 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:23.656] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:23.656] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:23.656] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=1 task_id=1 operator_id=25 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=25 input_columns=2 input_bytes=509 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=1.000000 row_ratio=1.000000 duration_us=5
+[2026-07-09 03:37:23.656] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=2
+[2026-07-09 03:37:23.656] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=2 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:23.656] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:23.656] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=509 local_bytes=509 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:23.656] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=2 task_id=2 operator_id=24 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=25 input_columns=2 input_bytes=509 output_batches=1 output_rows=25 output_columns=2 output_bytes=509 byte_ratio=1.000000 row_ratio=1.000000 duration_us=7
+[2026-07-09 03:37:23.679] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-09 03:37:23.715] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 1
+[2026-07-09 03:37:23.744] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-09 03:37:23.783] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=292968950, cap=536870912
+[2026-07-09 03:37:23.783] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 1
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=533977932, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=535582455, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=535597956, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=535592925, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=534714072, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=534355278, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=534344190, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=534338091, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=534353301, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=534344529, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=534347898, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=534345993, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=534350985, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=534357051, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=534368322, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=534363459, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=534354894, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=534321966, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=534353292, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #20: 1 slice(s), acc_bytes=534347898, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #21: 1 slice(s), acc_bytes=534359454, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #22: 1 slice(s), acc_bytes=534347424, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #23: 1 slice(s), acc_bytes=534352200, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #24: 1 slice(s), acc_bytes=534349068, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #25: 1 slice(s), acc_bytes=534344919, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #26: 1 slice(s), acc_bytes=534341433, cap=536870912
+[2026-07-09 03:37:23.823] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #27: 1 slice(s), acc_bytes=534361548, cap=536870912
+[2026-07-09 03:37:23.823] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:23.986] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:24.162] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:24.359] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:24.625] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:24.913] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:25.079] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:25.192] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:25.315] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:25.479] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:25.643] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:25.811] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:25.920] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:26.084] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:26.248] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:26.409] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:26.572] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:26.735] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:26.899] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:27.059] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:27.220] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:27.381] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:27.540] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:27.696] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:27.853] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:28.015] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:28.176] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 0
+[2026-07-09 03:37:28.337] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #28: 1 slice(s), acc_bytes=194749065, cap=536870912
+[2026-07-09 03:37:28.337] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=6 -> preferred GPU 1
+[2026-07-09 03:37:28.496] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=519418085, cap=536870912
+[2026-07-09 03:37:28.496] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=518667493, cap=536870912
+[2026-07-09 03:37:28.496] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=518761035, cap=536870912
+[2026-07-09 03:37:28.496] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=519492340, cap=536870912
+[2026-07-09 03:37:28.496] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=519101525, cap=536870912
+[2026-07-09 03:37:28.496] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 0
+[2026-07-09 03:37:28.501] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 1
+[2026-07-09 03:37:28.504] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3
+[2026-07-09 03:37:28.504] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=3 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:28.508] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 0
+[2026-07-09 03:37:28.508] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=4
+[2026-07-09 03:37:28.508] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=4 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:28.513] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 1
+[2026-07-09 03:37:28.513] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5
+[2026-07-09 03:37:28.513] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=5 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:28.518] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 0
+[2026-07-09 03:37:28.518] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=6
+[2026-07-09 03:37:28.518] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=6 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:28.523] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=154968236, cap=536870912
+[2026-07-09 03:37:28.523] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=12 -> preferred GPU 1
+[2026-07-09 03:37:28.812] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=3 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=474090391 byte_ratio=0.000000 row_ratio=0.000000 duration_us=305551
+[2026-07-09 03:37:28.812] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=3 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=2832801 input_columns=7 input_bytes=474090391 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=474090391 byte_ratio=1.000000 row_ratio=1.000000 duration_us=2
+[2026-07-09 03:37:28.813] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=7
+[2026-07-09 03:37:28.813] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=7 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:28.813] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=474090391 local_bytes=474090391 gpu_source_bytes=474090391 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:37:28.813] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9
+[2026-07-09 03:37:28.813] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=9 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:28.819] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=4 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=473407097 byte_ratio=0.000000 row_ratio=0.000000 duration_us=307636
+[2026-07-09 03:37:28.819] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=4 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=1 input_rows=2828601 input_columns=7 input_bytes=473407097 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=473407097 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:37:28.819] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=8
+[2026-07-09 03:37:28.819] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=8 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:28.819] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=473407097 local_bytes=473407097 gpu_source_bytes=473407097 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:37:28.819] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10
+[2026-07-09 03:37:28.819] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=10 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:28.820] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=10 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473407097 local_bytes=473407097 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:28.820] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=10 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473407097 local_bytes=473407097 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:28.820] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=10 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2828601 input_columns=7 input_bytes=473407097 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=473407097 byte_ratio=1.000000 row_ratio=1.000000 duration_us=7
+[2026-07-09 03:37:29.163] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=6 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=474160465 byte_ratio=0.000000 row_ratio=0.000000 duration_us=343149
+[2026-07-09 03:37:29.163] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=6 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=1 input_rows=2833075 input_columns=7 input_bytes=474160465 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=474160465 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:37:29.163] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=474160465 local_bytes=474160465 gpu_source_bytes=474160465 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:37:29.163] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=11
+[2026-07-09 03:37:29.164] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=11 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:29.164] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=11 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474160465 local_bytes=474160465 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.164] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=11 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474160465 local_bytes=474160465 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.164] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=11 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2833075 input_columns=7 input_bytes=474160465 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=474160465 byte_ratio=1.000000 row_ratio=1.000000 duration_us=5
+[2026-07-09 03:37:29.219] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=7 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=473802173 byte_ratio=0.000000 row_ratio=0.000000 duration_us=405801
+[2026-07-09 03:37:29.219] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=7 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=2831041 input_columns=7 input_bytes=473802173 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=473802173 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:37:29.220] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=473802173 local_bytes=473802173 gpu_source_bytes=473802173 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=5 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=473485939 byte_ratio=0.000000 row_ratio=0.000000 duration_us=406516
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=5 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=2829525 input_columns=7 input_bytes=473485939 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=473485939 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=12
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=12 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.220] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=473485939 local_bytes=473485939 gpu_source_bytes=473485939 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=13
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=13 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=9 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474090391 local_bytes=474090391 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=9 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474090391 local_bytes=474090391 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=9 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2832801 input_columns=7 input_bytes=474090391 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=474090391 byte_ratio=1.000000 row_ratio=1.000000 duration_us=0
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=12 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473407097 local_bytes=0 remote_gpu_bytes=473407097 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=14
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=14 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=13 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474160465 local_bytes=0 remote_gpu_bytes=474160465 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=15
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=15 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=14 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=15 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=14 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=15 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=15 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2829525 input_columns=7 input_bytes=473485939 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=473485939 byte_ratio=1.000000 row_ratio=1.000000 duration_us=2
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=14 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2831041 input_columns=7 input_bytes=473802173 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=473802173 byte_ratio=1.000000 row_ratio=1.000000 duration_us=8
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=16 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=16 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474090391 local_bytes=474090391 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=16 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474090391 local_bytes=474090391 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=16 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2832801 input_columns=7 input_bytes=474090391 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=474090391 byte_ratio=1.000000 row_ratio=1.000000 duration_us=0
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=17
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=17 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=18
+[2026-07-09 03:37:29.220] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=18 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=17 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=17 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.220] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=17 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2829525 input_columns=7 input_bytes=473485939 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=473485939 byte_ratio=1.000000 row_ratio=1.000000 duration_us=6
+[2026-07-09 03:37:29.221] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=18 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474090900 local_bytes=0 remote_gpu_bytes=474090900 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-09 03:37:29.270] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=8 operator_id=35 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=844957 output_columns=7 output_bytes=141448338 byte_ratio=0.000000 row_ratio=0.000000 duration_us=449959
+[2026-07-09 03:37:29.270] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=12 task_id=8 operator_id=36 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=2 input_batches=1 input_rows=844957 input_columns=7 input_bytes=141448338 output_batches=1 output_rows=844957 output_columns=7 output_bytes=141448338 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:37:29.270] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=38 input_bytes=141448338 local_bytes=141448338 gpu_source_bytes=141448338 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:37:29.270] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=19
+[2026-07-09 03:37:29.270] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=19 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:29.271] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=13 task_id=19 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=141448338 local_bytes=141448338 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.271] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=13 task_id=19 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=141448338 local_bytes=141448338 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.271] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=13 task_id=19 operator_id=38 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=844957 input_columns=7 input_bytes=141448338 output_batches=1 output_rows=844957 output_columns=7 output_bytes=141448338 byte_ratio=1.000000 row_ratio=1.000000 duration_us=8
+[2026-07-09 03:37:29.271] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=20
+[2026-07-09 03:37:29.271] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=20 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.271] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=21
+[2026-07-09 03:37:29.271] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=21 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.271] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=20 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.271] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=20 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.271] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=20 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2831041 input_columns=7 input_bytes=473802173 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=473802173 byte_ratio=1.000000 row_ratio=1.000000 duration_us=6
+[2026-07-09 03:37:29.271] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=14 task_id=21 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=141448338 local_bytes=0 remote_gpu_bytes=141448338 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.346] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=18 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474090900 local_bytes=474090900 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-09 03:37:29.378] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=18 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=2 input_rows=2832826 input_columns=9 input_bytes=474090900 output_batches=1 output_rows=2832801 output_columns=7 output_bytes=494154405 byte_ratio=1.042320 row_ratio=0.999991 duration_us=32824
+[2026-07-09 03:37:29.383] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=12 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=473407097 local_bytes=473407097 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.383] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=12 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2828601 input_columns=7 input_bytes=473407097 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=473407097 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-09 03:37:29.384] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=22
+[2026-07-09 03:37:29.384] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=22 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:29.384] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=23
+[2026-07-09 03:37:29.384] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=23 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:29.384] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=24
+[2026-07-09 03:37:29.384] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=24 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:29.384] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=23 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473802173 local_bytes=0 remote_gpu_bytes=473802173 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.384] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=22 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473485939 local_bytes=0 remote_gpu_bytes=473485939 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.384] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=24 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473407097 local_bytes=0 remote_gpu_bytes=473407097 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.387] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=25
+[2026-07-09 03:37:29.387] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=25 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:29.390] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=21 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=141448338 local_bytes=141448338 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.390] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=21 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=844957 input_columns=7 input_bytes=141448338 output_batches=1 output_rows=844957 output_columns=7 output_bytes=141448338 byte_ratio=1.000000 row_ratio=1.000000 duration_us=2
+[2026-07-09 03:37:29.396] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=27
+[2026-07-09 03:37:29.396] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=27 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.412] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=14 task_id=13 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=474160465 local_bytes=474160465 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.412] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=14 task_id=13 operator_id=37 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=2833075 input_columns=7 input_bytes=474160465 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=474160465 byte_ratio=1.000000 row_ratio=1.000000 duration_us=2
+[2026-07-09 03:37:29.479] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=30
+[2026-07-09 03:37:29.479] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=30 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:29.491] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=23 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473802173 local_bytes=473802173 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.498] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=23 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2831041 input_columns=7 input_bytes=473802173 output_batches=1 output_rows=2831041 output_columns=7 output_bytes=493844300 byte_ratio=1.042301 row_ratio=1.000000 duration_us=7710
+[2026-07-09 03:37:29.502] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=22 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473485939 local_bytes=473485939 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.510] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=22 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2829525 input_columns=7 input_bytes=473485939 output_batches=1 output_rows=2829525 output_columns=7 output_bytes=493515544 byte_ratio=1.042302 row_ratio=1.000000 duration_us=7520
+[2026-07-09 03:37:29.512] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=24 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=473407097 local_bytes=473407097 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:29.519] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=24 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2828601 input_columns=7 input_bytes=473407097 output_batches=1 output_rows=2828601 output_columns=7 output_bytes=493428602 byte_ratio=1.042292 row_ratio=1.000000 duration_us=7345
+[2026-07-09 03:37:29.903] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=27 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1263437 output_columns=2 output_bytes=20530896 byte_ratio=0.000000 row_ratio=0.000000 duration_us=417042
+[2026-07-09 03:37:29.923] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=28
+[2026-07-09 03:37:29.923] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=28 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.236] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=30 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1262015 output_columns=2 output_bytes=20507760 byte_ratio=0.000000 row_ratio=0.000000 duration_us=323809
+[2026-07-09 03:37:30.236] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=25 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1259044 output_columns=2 output_bytes=20459584 byte_ratio=0.000000 row_ratio=0.000000 duration_us=306062
+[2026-07-09 03:37:30.237] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=31
+[2026-07-09 03:37:30.237] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=31 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.237] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=29
+[2026-07-09 03:37:30.237] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=29 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.237] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=26
+[2026-07-09 03:37:30.237] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=26 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.237] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=29 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=474160480 local_bytes=0 remote_gpu_bytes=0 host_bytes=474160480 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.237] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=26 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=141448360 local_bytes=0 remote_gpu_bytes=0 host_bytes=141448360 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.255] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=26 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=154967666 local_bytes=154967666 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.258] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=26 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=844957 input_columns=7 input_bytes=154967666 output_batches=1 output_rows=844957 output_columns=7 output_bytes=147432996 byte_ratio=0.951379 row_ratio=1.000000 duration_us=2884
+[2026-07-09 03:37:30.270] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=29 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=519489681 local_bytes=519489681 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.280] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=29 operator_id=13 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=2833075 input_columns=7 input_bytes=519489681 output_batches=1 output_rows=2833075 output_columns=7 output_bytes=494214322 byte_ratio=0.951346 row_ratio=1.000000 duration_us=9528
+[2026-07-09 03:37:30.506] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=31 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=689568 output_columns=2 output_bytes=11205504 byte_ratio=0.000000 row_ratio=0.000000 duration_us=256272
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=28 operator_id=26 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1263359 output_columns=2 output_bytes=20529648 byte_ratio=0.000000 row_ratio=0.000000 duration_us=263552
+[2026-07-09 03:37:30.508] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=20530896 local_bytes=20530896 gpu_source_bytes=20530896 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:37:30.508] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=20507760 local_bytes=20507760 gpu_source_bytes=20507760 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-09 03:37:30.508] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=20459584 local_bytes=20459584 gpu_source_bytes=20459584 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:37:30.508] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=11205504 local_bytes=11205504 gpu_source_bytes=11205504 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:37:30.508] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=28 input_bytes=20529648 local_bytes=20529648 gpu_source_bytes=20529648 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=1
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=32
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=32 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=34
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=34 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=33
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=33 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=33 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=20507760 local_bytes=20507760 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=32 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=20530896 local_bytes=20530896 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=33 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=20507760 local_bytes=20507760 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=32 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=20530896 local_bytes=20530896 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=35
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=35 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=36
+[2026-07-09 03:37:30.508] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=36 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=34 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=20459584 local_bytes=20459584 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=34 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=20459584 local_bytes=20459584 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=35 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=11205504 local_bytes=11205504 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=35 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=11205504 local_bytes=11205504 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.508] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=36 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=20529648 local_bytes=20529648 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.509] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=36 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=20529648 local_bytes=20529648 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-09 03:37:30.515] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=33 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=1262015 input_columns=2 input_bytes=20507760 output_batches=2 output_rows=1262015 output_columns=4 output_bytes=20192240 byte_ratio=0.984615 row_ratio=1.000000 duration_us=6377
+[2026-07-09 03:37:30.515] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=32 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=1263437 input_columns=2 input_bytes=20530896 output_batches=2 output_rows=1263437 output_columns=4 output_bytes=20214992 byte_ratio=0.984613 row_ratio=1.000000 duration_us=6443
+[2026-07-09 03:37:30.516] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=35 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=689568 input_columns=2 input_bytes=11205504 output_batches=2 output_rows=689568 output_columns=4 output_bytes=11033088 byte_ratio=0.984613 row_ratio=1.000000 duration_us=7172
+[2026-07-09 03:37:30.516] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=34 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=1259044 input_columns=2 input_bytes=20459584 output_batches=2 output_rows=1259044 output_columns=4 output_bytes=20144704 byte_ratio=0.984610 row_ratio=1.000000 duration_us=7360
+[2026-07-09 03:37:30.516] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=36 operator_id=28 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=1 pipeline_operator_count=1 input_batches=1 input_rows=1263359 input_columns=2 input_bytes=20529648 output_batches=2 output_rows=1263359 output_columns=4 output_bytes=20213744 byte_ratio=0.984612 row_ratio=1.000000 duration_us=7211
+[2026-07-09 03:37:30.517] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=37
+[2026-07-09 03:37:30.517] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=37 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:30.517] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=38
+[2026-07-09 03:37:30.517] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=38 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.517] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=5 task_id=38 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=45951328 local_bytes=25729616 remote_gpu_bytes=20221712 host_bytes=0 disk_bytes=0 batch_count=5
+[2026-07-09 03:37:30.517] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=5 task_id=37 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=45847440 local_bytes=20185520 remote_gpu_bytes=25661920 host_bytes=0 disk_bytes=0 batch_count=5
+[2026-07-09 03:37:30.518] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=5 task_id=38 preferred_device=1 actual_gpu=1 target_tier=GPU target_device=1 input_bytes=45951328 local_bytes=45951328 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=5
+[2026-07-09 03:37:30.519] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=5 task_id=38 operator_id=27 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=1 pipeline_operator_count=1 input_batches=5 input_rows=2871958 input_columns=10 input_bytes=45951328 output_batches=1 output_rows=2871958 output_columns=2 output_bytes=45951328 byte_ratio=1.000000 row_ratio=1.000000 duration_us=927
+[2026-07-09 03:37:30.520] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=5 task_id=37 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=45847440 local_bytes=45847440 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=5
+[2026-07-09 03:37:30.521] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=5 task_id=37 operator_id=27 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=5 input_rows=2865465 input_columns=10 input_bytes=45847440 output_batches=1 output_rows=2865465 output_columns=2 output_bytes=45847440 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1040
+[2026-07-09 03:37:30.553] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=39
+[2026-07-09 03:37:30.553] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=39 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:30.619] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=40
+[2026-07-09 03:37:30.619] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=40 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.697] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=41
+[2026-07-09 03:37:30.697] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=41 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:30.747] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.774] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=42
+[2026-07-09 03:37:30.774] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=42 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.785] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.786] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.820] [warning] [gpu_pipeline_task.cpp:904] Pipeline 6: OOM at operator GPU_SCAN (id=29, index 0/2), requested 1 bytes (0.00 MB), global usage 4972262584 bytes (4741.92 MB), peak allocated 256 bytes (0.00 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 4284659640 bytes (4086.17 MB), rescheduling task 40
+[2026-07-09 03:37:30.820] [error] [bounded_thread_pool.hpp:214] Exception in bounded_thread_pool task: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream.cpp:47: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.856] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=43
+[2026-07-09 03:37:30.856] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=43 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:30.862] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.862] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.894] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.894] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.935] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=44
+[2026-07-09 03:37:30.935] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=44 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:30.971] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:30.971] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:31.016] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=45
+[2026-07-09 03:37:31.016] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=45 preferred_device=0 actual_gpu=0
+[2026-07-09 03:37:31.052] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:31.052] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:31.097] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=46
+[2026-07-09 03:37:31.097] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=46 preferred_device=1 actual_gpu=1
+[2026-07-09 03:37:31.134] [error] [gpu_pipeline_task.cpp:1062] Unknown error in prepare_for_processing for pipeline 6: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:31.134] [error] [gpu_pipeline_executor.cpp:408] GPU Pipeline Executor: Exception during task execution: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:32.788] [error] [sirius_engine.cpp:172] Error executing query: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:32.788] [info] [task_scheduler.cpp:262] task_scheduler: draining after error
+[2026-07-09 03:37:32.788] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-09 03:37:32.788] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-09 03:37:32.788] [info] [task_scheduler.cpp:305] task_scheduler: DONE draining after error
+[2026-07-09 03:37:32.788] [error] [sirius_interface.cpp:201] Error in sirius_execute_pending_query_result: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:32.788] [error] [physical_sirius_execution.cpp:161] Transparent GPU execution error: Invalid Error: CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalInstruction an illegal instruction was encountered
+[2026-07-09 03:37:32.832] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 03:37:32.843] [warning] [sirius_context.cpp:233] SiriusContext::QueryEnd: operator 16 port 'build' still had 2 un-consumed data batch(es) (memory leak).
+[2026-07-09 03:37:32.843] [warning] [sirius_context.cpp:233] SiriusContext::QueryEnd: operator 40 port 'default' still had 6 un-consumed data batch(es) (memory leak).
+[2026-07-09 03:37:32.843] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=4642045952 bytes free_blocks=2491
+[2026-07-09 03:37:32.843] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=5950000000 bytes reserved=0 bytes
+[2026-07-09 03:37:32.843] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=5950000000 bytes reserved=0 bytes
+[2026-07-09 03:37:32.844] [info] [sirius_context.cpp:924] Connection closed.
+[2026-07-09 03:37:32.899] [info] [task_scheduler.cpp:368] Task request channel closed, exiting management event loop.
+[2026-07-09 03:37:32.900] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-09 03:37:32.900] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop

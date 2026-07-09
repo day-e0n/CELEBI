@@ -1,0 +1,122 @@
+[2026-07-09 04:22:09.316] [info] [sirius_context.cpp:957] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/allq_5x_7gb_fixed/configs/sirius_2gpu.yaml
+[2026-07-09 04:22:09.322] [info] [telemetry_context.cpp:78] Telemetry context initialized (engine=siriusDB)
+[2026-07-09 04:22:09.322] [info] [sirius_context.cpp:296] SiriusContext: topology summary — 2 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-09 04:22:09.322] [info] [sirius_context.cpp:301]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:AC:00.0)
+[2026-07-09 04:22:09.322] [info] [sirius_context.cpp:301]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:CA:00.0)
+[2026-07-09 04:22:09.469] [warning] [sirius_context.cpp:311] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-09 04:22:09.469] [info] [sirius_context.cpp:323] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-09 04:22:09.471] [info] [sirius_context.cpp:376] SiriusContext: P2P enabled 0 -> 1
+[2026-07-09 04:22:09.471] [info] [sirius_context.cpp:376] SiriusContext: P2P enabled 1 -> 0
+[2026-07-09 04:22:09.490] [info] [sirius_context.cpp:436] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-09 04:22:09.493] [info] [sirius_context.cpp:918] Connection opened.
+[2026-07-09 04:22:09.493] [info] [sirius_context.cpp:931] Extension loaded: sirius
+[2026-07-09 04:22:09.493] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:09.502] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 04:22:09.502] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 04:22:09.502] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 04:22:09.502] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-09 04:22:09.502] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 04:22:09.502] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 04:22:09.502] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL pin_table('/mnt/nvme/dataset/customer.parquet', tier='gpu', name='customer', cols=['c_custkey','c_nationkey'])
+[2026-07-09 04:22:09.509] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=183749950, cap=536870912
+[2026-07-09 04:22:09.580] [info] [sirius_scan_manager.cpp:1737] [fixed-page-cache] page_directory indexed table='customer' fixed_cols=2 pages=12 resident_pages=12 resident_bytes=180000000 stats_pages=12 evicted_pages=0 eviction_count=0 directory_entries=12 page_bytes=16777216 rows=15000000 owned_pages=0
+[2026-07-09 04:22:09.580] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:09.583] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=70254592 bytes free_blocks=445
+[2026-07-09 04:22:09.583] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=183750400 bytes peak=412872192 bytes reserved=0 bytes
+[2026-07-09 04:22:09.583] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 04:22:09.583] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=70254592 bytes free_blocks=445
+[2026-07-09 04:22:09.583] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=183750400 bytes peak=412872192 bytes reserved=0 bytes
+[2026-07-09 04:22:09.583] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-09 04:22:09.583] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL pin_table('/mnt/nvme/dataset/lineitem.parquet', tier='gpu', name='lineitem', cols=['l_discount','l_extendedprice','l_orderkey','l_suppkey'])
+[2026-07-09 04:22:09.669] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=535450640, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=533587836, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=533571168, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=533589128, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=533602232, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=533586052, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=533919132, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=534357264, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=534356080, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=534332756, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=534331704, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=534372488, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=534336348, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=534345868, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=534339328, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=534349300, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=534338748, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=534362888, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=534360936, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #20: 1 slice(s), acc_bytes=534374396, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #21: 1 slice(s), acc_bytes=534362740, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #22: 1 slice(s), acc_bytes=534358428, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #23: 1 slice(s), acc_bytes=534329280, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #24: 1 slice(s), acc_bytes=534338528, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #25: 1 slice(s), acc_bytes=534346812, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #26: 1 slice(s), acc_bytes=534338784, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #27: 1 slice(s), acc_bytes=534362052, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #28: 1 slice(s), acc_bytes=534363228, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #29: 1 slice(s), acc_bytes=534344064, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #30: 1 slice(s), acc_bytes=534357696, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #31: 1 slice(s), acc_bytes=534356172, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #32: 1 slice(s), acc_bytes=534341920, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #33: 1 slice(s), acc_bytes=534349500, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #34: 1 slice(s), acc_bytes=534334008, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #35: 1 slice(s), acc_bytes=534352828, cap=536870912
+[2026-07-09 04:22:09.670] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #36: 1 slice(s), acc_bytes=534360796, cap=536870912
+[2026-07-09 04:22:13.580] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:13.594] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.594] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=183750400 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.594] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.608] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.608] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=183750400 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.608] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.608] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL unpin_table('customer')
+[2026-07-09 04:22:13.609] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:13.624] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.624] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.624] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.624] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.624] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.624] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.624] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL unpin_table('lineitem')
+[2026-07-09 04:22:13.625] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:13.634] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.634] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.634] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.634] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.634] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.634] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.634] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL unpin_table('nation')
+[2026-07-09 04:22:13.635] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:13.645] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.645] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.645] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.645] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.645] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.645] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.645] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL unpin_table('orders')
+[2026-07-09 04:22:13.645] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:13.655] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.655] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.655] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.655] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.655] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.655] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.655] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL unpin_table('region')
+[2026-07-09 04:22:13.655] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:13.665] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.665] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.665] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.665] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.665] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.665] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.665] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL unpin_table('supplier')
+[2026-07-09 04:22:13.666] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-09 04:22:13.675] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-09 04:22:13.675] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=6996906240 bytes reserved=0 bytes
+[2026-07-09 04:22:13.675] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=6544684800 bytes reserved=0 bytes
+[2026-07-09 04:22:13.675] [info] [sirius_context.cpp:924] Connection closed.
+[2026-07-09 04:22:13.686] [info] [task_scheduler.cpp:368] Task request channel closed, exiting management event loop.
+[2026-07-09 04:22:13.686] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-09 04:22:13.687] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop

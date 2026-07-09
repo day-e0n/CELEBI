@@ -240,6 +240,7 @@ def make_env(args: argparse.Namespace, condition: str, log_dir: Path, config_pat
         env["SIRIUS_FIXED_PAGE_PRUNING"] = "1"
         env["SIRIUS_FIXED_PAGE_OWNED_PAGES"] = "1"
         env["SIRIUS_FIXED_PAGE_DEMAND_LOAD"] = "1"
+        env["SIRIUS_FIXED_PAGE_BACKED_PROVIDER"] = "1"
         if args.page_cache_bytes_per_gpu:
             env["SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU"] = args.page_cache_bytes_per_gpu
         if args.page_cache_workspace_reserve_bytes_per_gpu:
