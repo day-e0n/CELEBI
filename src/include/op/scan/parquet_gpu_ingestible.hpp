@@ -242,6 +242,10 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   /// back to @c parquet_ingestible_table_info for typed access.
   explicit parquet_gpu_ingestible(std::unique_ptr<parquet_ingestible_table_info> info);
 
+  void set_scan_manager(scan_manager::sirius_scan_manager* manager) noexcept { _scan_manager = manager; }
+
+  [[nodiscard]] std::string fixed_page_cache_filter_signature() const;
+
   ~parquet_gpu_ingestible() override;
 
   std::unique_ptr<batch_coalescer> create_batch_coalescer() const override;
@@ -271,6 +275,10 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   std::unique_ptr<scan_info> build_file_scan_info(std::string const& file_path,
                                                   std::shared_ptr<io::sirius_ioctx> const& io_ctx);
 
+  void auto_cache_materialized_table(cudf::table_view view,
+                                     const cucascade::memory::memory_space& mem_space,
+                                     rmm::cuda_stream_view stream);
+
   std::unique_ptr<parquet_ingestible_table_info> _info;
 
   // Canonical scan plan — built once in the constructor, shared by every
@@ -293,6 +301,7 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   // AST-capable filters are ANDed into the parquet reader filter; membership filtering happens in
   // the downstream dynamic-filter operator.
   std::shared_ptr<sirius::op::sirius_dynamic_filter_set> _sirius_dynamic_filters;
+  scan_manager::sirius_scan_manager* _scan_manager{nullptr};
 };
 
 std::shared_ptr<parquet_gpu_ingestible> make_ingestible(

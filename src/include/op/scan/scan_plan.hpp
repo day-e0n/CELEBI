@@ -66,6 +66,7 @@ struct scan_plan {
   struct data_column {
     std::size_t primary_idx;  ///< P — index into the DuckDB schema
     std::string name;         ///< parquet column name
+    sirius::logical_type type; ///< DuckDB/Sirius logical type
   };
 
   /// A column synthesized from the file path, injected after read.

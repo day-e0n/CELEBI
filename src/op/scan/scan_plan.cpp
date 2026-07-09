@@ -276,7 +276,8 @@ scan_plan build_scan_plan(duckdb::vector<duckdb::ColumnIndex> const& column_ids,
       // data_columns without ever consuming the name downstream.
       auto const batch_idx = plan.data_columns.size();
       std::string col_name = names.empty() ? std::string{} : names.at(primary_idx);
-      plan.data_columns.push_back(scan_plan::data_column{primary_idx, std::move(col_name)});
+      plan.data_columns.push_back(scan_plan::data_column{
+        primary_idx, std::move(col_name), returned_types.at(primary_idx)});
       primary_to_batch[primary_idx] = batch_idx;
       if (is_output) {
         plan.output_position_by_column_id[column_ids_pos] = plan.output_layout.size();

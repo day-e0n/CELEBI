@@ -1,0 +1,159 @@
+[2026-07-08 12:33:25.497] [warning] [sirius_config.cpp:459] sirius_config: use_sirius_datasource was false but 2 GPUs are configured; the sirius datasource is required for multi-GPU IO routing. Overriding use_sirius_datasource to true.
+[2026-07-08 12:33:25.497] [info] [sirius_context.cpp:1046] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/tpch22_retry7gb/configs/sirius_2gpu.yaml
+[2026-07-08 12:33:25.501] [info] [telemetry_context.cpp:67] Telemetry context initialized (engine=siriusDB)
+[2026-07-08 12:33:25.501] [info] [sirius_context.cpp:337] SiriusContext: topology summary — 2 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-08 12:33:25.501] [info] [sirius_context.cpp:342]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
+[2026-07-08 12:33:25.501] [info] [sirius_context.cpp:342]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:34:00.0)
+[2026-07-08 12:33:25.644] [warning] [sirius_context.cpp:352] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-08 12:33:25.644] [info] [sirius_context.cpp:364] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-08 12:33:25.646] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 1
+[2026-07-08 12:33:25.646] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 0
+[2026-07-08 12:33:25.663] [info] [sirius_context.cpp:477] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-08 12:33:25.825] [info] [sirius_context.cpp:1007] Connection opened.
+[2026-07-08 12:33:25.825] [info] [sirius_context.cpp:1020] Extension loaded: sirius
+[2026-07-08 12:33:25.825] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 12:33:25.833] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-08 12:33:25.833] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:33:25.833] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:33:25.834] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-08 12:33:25.834] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:33:25.834] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:33:25.834] [info] [sirius_context.cpp:242] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-08 12:33:25.834] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 12:33:25.844] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-08 12:33:25.844] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:33:25.844] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:33:25.844] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-08 12:33:25.844] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:33:25.844] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:33:25.844] [info] [sirius_context.cpp:242] QueryBegin: SQL: select l.l_shipmode, sum(case when o.o_orderpriority = '1-URGENT' or o.o_orderpriority = '2-HIGH' then 1 else 0 end) as high_line_count, sum(case when o.o_orderpriority <> '1-URGENT' and o.o_orderpriority <> '2-HIGH' then 1 else 0 end) as low_line_count from orders o, lineitem l where o.o_orderkey = l.l_orderkey and l.l_shipmode in ('TRUCK', 'REG AIR') and l.l_commitdate < l.l_receiptdate and l.l_shipdate < l.l_commitdate and l.l_receiptdate >= date '1994-01-01' and l.l_receiptdate < date '1995-01-01' group by l.l_shipmode order by l.l_shipmode
+[2026-07-08 12:33:26.141] [info] [sirius_context.cpp:954] Transparent execution: Sirius physical plan generated successfully
+[2026-07-08 12:33:26.154] [info] [sirius_context.cpp:966] Transparent execution: physical plan replaced with GPU operator
+[2026-07-08 12:33:26.154] [info] [physical_sirius_execution.cpp:96] Transparent GPU execution: executing query
+[2026-07-08 12:33:26.213] [info] [sirius_engine.cpp:400] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17) -> FILTER (id=10) -> PROJECTION (id=11)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=12) -> PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=12), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=12), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #9: ORDER_BY (id=15)
+  Input: <- Pipeline #8 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #10: SORT_SAMPLE (id=25) -> SORT_PARTITION (id=26)
+  Input: <- Pipeline #9 [on: SORT_SAMPLE (id=25), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #11: MERGE_SORT (id=27)
+  Input: <- Pipeline #10 [on: MERGE_SORT (id=27), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #12: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #11 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_SORT (id=27)       │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ SORT_PARTITION (id=26)   │                            
+│ SORT_SAMPLE (id=25)      │                            
+│ Input(#9): PIPELINE      │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ HASH_JOIN (id=12)        │                            
+│   type: INNER            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ PROJECTION (id=11)       ││ GPU_SCAN (id=20)         │
+│ FILTER (id=10)           ││                          │
+│ GPU_SCAN (id=17)         ││                          │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-08 12:33:26.271] [info] [gpu_ingestible_factory.cpp:607] [fixed-page-cache] auto_populate admission_trim name='__wdy_auto_fixed_page:lineitem:7513163778645419746' op_id=17 estimated_bytes=7200454824 selected_bytes=2400151608 max_bytes=3221225472 cols=3 selected_cols=1 policy=smallest max_columns=1 useful_ratio=0.6 selected_ratio=0.2 expected_reuses=2 cache_score=0.4 selected_names='l_shipdate'
+[2026-07-08 12:33:26.864] [warning] [gpu_ingestible_factory.cpp:770] [fixed-page-cache] auto_populate failed name='__wdy_auto_fixed_page:lineitem:7513163778645419746' op_id=17 cols=1 duration_us=650460 error=CUDA error at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/src/cuda_stream_view.cpp:45: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-08 12:33:26.864] [error] [task_creator.cpp:425] Task Creator: Exception during task creation: std::bad_alloc: out_of_memory: std::bad_alloc: CUDA error (failed to allocate 1 bytes) at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/include/rmm/mr/cuda_async_view_memory_resource.hpp:87: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-08 12:33:26.864] [error] [sirius_engine.cpp:178] Error executing query: std::bad_alloc: out_of_memory: std::bad_alloc: CUDA error (failed to allocate 1 bytes) at: /tmp/conda-bld-output/bld/rattler-build_librmm/work/cpp/include/rmm/mr/cuda_async_view_memory_resource.hpp:87: cudaErrorIllegalAddress an illegal memory access was encountered
+[2026-07-08 12:33:26.864] [info] [task_scheduler.cpp:189] task_scheduler: draining after error
+[2026-07-08 12:33:26.865] [info] [task_scheduler.cpp:295] Task request channel closed, exiting management event loop.
+[2026-07-08 12:33:26.865] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-08 12:33:26.865] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop

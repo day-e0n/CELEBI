@@ -1,0 +1,45 @@
+[2026-07-08 12:28:04.838] [warning] [sirius_config.cpp:459] sirius_config: use_sirius_datasource was false but 2 GPUs are configured; the sirius datasource is required for multi-GPU IO routing. Overriding use_sirius_datasource to true.
+[2026-07-08 12:28:04.838] [info] [sirius_context.cpp:1046] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/tpch22_page7gb_iso/configs/sirius_2gpu.yaml
+[2026-07-08 12:28:04.842] [info] [telemetry_context.cpp:67] Telemetry context initialized (engine=siriusDB)
+[2026-07-08 12:28:04.842] [info] [sirius_context.cpp:337] SiriusContext: topology summary — 2 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-08 12:28:04.842] [info] [sirius_context.cpp:342]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
+[2026-07-08 12:28:04.842] [info] [sirius_context.cpp:342]   GPU 1: NVIDIA RTX A5000 (numa=0, pci=00000000:34:00.0)
+[2026-07-08 12:28:04.982] [warning] [sirius_context.cpp:352] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-08 12:28:04.982] [info] [sirius_context.cpp:364] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-08 12:28:04.984] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 0 -> 1
+[2026-07-08 12:28:04.984] [info] [sirius_context.cpp:417] SiriusContext: P2P enabled 1 -> 0
+[2026-07-08 12:28:05.002] [info] [sirius_context.cpp:477] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-08 12:28:05.164] [info] [sirius_context.cpp:1007] Connection opened.
+[2026-07-08 12:28:05.164] [info] [sirius_context.cpp:1020] Extension loaded: sirius
+[2026-07-08 12:28:05.164] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 12:28:05.173] [info] [:] [host_pool] HOST:0 QueryEnd allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-08 12:28:05.173] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:05.173] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:05.173] [info] [:] [host_pool] HOST:0 QueryBegin allocated=0 bytes peak=0 bytes free_blocks=512
+[2026-07-08 12:28:05.173] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:05.173] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:05.173] [info] [sirius_context.cpp:242] QueryBegin: SQL: CALL pin_table('/mnt/nvme/dataset/lineitem*.parquet', tier='gpu', name='lineitem', cols=['l_discount','l_extendedprice','l_partkey','l_quantity','l_shipinstruct','l_shipmode'])
+[2026-07-08 12:28:08.235] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 12:28:08.250] [info] [:] [host_pool] HOST:0 QueryEnd allocated=1048576 bytes peak=1048576 bytes free_blocks=511
+[2026-07-08 12:28:08.250] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=2943488 bytes reserved=0 bytes
+[2026-07-08 12:28:08.250] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:08.251] [info] [:] [host_pool] HOST:0 QueryBegin allocated=1048576 bytes peak=1048576 bytes free_blocks=511
+[2026-07-08 12:28:08.251] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=2943488 bytes reserved=0 bytes
+[2026-07-08 12:28:08.251] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:08.251] [info] [sirius_context.cpp:242] QueryBegin: SQL: CALL unpin_table('lineitem')
+[2026-07-08 12:28:08.251] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 12:28:08.271] [info] [:] [host_pool] HOST:0 QueryEnd allocated=1048576 bytes peak=1048576 bytes free_blocks=511
+[2026-07-08 12:28:08.271] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=2943488 bytes reserved=0 bytes
+[2026-07-08 12:28:08.271] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:08.271] [info] [:] [host_pool] HOST:0 QueryBegin allocated=1048576 bytes peak=1048576 bytes free_blocks=511
+[2026-07-08 12:28:08.271] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=2943488 bytes reserved=0 bytes
+[2026-07-08 12:28:08.271] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:08.271] [info] [sirius_context.cpp:242] QueryBegin: SQL: CALL unpin_table('part')
+[2026-07-08 12:28:08.271] [info] [sirius_context.cpp:258] QueryEnd
+[2026-07-08 12:28:08.291] [info] [:] [host_pool] HOST:0 QueryEnd allocated=1048576 bytes peak=1048576 bytes free_blocks=511
+[2026-07-08 12:28:08.291] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=2943488 bytes reserved=0 bytes
+[2026-07-08 12:28:08.291] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 12:28:08.291] [info] [sirius_context.cpp:1013] Connection closed.
+[2026-07-08 12:28:08.299] [info] [task_scheduler.cpp:295] Task request channel closed, exiting management event loop.
+[2026-07-08 12:28:08.299] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-08 12:28:08.300] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop

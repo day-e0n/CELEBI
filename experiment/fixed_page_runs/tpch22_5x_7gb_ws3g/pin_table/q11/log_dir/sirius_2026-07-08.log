@@ -1,0 +1,870 @@
+[2026-07-08 17:06:42.664] [info] [sirius_context.cpp:957] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/fixed_page_runs/tpch22_5x_7gb_ws3g/configs/sirius_1gpu.yaml
+[2026-07-08 17:06:42.693] [info] [telemetry_context.cpp:78] Telemetry context initialized (engine=siriusDB)
+[2026-07-08 17:06:42.693] [info] [sirius_context.cpp:296] SiriusContext: topology summary — 1 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-08 17:06:42.693] [info] [sirius_context.cpp:301]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:16:00.0)
+[2026-07-08 17:06:42.821] [warning] [sirius_context.cpp:311] SiriusContext: disk memory space is not configured; spilling GPU or HOST data to disk is disabled. If queries run out of GPU/HOST memory, downgrades to disk will not be possible.
+[2026-07-08 17:06:42.821] [info] [sirius_context.cpp:323] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-08 17:06:42.821] [info] [sirius_context.cpp:386] SiriusContext: skipping peer-access enable loop (num_gpus=1); single-GPU host has no pairs to enable
+[2026-07-08 17:06:42.839] [info] [sirius_context.cpp:436] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-08 17:06:42.842] [info] [sirius_context.cpp:918] Connection opened.
+[2026-07-08 17:06:42.842] [info] [sirius_context.cpp:931] Extension loaded: sirius
+[2026-07-08 17:06:42.842] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-08 17:06:42.851] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-08 17:06:42.851] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 17:06:42.851] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-08 17:06:42.851] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-08 17:06:42.851] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL pin_table('/mnt/nvme/dataset/nation.parquet', tier='gpu', name='nation', cols=['n_name','n_nationkey'])
+[2026-07-08 17:06:42.852] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=508, cap=536870912
+[2026-07-08 17:06:42.882] [info] [sirius_scan_manager.cpp:1737] [fixed-page-cache] page_directory indexed table='nation' fixed_cols=1 pages=1 resident_pages=1 resident_bytes=100 stats_pages=1 evicted_pages=0 eviction_count=0 directory_entries=1 page_bytes=16777216 rows=25 owned_pages=0
+[2026-07-08 17:06:42.883] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-08 17:06:42.892] [info] [:] [host_pool] HOST:0 QueryEnd allocated=68157440 bytes peak=68157440 bytes free_blocks=447
+[2026-07-08 17:06:42.892] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=1280 bytes peak=9728 bytes reserved=0 bytes
+[2026-07-08 17:06:42.892] [info] [:] [host_pool] HOST:0 QueryBegin allocated=68157440 bytes peak=68157440 bytes free_blocks=447
+[2026-07-08 17:06:42.892] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=1280 bytes peak=9728 bytes reserved=0 bytes
+[2026-07-08 17:06:42.892] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL pin_table('/mnt/nvme/dataset/partsupp.parquet', tier='gpu', name='partsupp', cols=['ps_availqty','ps_partkey','ps_suppkey','ps_supplycost'])
+[2026-07-08 17:06:42.901] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=532942300, cap=536870912
+[2026-07-08 17:06:42.901] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=533182052, cap=536870912
+[2026-07-08 17:06:42.901] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=532889460, cap=536870912
+[2026-07-08 17:06:42.901] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=536703428, cap=536870912
+[2026-07-08 17:06:43.298] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=464282420, cap=536870912
+[2026-07-08 17:06:43.398] [info] [sirius_scan_manager.cpp:1737] [fixed-page-cache] page_directory indexed table='partsupp' fixed_cols=4 pages=156 resident_pages=156 resident_bytes=2560000000 stats_pages=117 evicted_pages=0 eviction_count=0 directory_entries=156 page_bytes=16777216 rows=80000000 owned_pages=0
+[2026-07-08 17:06:43.399] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-08 17:06:43.418] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-08 17:06:43.418] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=2600006912 bytes peak=3210814464 bytes reserved=0 bytes
+[2026-07-08 17:06:43.419] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-08 17:06:43.419] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=2600006912 bytes peak=3210814464 bytes reserved=0 bytes
+[2026-07-08 17:06:43.419] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL pin_table('/mnt/nvme/dataset/supplier.parquet', tier='gpu', name='supplier', cols=['s_nationkey','s_suppkey'])
+[2026-07-08 17:06:43.420] [info] [parquet_gpu_ingestible.cpp:250] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=12249994, cap=536870912
+[2026-07-08 17:06:43.432] [info] [sirius_scan_manager.cpp:1737] [fixed-page-cache] page_directory indexed table='supplier' fixed_cols=2 pages=2 resident_pages=2 resident_bytes=12000000 stats_pages=2 evicted_pages=0 eviction_count=0 directory_entries=2 page_bytes=16777216 rows=1000000 owned_pages=0
+[2026-07-08 17:06:43.432] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-08 17:06:43.449] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-08 17:06:43.449] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=2612257280 bytes peak=3210814464 bytes reserved=0 bytes
+[2026-07-08 17:06:43.449] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-08 17:06:43.449] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=2612257280 bytes peak=3210814464 bytes reserved=0 bytes
+[2026-07-08 17:06:43.449] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-08 17:06:43.450] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-08 17:06:43.470] [info] [:] [host_pool] HOST:0 QueryEnd allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-08 17:06:43.470] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=2612257280 bytes peak=3210814464 bytes reserved=0 bytes
+[2026-07-08 17:06:43.470] [info] [:] [host_pool] HOST:0 QueryBegin allocated=71303168 bytes peak=71303168 bytes free_blocks=444
+[2026-07-08 17:06:43.470] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=2612257280 bytes peak=3210814464 bytes reserved=0 bytes
+[2026-07-08 17:06:43.470] [info] [sirius_context.cpp:201] QueryBegin: SQL: select ps.ps_partkey, sum(ps.ps_supplycost * ps.ps_availqty) as value from partsupp ps, supplier s, nation n where ps.ps_suppkey = s.s_suppkey and s.s_nationkey = n.n_nationkey and n.n_name = 'GERMANY' group by ps.ps_partkey having sum(ps.ps_supplycost * ps.ps_availqty) > ( select sum(ps.ps_supplycost * ps.ps_availqty) * 0.0001000000 from partsupp ps, supplier s, nation n where ps.ps_suppkey = s.s_suppkey and s.s_nationkey = n.n_nationkey and n.n_name = 'GERMANY' ) order by value desc
+[2026-07-08 17:06:43.495] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x607a3e6e4fb0).
+[2026-07-08 17:06:43.496] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 25 rows).
+[2026-07-08 17:06:43.496] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x607a3e4a4370).
+[2026-07-08 17:06:43.496] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-08 17:06:43.496] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x607a3e6edc90).
+[2026-07-08 17:06:43.496] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-08 17:06:43.497] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-08 17:06:43.498] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-08 17:06:43.498] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-08 17:06:43.502] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x607a3e6e4fb0).
+[2026-07-08 17:06:43.502] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 25 rows).
+[2026-07-08 17:06:43.502] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x607a3e4a4370).
+[2026-07-08 17:06:43.502] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-08 17:06:43.502] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x607a3e6edc90).
+[2026-07-08 17:06:43.502] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-08 17:06:43.503] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=41)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=43)
+  Input: <- Pipeline #0 [on: PARTITION (id=43), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=42)
+  Input: <- Pipeline #1 [on: CONCAT (id=42), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=44) -> DYNAMIC_FILTER (id=45)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=47)
+  Input: <- Pipeline #3 [on: PARTITION (id=47), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=46)
+  Input: <- Pipeline #4 [on: CONCAT (id=46), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=22) -> CTE (id=37)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=22), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=22), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=49)
+  Input: <- Pipeline #6 [on: PARTITION (id=49), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #8: CONCAT (id=48)
+  Input: <- Pipeline #7 [on: CONCAT (id=48), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #7
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #9: GPU_SCAN (id=50)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #10: PARTITION (id=52)
+  Input: <- Pipeline #9 [on: PARTITION (id=52), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #9
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #11: CONCAT (id=51)
+  Input: <- Pipeline #10 [on: CONCAT (id=51), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #10
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #12: HASH_JOIN (id=25) -> PROJECTION (id=26) -> HASH_GROUP_BY (id=27)
+  Input: <- Pipeline #11 [on: HASH_JOIN (id=25), port: default, barrier: FULL]
+  Input: <- Pipeline #8 [on: HASH_JOIN (id=25), port: build, barrier: FULL]
+  Dependencies: Pipeline #8, Pipeline #11
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #13: PARTITION (id=53)
+  Input: <- Pipeline #12 [on: PARTITION (id=53), port: default, barrier: FULL]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #14: MERGE_GROUP_BY (id=54)
+  Input: <- Pipeline #13 [on: MERGE_GROUP_BY (id=54), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #15: PARTITION (id=56)
+  Input: <- Pipeline #6 [on: PARTITION (id=56), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #16: CONCAT (id=55)
+  Input: <- Pipeline #15 [on: CONCAT (id=55), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #15
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #17: GPU_SCAN (id=57)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #18: PARTITION (id=59)
+  Input: <- Pipeline #17 [on: PARTITION (id=59), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #17
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #19: CONCAT (id=58)
+  Input: <- Pipeline #18 [on: CONCAT (id=58), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #18
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #20: HASH_JOIN (id=30) -> PROJECTION (id=31) -> UNGROUPED_AGGREGATE (id=32)
+  Input: <- Pipeline #19 [on: HASH_JOIN (id=30), port: default, barrier: FULL]
+  Input: <- Pipeline #16 [on: HASH_JOIN (id=30), port: build, barrier: FULL]
+  Dependencies: Pipeline #16, Pipeline #19
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #21: MERGE_AGGREGATE (id=60)
+  Input: <- Pipeline #20 [on: MERGE_AGGREGATE (id=60), port: default, barrier: FULL]
+  Dependencies: Pipeline #20
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #22: PROJECTION (id=33) -> UNGROUPED_AGGREGATE (id=34)
+  Input: <- Pipeline #21 [on: PROJECTION (id=33), port: default, barrier: FULL]
+  Dependencies: Pipeline #21
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #23: MERGE_AGGREGATE (id=61)
+  Input: <- Pipeline #22 [on: MERGE_AGGREGATE (id=61), port: default, barrier: FULL]
+  Dependencies: Pipeline #22
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #24: PROJECTION (id=35)
+  Input: <- Pipeline #23 [on: PROJECTION (id=35), port: default, barrier: FULL]
+  Dependencies: Pipeline #23
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #25: PARTITION (id=63)
+  Input: <- Pipeline #24 [on: PARTITION (id=63), port: default, barrier: FULL]
+  Dependencies: Pipeline #24
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #26: CONCAT (id=62)
+  Input: <- Pipeline #25 [on: CONCAT (id=62), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #25
+  Output: -> NESTED_LOOP_JOIN [port: build, barrier: FULL]
+Pipeline #27: PARTITION (id=65)
+  Input: <- Pipeline #14 [on: PARTITION (id=65), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #28: CONCAT (id=64)
+  Input: <- Pipeline #27 [on: CONCAT (id=64), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #27
+  Output: -> NESTED_LOOP_JOIN [port: default, barrier: FULL]
+Pipeline #29: NESTED_LOOP_JOIN (id=36) -> PROJECTION (id=38) -> ORDER_BY (id=39)
+  Input: <- Pipeline #28 [on: NESTED_LOOP_JOIN (id=36), port: default, barrier: FULL]
+  Input: <- Pipeline #26 [on: NESTED_LOOP_JOIN (id=36), port: build, barrier: FULL]
+  Dependencies: Pipeline #26, Pipeline #28
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #30: SORT_SAMPLE (id=66) -> SORT_PARTITION (id=67)
+  Input: <- Pipeline #29 [on: SORT_SAMPLE (id=66), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #29
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #31: MERGE_SORT (id=68)
+  Input: <- Pipeline #30 [on: MERGE_SORT (id=68), port: default, barrier: FULL]
+  Dependencies: Pipeline #30
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #32: RESULT_COLLECTOR (id=40)
+  Input: <- Pipeline #31 [on: RESULT_COLLECTOR (id=40), port: default, barrier: FULL]
+  Dependencies: Pipeline #31
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                                                                                                                            
+│ Pipeline #32                │                                                                                                                            
+│ RESULT_COLLECTOR (id=40)    │                                                                                                                            
+│ Input(#31): FULL            │                                                                                                                            
+└──────────────┬──────────────┘                                                                                                                            
+               │                                                                                                                                           
+┌─────────────────────────────┐                                                                                                                            
+│ Pipeline #31                │                                                                                                                            
+│ MERGE_SORT (id=68)          │                                                                                                                            
+│ Input(#30): FULL            │                                                                                                                            
+└──────────────┬──────────────┘                                                                                                                            
+               │                                                                                                                                           
+┌─────────────────────────────┐                                                                                                                            
+│ Pipeline #30                │                                                                                                                            
+│ SORT_PARTITION (id=67)      │                                                                                                                            
+│ SORT_SAMPLE (id=66)         │                                                                                                                            
+│ Input(#29): PIPELINE        │                                                                                                                            
+└──────────────┬──────────────┘                                                                                                                            
+               │                                                                                                                                           
+┌─────────────────────────────┐                                                                                                                            
+│ Pipeline #29                │                                                                                                                            
+│ ORDER_BY (id=39)            │                                                                                                                            
+│ PROJECTION (id=38)          │                                                                                                                            
+│ NESTED_LOOP_JOIN (id=36)    │                                                                                                                            
+│   type: INNER               │                                                                                                                            
+│ Input(#28): FULL            │                                                                                                                            
+│ Input(#26): FULL            │                                                                                                                            
+└──────────────┬──────────────┘                                                                                                                            
+               ┌────────────────────────────────────────────────────────────────────────────────────────────┐                                              
+               │                                                                                            │                                              
+┌─────────────────────────────┐                                                              ┌─────────────────────────────┐                               
+│ Pipeline #26                │                                                              │ Pipeline #28                │                               
+│ CONCAT (id=62)              │                                                              │ CONCAT (id=64)              │                               
+│ Input(#25): PARTIAL         │                                                              │ Input(#27): PARTIAL         │                               
+└──────────────┬──────────────┘                                                              └──────────────┬──────────────┘                               
+               │                                                                                            │                                              
+┌─────────────────────────────┐                                                              ┌─────────────────────────────┐                               
+│ Pipeline #25                │                                                              │ Pipeline #27                │                               
+│ PARTITION (id=63)           │                                                              │ PARTITION (id=65)           │                               
+│ Input(#24): FULL            │                                                              │ Input(#14): FULL            │                               
+└──────────────┬──────────────┘                                                              └──────────────┬──────────────┘                               
+               │                                                                                            │                                              
+┌─────────────────────────────┐                                                              ┌─────────────────────────────┐                               
+│ Pipeline #24                │                                                              │ Pipeline #14                │                               
+│ PROJECTION (id=35)          │                                                              │ MERGE_GROUP_BY (id=54)      │                               
+│ Input(#23): FULL            │                                                              │ Input(#13): FULL            │                               
+└──────────────┬──────────────┘                                                              └──────────────┬──────────────┘                               
+               │                                                                                            │                                              
+┌─────────────────────────────┐                                                              ┌─────────────────────────────┐                               
+│ Pipeline #23                │                                                              │ Pipeline #13                │                               
+│ MERGE_AGGREGATE (id=61)     │                                                              │ PARTITION (id=53)           │                               
+│ Input(#22): FULL            │                                                              │ Input(#12): FULL            │                               
+└──────────────┬──────────────┘                                                              └──────────────┬──────────────┘                               
+               │                                                                                            │                                              
+┌─────────────────────────────┐                                                              ┌─────────────────────────────┐                               
+│ Pipeline #22                │                                                              │ Pipeline #12                │                               
+│ UNGROUPED_AGGREGATE (id=34) │                                                              │ HASH_GROUP_BY (id=27)       │                               
+│ PROJECTION (id=33)          │                                                              │ PROJECTION (id=26)          │                               
+│ Input(#21): FULL            │                                                              │ HASH_JOIN (id=25)           │                               
+│                             │                                                              │   type: INNER               │                               
+│                             │                                                              │ Input(#11): FULL            │                               
+│                             │                                                              │ Input(#8): FULL             │                               
+└──────────────┬──────────────┘                                                              └──────────────┬──────────────┘                               
+               │                                                                                            ┌──────────────────────────────┐               
+               │                                                                                            │                              │               
+┌─────────────────────────────┐                                                              ┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #21                │                                                              │ Pipeline #8                 ││ Pipeline #11                │
+│ MERGE_AGGREGATE (id=60)     │                                                              │ CONCAT (id=48)              ││ CONCAT (id=51)              │
+│ Input(#20): FULL            │                                                              │ Input(#7): PARTIAL          ││ Input(#10): PARTIAL         │
+└──────────────┬──────────────┘                                                              └──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                                                                                            │                              │               
+┌─────────────────────────────┐                                                              ┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #20                │                                                              │ Pipeline #7                 ││ Pipeline #10                │
+│ UNGROUPED_AGGREGATE (id=32) │                                                              │ PARTITION (id=49)           ││ PARTITION (id=52)           │
+│ PROJECTION (id=31)          │                                                              │ Input(#6): FULL             ││ Input(#9): PARTIAL          │
+│ HASH_JOIN (id=30)           │                                                              │                             ││                             │
+│   type: INNER               │                                                              │                             ││                             │
+│ Input(#19): FULL            │                                                              │                             ││                             │
+│ Input(#16): FULL            │                                                              │                             ││                             │
+└──────────────┬──────────────┘                                                              └──────────────┬──────────────┘└──────────────┬──────────────┘
+               ┌─────────────────────────────────────────────────────────────┐                              │                              │               
+               │                                                             │                              │                              │               
+┌─────────────────────────────┐                               ┌─────────────────────────────┐┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #16                │                               │ Pipeline #19                ││ (-> Pipeline #6)            ││ Pipeline #9                 │
+│ CONCAT (id=55)              │                               │ CONCAT (id=58)              ││                             ││ GPU_SCAN (id=50)            │
+│ Input(#15): PARTIAL         │                               │ Input(#18): PARTIAL         ││                             ││                             │
+└──────────────┬──────────────┘                               └──────────────┬──────────────┘└──────────────┬──────────────┘└─────────────────────────────┘
+               │                                                             │                                                                             
+┌─────────────────────────────┐                               ┌─────────────────────────────┐                                                              
+│ Pipeline #15                │                               │ Pipeline #18                │                                                              
+│ PARTITION (id=56)           │                               │ PARTITION (id=59)           │                                                              
+│ Input(#6): FULL             │                               │ Input(#17): PARTIAL         │                                                              
+└──────────────┬──────────────┘                               └──────────────┬──────────────┘                                                              
+               │                                                             │                                                                             
+┌─────────────────────────────┐                               ┌─────────────────────────────┐                                                              
+│ Pipeline #6                 │                               │ Pipeline #17                │                                                              
+│ CTE (id=37)                 │                               │ GPU_SCAN (id=57)            │                                                              
+│ HASH_JOIN (id=22)           │                               │                             │                                                              
+│   type: INNER               │                               │                             │                                                              
+│ Input(#5): FULL             │                               │                             │                                                              
+│ Input(#2): FULL             │                               │                             │                                                              
+└──────────────┬──────────────┘                               └─────────────────────────────┘                                                              
+               ┌──────────────────────────────┐                                                                                                            
+               │                              │                                                                                                            
+┌─────────────────────────────┐┌─────────────────────────────┐                                                                                             
+│ Pipeline #2                 ││ Pipeline #5                 │                                                                                             
+│ CONCAT (id=42)              ││ CONCAT (id=46)              │                                                                                             
+│ Input(#1): PARTIAL          ││ Input(#4): PARTIAL          │                                                                                             
+└──────────────┬──────────────┘└──────────────┬──────────────┘                                                                                             
+               │                              │                                                                                                            
+┌─────────────────────────────┐┌─────────────────────────────┐                                                                                             
+│ Pipeline #1                 ││ Pipeline #4                 │                                                                                             
+│ PARTITION (id=43)           ││ PARTITION (id=47)           │                                                                                             
+│ Input(#0): FULL             ││ Input(#3): PARTIAL          │                                                                                             
+└──────────────┬──────────────┘└──────────────┬──────────────┘                                                                                             
+               │                              │                                                                                                            
+┌─────────────────────────────┐┌─────────────────────────────┐                                                                                             
+│ Pipeline #0                 ││ Pipeline #3                 │                                                                                             
+│ GPU_SCAN (id=41)            ││ DYNAMIC_FILTER (id=45)      │                                                                                             
+│                             ││ GPU_SCAN (id=44)            │                                                                                             
+└─────────────────────────────┘└─────────────────────────────┘                                                                                             
+
+[2026-07-08 17:06:43.503] [info] [sirius_scan_manager.cpp:416] [fixed-page-cache] page-backed cached provider unavailable; falling back to chunk-backed cached provider
+[2026-07-08 17:06:43.503] [info] [:] [sirius_scan_manager] assigned pinned entry 'nation' to operator '41'
+[2026-07-08 17:06:43.503] [info] [sirius_scan_manager.cpp:411] [fixed-page-cache] using page-backed cached provider batches=1
+[2026-07-08 17:06:43.503] [info] [:] [sirius_scan_manager] assigned pinned entry 'supplier' to operator '44'
+[2026-07-08 17:06:43.503] [info] [sirius_scan_manager.cpp:411] [fixed-page-cache] using page-backed cached provider batches=39
+[2026-07-08 17:06:43.503] [info] [:] [sirius_scan_manager] assigned pinned entry 'partsupp' to operator '50'
+[2026-07-08 17:06:43.503] [info] [sirius_scan_manager.cpp:411] [fixed-page-cache] using page-backed cached provider batches=39
+[2026-07-08 17:06:43.503] [info] [:] [sirius_scan_manager] assigned pinned entry 'partsupp' to operator '57'
+[2026-07-08 17:06:43.504] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-07-08 17:06:43.504] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=0 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.519] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=0 task_id=0 operator_id=41 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1 output_columns=1 output_bytes=68 byte_ratio=0.000000 row_ratio=0.000000 duration_us=14651
+[2026-07-08 17:06:43.519] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=43 input_bytes=68 local_bytes=68 gpu_source_bytes=68 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-08 17:06:43.519] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=1
+[2026-07-08 17:06:43.519] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=1 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.519] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=68 local_bytes=68 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.519] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=1 task_id=1 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=68 local_bytes=68 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.519] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=1 task_id=1 operator_id=43 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=1 input_columns=1 input_bytes=68 output_batches=1 output_rows=1 output_columns=1 output_bytes=68 byte_ratio=1.000000 row_ratio=1.000000 duration_us=8
+[2026-07-08 17:06:43.520] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=2
+[2026-07-08 17:06:43.520] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=2 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.520] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=68 local_bytes=68 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.520] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=2 task_id=2 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=68 local_bytes=68 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.520] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=2 task_id=2 operator_id=42 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=1 input_columns=1 input_bytes=68 output_batches=1 output_rows=1 output_columns=1 output_bytes=68 byte_ratio=1.000000 row_ratio=1.000000 duration_us=10
+[2026-07-08 17:06:43.527] [info] [dynamic_filter_publisher.cpp:330] [sirius_physical_hash_join] Pushed 1 dynamic filter(s) across 1 active target(s) of 1 wired target(s) (1 build rows, 1 keys).
+[2026-07-08 17:06:43.527] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3
+[2026-07-08 17:06:43.527] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=3 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.528] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=3 operator_id=44 operator_name=GPU_SCAN stage_kind=SCAN operator_type=94 input_type=GPU_SCAN output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=0 input_rows=0 input_columns=0 input_bytes=0 output_batches=1 output_rows=1000000 output_columns=2 output_bytes=12250112 byte_ratio=0.000000 row_ratio=0.000000 duration_us=378
+[2026-07-08 17:06:43.529] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=3 task_id=3 operator_id=45 operator_name=DYNAMIC_FILTER stage_kind=OTHER operator_type=95 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=1000000 input_columns=2 input_bytes=12250112 output_batches=1 output_rows=40045 output_columns=2 output_bytes=490652 byte_ratio=0.040053 row_ratio=0.040045 duration_us=769
+[2026-07-08 17:06:43.529] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=47 input_bytes=490652 local_bytes=490652 gpu_source_bytes=490652 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-08 17:06:43.529] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4
+[2026-07-08 17:06:43.529] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=4 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.529] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=4 task_id=4 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=490652 local_bytes=490652 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.529] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=4 task_id=4 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=490652 local_bytes=490652 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.529] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=4 task_id=4 operator_id=47 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=40045 input_columns=2 input_bytes=490652 output_batches=1 output_rows=40045 output_columns=2 output_bytes=490652 byte_ratio=1.000000 row_ratio=1.000000 duration_us=3
+[2026-07-08 17:06:43.530] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5
+[2026-07-08 17:06:43.530] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=5 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.530] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=5 task_id=5 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=490652 local_bytes=490652 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.530] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=5 task_id=5 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=490652 local_bytes=490652 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.530] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=5 task_id=5 operator_id=46 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=40045 input_columns=2 input_bytes=490652 output_batches=1 output_rows=40045 output_columns=2 output_bytes=490652 byte_ratio=1.000000 row_ratio=1.000000 duration_us=7
+[2026-07-08 17:06:43.530] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=6
+[2026-07-08 17:06:43.530] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=6 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.530] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=6 task_id=6 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=490720 local_bytes=490720 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-08 17:06:43.530] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=6 task_id=6 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=490720 local_bytes=490720 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=2
+[2026-07-08 17:06:43.538] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=6 task_id=6 operator_id=22 operator_name=HASH_JOIN stage_kind=JOIN operator_type=33 input_type=PARTITIONED output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=2 input_rows=40046 input_columns=3 input_bytes=490720 output_batches=1 output_rows=40045 output_columns=3 output_bytes=655888 byte_ratio=1.336583 row_ratio=0.999975 duration_us=8061
+[2026-07-08 17:06:43.538] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=6 task_id=6 operator_id=37 operator_name=CTE stage_kind=CTE operator_type=44 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=2 input_batches=1 input_rows=40045 input_columns=3 input_bytes=655888 output_batches=1 output_rows=40045 output_columns=3 output_bytes=655888 byte_ratio=1.000000 row_ratio=1.000000 duration_us=3
+[2026-07-08 17:06:43.538] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=49 input_bytes=655888 local_bytes=655888 gpu_source_bytes=655888 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-08 17:06:43.539] [info] [task_creator.cpp:363] [locality-audit] task_create operator_id=56 input_bytes=655888 local_bytes=655888 gpu_source_bytes=655888 host_source_bytes=0 disk_source_bytes=0 gpu_sources=1 host_sources=0 preferred_device=0
+[2026-07-08 17:06:43.539] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=7
+[2026-07-08 17:06:43.539] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=7 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.539] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.539] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (655888 bytes freed), reservation still partial (0/1311776 bytes) for pipeline 7 task 7 -- proceeding with partial reservation
+[2026-07-08 17:06:43.539] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=8
+[2026-07-08 17:06:43.539] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=8 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.539] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=7 task_id=7 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=655892 local_bytes=0 remote_gpu_bytes=0 host_bytes=655892 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.539] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=7 task_id=7 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=655888 local_bytes=655888 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.539] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=7 task_id=7 operator_id=49 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=40045 input_columns=3 input_bytes=655888 output_batches=1 output_rows=40045 output_columns=3 output_bytes=655888 byte_ratio=1.000000 row_ratio=1.000000 duration_us=3
+[2026-07-08 17:06:43.540] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.540] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (655888 bytes freed), reservation still partial (0/1967676 bytes) for pipeline 15 task 8 -- proceeding with partial reservation
+[2026-07-08 17:06:43.540] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9
+[2026-07-08 17:06:43.540] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=9 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.540] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=15 task_id=8 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=655892 local_bytes=0 remote_gpu_bytes=0 host_bytes=655892 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.540] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=15 task_id=8 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=655888 local_bytes=655888 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.540] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=15 task_id=8 operator_id=56 operator_name=PARTITION stage_kind=PARTITION operator_type=82 input_type=PIPELINEABLE output_type=PIPELINEABLE actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=40045 input_columns=3 input_bytes=655888 output_batches=1 output_rows=40045 output_columns=3 output_bytes=655888 byte_ratio=1.000000 row_ratio=1.000000 duration_us=5
+[2026-07-08 17:06:43.540] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.540] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (655888 bytes freed), reservation still partial (0/1311784 bytes) for pipeline 8 task 9 -- proceeding with partial reservation
+[2026-07-08 17:06:43.540] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10
+[2026-07-08 17:06:43.540] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=10 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.540] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=8 task_id=9 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=655892 local_bytes=0 remote_gpu_bytes=0 host_bytes=655892 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.541] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=8 task_id=9 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=655888 local_bytes=655888 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.541] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=8 task_id=9 operator_id=48 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=40045 input_columns=3 input_bytes=655888 output_batches=1 output_rows=40045 output_columns=3 output_bytes=655888 byte_ratio=1.000000 row_ratio=1.000000 duration_us=5
+[2026-07-08 17:06:43.541] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.541] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (655888 bytes freed), reservation still partial (0/1311776 bytes) for pipeline 16 task 10 -- proceeding with partial reservation
+[2026-07-08 17:06:43.541] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_before pipeline_id=16 task_id=10 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=655892 local_bytes=0 remote_gpu_bytes=0 host_bytes=655892 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.541] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=11
+[2026-07-08 17:06:43.542] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=11 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.542] [info] [gpu_pipeline_task.cpp:188] [locality-audit] prepare_after pipeline_id=16 task_id=10 preferred_device=0 actual_gpu=0 target_tier=GPU target_device=0 input_bytes=655888 local_bytes=655888 remote_gpu_bytes=0 host_bytes=0 disk_bytes=0 batch_count=1
+[2026-07-08 17:06:43.542] [info] [gpu_pipeline_task.cpp:321] [stage-audit] pipeline_id=16 task_id=10 operator_id=55 operator_name=CONCAT stage_kind=CONCAT operator_type=83 input_type=PARTITIONED output_type=PARTITIONED actual_gpu=0 pipeline_operator_count=1 input_batches=1 input_rows=40045 input_columns=3 input_bytes=655888 output_batches=1 output_rows=40045 output_columns=3 output_bytes=655888 byte_ratio=1.000000 row_ratio=1.000000 duration_us=1
+[2026-07-08 17:06:43.542] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.542] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (655888 bytes freed), reservation still partial (0/68157440 bytes) for pipeline 9 task 11 -- proceeding with partial reservation
+[2026-07-08 17:06:43.542] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=12
+[2026-07-08 17:06:43.542] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=12 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.542] [error] [scoped_dispatcher.hpp:118] Exception in scoped_dispatcher task at /home/dy1013/sirius_multi-gpu/src/include/exec/scoped_dispatcher.hpp:134: std::bad_alloc: out_of_memory: not enough capacity to allocate memory
+[2026-07-08 17:06:43.542] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984972544 bytes (6661.39 MB), peak allocated 17039360 bytes (16.25 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 11
+[2026-07-08 17:06:43.542] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 11 (original task 11), resuming from operator index 0
+[2026-07-08 17:06:43.543] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.543] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/68157440 bytes) for pipeline 9 task 12 -- proceeding with partial reservation
+[2026-07-08 17:06:43.543] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=13
+[2026-07-08 17:06:43.543] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=13 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.543] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 12
+[2026-07-08 17:06:43.543] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 12 (original task 12), resuming from operator index 0
+[2026-07-08 17:06:43.543] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.543] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/17039360 bytes) for pipeline 9 task 13 -- proceeding with partial reservation
+[2026-07-08 17:06:43.543] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=14
+[2026-07-08 17:06:43.543] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=14 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.544] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 13
+[2026-07-08 17:06:43.544] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 13 (original task 13), resuming from operator index 0
+[2026-07-08 17:06:43.544] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.544] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 9 task 14 -- proceeding with partial reservation
+[2026-07-08 17:06:43.544] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 14
+[2026-07-08 17:06:43.544] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 14 (original task 14), resuming from operator index 0
+[2026-07-08 17:06:43.593] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=15
+[2026-07-08 17:06:43.593] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=15 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.593] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.593] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 9 task 85 -- proceeding with partial reservation
+[2026-07-08 17:06:43.594] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 85
+[2026-07-08 17:06:43.594] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16
+[2026-07-08 17:06:43.594] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=16 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.594] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 85 (original task 11), resuming from operator index 0
+[2026-07-08 17:06:43.594] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.594] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 9 task 15 -- proceeding with partial reservation
+[2026-07-08 17:06:43.594] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=17
+[2026-07-08 17:06:43.594] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=17 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.594] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 15
+[2026-07-08 17:06:43.594] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 15 (original task 15), resuming from operator index 0
+[2026-07-08 17:06:43.594] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.594] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 9 task 86 -- proceeding with partial reservation
+[2026-07-08 17:06:43.595] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=18
+[2026-07-08 17:06:43.595] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=18 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.595] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 86
+[2026-07-08 17:06:43.595] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 86 (original task 12), resuming from operator index 0
+[2026-07-08 17:06:43.595] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.595] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 9 task 16 -- proceeding with partial reservation
+[2026-07-08 17:06:43.596] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 16
+[2026-07-08 17:06:43.596] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 16 (original task 16), resuming from operator index 0
+[2026-07-08 17:06:43.644] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.644] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=19
+[2026-07-08 17:06:43.644] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=19 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.644] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 9 task 87 -- proceeding with partial reservation
+[2026-07-08 17:06:43.645] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=20
+[2026-07-08 17:06:43.645] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=20 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.645] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 87
+[2026-07-08 17:06:43.645] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 87 (original task 13), resuming from operator index 0
+[2026-07-08 17:06:43.645] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.645] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 9 task 88 -- proceeding with partial reservation
+[2026-07-08 17:06:43.645] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=21
+[2026-07-08 17:06:43.645] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=21 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.646] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 88
+[2026-07-08 17:06:43.646] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 88 (original task 14), resuming from operator index 0
+[2026-07-08 17:06:43.646] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.646] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 9 task 17 -- proceeding with partial reservation
+[2026-07-08 17:06:43.646] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=22
+[2026-07-08 17:06:43.646] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=22 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.647] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 17
+[2026-07-08 17:06:43.647] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 17 (original task 17), resuming from operator index 0
+[2026-07-08 17:06:43.647] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.647] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/27920176 bytes) for pipeline 9 task 18 -- proceeding with partial reservation
+[2026-07-08 17:06:43.647] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 13745304 bytes (13.11 MB), global usage 6995544064 bytes (6671.47 MB), peak allocated 41880576 bytes (39.94 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 18
+[2026-07-08 17:06:43.647] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 18 (original task 18), resuming from operator index 0
+[2026-07-08 17:06:43.695] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=23
+[2026-07-08 17:06:43.695] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=23 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.696] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.696] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 89 -- proceeding with partial reservation
+[2026-07-08 17:06:43.696] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=24
+[2026-07-08 17:06:43.696] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=24 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.696] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 89
+[2026-07-08 17:06:43.697] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 89 (original task 11), resuming from operator index 0
+[2026-07-08 17:06:43.697] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.697] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 19 -- proceeding with partial reservation
+[2026-07-08 17:06:43.697] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=25
+[2026-07-08 17:06:43.697] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=25 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.697] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 19
+[2026-07-08 17:06:43.697] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 19 (original task 19), resuming from operator index 0
+[2026-07-08 17:06:43.697] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.697] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 90 -- proceeding with partial reservation
+[2026-07-08 17:06:43.697] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=26
+[2026-07-08 17:06:43.697] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=26 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.698] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 90
+[2026-07-08 17:06:43.698] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 90 (original task 15), resuming from operator index 0
+[2026-07-08 17:06:43.698] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.698] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 20 -- proceeding with partial reservation
+[2026-07-08 17:06:43.698] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 20
+[2026-07-08 17:06:43.698] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 20 (original task 20), resuming from operator index 0
+[2026-07-08 17:06:43.747] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=27
+[2026-07-08 17:06:43.747] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=27 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.747] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.747] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 91 -- proceeding with partial reservation
+[2026-07-08 17:06:43.748] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 91
+[2026-07-08 17:06:43.748] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 91 (original task 12), resuming from operator index 0
+[2026-07-08 17:06:43.748] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=28
+[2026-07-08 17:06:43.748] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=28 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.748] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.748] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 21 -- proceeding with partial reservation
+[2026-07-08 17:06:43.748] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 21
+[2026-07-08 17:06:43.748] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 21 (original task 21), resuming from operator index 0
+[2026-07-08 17:06:43.748] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=29
+[2026-07-08 17:06:43.748] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=29 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.748] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.748] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 92 -- proceeding with partial reservation
+[2026-07-08 17:06:43.749] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=30
+[2026-07-08 17:06:43.749] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=30 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.749] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 92
+[2026-07-08 17:06:43.749] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 92 (original task 16), resuming from operator index 0
+[2026-07-08 17:06:43.749] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.749] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 22 -- proceeding with partial reservation
+[2026-07-08 17:06:43.750] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 22
+[2026-07-08 17:06:43.750] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 22 (original task 22), resuming from operator index 0
+[2026-07-08 17:06:43.798] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=31
+[2026-07-08 17:06:43.798] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=31 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.798] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.798] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 93 -- proceeding with partial reservation
+[2026-07-08 17:06:43.799] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=32
+[2026-07-08 17:06:43.799] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=32 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.799] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 93
+[2026-07-08 17:06:43.799] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 93 (original task 13), resuming from operator index 0
+[2026-07-08 17:06:43.799] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.800] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 23 -- proceeding with partial reservation
+[2026-07-08 17:06:43.800] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=33
+[2026-07-08 17:06:43.800] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=33 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.800] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 23
+[2026-07-08 17:06:43.800] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 23 (original task 23), resuming from operator index 0
+[2026-07-08 17:06:43.800] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.800] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 94 -- proceeding with partial reservation
+[2026-07-08 17:06:43.800] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=34
+[2026-07-08 17:06:43.800] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=34 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.801] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 94
+[2026-07-08 17:06:43.801] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 94 (original task 14), resuming from operator index 0
+[2026-07-08 17:06:43.801] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.801] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 24 -- proceeding with partial reservation
+[2026-07-08 17:06:43.801] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 24
+[2026-07-08 17:06:43.801] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 24 (original task 24), resuming from operator index 0
+[2026-07-08 17:06:43.850] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.850] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=35
+[2026-07-08 17:06:43.850] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=35 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.850] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 95 -- proceeding with partial reservation
+[2026-07-08 17:06:43.850] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=36
+[2026-07-08 17:06:43.850] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=36 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.850] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 95
+[2026-07-08 17:06:43.850] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 95 (original task 17), resuming from operator index 0
+[2026-07-08 17:06:43.850] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.851] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41826438 bytes) for pipeline 9 task 25 -- proceeding with partial reservation
+[2026-07-08 17:06:43.851] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=37
+[2026-07-08 17:06:43.851] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=37 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.851] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 25
+[2026-07-08 17:06:43.851] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 25 (original task 25), resuming from operator index 0
+[2026-07-08 17:06:43.851] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.851] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/35532987 bytes) for pipeline 9 task 96 -- proceeding with partial reservation
+[2026-07-08 17:06:43.851] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=38
+[2026-07-08 17:06:43.851] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=38 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.852] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 13745304 bytes (13.11 MB), global usage 6995544064 bytes (6671.47 MB), peak allocated 41880576 bytes (39.94 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 96
+[2026-07-08 17:06:43.852] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 96 (original task 18), resuming from operator index 0
+[2026-07-08 17:06:43.852] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.852] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/35658317 bytes) for pipeline 9 task 26 -- proceeding with partial reservation
+[2026-07-08 17:06:43.852] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 13804320 bytes (13.16 MB), global usage 6995665408 bytes (6671.59 MB), peak allocated 42061056 bytes (40.11 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 26
+[2026-07-08 17:06:43.853] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 26 (original task 26), resuming from operator index 0
+[2026-07-08 17:06:43.901] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=39
+[2026-07-08 17:06:43.901] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=39 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.901] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.901] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 97 -- proceeding with partial reservation
+[2026-07-08 17:06:43.902] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=40
+[2026-07-08 17:06:43.902] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=40 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.902] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 97
+[2026-07-08 17:06:43.902] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 4/100) for task 97 (original task 11), resuming from operator index 0
+[2026-07-08 17:06:43.902] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.902] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 27 -- proceeding with partial reservation
+[2026-07-08 17:06:43.902] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=41
+[2026-07-08 17:06:43.902] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=41 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.903] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 27
+[2026-07-08 17:06:43.903] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 27 (original task 27), resuming from operator index 0
+[2026-07-08 17:06:43.903] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.903] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 98 -- proceeding with partial reservation
+[2026-07-08 17:06:43.903] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=42
+[2026-07-08 17:06:43.903] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=42 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.904] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 98
+[2026-07-08 17:06:43.904] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 98 (original task 19), resuming from operator index 0
+[2026-07-08 17:06:43.904] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.904] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 28 -- proceeding with partial reservation
+[2026-07-08 17:06:43.904] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 28
+[2026-07-08 17:06:43.905] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 28 (original task 28), resuming from operator index 0
+[2026-07-08 17:06:43.952] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=43
+[2026-07-08 17:06:43.952] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=43 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.952] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.952] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 99 -- proceeding with partial reservation
+[2026-07-08 17:06:43.953] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 99
+[2026-07-08 17:06:43.953] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=44
+[2026-07-08 17:06:43.953] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=44 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.953] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 99 (original task 15), resuming from operator index 0
+[2026-07-08 17:06:43.953] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.953] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 29 -- proceeding with partial reservation
+[2026-07-08 17:06:43.954] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 29
+[2026-07-08 17:06:43.954] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 29 (original task 29), resuming from operator index 0
+[2026-07-08 17:06:43.954] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=45
+[2026-07-08 17:06:43.954] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=45 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.954] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.954] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 100 -- proceeding with partial reservation
+[2026-07-08 17:06:43.955] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=46
+[2026-07-08 17:06:43.955] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=46 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:43.955] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 100
+[2026-07-08 17:06:43.955] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 100 (original task 20), resuming from operator index 0
+[2026-07-08 17:06:43.955] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:43.955] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 30 -- proceeding with partial reservation
+[2026-07-08 17:06:43.955] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 30
+[2026-07-08 17:06:43.955] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 30 (original task 30), resuming from operator index 0
+[2026-07-08 17:06:44.004] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=47
+[2026-07-08 17:06:44.004] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=47 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.004] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.004] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 101 -- proceeding with partial reservation
+[2026-07-08 17:06:44.004] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=48
+[2026-07-08 17:06:44.004] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=48 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.005] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 101
+[2026-07-08 17:06:44.005] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 4/100) for task 101 (original task 12), resuming from operator index 0
+[2026-07-08 17:06:44.005] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.005] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 102 -- proceeding with partial reservation
+[2026-07-08 17:06:44.005] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=49
+[2026-07-08 17:06:44.005] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=49 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.006] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 102
+[2026-07-08 17:06:44.006] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 102 (original task 21), resuming from operator index 0
+[2026-07-08 17:06:44.006] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.006] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 31 -- proceeding with partial reservation
+[2026-07-08 17:06:44.006] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=50
+[2026-07-08 17:06:44.006] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=50 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.006] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 31
+[2026-07-08 17:06:44.006] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 31 (original task 31), resuming from operator index 0
+[2026-07-08 17:06:44.007] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.007] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 32 -- proceeding with partial reservation
+[2026-07-08 17:06:44.007] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 32
+[2026-07-08 17:06:44.007] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 32 (original task 32), resuming from operator index 0
+[2026-07-08 17:06:44.055] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=51
+[2026-07-08 17:06:44.055] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=51 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.055] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.055] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 103 -- proceeding with partial reservation
+[2026-07-08 17:06:44.056] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=52
+[2026-07-08 17:06:44.056] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=52 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.056] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 103
+[2026-07-08 17:06:44.056] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 103 (original task 16), resuming from operator index 0
+[2026-07-08 17:06:44.056] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.056] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 104 -- proceeding with partial reservation
+[2026-07-08 17:06:44.057] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=53
+[2026-07-08 17:06:44.057] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=53 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.057] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 104
+[2026-07-08 17:06:44.057] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 104 (original task 22), resuming from operator index 0
+[2026-07-08 17:06:44.057] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.057] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/44738173 bytes) for pipeline 9 task 33 -- proceeding with partial reservation
+[2026-07-08 17:06:44.057] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=54
+[2026-07-08 17:06:44.057] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=54 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.058] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 33
+[2026-07-08 17:06:44.058] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 33 (original task 33), resuming from operator index 0
+[2026-07-08 17:06:44.058] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.058] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/37730777 bytes) for pipeline 9 task 34 -- proceeding with partial reservation
+[2026-07-08 17:06:44.058] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 13732296 bytes (13.10 MB), global usage 6995517952 bytes (6671.45 MB), peak allocated 41841408 bytes (39.90 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 34
+[2026-07-08 17:06:44.058] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 34 (original task 34), resuming from operator index 0
+[2026-07-08 17:06:44.107] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=55
+[2026-07-08 17:06:44.107] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=55 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.107] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.107] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 105 -- proceeding with partial reservation
+[2026-07-08 17:06:44.107] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=56
+[2026-07-08 17:06:44.107] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=56 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.108] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 105
+[2026-07-08 17:06:44.108] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 4/100) for task 105 (original task 13), resuming from operator index 0
+[2026-07-08 17:06:44.108] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.108] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 35 -- proceeding with partial reservation
+[2026-07-08 17:06:44.108] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=57
+[2026-07-08 17:06:44.108] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=57 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.109] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 35
+[2026-07-08 17:06:44.109] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 35 (original task 35), resuming from operator index 0
+[2026-07-08 17:06:44.109] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.109] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 106 -- proceeding with partial reservation
+[2026-07-08 17:06:44.109] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=58
+[2026-07-08 17:06:44.109] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=58 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.110] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 106
+[2026-07-08 17:06:44.110] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 106 (original task 23), resuming from operator index 0
+[2026-07-08 17:06:44.110] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.110] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 36 -- proceeding with partial reservation
+[2026-07-08 17:06:44.110] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 36
+[2026-07-08 17:06:44.110] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 36 (original task 36), resuming from operator index 0
+[2026-07-08 17:06:44.158] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=59
+[2026-07-08 17:06:44.158] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=59 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.158] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.159] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 107 -- proceeding with partial reservation
+[2026-07-08 17:06:44.159] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=60
+[2026-07-08 17:06:44.159] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=60 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.159] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 107
+[2026-07-08 17:06:44.159] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 4/100) for task 107 (original task 14), resuming from operator index 0
+[2026-07-08 17:06:44.160] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.160] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 37 -- proceeding with partial reservation
+[2026-07-08 17:06:44.160] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=61
+[2026-07-08 17:06:44.160] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=61 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.160] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 37
+[2026-07-08 17:06:44.160] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 37 (original task 37), resuming from operator index 0
+[2026-07-08 17:06:44.160] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.161] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 108 -- proceeding with partial reservation
+[2026-07-08 17:06:44.161] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=62
+[2026-07-08 17:06:44.161] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=62 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.161] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 108
+[2026-07-08 17:06:44.161] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 108 (original task 24), resuming from operator index 0
+[2026-07-08 17:06:44.161] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.161] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 38 -- proceeding with partial reservation
+[2026-07-08 17:06:44.162] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 38
+[2026-07-08 17:06:44.162] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 38 (original task 38), resuming from operator index 0
+[2026-07-08 17:06:44.210] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=63
+[2026-07-08 17:06:44.210] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=63 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.210] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.210] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 109 -- proceeding with partial reservation
+[2026-07-08 17:06:44.211] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 109
+[2026-07-08 17:06:44.211] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 109 (original task 17), resuming from operator index 0
+[2026-07-08 17:06:44.211] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=64
+[2026-07-08 17:06:44.211] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=64 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.211] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.211] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 39 -- proceeding with partial reservation
+[2026-07-08 17:06:44.212] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=65
+[2026-07-08 17:06:44.212] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=65 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.212] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 39
+[2026-07-08 17:06:44.212] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 39 (original task 39), resuming from operator index 0
+[2026-07-08 17:06:44.212] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.212] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 110 -- proceeding with partial reservation
+[2026-07-08 17:06:44.212] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=66
+[2026-07-08 17:06:44.212] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=66 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.213] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 110
+[2026-07-08 17:06:44.213] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 110 (original task 25), resuming from operator index 0
+[2026-07-08 17:06:44.213] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.213] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 40 -- proceeding with partial reservation
+[2026-07-08 17:06:44.213] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 40
+[2026-07-08 17:06:44.213] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 40 (original task 40), resuming from operator index 0
+[2026-07-08 17:06:44.261] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=67
+[2026-07-08 17:06:44.261] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=67 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.262] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.262] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/38840487 bytes) for pipeline 9 task 111 -- proceeding with partial reservation
+[2026-07-08 17:06:44.262] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 13745304 bytes (13.11 MB), global usage 6995544064 bytes (6671.47 MB), peak allocated 41880576 bytes (39.94 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 111
+[2026-07-08 17:06:44.262] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=68
+[2026-07-08 17:06:44.262] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=68 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.262] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 111 (original task 18), resuming from operator index 0
+[2026-07-08 17:06:44.262] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.262] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/46255451 bytes) for pipeline 9 task 41 -- proceeding with partial reservation
+[2026-07-08 17:06:44.263] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 41
+[2026-07-08 17:06:44.263] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 41 (original task 41), resuming from operator index 0
+[2026-07-08 17:06:44.263] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=69
+[2026-07-08 17:06:44.263] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=69 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.263] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.263] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/38995386 bytes) for pipeline 9 task 112 -- proceeding with partial reservation
+[2026-07-08 17:06:44.263] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=70
+[2026-07-08 17:06:44.263] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=70 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.264] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 13804320 bytes (13.16 MB), global usage 6995665408 bytes (6671.59 MB), peak allocated 42061056 bytes (40.11 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 112
+[2026-07-08 17:06:44.264] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 112 (original task 26), resuming from operator index 0
+[2026-07-08 17:06:44.264] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.264] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/41151861 bytes) for pipeline 9 task 42 -- proceeding with partial reservation
+[2026-07-08 17:06:44.264] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 14671120 bytes (13.99 MB), global usage 6997439744 bytes (6673.28 MB), peak allocated 44702208 bytes (42.63 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 42
+[2026-07-08 17:06:44.264] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 42 (original task 42), resuming from operator index 0
+[2026-07-08 17:06:44.313] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=71
+[2026-07-08 17:06:44.313] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=71 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.313] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.313] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 113 -- proceeding with partial reservation
+[2026-07-08 17:06:44.313] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=72
+[2026-07-08 17:06:44.314] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=72 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.314] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 113
+[2026-07-08 17:06:44.314] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 5/100) for task 113 (original task 11), resuming from operator index 0
+[2026-07-08 17:06:44.314] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.314] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 43 -- proceeding with partial reservation
+[2026-07-08 17:06:44.314] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=73
+[2026-07-08 17:06:44.314] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=73 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.315] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 43
+[2026-07-08 17:06:44.315] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 43 (original task 43), resuming from operator index 0
+[2026-07-08 17:06:44.315] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.315] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 114 -- proceeding with partial reservation
+[2026-07-08 17:06:44.315] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=74
+[2026-07-08 17:06:44.315] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=74 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.315] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 114
+[2026-07-08 17:06:44.315] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 114 (original task 27), resuming from operator index 0
+[2026-07-08 17:06:44.315] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.315] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 44 -- proceeding with partial reservation
+[2026-07-08 17:06:44.316] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 44
+[2026-07-08 17:06:44.316] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 44 (original task 44), resuming from operator index 0
+[2026-07-08 17:06:44.364] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=75
+[2026-07-08 17:06:44.364] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=75 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.364] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.364] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 115 -- proceeding with partial reservation
+[2026-07-08 17:06:44.365] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=76
+[2026-07-08 17:06:44.365] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=76 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.365] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 115
+[2026-07-08 17:06:44.365] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 115 (original task 19), resuming from operator index 0
+[2026-07-08 17:06:44.365] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.365] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 45 -- proceeding with partial reservation
+[2026-07-08 17:06:44.366] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=77
+[2026-07-08 17:06:44.366] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=77 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.366] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 45
+[2026-07-08 17:06:44.366] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 45 (original task 45), resuming from operator index 0
+[2026-07-08 17:06:44.366] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.366] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 116 -- proceeding with partial reservation
+[2026-07-08 17:06:44.366] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=78
+[2026-07-08 17:06:44.366] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=78 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.367] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 116
+[2026-07-08 17:06:44.367] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 116 (original task 28), resuming from operator index 0
+[2026-07-08 17:06:44.367] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.367] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 46 -- proceeding with partial reservation
+[2026-07-08 17:06:44.367] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 46
+[2026-07-08 17:06:44.367] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 46 (original task 46), resuming from operator index 0
+[2026-07-08 17:06:44.416] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=79
+[2026-07-08 17:06:44.416] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=79 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.416] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.416] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 117 -- proceeding with partial reservation
+[2026-07-08 17:06:44.416] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=80
+[2026-07-08 17:06:44.416] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=80 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.416] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 117
+[2026-07-08 17:06:44.416] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 4/100) for task 117 (original task 15), resuming from operator index 0
+[2026-07-08 17:06:44.416] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.416] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 47 -- proceeding with partial reservation
+[2026-07-08 17:06:44.417] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=81
+[2026-07-08 17:06:44.417] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=81 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.417] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 47
+[2026-07-08 17:06:44.417] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 47 (original task 47), resuming from operator index 0
+[2026-07-08 17:06:44.417] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.417] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 118 -- proceeding with partial reservation
+[2026-07-08 17:06:44.417] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=82
+[2026-07-08 17:06:44.417] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=82 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.418] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 118
+[2026-07-08 17:06:44.418] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 118 (original task 29), resuming from operator index 0
+[2026-07-08 17:06:44.418] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.418] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 48 -- proceeding with partial reservation
+[2026-07-08 17:06:44.418] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 48
+[2026-07-08 17:06:44.418] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 48 (original task 48), resuming from operator index 0
+[2026-07-08 17:06:44.467] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=83
+[2026-07-08 17:06:44.467] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=83 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.467] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.467] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 119 -- proceeding with partial reservation
+[2026-07-08 17:06:44.467] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 119
+[2026-07-08 17:06:44.467] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 119 (original task 20), resuming from operator index 0
+[2026-07-08 17:06:44.468] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.468] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47233366 bytes) for pipeline 9 task 120 -- proceeding with partial reservation
+[2026-07-08 17:06:44.468] [info] [task_scheduler.cpp:462] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=84
+[2026-07-08 17:06:44.468] [info] [task_scheduler.cpp:464] [locality-audit] dispatch task_id=84 preferred_device=0 actual_gpu=0
+[2026-07-08 17:06:44.468] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 120
+[2026-07-08 17:06:44.468] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 120 (original task 30), resuming from operator index 0
+[2026-07-08 17:06:44.468] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.468] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/39082690 bytes) for pipeline 9 task 49 -- proceeding with partial reservation
+[2026-07-08 17:06:44.469] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 13621616 bytes (12.99 MB), global usage 6995291392 bytes (6671.23 MB), peak allocated 41504256 bytes (39.58 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 49
+[2026-07-08 17:06:44.469] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 49 (original task 49), resuming from operator index 0
+[2026-07-08 17:06:44.469] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.469] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/51118080 bytes) for pipeline 17 task 50 -- proceeding with partial reservation
+[2026-07-08 17:06:44.470] [warning] [gpu_pipeline_task.cpp:904] Pipeline 17: OOM at operator GPU_SCAN (id=57, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 50
+[2026-07-08 17:06:44.470] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 50 (original task 50), resuming from operator index 0
+[2026-07-08 17:06:44.518] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.518] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47850221 bytes) for pipeline 9 task 121 -- proceeding with partial reservation
+[2026-07-08 17:06:44.519] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 121
+[2026-07-08 17:06:44.519] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 5/100) for task 121 (original task 12), resuming from operator index 0
+[2026-07-08 17:06:44.519] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.519] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 17 task 51 -- proceeding with partial reservation
+[2026-07-08 17:06:44.519] [warning] [gpu_pipeline_task.cpp:904] Pipeline 17: OOM at operator GPU_SCAN (id=57, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 51
+[2026-07-08 17:06:44.520] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 51 (original task 51), resuming from operator index 0
+[2026-07-08 17:06:44.520] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.520] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47850221 bytes) for pipeline 9 task 122 -- proceeding with partial reservation
+[2026-07-08 17:06:44.520] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 122
+[2026-07-08 17:06:44.520] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 3/100) for task 122 (original task 21), resuming from operator index 0
+[2026-07-08 17:06:44.569] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.569] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 17 task 52 -- proceeding with partial reservation
+[2026-07-08 17:06:44.570] [warning] [gpu_pipeline_task.cpp:904] Pipeline 17: OOM at operator GPU_SCAN (id=57, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 52
+[2026-07-08 17:06:44.570] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 52 (original task 52), resuming from operator index 0
+[2026-07-08 17:06:44.570] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.570] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/47850221 bytes) for pipeline 9 task 123 -- proceeding with partial reservation
+[2026-07-08 17:06:44.571] [warning] [gpu_pipeline_task.cpp:904] Pipeline 9: OOM at operator GPU_SCAN (id=50, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 123
+[2026-07-08 17:06:44.571] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 2/100) for task 123 (original task 31), resuming from operator index 0
+[2026-07-08 17:06:44.621] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-07-08 17:06:44.622] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (0 bytes freed), reservation still partial (0/34078720 bytes) for pipeline 17 task 53 -- proceeding with partial reservation
+[2026-07-08 17:06:44.622] [warning] [gpu_pipeline_task.cpp:904] Pipeline 17: OOM at operator GPU_SCAN (id=57, index 0/1), requested 16777216 bytes (16.00 MB), global usage 6984710400 bytes (6661.14 MB), peak allocated 34078720 bytes (32.50 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 0 bytes (0.00 MB), rescheduling task 53
+[2026-07-08 17:06:44.622] [warning] [gpu_pipeline_executor.cpp:352] GPU Pipeline Executor: OOM reschedule (retry 1/100) for task 53 (original task 53), resuming from operator index 0

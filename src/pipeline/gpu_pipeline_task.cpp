@@ -108,7 +108,7 @@ int current_gpu_id()
 // wdy start
 // locality audit: for each input batch, record the locality of the batch relative to the target memory space (if any) and accumulate the bytes in each category (local, remote GPU, host, disk). This is useful for understanding data movement and locality in GPU pipelines.
 // for breakdown
-const char* tier_name(cucascade::memory::Tier tier)
+const char* tier_name(cucascade::memory::Tier tier) 
 {
   switch (tier) {
     case cucascade::memory::Tier::GPU: return "GPU";
@@ -127,6 +127,7 @@ struct locality_bytes_snapshot {
   size_t batch_count      = 0;
 };
 
+// Adds the given batch's bytes to the snapshot, categorizing them based on their locality relative to the target memory space.
 void add_batch_to_snapshot(locality_bytes_snapshot& snapshot,
                            const cucascade::memory::memory_space* space,
                            size_t bytes,
@@ -147,6 +148,7 @@ void add_batch_to_snapshot(locality_bytes_snapshot& snapshot,
   }
 }
 
+// Summarizes the locality of unlocked batches in the given operator data relative to the target memory space.
 locality_bytes_snapshot summarize_unlocked_batches(
   const op::pipelineable_operator_data& data, const cucascade::memory::memory_space* target_space)
 {
@@ -161,6 +163,7 @@ locality_bytes_snapshot summarize_unlocked_batches(
   return snapshot;
 }
 
+// Summarizes the locality of locked batches in the given operator data relative to the target memory space.
 locality_bytes_snapshot summarize_locked_batches(
   const op::pipelineable_operator_data& data, const cucascade::memory::memory_space* target_space)
 {
@@ -173,6 +176,7 @@ locality_bytes_snapshot summarize_locked_batches(
   return snapshot;
 }
 
+// Logs a snapshot of the locality of input batches relative to the target memory space, including counts of bytes in each category and the number of batches.
 void log_locality_snapshot(const char* phase,
                            const sirius_pipeline* pipeline,
                            uint64_t task_id,
@@ -202,6 +206,7 @@ void log_locality_snapshot(const char* phase,
 // wdy end
 
 // wdy start
+// Returns a string representation of the operator data type for logging purposes.
 const char* operator_data_type_name(op::operator_data_type type)
 {
   switch (type) {
@@ -213,6 +218,7 @@ const char* operator_data_type_name(op::operator_data_type type)
   }
 }
 
+// to be used in log_stage_audit to log the stage kind (SCAN, FILTER, PROJECTION, JOIN, AGGREGATE, SORT, LIMIT, PARTITION, CONCAT, CTE, RESULT, OTHER) based on the operator type.
 const char* stage_kind(op::SiriusPhysicalOperatorType type)
 {
   switch (type) {
@@ -268,6 +274,7 @@ const char* stage_kind(op::SiriusPhysicalOperatorType type)
   }
 }
 
+// Summarizes the number of batches, rows, columns, and total bytes in operator data.
 struct stage_data_summary {
   size_t batches = 0;
   size_t rows    = 0;
@@ -275,6 +282,7 @@ struct stage_data_summary {
   size_t bytes   = 0;
 };
 
+// Summarizes the number of batches, rows, columns, and total bytes in the given operator data.
 stage_data_summary summarize_stage_data(const op::operator_data& data)
 {
   stage_data_summary summary;
@@ -291,7 +299,7 @@ stage_data_summary summarize_stage_data(const op::operator_data& data)
   }
   return summary;
 }
-
+// log_stage_audit logs detailed information about the execution of a stage in the GPU pipeline, including operator details, input/output summaries, and performance metrics.
 void log_stage_audit(const op::sirius_physical_operator& op,
                      const op::operator_data& input_data,
                      const op::operator_data& output_data,
@@ -341,6 +349,7 @@ void log_stage_audit(const op::sirius_physical_operator& op,
 
 
 // wdy start
+// retained_join_batch represents a data batch that is retained in memory for potential reuse in join operations, along with its size in bytes.
 struct retained_join_batch {
   std::shared_ptr<cucascade::data_batch> batch;
   std::size_t bytes = 0;
@@ -350,6 +359,7 @@ std::mutex retained_join_batches_mutex;
 std::vector<retained_join_batch> retained_join_batches;
 std::size_t retained_join_bytes = 0;
 
+// cached_join_output represents the cached output of a join operation, including the retained data batches, their total size in bytes, and the number of times this cached output has been reused (hits).
 struct cached_join_output {
   std::vector<std::shared_ptr<cucascade::data_batch>> batches;
   std::size_t bytes = 0;
@@ -358,6 +368,7 @@ struct cached_join_output {
 
 std::unordered_map<std::string, cached_join_output> retained_join_outputs_by_signature;
 
+// Returns true if the environment variable `name` is set to a truthy value ("1", "true", "on"), false otherwise.
 bool env_truthy(const char* name)
 {
   auto* value = std::getenv(name);
@@ -366,6 +377,7 @@ bool env_truthy(const char* name)
   return sv == "1" || sv == "true" || sv == "TRUE" || sv == "on" || sv == "ON";
 }
 
+// Returns the value of the environment variable `name` as a size_t, or `fallback` if the variable is not set or cannot be converted to a size_t.
 std::size_t env_size_or_default(const char* name, std::size_t fallback)
 {
   auto* value = std::getenv(name);
@@ -376,29 +388,29 @@ std::size_t env_size_or_default(const char* name, std::size_t fallback)
     return fallback;
   }
 }
-
+// Returns true if join output retention is enabled either via configuration or environment variable, false otherwise.
 bool join_output_retention_enabled()
 {
   return duckdb::Config::JOIN_OUTPUT_RETENTION || env_truthy("SIRIUS_JOIN_OUTPUT_RETENTION");
 }
-
+// Returns true if join output reuse is enabled either via configuration or environment variable, false otherwise.
 bool join_output_reuse_enabled()
 {
   return duckdb::Config::JOIN_OUTPUT_REUSE || env_truthy("SIRIUS_JOIN_OUTPUT_REUSE");
 }
-
+// Returns the configured limit for join output retention in bytes, either from the environment variable or the default configuration.
 std::size_t join_output_retention_limit_bytes()
 {
   return env_size_or_default("SIRIUS_JOIN_OUTPUT_RETENTION_LIMIT_BYTES",
                              duckdb::Config::JOIN_OUTPUT_RETENTION_LIMIT_BYTES);
 }
-
+// Returns the configured maximum batch size for join output retention in bytes, either from the environment variable or the default configuration.
 std::size_t join_output_retention_max_batch_bytes()
 {
   return env_size_or_default("SIRIUS_JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES",
                              duckdb::Config::JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES);
 }
-
+// Clears all retained join batches and cached outputs, logging the reason for the clearance and the number of batches and bytes released.
 void clear_retained_join_batches_locked(const char* reason)
 {
   auto released_batches = retained_join_batches.size();
@@ -413,7 +425,7 @@ void clear_retained_join_batches_locked(const char* reason)
                     released_bytes);
   }
 }
-
+// Retains the given join output batches for potential reuse, respecting configured limits on total bytes and maximum batch size. Returns true if the batches were retained, false otherwise.
 void append_type_signature(std::ostringstream& out, duckdb::vector<sirius::logical_type> const& types)
 {
   out << "types(" << types.size() << ")=";
@@ -422,7 +434,7 @@ void append_type_signature(std::ostringstream& out, duckdb::vector<sirius::logic
     out << static_cast<int>(cudf_type.id()) << ":";
   }
 }
-
+// Appends a string representation of the operator's signature, including its type, name, estimated cardinality, output types, and any relevant details for scan or join operators. This is used for caching and reuse of join outputs.
 void append_operator_signature(std::ostringstream& out, const op::sirius_physical_operator& op)
 {
   out << "op{" << static_cast<int>(op.type) << "," << op.get_name() << ",card="
@@ -457,7 +469,7 @@ void append_operator_signature(std::ostringstream& out, const op::sirius_physica
   }
   out << "]}";
 }
-
+// Appends a string representation of the input data's shape and types, including the number of rows, columns, bytes, and column data types for each batch. This is used for caching and reuse of join outputs.
 void append_input_shape_signature(std::ostringstream& out, const op::operator_data& data)
 {
   out << "input{" << static_cast<int>(data.get_type()) << ":";

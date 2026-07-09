@@ -41,6 +41,7 @@ namespace cucascade::memory {
 class fixed_size_host_memory_resource;
 }  // namespace cucascade::memory
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <span>
@@ -91,6 +92,7 @@ class cache_entry_info {
   std::string catalog_name;                        ///< duckdb identity: catalog (attach alias)
   std::string schema_name;                         ///< duckdb identity: schema
   std::string table_name;                          ///< duckdb identity: table
+  std::string filter_signature;                    ///< non-empty for filter-specific auto caches
   duckdb::vector<duckdb::ColumnIndex> column_ids;  ///< cached columns, by primary index
   std::vector<std::string> names;                  ///< aligned with column_ids; gather keys
 
@@ -111,6 +113,93 @@ class cache_entry_info {
   [[nodiscard]] const std::vector<std::string>& column_names() const { return names; }
 };
 
+// wdy start
+enum class fixed_width_page_stat_kind : uint8_t {
+  none,
+  signed_int,
+  unsigned_int,
+  floating,
+};
+
+enum class fixed_width_page_state : uint8_t {
+  resident,
+  evicted,
+};
+
+struct fixed_width_page_directory_key {
+  std::string table_name;
+  std::string file_path;
+  std::string column_name;
+  std::size_t chunk_index{0};
+  std::size_t page_index{0};
+  int device_id{-1};
+};
+
+struct fixed_width_page_stats {
+  bool valid{false};
+  bool has_null{false};
+  fixed_width_page_stat_kind kind{fixed_width_page_stat_kind::none};
+  int64_t min_signed{0};
+  int64_t max_signed{0};
+  uint64_t min_unsigned{0};
+  uint64_t max_unsigned{0};
+  double min_floating{0.0};
+  double max_floating{0.0};
+};
+
+/**
+ * @brief Logical page metadata for a fixed-width GPU column chunk.
+ *
+ * The first prototype keeps physical ownership in the existing cudf::column
+ * chunks and records page boundaries over those buffers. A later scan path can
+ * use this as the lookup unit for table/column/chunk/page reuse without first
+ * changing cudf buffer ownership.
+ */
+struct fixed_width_column_page {
+  fixed_width_page_directory_key key;
+  fixed_width_page_state state{fixed_width_page_state::resident};
+  std::size_t chunk_index{0};
+  std::size_t page_index{0};
+  std::size_t global_row_offset{0};
+  std::size_t row_offset{0};
+  std::size_t num_rows{0};
+  std::size_t byte_offset{0};
+  std::size_t num_bytes{0};
+  std::size_t element_size_bytes{0};
+  cudf::type_id type_id{cudf::type_id::EMPTY};
+  cucascade::memory::memory_space* memory_space{nullptr};
+  /// Admission/eviction hint: lower scores are evicted first under page budget.
+  double admission_score{0.0};
+  /// Lightweight reuse counter, currently bumped by demand-loaded pages.
+  std::size_t access_count{0};
+  /// Optional page-owned storage. When set, this page can be materialized
+  /// without retaining the original full cuDF column chunk.
+  std::shared_ptr<cudf::column> owned_column;
+  fixed_width_page_stats stats;
+};
+
+struct fixed_width_page_directory_metrics {
+  std::size_t resident_pages{0};
+  std::size_t resident_bytes{0};
+  std::size_t stats_pages{0};
+  std::size_t evicted_pages{0};
+  std::size_t eviction_count{0};
+};
+
+struct fixed_width_page_directory_entry {
+  std::string column_name;
+  std::size_t page_ordinal{0};
+};
+
+struct fixed_width_filter_mask_cache_entry {
+  std::shared_ptr<cudf::column> mask;
+  int device_id{-1};
+  std::size_t rows{0};
+  std::size_t bytes{0};
+  std::size_t hits{0};
+};
+// wdy end
+
 /**
  * @brief A single pinned-table entry, keyed by table name in the scan_manager.
  *
@@ -128,6 +217,26 @@ struct pinned_entry {
   /// @ref sirius_scan_manager::insert_pinned_entry. Empty when @ref tier is HOST.
   std::unordered_map<std::string, std::vector<std::shared_ptr<cudf::column>>>
     data_batches_by_column;
+  /// Prototype fixed-width page index. Keyed by column name; each entry is a
+  /// logical page over the corresponding cudf column chunk in
+  /// data_batches_by_column. Variable-width and nested columns are omitted.
+  std::unordered_map<std::string, std::vector<fixed_width_column_page>> fixed_width_pages_by_column;
+  /// Directory lookup keyed by table/file/column/chunk/page/device. Values point
+  /// back into fixed_width_pages_by_column without owning page storage.
+  std::unordered_map<std::string, fixed_width_page_directory_entry> fixed_width_page_directory;
+  /// Target page size used when fixed_width_pages_by_column was built.
+  std::size_t fixed_width_page_size_bytes{0};
+  /// Lightweight page-directory accounting for the current prototype. Pages are
+  /// still physically owned by cudf column chunks, but this is the metadata
+  /// surface that scan reuse and future page admission/eviction build on.
+  fixed_width_page_directory_metrics fixed_width_page_metrics;
+  /// Optional reusable boolean masks for fixed-page cached filter predicates.
+  /// Guarded by fixed_width_filter_mask_cache_mutex because scan splits can
+  /// materialize concurrently on different workers/devices.
+  mutable std::unordered_map<std::string, fixed_width_filter_mask_cache_entry>
+    fixed_width_filter_mask_cache;
+  mutable std::shared_ptr<std::mutex> fixed_width_filter_mask_cache_mutex{
+    std::make_shared<std::mutex>()};
   /// Per-chunk memory space placement. Parallel to the inner vectors of
   /// data_batches_by_column: chunk_memory_spaces[i] is the memory_space*
   /// for every column's chunk at index i. All columns at chunk index i
@@ -335,6 +444,7 @@ class sirius_scan_manager {
   std::unordered_map<op::scan::sirius_gpu_scan_operator*, std::unique_ptr<split_provider>>
     _providers_by_op;
   std::vector<op::scan::sirius_gpu_scan_operator*> _scan_op_order;
+  mutable std::mutex _pinned_entries_mutex;
   std::unordered_map<std::string, pinned_entry> _pinned_entries;
 
   /// Per-query sequencer for opportunistic fadvise calls.  Built fresh

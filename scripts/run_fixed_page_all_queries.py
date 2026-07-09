@@ -242,6 +242,10 @@ def make_env(args: argparse.Namespace, condition: str, log_dir: Path, config_pat
         env["SIRIUS_FIXED_PAGE_DEMAND_LOAD"] = "1"
         if args.page_cache_bytes_per_gpu:
             env["SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU"] = args.page_cache_bytes_per_gpu
+        if args.page_cache_workspace_reserve_bytes_per_gpu:
+            env["SIRIUS_FIXED_PAGE_CACHE_WORKSPACE_RESERVE_BYTES_PER_GPU"] = (
+                args.page_cache_workspace_reserve_bytes_per_gpu
+            )
         if args.demand_max_bytes_per_split:
             env["SIRIUS_FIXED_PAGE_DEMAND_MAX_BYTES_PER_SPLIT"] = args.demand_max_bytes_per_split
     else:
@@ -404,6 +408,48 @@ def run_case(args: argparse.Namespace, qnum: int, condition: str, config_path: P
     return {"status": "ok", "rows": detailed}
 
 
+def run_case_subprocess(args: argparse.Namespace, qnum: int, condition: str, config_path: Path) -> dict[str, object]:
+    case_dir = args.output / condition / f"q{qnum}"
+    result_path = case_dir / "case_result.json"
+    result_path.parent.mkdir(parents=True, exist_ok=True)
+    if result_path.exists():
+        result_path.unlink()
+    cmd = [
+        sys.executable,
+        str(Path(__file__).resolve()),
+        "--input", str(args.input),
+        "--output", str(args.output),
+        "--graph-dir", str(args.graph_dir),
+        "--graph-prefix", args.graph_prefix,
+        "--queries", str(qnum),
+        "--conditions", condition,
+        "--executions", str(args.executions),
+        "--devices", args.devices,
+        "--num-gpus", str(args.num_gpus),
+        "--gpu-usage-limit", args.gpu_usage_limit,
+        "--host-capacity", args.host_capacity,
+        "--reservation-limit-fraction", args.reservation_limit_fraction,
+        "--demand-max-bytes-per-split", args.demand_max_bytes_per_split,
+        "--log-level", args.log_level,
+        "--case-timeout-s", str(args.case_timeout_s),
+        "--single-query", str(qnum),
+        "--single-condition", condition,
+        "--single-result", str(result_path),
+    ]
+    if args.page_cache_bytes_per_gpu:
+        cmd.extend(["--page-cache-bytes-per-gpu", args.page_cache_bytes_per_gpu])
+    try:
+        proc = subprocess.run(cmd, cwd=str(REPO_ROOT), env=os.environ.copy(), text=True, timeout=args.case_timeout_s)
+    except subprocess.TimeoutExpired:
+        return {"status": "failed", "error": f"case_timeout_{args.case_timeout_s}s"}
+    if result_path.exists():
+        try:
+            return json.loads(result_path.read_text())
+        except Exception as exc:
+            return {"status": "failed", "error": f"failed_to_read_case_result: {exc!r}"}
+    return {"status": "failed", "error": f"case_process_exit_{proc.returncode}"}
+
+
 def aggregate(rows: list[dict[str, object]], executions: int) -> list[dict[str, object]]:
     by = defaultdict(list)
     for row in rows:
@@ -521,9 +567,14 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--host-capacity", default="32GB")
     ap.add_argument("--reservation-limit-fraction", default="0.85")
     ap.add_argument("--page-cache-bytes-per-gpu", default="")
+    ap.add_argument("--page-cache-workspace-reserve-bytes-per-gpu", default="3072MB")
     ap.add_argument("--demand-max-bytes-per-split", default="3221225472")
     ap.add_argument("--log-level", default="info")
+    ap.add_argument("--case-timeout-s", type=int, default=300)
     ap.add_argument("--skip-existing", action="store_true")
+    ap.add_argument("--single-query", type=int, default=0, help=argparse.SUPPRESS)
+    ap.add_argument("--single-condition", default="", help=argparse.SUPPRESS)
+    ap.add_argument("--single-result", type=Path, default=None, help=argparse.SUPPRESS)
     return ap
 
 
@@ -532,6 +583,15 @@ def main() -> int:
     args.output = args.output.resolve()
     config = args.output / "configs" / f"sirius_{args.num_gpus}gpu.yaml"
     write_config(config, args)
+    if args.single_query and args.single_condition:
+        result_path = args.single_result or (args.output / args.single_condition / f"q{args.single_query}" / "case_result.json")
+        try:
+            result = run_case(args, args.single_query, args.single_condition, config)
+        except Exception as exc:
+            result = {"status": "failed", "error": repr(exc)}
+        result_path.parent.mkdir(parents=True, exist_ok=True)
+        result_path.write_text(json.dumps(result, indent=2) + "\n")
+        return 0
     queries = parse_query_list(args.queries)
     conditions = parse_csv_list(args.conditions)
     all_rows: list[dict[str, object]] = []
@@ -551,8 +611,11 @@ def main() -> int:
                 if args.skip_existing and summary_path.exists():
                     print(f"[SKIP] q{q} {cond}", flush=True)
                     continue
-                result = run_case(args, q, cond, config)
-                all_rows.extend(result["rows"])
+                result = run_case_subprocess(args, q, cond, config)
+                if result.get("status") == "ok":
+                    all_rows.extend(result["rows"])
+                else:
+                    failed.append({"query": f"q{q}", "condition": cond, "error": result.get("error", "unknown_error")})
             except Exception as exc:
                 print(f"[FAILED] q{q} {cond}: {exc}", flush=True)
                 failed.append({"query": f"q{q}", "condition": cond, "error": repr(exc)})

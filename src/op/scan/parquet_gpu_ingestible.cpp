@@ -57,10 +57,12 @@
 // standard library
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -69,6 +71,44 @@ namespace sirius::op::scan {
 namespace {
 
 bool has_uri_scheme(std::string const& p) { return p.find("://") != std::string::npos; }
+
+bool is_fixed_width_auto_cache_candidate(cudf::column_view const& col) noexcept
+{
+  switch (col.type().id()) {
+    case cudf::type_id::STRING:
+    case cudf::type_id::LIST:
+    case cudf::type_id::STRUCT:
+    case cudf::type_id::DICTIONARY32:
+    case cudf::type_id::EMPTY: return false;
+    default: return true;
+  }
+}
+
+bool fixed_page_auto_cache_enabled()
+{
+  auto const* reuse = std::getenv("SIRIUS_ENABLE_FIXED_PAGE_REUSE");
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_AUTO_CACHE");
+  return reuse != nullptr && std::string_view(reuse) == "1" && value != nullptr &&
+         std::string_view(value) == "1";
+}
+
+bool fixed_page_hybrid_provider_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_HYBRID_PROVIDER");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
+std::string auto_fixed_page_cache_name(std::vector<std::string> const& file_paths,
+                                       std::string const& filter_signature)
+{
+  std::vector<std::string> paths = file_paths;
+  std::sort(paths.begin(), paths.end());
+  std::ostringstream out;
+  out << "__wdy_auto_fixed_page:";
+  for (auto const& path : paths) { out << path << ";"; }
+  if (!filter_signature.empty()) { out << "filter=" << filter_signature; }
+  return out.str();
+}
 
 //===----------------------------------------------------------------------===//
 // parquet_batch_coalescer
@@ -654,6 +694,74 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
   return out;
 }
 
+
+std::string parquet_gpu_ingestible::fixed_page_cache_filter_signature() const
+{
+  return _duckdb_filter_expression ? _duckdb_filter_expression->ToString() : std::string{};
+}
+
+
+void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view,
+                                                           const cucascade::memory::memory_space& mem_space,
+                                                           rmm::cuda_stream_view stream)
+{
+  if (!_scan_manager || !fixed_page_auto_cache_enabled() || view.num_columns() == 0 ||
+      view.num_rows() == 0 || _plan->has_partitions()) {
+    return;
+  }
+
+  bool has_fixed_width_column = false;
+  for (cudf::size_type i = 0; i < view.num_columns(); ++i) {
+    bool const fixed_width = is_fixed_width_auto_cache_candidate(view.column(i));
+    has_fixed_width_column = has_fixed_width_column || fixed_width;
+    if (!fixed_width && !fixed_page_hybrid_provider_enabled()) {
+      SIRIUS_LOG_INFO(
+        "[fixed-page-cache] auto_cache_skip reason=non_fixed_width_column column_index={} type_id={}",
+        i,
+        static_cast<int>(view.column(i).type().id()));
+      return;
+    }
+  }
+  if (!has_fixed_width_column) {
+    SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=no_fixed_width_column");
+    return;
+  }
+
+  scan_manager::cache_entry_info cache_info;
+  cache_info.resolved_file_paths = _file_paths;
+  cache_info.filter_signature = fixed_page_cache_filter_signature();
+  cache_info.column_ids.reserve(_plan->data_columns.size());
+  cache_info.names.reserve(_plan->data_columns.size());
+  for (auto const& dc : _plan->data_columns) {
+    cache_info.column_ids.emplace_back(duckdb::ColumnIndex(dc.primary_idx));
+    cache_info.names.push_back(dc.name);
+  }
+  if (cache_info.column_ids.size() != static_cast<std::size_t>(view.num_columns())) {
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] auto_cache_skip reason=column_count_mismatch expected={} actual={}",
+      cache_info.column_ids.size(),
+      view.num_columns());
+    return;
+  }
+
+  auto cache_table = std::make_unique<cudf::table>(view, stream, mem_space.get_default_allocator());
+  std::vector<std::unique_ptr<cudf::table>> tables;
+  tables.push_back(std::move(cache_table));
+  std::vector<cucascade::memory::memory_space*> spaces;
+  spaces.push_back(const_cast<cucascade::memory::memory_space*>(&mem_space));
+
+  auto const name = auto_fixed_page_cache_name(_file_paths, cache_info.filter_signature);
+  try {
+    _scan_manager->insert_pinned_entry(name, std::move(cache_info), std::move(tables), spaces);
+    SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_populate table='{}' rows={} columns={}",
+                    name,
+                    view.num_rows(),
+                    view.num_columns());
+  } catch (std::exception const& ex) {
+    SIRIUS_LOG_WARN("[fixed-page-cache] auto_cache_populate_failed error='{}'", ex.what());
+  }
+}
+
 //===----------------------------------------------------------------------===//
 // materialize_table — ports read_table_from_metadata
 //===----------------------------------------------------------------------===//
@@ -714,6 +822,8 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     std::nullopt;
   cudf::ast::expression const* reader_filter_root = nullptr;
 
+  bool const auto_cache = fixed_page_auto_cache_enabled() && _scan_manager != nullptr;
+
   if (_duckdb_filter_expression && !split.disable_filter_pushdown && !all_slices_pruned) {
     auto sirius_filter_ast = sirius::ast::from_duckdb(*_duckdb_filter_expression);
     auto name_resolver     = [plan = split.plan](duckdb::idx_t ref_index) -> std::string {
@@ -748,6 +858,8 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
   rmm::device_async_resource_ref mr_ref(mem_space.get_default_allocator());
   auto [table, _] =
     cudf::io::read_parquet(std::move(sources), std::move(metadatas), opts, stream, mr_ref);
+
+  if (auto_cache && table) { auto_cache_materialized_table(table->view(), mem_space, stream); }
 
   // Hive-partition scans assemble inline here: partition_values are per-split
   // (carried on parquet_split_info) and do not travel to the pipeline-shared
