@@ -1,0 +1,381 @@
+previous_query,second_query,previous_loaded_tables,second_loaded_tables,shared_loaded_tables,shared_table_count,second_table_count,overlap_table_ratio_of_second,second_materialized_uncompressed_gb,overlap_second_uncompressed_gb,overlap_byte_ratio_of_second
+q1,q2,lineitem,part partsupp supplier nation region,,0,5,0.0,4.338222954,0.0,0.0
+q1,q3,lineitem,lineitem orders customer,lineitem,1,3,0.3333333333333333,18.422791865,14.625917598,0.7939034270797262
+q1,q4,lineitem,lineitem orders,lineitem,1,2,0.5,11.720109723,9.825614382,0.8383551531704376
+q1,q5,lineitem,lineitem orders customer supplier nation region,lineitem,1,6,0.16666666666666666,22.134723685,19.501223464,0.8810240300047368
+q1,q6,lineitem,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q1,q7,lineitem,lineitem orders customer supplier nation,lineitem,1,5,0.2,24.609878328,21.976377722,0.8929901005238322
+q1,q8,lineitem,lineitem orders customer part supplier nation region,lineitem,1,7,0.14285714285714285,27.791279457,24.37652933,0.8771287182987215
+q1,q9,lineitem,lineitem orders part partsupp supplier nation,lineitem,1,6,0.16666666666666666,33.214085069,29.251835196,0.880705734787856
+q1,q11,lineitem,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q1,q12,lineitem,lineitem orders,lineitem,1,2,0.5,16.898499478,15.004004137,0.8878897298859922
+q1,q13,lineitem,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q1,q15,lineitem,lineitem supplier,lineitem,1,2,0.5,14.716415743,14.625917598,0.9938505308235094
+q1,q16,lineitem,part partsupp supplier,,0,3,0.0,1.751456478,0.0,0.0
+q1,q17,lineitem,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q1,q18,lineitem,lineitem orders customer,lineitem,1,3,0.3333333333333333,24.28997661,19.501223464,0.8028506481134895
+q1,q19,lineitem,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q1,q20,lineitem,lineitem part partsupp supplier nation,lineitem,1,5,0.2,16.809915276,14.625917598,0.8700768182265525
+q1,q21,lineitem,lineitem orders supplier nation,lineitem,1,4,0.25,40.409577432,39.152452228,0.9688904145034565
+q1,q22,lineitem,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q2,q1,part partsupp supplier nation region,lineitem,,0,1,0.0,24.754772085,0.0,0.0
+q2,q3,part partsupp supplier nation region,lineitem orders customer,,0,3,0.0,18.422791865,0.0,0.0
+q2,q4,part partsupp supplier nation region,lineitem orders,,0,2,0.0,11.720109723,0.0,0.0
+q2,q5,part partsupp supplier nation region,lineitem orders customer supplier nation region,supplier nation region,3,6,0.5,22.134723685,0.012250625,0.0005534573267929186
+q2,q6,part partsupp supplier nation region,lineitem,,0,1,0.0,9.750611732,0.0,0.0
+q2,q7,part partsupp supplier nation region,lineitem orders customer supplier nation,supplier nation,2,5,0.4,24.609878328,0.01225101,0.0004978086375202171
+q2,q8,part partsupp supplier nation region,lineitem orders customer part supplier nation region,part supplier nation region,4,7,0.5714285714285714,27.791279457,0.174750708,0.006287969154870421
+q2,q9,part partsupp supplier nation region,lineitem orders part partsupp supplier nation,part partsupp supplier nation,4,6,0.6666666666666666,33.214085069,2.124750227,0.06397136102307127
+q2,q11,part partsupp supplier nation region,partsupp supplier nation,partsupp supplier nation,3,3,1.0,4.562249502,4.562249502,1.0
+q2,q12,part partsupp supplier nation region,lineitem orders,,0,2,0.0,16.898499478,0.0,0.0
+q2,q13,part partsupp supplier nation region,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q2,q15,part partsupp supplier nation region,lineitem supplier,supplier,1,2,0.5,14.716415743,0.090498145,0.006149469176490633
+q2,q16,part partsupp supplier nation region,part partsupp supplier,part partsupp supplier,3,3,1.0,1.751456478,1.751456478,1.0
+q2,q17,part partsupp supplier nation region,lineitem part,part,1,2,0.5,24.53902931,0.16249998,0.006622103015858862
+q2,q18,part partsupp supplier nation region,lineitem orders customer,,0,3,0.0,24.28997661,0.0,0.0
+q2,q19,part partsupp supplier nation region,lineitem part,part,1,2,0.5,22.642262976,0.437804015,0.019335700475878088
+q2,q20,part partsupp supplier nation region,lineitem part partsupp supplier nation,part partsupp supplier nation,4,5,0.8,16.809915276,2.183997678,0.1299231817734475
+q2,q21,part partsupp supplier nation region,lineitem orders supplier nation,supplier nation,2,4,0.5,40.409577432,0.038375381,0.0009496605369006127
+q2,q22,part partsupp supplier nation region,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q3,q1,lineitem orders customer,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q3,q2,lineitem orders customer,part partsupp supplier nation region,,0,5,0.0,4.338222954,0.0,0.0
+q3,q4,lineitem orders customer,lineitem orders,lineitem orders,2,2,1.0,11.720109723,11.720109723,1.0
+q3,q5,lineitem orders customer,lineitem orders customer supplier nation region,lineitem orders customer,3,6,0.5,22.134723685,22.12247306,0.9994465426732071
+q3,q6,lineitem orders customer,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q3,q7,lineitem orders customer,lineitem orders customer supplier nation,lineitem orders customer,3,5,0.6,24.609878328,24.597627318,0.9995021913624798
+q3,q8,lineitem orders customer,lineitem orders customer part supplier nation region,lineitem orders customer,3,7,0.42857142857142855,27.791279457,27.616528749,0.9937120308451296
+q3,q9,lineitem orders customer,lineitem orders part partsupp supplier nation,lineitem orders,2,6,0.3333333333333333,33.214085069,31.089334842,0.9360286389769288
+q3,q11,lineitem orders customer,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q3,q12,lineitem orders customer,lineitem orders,lineitem orders,2,2,1.0,16.898499478,16.898499478,1.0
+q3,q13,lineitem orders customer,orders customer,orders customer,2,2,1.0,2.559374621,2.559374621,1.0
+q3,q15,lineitem orders customer,lineitem supplier,lineitem,1,2,0.5,14.716415743,14.625917598,0.9938505308235094
+q3,q16,lineitem orders customer,part partsupp supplier,,0,3,0.0,1.751456478,0.0,0.0
+q3,q17,lineitem orders customer,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q3,q18,lineitem orders customer,lineitem orders customer,lineitem orders customer,3,3,1.0,24.28997661,24.28997661,1.0
+q3,q19,lineitem orders customer,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q3,q20,lineitem orders customer,lineitem part partsupp supplier nation,lineitem,1,5,0.2,16.809915276,14.625917598,0.8700768182265525
+q3,q21,lineitem orders customer,lineitem orders supplier nation,lineitem orders,2,4,0.5,40.409577432,40.371202051,0.9990503394630994
+q3,q22,lineitem orders customer,orders customer,orders customer,2,2,1.0,1.931253749,1.931253749,1.0
+q4,q1,lineitem orders,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q4,q2,lineitem orders,part partsupp supplier nation region,,0,5,0.0,4.338222954,0.0,0.0
+q4,q3,lineitem orders,lineitem orders customer,lineitem orders,2,3,0.6666666666666666,18.422791865,18.30091689,0.9933845545293523
+q4,q5,lineitem orders,lineitem orders customer supplier nation region,lineitem orders,2,6,0.3333333333333333,22.134723685,21.93872311,0.991145108572879
+q4,q6,lineitem orders,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q4,q7,lineitem orders,lineitem orders customer supplier nation,lineitem orders,2,5,0.4,24.609878328,24.413877368,0.9920356794378378
+q4,q8,lineitem orders,lineitem orders customer part supplier nation region,lineitem orders,2,7,0.2857142857142857,27.791279457,27.432778799,0.987100246372079
+q4,q9,lineitem orders,lineitem orders part partsupp supplier nation,lineitem orders,2,6,0.3333333333333333,33.214085069,31.089334842,0.9360286389769288
+q4,q11,lineitem orders,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q4,q12,lineitem orders,lineitem orders,lineitem orders,2,2,1.0,16.898499478,16.898499478,1.0
+q4,q13,lineitem orders,orders customer,orders,1,2,0.5,2.559374621,2.437499646,0.9523809550973897
+q4,q15,lineitem orders,lineitem supplier,lineitem,1,2,0.5,14.716415743,14.625917598,0.9938505308235094
+q4,q16,lineitem orders,part partsupp supplier,,0,3,0.0,1.751456478,0.0,0.0
+q4,q17,lineitem orders,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q4,q18,lineitem orders,lineitem orders customer,lineitem orders,2,3,0.6666666666666666,24.28997661,23.776222756,0.9788491416748218
+q4,q19,lineitem orders,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q4,q20,lineitem orders,lineitem part partsupp supplier nation,lineitem,1,5,0.2,16.809915276,14.625917598,0.8700768182265525
+q4,q21,lineitem orders,lineitem orders supplier nation,lineitem orders,2,4,0.5,40.409577432,40.371202051,0.9990503394630994
+q4,q22,lineitem orders,orders customer,orders,1,2,0.5,1.931253749,1.218749823,0.6310666444692038
+q5,q1,lineitem orders customer supplier nation region,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q5,q2,lineitem orders customer supplier nation region,part partsupp supplier nation region,supplier nation region,3,5,0.6,4.338222954,0.185619906,0.04278708309098122
+q5,q3,lineitem orders customer supplier nation region,lineitem orders customer,lineitem orders customer,3,3,1.0,18.422791865,18.422791865,1.0
+q5,q4,lineitem orders customer supplier nation region,lineitem orders,lineitem orders,2,2,1.0,11.720109723,11.720109723,1.0
+q5,q6,lineitem orders customer supplier nation region,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q5,q7,lineitem orders customer supplier nation region,lineitem orders customer supplier nation,lineitem orders customer supplier nation,5,5,1.0,24.609878328,24.609878328,1.0
+q5,q8,lineitem orders customer supplier nation region,lineitem orders customer part supplier nation region,lineitem orders customer supplier nation region,6,7,0.8571428571428571,27.791279457,27.628779477,0.9941528427918755
+q5,q9,lineitem orders customer supplier nation region,lineitem orders part partsupp supplier nation,lineitem orders supplier nation,4,6,0.6666666666666666,33.214085069,31.101585344,0.9363974735233133
+q5,q11,lineitem orders customer supplier nation region,partsupp supplier nation,supplier nation,2,3,0.6666666666666666,4.562249502,0.012250097,0.002685100188981291
+q5,q12,lineitem orders customer supplier nation region,lineitem orders,lineitem orders,2,2,1.0,16.898499478,16.898499478,1.0
+q5,q13,lineitem orders customer supplier nation region,orders customer,orders customer,2,2,1.0,2.559374621,2.559374621,1.0
+q5,q15,lineitem orders customer supplier nation region,lineitem supplier,lineitem supplier,2,2,1.0,14.716415743,14.716415743,1.0
+q5,q16,lineitem orders customer supplier nation region,part partsupp supplier,supplier,1,3,0.3333333333333333,1.751456478,0.008124997,0.004638994518024215
+q5,q17,lineitem orders customer supplier nation region,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q5,q18,lineitem orders customer supplier nation region,lineitem orders customer,lineitem orders customer,3,3,1.0,24.28997661,24.28997661,1.0
+q5,q19,lineitem orders customer supplier nation region,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q5,q20,lineitem orders customer supplier nation region,lineitem part partsupp supplier nation,lineitem supplier nation,3,5,0.6,16.809915276,14.697415551,0.8743301384739234
+q5,q21,lineitem orders customer supplier nation region,lineitem orders supplier nation,lineitem orders supplier nation,4,4,1.0,40.409577432,40.409577432,1.0
+q5,q22,lineitem orders customer supplier nation region,orders customer,orders customer,2,2,1.0,1.931253749,1.931253749,1.0
+q6,q1,lineitem,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q6,q2,lineitem,part partsupp supplier nation region,,0,5,0.0,4.338222954,0.0,0.0
+q6,q3,lineitem,lineitem orders customer,lineitem,1,3,0.3333333333333333,18.422791865,14.625917598,0.7939034270797262
+q6,q4,lineitem,lineitem orders,lineitem,1,2,0.5,11.720109723,9.825614382,0.8383551531704376
+q6,q5,lineitem,lineitem orders customer supplier nation region,lineitem,1,6,0.16666666666666666,22.134723685,19.501223464,0.8810240300047368
+q6,q7,lineitem,lineitem orders customer supplier nation,lineitem,1,5,0.2,24.609878328,21.976377722,0.8929901005238322
+q6,q8,lineitem,lineitem orders customer part supplier nation region,lineitem,1,7,0.14285714285714285,27.791279457,24.37652933,0.8771287182987215
+q6,q9,lineitem,lineitem orders part partsupp supplier nation,lineitem,1,6,0.16666666666666666,33.214085069,29.251835196,0.880705734787856
+q6,q11,lineitem,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q6,q12,lineitem,lineitem orders,lineitem,1,2,0.5,16.898499478,15.004004137,0.8878897298859922
+q6,q13,lineitem,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q6,q15,lineitem,lineitem supplier,lineitem,1,2,0.5,14.716415743,14.625917598,0.9938505308235094
+q6,q16,lineitem,part partsupp supplier,,0,3,0.0,1.751456478,0.0,0.0
+q6,q17,lineitem,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q6,q18,lineitem,lineitem orders customer,lineitem,1,3,0.3333333333333333,24.28997661,19.501223464,0.8028506481134895
+q6,q19,lineitem,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q6,q20,lineitem,lineitem part partsupp supplier nation,lineitem,1,5,0.2,16.809915276,14.625917598,0.8700768182265525
+q6,q21,lineitem,lineitem orders supplier nation,lineitem,1,4,0.25,40.409577432,39.152452228,0.9688904145034565
+q6,q22,lineitem,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q7,q1,lineitem orders customer supplier nation,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q7,q2,lineitem orders customer supplier nation,part partsupp supplier nation region,supplier nation,2,5,0.4,4.338222954,0.185619866,0.04278707387061601
+q7,q3,lineitem orders customer supplier nation,lineitem orders customer,lineitem orders customer,3,3,1.0,18.422791865,18.422791865,1.0
+q7,q4,lineitem orders customer supplier nation,lineitem orders,lineitem orders,2,2,1.0,11.720109723,11.720109723,1.0
+q7,q5,lineitem orders customer supplier nation,lineitem orders customer supplier nation region,lineitem orders customer supplier nation,5,6,0.8333333333333334,22.134723685,22.134723665,0.9999999990964423
+q7,q6,lineitem orders customer supplier nation,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q7,q8,lineitem orders customer supplier nation,lineitem orders customer part supplier nation region,lineitem orders customer supplier nation,5,7,0.7142857142857143,27.791279457,27.628779457,0.9941528420722253
+q7,q9,lineitem orders customer supplier nation,lineitem orders part partsupp supplier nation,lineitem orders supplier nation,4,6,0.6666666666666666,33.214085069,31.101585344,0.9363974735233133
+q7,q11,lineitem orders customer supplier nation,partsupp supplier nation,supplier nation,2,3,0.6666666666666666,4.562249502,0.012250097,0.002685100188981291
+q7,q12,lineitem orders customer supplier nation,lineitem orders,lineitem orders,2,2,1.0,16.898499478,16.898499478,1.0
+q7,q13,lineitem orders customer supplier nation,orders customer,orders customer,2,2,1.0,2.559374621,2.559374621,1.0
+q7,q15,lineitem orders customer supplier nation,lineitem supplier,lineitem supplier,2,2,1.0,14.716415743,14.716415743,1.0
+q7,q16,lineitem orders customer supplier nation,part partsupp supplier,supplier,1,3,0.3333333333333333,1.751456478,0.008124997,0.004638994518024215
+q7,q17,lineitem orders customer supplier nation,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q7,q18,lineitem orders customer supplier nation,lineitem orders customer,lineitem orders customer,3,3,1.0,24.28997661,24.28997661,1.0
+q7,q19,lineitem orders customer supplier nation,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q7,q20,lineitem orders customer supplier nation,lineitem part partsupp supplier nation,lineitem supplier nation,3,5,0.6,16.809915276,14.697415551,0.8743301384739234
+q7,q21,lineitem orders customer supplier nation,lineitem orders supplier nation,lineitem orders supplier nation,4,4,1.0,40.409577432,40.409577432,1.0
+q7,q22,lineitem orders customer supplier nation,orders customer,orders customer,2,2,1.0,1.931253749,1.931253749,1.0
+q8,q1,lineitem orders customer part supplier nation region,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q8,q2,lineitem orders customer part supplier nation region,part partsupp supplier nation region,part supplier nation region,4,5,0.8,4.338222954,0.438223464,0.1010145095461131
+q8,q3,lineitem orders customer part supplier nation region,lineitem orders customer,lineitem orders customer,3,3,1.0,18.422791865,18.422791865,1.0
+q8,q4,lineitem orders customer part supplier nation region,lineitem orders,lineitem orders,2,2,1.0,11.720109723,11.720109723,1.0
+q8,q5,lineitem orders customer part supplier nation region,lineitem orders customer supplier nation region,lineitem orders customer supplier nation region,6,6,1.0,22.134723685,22.134723685,1.0
+q8,q6,lineitem orders customer part supplier nation region,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q8,q7,lineitem orders customer part supplier nation region,lineitem orders customer supplier nation,lineitem orders customer supplier nation,5,5,1.0,24.609878328,24.609878328,1.0
+q8,q9,lineitem orders customer part supplier nation region,lineitem orders part partsupp supplier nation,lineitem orders part supplier nation,5,6,0.8333333333333334,33.214085069,31.264085324,0.941289975594721
+q8,q11,lineitem orders customer part supplier nation region,partsupp supplier nation,supplier nation,2,3,0.6666666666666666,4.562249502,0.012250097,0.002685100188981291
+q8,q12,lineitem orders customer part supplier nation region,lineitem orders,lineitem orders,2,2,1.0,16.898499478,16.898499478,1.0
+q8,q13,lineitem orders customer part supplier nation region,orders customer,orders customer,2,2,1.0,2.559374621,2.559374621,1.0
+q8,q15,lineitem orders customer part supplier nation region,lineitem supplier,lineitem supplier,2,2,1.0,14.716415743,14.716415743,1.0
+q8,q16,lineitem orders customer part supplier nation region,part partsupp supplier,part supplier,2,3,0.6666666666666666,1.751456478,0.451456648,0.257760700120577
+q8,q17,lineitem orders customer part supplier nation region,lineitem part,lineitem part,2,2,1.0,24.53902931,24.53902931,1.0
+q8,q18,lineitem orders customer part supplier nation region,lineitem orders customer,lineitem orders customer,3,3,1.0,24.28997661,24.28997661,1.0
+q8,q19,lineitem orders customer part supplier nation region,lineitem part,lineitem part,2,2,1.0,22.642262976,22.642262976,1.0
+q8,q20,lineitem orders customer part supplier nation region,lineitem part partsupp supplier nation,lineitem part supplier nation,4,5,0.8,16.809915276,14.859915531,0.883997050967647
+q8,q21,lineitem orders customer part supplier nation region,lineitem orders supplier nation,lineitem orders supplier nation,4,4,1.0,40.409577432,40.409577432,1.0
+q8,q22,lineitem orders customer part supplier nation region,orders customer,orders customer,2,2,1.0,1.931253749,1.931253749,1.0
+q9,q1,lineitem orders part partsupp supplier nation,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q9,q2,lineitem orders part partsupp supplier nation,part partsupp supplier nation region,part partsupp supplier nation,4,5,0.8,4.338222954,4.338222914,0.9999999907796348
+q9,q3,lineitem orders part partsupp supplier nation,lineitem orders customer,lineitem orders,2,3,0.6666666666666666,18.422791865,18.30091689,0.9933845545293523
+q9,q4,lineitem orders part partsupp supplier nation,lineitem orders,lineitem orders,2,2,1.0,11.720109723,11.720109723,1.0
+q9,q5,lineitem orders part partsupp supplier nation,lineitem orders customer supplier nation region,lineitem orders supplier nation,4,6,0.6666666666666666,22.134723685,21.950973715,0.9916985649961142
+q9,q6,lineitem orders part partsupp supplier nation,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q9,q7,lineitem orders part partsupp supplier nation,lineitem orders customer supplier nation,lineitem orders supplier nation,4,5,0.8,24.609878328,24.426128378,0.992533488075358
+q9,q8,lineitem orders part partsupp supplier nation,lineitem orders customer part supplier nation region,lineitem orders part supplier nation,5,7,0.7142857142857143,27.791279457,27.607529487,0.9933882148072993
+q9,q11,lineitem orders part partsupp supplier nation,partsupp supplier nation,partsupp supplier nation,3,3,1.0,4.562249502,4.562249502,1.0
+q9,q12,lineitem orders part partsupp supplier nation,lineitem orders,lineitem orders,2,2,1.0,16.898499478,16.898499478,1.0
+q9,q13,lineitem orders part partsupp supplier nation,orders customer,orders,1,2,0.5,2.559374621,2.437499646,0.9523809550973897
+q9,q15,lineitem orders part partsupp supplier nation,lineitem supplier,lineitem supplier,2,2,1.0,14.716415743,14.716415743,1.0
+q9,q16,lineitem orders part partsupp supplier nation,part partsupp supplier,part partsupp supplier,3,3,1.0,1.751456478,1.751456478,1.0
+q9,q17,lineitem orders part partsupp supplier nation,lineitem part,lineitem part,2,2,1.0,24.53902931,24.53902931,1.0
+q9,q18,lineitem orders part partsupp supplier nation,lineitem orders customer,lineitem orders,2,3,0.6666666666666666,24.28997661,23.776222756,0.9788491416748218
+q9,q19,lineitem orders part partsupp supplier nation,lineitem part,lineitem part,2,2,1.0,22.642262976,22.642262976,1.0
+q9,q20,lineitem orders part partsupp supplier nation,lineitem part partsupp supplier nation,lineitem part partsupp supplier nation,5,5,1.0,16.809915276,16.809915276,1.0
+q9,q21,lineitem orders part partsupp supplier nation,lineitem orders supplier nation,lineitem orders supplier nation,4,4,1.0,40.409577432,40.409577432,1.0
+q9,q22,lineitem orders part partsupp supplier nation,orders customer,orders,1,2,0.5,1.931253749,1.218749823,0.6310666444692038
+q11,q1,partsupp supplier nation,lineitem,,0,1,0.0,24.754772085,0.0,0.0
+q11,q2,partsupp supplier nation,part partsupp supplier nation region,partsupp supplier nation,3,5,0.6,4.338222954,4.085619356,0.941772564324503
+q11,q3,partsupp supplier nation,lineitem orders customer,,0,3,0.0,18.422791865,0.0,0.0
+q11,q4,partsupp supplier nation,lineitem orders,,0,2,0.0,11.720109723,0.0,0.0
+q11,q5,partsupp supplier nation,lineitem orders customer supplier nation region,supplier nation,2,6,0.3333333333333333,22.134723685,0.012250605,0.0005534564232352196
+q11,q6,partsupp supplier nation,lineitem,,0,1,0.0,9.750611732,0.0,0.0
+q11,q7,partsupp supplier nation,lineitem orders customer supplier nation,supplier nation,2,5,0.4,24.609878328,0.01225101,0.0004978086375202171
+q11,q8,partsupp supplier nation,lineitem orders customer part supplier nation region,supplier nation,2,7,0.2857142857142857,27.791279457,0.012250708,0.0004408112270957112
+q11,q9,partsupp supplier nation,lineitem orders part partsupp supplier nation,partsupp supplier nation,3,6,0.5,33.214085069,1.962250247,0.05907885895166339
+q11,q12,partsupp supplier nation,lineitem orders,,0,2,0.0,16.898499478,0.0,0.0
+q11,q13,partsupp supplier nation,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q11,q15,partsupp supplier nation,lineitem supplier,supplier,1,2,0.5,14.716415743,0.090498145,0.006149469176490633
+q11,q16,partsupp supplier nation,part partsupp supplier,partsupp supplier,2,3,0.6666666666666666,1.751456478,1.308124827,0.7468782943974472
+q11,q17,partsupp supplier nation,lineitem part,,0,2,0.0,24.53902931,0.0,0.0
+q11,q18,partsupp supplier nation,lineitem orders customer,,0,3,0.0,24.28997661,0.0,0.0
+q11,q19,partsupp supplier nation,lineitem part,,0,2,0.0,22.642262976,0.0,0.0
+q11,q20,partsupp supplier nation,lineitem part partsupp supplier nation,partsupp supplier nation,3,5,0.6,16.809915276,2.021497698,0.12025626927972388
+q11,q21,partsupp supplier nation,lineitem orders supplier nation,supplier nation,2,4,0.5,40.409577432,0.038375381,0.0009496605369006127
+q11,q22,partsupp supplier nation,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q12,q1,lineitem orders,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q12,q2,lineitem orders,part partsupp supplier nation region,,0,5,0.0,4.338222954,0.0,0.0
+q12,q3,lineitem orders,lineitem orders customer,lineitem orders,2,3,0.6666666666666666,18.422791865,18.30091689,0.9933845545293523
+q12,q4,lineitem orders,lineitem orders,lineitem orders,2,2,1.0,11.720109723,11.720109723,1.0
+q12,q5,lineitem orders,lineitem orders customer supplier nation region,lineitem orders,2,6,0.3333333333333333,22.134723685,21.93872311,0.991145108572879
+q12,q6,lineitem orders,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q12,q7,lineitem orders,lineitem orders customer supplier nation,lineitem orders,2,5,0.4,24.609878328,24.413877368,0.9920356794378378
+q12,q8,lineitem orders,lineitem orders customer part supplier nation region,lineitem orders,2,7,0.2857142857142857,27.791279457,27.432778799,0.987100246372079
+q12,q9,lineitem orders,lineitem orders part partsupp supplier nation,lineitem orders,2,6,0.3333333333333333,33.214085069,31.089334842,0.9360286389769288
+q12,q11,lineitem orders,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q12,q13,lineitem orders,orders customer,orders,1,2,0.5,2.559374621,2.437499646,0.9523809550973897
+q12,q15,lineitem orders,lineitem supplier,lineitem,1,2,0.5,14.716415743,14.625917598,0.9938505308235094
+q12,q16,lineitem orders,part partsupp supplier,,0,3,0.0,1.751456478,0.0,0.0
+q12,q17,lineitem orders,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q12,q18,lineitem orders,lineitem orders customer,lineitem orders,2,3,0.6666666666666666,24.28997661,23.776222756,0.9788491416748218
+q12,q19,lineitem orders,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q12,q20,lineitem orders,lineitem part partsupp supplier nation,lineitem,1,5,0.2,16.809915276,14.625917598,0.8700768182265525
+q12,q21,lineitem orders,lineitem orders supplier nation,lineitem orders,2,4,0.5,40.409577432,40.371202051,0.9990503394630994
+q12,q22,lineitem orders,orders customer,orders,1,2,0.5,1.931253749,1.218749823,0.6310666444692038
+q13,q1,orders customer,lineitem,,0,1,0.0,24.754772085,0.0,0.0
+q13,q2,orders customer,part partsupp supplier nation region,,0,5,0.0,4.338222954,0.0,0.0
+q13,q3,orders customer,lineitem orders customer,orders customer,2,3,0.6666666666666666,18.422791865,3.796874267,0.20609657292027384
+q13,q4,orders customer,lineitem orders,orders,1,2,0.5,11.720109723,1.894495341,0.1616448468295624
+q13,q5,orders customer,lineitem orders customer supplier nation region,orders customer,2,6,0.3333333333333333,22.134723685,2.621249596,0.1184225126684702
+q13,q6,orders customer,lineitem,,0,1,0.0,9.750611732,0.0,0.0
+q13,q7,orders customer,lineitem orders customer supplier nation,orders customer,2,5,0.4,24.609878328,2.621249596,0.10651209083864756
+q13,q8,orders customer,lineitem orders customer part supplier nation region,orders customer,2,7,0.2857142857142857,27.791279457,3.239999419,0.11658331254640804
+q13,q9,orders customer,lineitem orders part partsupp supplier nation,orders,1,6,0.16666666666666666,33.214085069,1.837499646,0.055322904189072784
+q13,q11,orders customer,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q13,q12,orders customer,lineitem orders,orders,1,2,0.5,16.898499478,1.894495341,0.11211027011400782
+q13,q15,orders customer,lineitem supplier,,0,2,0.0,14.716415743,0.0,0.0
+q13,q16,orders customer,part partsupp supplier,,0,3,0.0,1.751456478,0.0,0.0
+q13,q17,orders customer,lineitem part,,0,2,0.0,24.53902931,0.0,0.0
+q13,q18,orders customer,lineitem orders customer,orders customer,2,3,0.6666666666666666,24.28997661,4.788753146,0.19714935188651053
+q13,q19,orders customer,lineitem part,,0,2,0.0,22.642262976,0.0,0.0
+q13,q20,orders customer,lineitem part partsupp supplier nation,,0,5,0.0,16.809915276,0.0,0.0
+q13,q21,orders customer,lineitem orders supplier nation,orders,1,4,0.25,40.409577432,1.218749823,0.03015992495964292
+q13,q22,orders customer,orders customer,orders customer,2,2,1.0,1.931253749,1.931253749,1.0
+q15,q1,lineitem supplier,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q15,q2,lineitem supplier,part partsupp supplier nation region,supplier,1,5,0.2,4.338222954,0.185619049,0.04278688554465659
+q15,q3,lineitem supplier,lineitem orders customer,lineitem,1,3,0.3333333333333333,18.422791865,14.625917598,0.7939034270797262
+q15,q4,lineitem supplier,lineitem orders,lineitem,1,2,0.5,11.720109723,9.825614382,0.8383551531704376
+q15,q5,lineitem supplier,lineitem orders customer supplier nation region,lineitem supplier,2,6,0.3333333333333333,22.134723685,19.513473458,0.8815774588242844
+q15,q6,lineitem supplier,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q15,q7,lineitem supplier,lineitem orders customer supplier nation,lineitem supplier,2,5,0.4,24.609878328,21.988627716,0.8934878678771174
+q15,q8,lineitem supplier,lineitem orders customer part supplier nation region,lineitem supplier,2,7,0.2857142857142857,27.791279457,24.388779324,0.8775695038343049
+q15,q9,lineitem supplier,lineitem orders part partsupp supplier nation,lineitem supplier,2,6,0.3333333333333333,33.214085069,29.26408519,0.8810745540395244
+q15,q11,lineitem supplier,partsupp supplier nation,supplier,1,3,0.3333333333333333,4.562249502,0.012249994,0.0026850776123992877
+q15,q12,lineitem supplier,lineitem orders,lineitem,1,2,0.5,16.898499478,15.004004137,0.8878897298859922
+q15,q13,lineitem supplier,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q15,q16,lineitem supplier,part partsupp supplier,supplier,1,3,0.3333333333333333,1.751456478,0.008124997,0.004638994518024215
+q15,q17,lineitem supplier,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q15,q18,lineitem supplier,lineitem orders customer,lineitem,1,3,0.3333333333333333,24.28997661,19.501223464,0.8028506481134895
+q15,q19,lineitem supplier,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q15,q20,lineitem supplier,lineitem part partsupp supplier nation,lineitem supplier,2,5,0.4,16.809915276,14.697415448,0.8743301323465873
+q15,q21,lineitem supplier,lineitem orders supplier nation,lineitem supplier,2,4,0.5,40.409577432,39.190827506,0.9698400724914564
+q15,q22,lineitem supplier,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q16,q1,part partsupp supplier,lineitem,,0,1,0.0,24.754772085,0.0,0.0
+q16,q2,part partsupp supplier,part partsupp supplier nation region,part partsupp supplier,3,5,0.6,4.338222954,4.338222097,0.9999998024536754
+q16,q3,part partsupp supplier,lineitem orders customer,,0,3,0.0,18.422791865,0.0,0.0
+q16,q4,part partsupp supplier,lineitem orders,,0,2,0.0,11.720109723,0.0,0.0
+q16,q5,part partsupp supplier,lineitem orders customer supplier nation region,supplier,1,6,0.16666666666666666,22.134723685,0.012249994,0.0005534288195475163
+q16,q6,part partsupp supplier,lineitem,,0,1,0.0,9.750611732,0.0,0.0
+q16,q7,part partsupp supplier,lineitem orders customer supplier nation,supplier,1,5,0.2,24.609878328,0.012249994,0.0004977673532852259
+q16,q8,part partsupp supplier,lineitem orders customer part supplier nation region,part supplier,2,7,0.2857142857142857,27.791279457,0.174749974,0.006287942743707843
+q16,q9,part partsupp supplier,lineitem orders part partsupp supplier nation,part partsupp supplier,3,6,0.5,33.214085069,2.124749719,0.06397134572835522
+q16,q11,part partsupp supplier,partsupp supplier nation,partsupp supplier,2,3,0.6666666666666666,4.562249502,4.562249399,0.999999977423418
+q16,q12,part partsupp supplier,lineitem orders,,0,2,0.0,16.898499478,0.0,0.0
+q16,q13,part partsupp supplier,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q16,q15,part partsupp supplier,lineitem supplier,supplier,1,2,0.5,14.716415743,0.090498145,0.006149469176490633
+q16,q17,part partsupp supplier,lineitem part,part,1,2,0.5,24.53902931,0.16249998,0.006622103015858862
+q16,q18,part partsupp supplier,lineitem orders customer,,0,3,0.0,24.28997661,0.0,0.0
+q16,q19,part partsupp supplier,lineitem part,part,1,2,0.5,22.642262976,0.437804015,0.019335700475878088
+q16,q20,part partsupp supplier,lineitem part partsupp supplier nation,part partsupp supplier,3,5,0.6,16.809915276,2.183997575,0.12992317564611144
+q16,q21,part partsupp supplier,lineitem orders supplier nation,supplier,1,4,0.25,40.409577432,0.038375278,0.0009496579879999177
+q16,q22,part partsupp supplier,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q17,q1,lineitem part,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q17,q2,lineitem part,part partsupp supplier nation region,part,1,5,0.2,4.338222954,0.252603558,0.05822742645513189
+q17,q3,lineitem part,lineitem orders customer,lineitem,1,3,0.3333333333333333,18.422791865,14.625917598,0.7939034270797262
+q17,q4,lineitem part,lineitem orders,lineitem,1,2,0.5,11.720109723,9.825614382,0.8383551531704376
+q17,q5,lineitem part,lineitem orders customer supplier nation region,lineitem,1,6,0.16666666666666666,22.134723685,19.501223464,0.8810240300047368
+q17,q6,lineitem part,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q17,q7,lineitem part,lineitem orders customer supplier nation,lineitem,1,5,0.2,24.609878328,21.976377722,0.8929901005238322
+q17,q8,lineitem part,lineitem orders customer part supplier nation region,lineitem part,2,7,0.2857142857142857,27.791279457,24.53902931,0.8829758755068461
+q17,q9,lineitem part,lineitem orders part partsupp supplier nation,lineitem part,2,6,0.3333333333333333,33.214085069,29.414335176,0.8855982368592639
+q17,q11,lineitem part,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q17,q12,lineitem part,lineitem orders,lineitem,1,2,0.5,16.898499478,15.004004137,0.8878897298859922
+q17,q13,lineitem part,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q17,q15,lineitem part,lineitem supplier,lineitem,1,2,0.5,14.716415743,14.625917598,0.9938505308235094
+q17,q16,lineitem part,part partsupp supplier,part,1,3,0.3333333333333333,1.751456478,0.443331651,0.2531217056025528
+q17,q18,lineitem part,lineitem orders customer,lineitem,1,3,0.3333333333333333,24.28997661,19.501223464,0.8028506481134895
+q17,q19,lineitem part,lineitem part,lineitem part,2,2,1.0,22.642262976,22.642262976,1.0
+q17,q20,lineitem part,lineitem part partsupp supplier nation,lineitem part,2,5,0.4,16.809915276,14.788417578,0.8797437307202761
+q17,q21,lineitem part,lineitem orders supplier nation,lineitem,1,4,0.25,40.409577432,39.152452228,0.9688904145034565
+q17,q22,lineitem part,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q18,q1,lineitem orders customer,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q18,q2,lineitem orders customer,part partsupp supplier nation region,,0,5,0.0,4.338222954,0.0,0.0
+q18,q3,lineitem orders customer,lineitem orders customer,lineitem orders customer,3,3,1.0,18.422791865,18.422791865,1.0
+q18,q4,lineitem orders customer,lineitem orders,lineitem orders,2,2,1.0,11.720109723,11.720109723,1.0
+q18,q5,lineitem orders customer,lineitem orders customer supplier nation region,lineitem orders customer,3,6,0.5,22.134723685,22.12247306,0.9994465426732071
+q18,q6,lineitem orders customer,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q18,q7,lineitem orders customer,lineitem orders customer supplier nation,lineitem orders customer,3,5,0.6,24.609878328,24.597627318,0.9995021913624798
+q18,q8,lineitem orders customer,lineitem orders customer part supplier nation region,lineitem orders customer,3,7,0.42857142857142855,27.791279457,27.616528749,0.9937120308451296
+q18,q9,lineitem orders customer,lineitem orders part partsupp supplier nation,lineitem orders,2,6,0.3333333333333333,33.214085069,31.089334842,0.9360286389769288
+q18,q11,lineitem orders customer,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q18,q12,lineitem orders customer,lineitem orders,lineitem orders,2,2,1.0,16.898499478,16.898499478,1.0
+q18,q13,lineitem orders customer,orders customer,orders customer,2,2,1.0,2.559374621,2.559374621,1.0
+q18,q15,lineitem orders customer,lineitem supplier,lineitem,1,2,0.5,14.716415743,14.625917598,0.9938505308235094
+q18,q16,lineitem orders customer,part partsupp supplier,,0,3,0.0,1.751456478,0.0,0.0
+q18,q17,lineitem orders customer,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q18,q19,lineitem orders customer,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q18,q20,lineitem orders customer,lineitem part partsupp supplier nation,lineitem,1,5,0.2,16.809915276,14.625917598,0.8700768182265525
+q18,q21,lineitem orders customer,lineitem orders supplier nation,lineitem orders,2,4,0.5,40.409577432,40.371202051,0.9990503394630994
+q18,q22,lineitem orders customer,orders customer,orders customer,2,2,1.0,1.931253749,1.931253749,1.0
+q19,q1,lineitem part,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q19,q2,lineitem part,part partsupp supplier nation region,part,1,5,0.2,4.338222954,0.252603558,0.05822742645513189
+q19,q3,lineitem part,lineitem orders customer,lineitem,1,3,0.3333333333333333,18.422791865,14.625917598,0.7939034270797262
+q19,q4,lineitem part,lineitem orders,lineitem,1,2,0.5,11.720109723,9.825614382,0.8383551531704376
+q19,q5,lineitem part,lineitem orders customer supplier nation region,lineitem,1,6,0.16666666666666666,22.134723685,19.501223464,0.8810240300047368
+q19,q6,lineitem part,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q19,q7,lineitem part,lineitem orders customer supplier nation,lineitem,1,5,0.2,24.609878328,21.976377722,0.8929901005238322
+q19,q8,lineitem part,lineitem orders customer part supplier nation region,lineitem part,2,7,0.2857142857142857,27.791279457,24.53902931,0.8829758755068461
+q19,q9,lineitem part,lineitem orders part partsupp supplier nation,lineitem part,2,6,0.3333333333333333,33.214085069,29.414335176,0.8855982368592639
+q19,q11,lineitem part,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q19,q12,lineitem part,lineitem orders,lineitem,1,2,0.5,16.898499478,15.004004137,0.8878897298859922
+q19,q13,lineitem part,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q19,q15,lineitem part,lineitem supplier,lineitem,1,2,0.5,14.716415743,14.625917598,0.9938505308235094
+q19,q16,lineitem part,part partsupp supplier,part,1,3,0.3333333333333333,1.751456478,0.443331651,0.2531217056025528
+q19,q17,lineitem part,lineitem part,lineitem part,2,2,1.0,24.53902931,24.53902931,1.0
+q19,q18,lineitem part,lineitem orders customer,lineitem,1,3,0.3333333333333333,24.28997661,19.501223464,0.8028506481134895
+q19,q20,lineitem part,lineitem part partsupp supplier nation,lineitem part,2,5,0.4,16.809915276,14.788417578,0.8797437307202761
+q19,q21,lineitem part,lineitem orders supplier nation,lineitem,1,4,0.25,40.409577432,39.152452228,0.9688904145034565
+q19,q22,lineitem part,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q20,q1,lineitem part partsupp supplier nation,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q20,q2,lineitem part partsupp supplier nation,part partsupp supplier nation region,part partsupp supplier nation,4,5,0.8,4.338222954,4.338222914,0.9999999907796348
+q20,q3,lineitem part partsupp supplier nation,lineitem orders customer,lineitem,1,3,0.3333333333333333,18.422791865,14.625917598,0.7939034270797262
+q20,q4,lineitem part partsupp supplier nation,lineitem orders,lineitem,1,2,0.5,11.720109723,9.825614382,0.8383551531704376
+q20,q5,lineitem part partsupp supplier nation,lineitem orders customer supplier nation region,lineitem supplier nation,3,6,0.5,22.134723685,19.513474069,0.8815774864279721
+q20,q6,lineitem part partsupp supplier nation,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q20,q7,lineitem part partsupp supplier nation,lineitem orders customer supplier nation,lineitem supplier nation,3,5,0.6,24.609878328,21.988628732,0.8934879091613525
+q20,q8,lineitem part partsupp supplier nation,lineitem orders customer part supplier nation region,lineitem part supplier nation,4,7,0.5714285714285714,27.791279457,24.551280018,0.8834166867339418
+q20,q9,lineitem part partsupp supplier nation,lineitem orders part partsupp supplier nation,lineitem part partsupp supplier nation,5,6,0.8333333333333334,33.214085069,31.376585423,0.9446770958109272
+q20,q11,lineitem part partsupp supplier nation,partsupp supplier nation,partsupp supplier nation,3,3,1.0,4.562249502,4.562249502,1.0
+q20,q12,lineitem part partsupp supplier nation,lineitem orders,lineitem,1,2,0.5,16.898499478,15.004004137,0.8878897298859922
+q20,q13,lineitem part partsupp supplier nation,orders customer,,0,2,0.0,2.559374621,0.0,0.0
+q20,q15,lineitem part partsupp supplier nation,lineitem supplier,lineitem supplier,2,2,1.0,14.716415743,14.716415743,1.0
+q20,q16,lineitem part partsupp supplier nation,part partsupp supplier,part partsupp supplier,3,3,1.0,1.751456478,1.751456478,1.0
+q20,q17,lineitem part partsupp supplier nation,lineitem part,lineitem part,2,2,1.0,24.53902931,24.53902931,1.0
+q20,q18,lineitem part partsupp supplier nation,lineitem orders customer,lineitem,1,3,0.3333333333333333,24.28997661,19.501223464,0.8028506481134895
+q20,q19,lineitem part partsupp supplier nation,lineitem part,lineitem part,2,2,1.0,22.642262976,22.642262976,1.0
+q20,q21,lineitem part partsupp supplier nation,lineitem orders supplier nation,lineitem supplier nation,3,4,0.75,40.409577432,39.190827609,0.9698400750403571
+q20,q22,lineitem part partsupp supplier nation,orders customer,,0,2,0.0,1.931253749,0.0,0.0
+q21,q1,lineitem orders supplier nation,lineitem,lineitem,1,1,1.0,24.754772085,24.754772085,1.0
+q21,q2,lineitem orders supplier nation,part partsupp supplier nation region,supplier nation,2,5,0.4,4.338222954,0.185619866,0.04278707387061601
+q21,q3,lineitem orders supplier nation,lineitem orders customer,lineitem orders,2,3,0.6666666666666666,18.422791865,18.30091689,0.9933845545293523
+q21,q4,lineitem orders supplier nation,lineitem orders,lineitem orders,2,2,1.0,11.720109723,11.720109723,1.0
+q21,q5,lineitem orders supplier nation,lineitem orders customer supplier nation region,lineitem orders supplier nation,4,6,0.6666666666666666,22.134723685,21.950973715,0.9916985649961142
+q21,q6,lineitem orders supplier nation,lineitem,lineitem,1,1,1.0,9.750611732,9.750611732,1.0
+q21,q7,lineitem orders supplier nation,lineitem orders customer supplier nation,lineitem orders supplier nation,4,5,0.8,24.609878328,24.426128378,0.992533488075358
+q21,q8,lineitem orders supplier nation,lineitem orders customer part supplier nation region,lineitem orders supplier nation,4,7,0.5714285714285714,27.791279457,27.445029507,0.9875410575991748
+q21,q9,lineitem orders supplier nation,lineitem orders part partsupp supplier nation,lineitem orders supplier nation,4,6,0.6666666666666666,33.214085069,31.101585344,0.9363974735233133
+q21,q11,lineitem orders supplier nation,partsupp supplier nation,supplier nation,2,3,0.6666666666666666,4.562249502,0.012250097,0.002685100188981291
+q21,q12,lineitem orders supplier nation,lineitem orders,lineitem orders,2,2,1.0,16.898499478,16.898499478,1.0
+q21,q13,lineitem orders supplier nation,orders customer,orders,1,2,0.5,2.559374621,2.437499646,0.9523809550973897
+q21,q15,lineitem orders supplier nation,lineitem supplier,lineitem supplier,2,2,1.0,14.716415743,14.716415743,1.0
+q21,q16,lineitem orders supplier nation,part partsupp supplier,supplier,1,3,0.3333333333333333,1.751456478,0.008124997,0.004638994518024215
+q21,q17,lineitem orders supplier nation,lineitem part,lineitem,1,2,0.5,24.53902931,24.37652933,0.9933778969841411
+q21,q18,lineitem orders supplier nation,lineitem orders customer,lineitem orders,2,3,0.6666666666666666,24.28997661,23.776222756,0.9788491416748218
+q21,q19,lineitem orders supplier nation,lineitem part,lineitem,1,2,0.5,22.642262976,22.204458961,0.9806642995241219
+q21,q20,lineitem orders supplier nation,lineitem part partsupp supplier nation,lineitem supplier nation,3,5,0.6,16.809915276,14.697415551,0.8743301384739234
+q21,q22,lineitem orders supplier nation,orders customer,orders,1,2,0.5,1.931253749,1.218749823,0.6310666444692038
+q22,q1,orders customer,lineitem,,0,1,0.0,24.754772085,0.0,0.0
+q22,q2,orders customer,part partsupp supplier nation region,,0,5,0.0,4.338222954,0.0,0.0
+q22,q3,orders customer,lineitem orders customer,orders customer,2,3,0.6666666666666666,18.422791865,3.796874267,0.20609657292027384
+q22,q4,orders customer,lineitem orders,orders,1,2,0.5,11.720109723,1.894495341,0.1616448468295624
+q22,q5,orders customer,lineitem orders customer supplier nation region,orders customer,2,6,0.3333333333333333,22.134723685,2.621249596,0.1184225126684702
+q22,q6,orders customer,lineitem,,0,1,0.0,9.750611732,0.0,0.0
+q22,q7,orders customer,lineitem orders customer supplier nation,orders customer,2,5,0.4,24.609878328,2.621249596,0.10651209083864756
+q22,q8,orders customer,lineitem orders customer part supplier nation region,orders customer,2,7,0.2857142857142857,27.791279457,3.239999419,0.11658331254640804
+q22,q9,orders customer,lineitem orders part partsupp supplier nation,orders,1,6,0.16666666666666666,33.214085069,1.837499646,0.055322904189072784
+q22,q11,orders customer,partsupp supplier nation,,0,3,0.0,4.562249502,0.0,0.0
+q22,q12,orders customer,lineitem orders,orders,1,2,0.5,16.898499478,1.894495341,0.11211027011400782
+q22,q13,orders customer,orders customer,orders customer,2,2,1.0,2.559374621,2.559374621,1.0
+q22,q15,orders customer,lineitem supplier,,0,2,0.0,14.716415743,0.0,0.0
+q22,q16,orders customer,part partsupp supplier,,0,3,0.0,1.751456478,0.0,0.0
+q22,q17,orders customer,lineitem part,,0,2,0.0,24.53902931,0.0,0.0
+q22,q18,orders customer,lineitem orders customer,orders customer,2,3,0.6666666666666666,24.28997661,4.788753146,0.19714935188651053
+q22,q19,orders customer,lineitem part,,0,2,0.0,22.642262976,0.0,0.0
+q22,q20,orders customer,lineitem part partsupp supplier nation,,0,5,0.0,16.809915276,0.0,0.0
+q22,q21,orders customer,lineitem orders supplier nation,orders,1,4,0.25,40.409577432,1.218749823,0.03015992495964292

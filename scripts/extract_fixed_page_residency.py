@@ -12,6 +12,7 @@ from pathlib import Path
 
 LOG_TS_RE = re.compile(r"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\]")
 KV_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)=('[^']*'|[^\s]+)")
+TABLE_RE = re.compile(r"table='(.*)' fixed_cols=")
 
 
 def parse_kv(line: str) -> dict[str, str]:
@@ -19,6 +20,11 @@ def parse_kv(line: str) -> dict[str, str]:
     for key, value in KV_RE.findall(line):
         out[key] = value.strip("'")
     return out
+
+
+def parse_table_key(line: str) -> str:
+    match = TABLE_RE.search(line)
+    return match.group(1) if match else ""
 
 
 def timestamp_ms(line: str) -> float | None:
@@ -64,6 +70,9 @@ def extract_rows(run_root: Path) -> tuple[list[dict[str, object]], list[dict[str
         evicted_pages = 0
         directory_events = 0
         budget_events = 0
+        resident_by_cache_key: dict[str, int] = {}
+        max_total_directory_bytes = 0
+        last_total_directory_bytes = 0
 
         for line in log_path.read_text(errors="replace").splitlines():
             ts = timestamp_ms(line)
@@ -73,20 +82,28 @@ def extract_rows(run_root: Path) -> tuple[list[dict[str, object]], list[dict[str
 
             if "[fixed-page-cache] page_directory" in line:
                 fields = parse_kv(line)
+                cache_key = parse_table_key(line)
                 resident_bytes = int(fields.get("resident_bytes", "0") or 0)
                 resident_pages = int(fields.get("resident_pages", "0") or 0)
                 directory_events += 1
                 max_directory_bytes = max(max_directory_bytes, resident_bytes)
                 last_directory_bytes = resident_bytes
+                if cache_key:
+                    resident_by_cache_key[cache_key] = resident_bytes
+                    last_total_directory_bytes = sum(resident_by_cache_key.values())
+                    max_total_directory_bytes = max(max_total_directory_bytes, last_total_directory_bytes)
                 events.append(
                     {
                         "condition": condition,
                         "query": query,
                         "event": "page_directory",
+                        "cache_key": cache_key,
                         "relative_ms": rel_ms,
                         "device": "",
                         "resident_bytes": resident_bytes,
                         "resident_gib": bytes_to_gib(resident_bytes),
+                        "total_resident_bytes": last_total_directory_bytes,
+                        "total_resident_gib": bytes_to_gib(last_total_directory_bytes),
                         "resident_pages": resident_pages,
                         "evicted_bytes": int(fields.get("evicted_bytes", "0") or 0),
                         "evicted_pages": int(fields.get("evicted_pages", "0") or 0),
@@ -133,6 +150,8 @@ def extract_rows(run_root: Path) -> tuple[list[dict[str, object]], list[dict[str
                     "budget_events": budget_events,
                     "max_cache_directory_resident_gib": bytes_to_gib(max_directory_bytes),
                     "last_cache_directory_resident_gib": bytes_to_gib(last_directory_bytes),
+                    "max_cache_directory_total_resident_gib": bytes_to_gib(max_total_directory_bytes),
+                    "last_cache_directory_total_resident_gib": bytes_to_gib(last_total_directory_bytes),
                     "max_budget_resident_total_gib": bytes_to_gib(sum(max_budget_after_by_device.values())),
                     "last_budget_resident_total_gib": bytes_to_gib(sum(last_budget_after_by_device.values())),
                     "evicted_gib": bytes_to_gib(evicted_bytes),

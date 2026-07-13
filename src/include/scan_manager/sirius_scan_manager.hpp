@@ -37,17 +37,21 @@
 #include <duckdb/common/vector.hpp>
 #include <io/types.hpp>
 
+#include <atomic>
+#include <cstdint>
+#include <utility>
+
 namespace cucascade::memory {
 class fixed_size_host_memory_resource;
 }  // namespace cucascade::memory
 
-#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace cucascade::memory {
@@ -156,6 +160,96 @@ struct fixed_width_page_stats {
  * changing cudf buffer ownership.
  */
 struct fixed_width_column_page {
+  fixed_width_column_page() = default;
+
+  fixed_width_column_page(fixed_width_column_page const& other)
+    : key(other.key),
+      state(other.state),
+      chunk_index(other.chunk_index),
+      page_index(other.page_index),
+      global_row_offset(other.global_row_offset),
+      row_offset(other.row_offset),
+      num_rows(other.num_rows),
+      byte_offset(other.byte_offset),
+      num_bytes(other.num_bytes),
+      element_size_bytes(other.element_size_bytes),
+      type_id(other.type_id),
+      memory_space(other.memory_space),
+      admission_score(other.admission_score),
+      access_count(other.access_count),
+      last_access_tick(other.last_access_tick.load(std::memory_order_relaxed)),
+      owned_column(other.owned_column),
+      stats(other.stats)
+  {}
+
+  fixed_width_column_page& operator=(fixed_width_column_page const& other)
+  {
+    if (this == &other) { return *this; }
+    key                = other.key;
+    state              = other.state;
+    chunk_index        = other.chunk_index;
+    page_index         = other.page_index;
+    global_row_offset  = other.global_row_offset;
+    row_offset         = other.row_offset;
+    num_rows           = other.num_rows;
+    byte_offset        = other.byte_offset;
+    num_bytes          = other.num_bytes;
+    element_size_bytes = other.element_size_bytes;
+    type_id            = other.type_id;
+    memory_space       = other.memory_space;
+    admission_score    = other.admission_score;
+    access_count       = other.access_count;
+    last_access_tick.store(other.last_access_tick.load(std::memory_order_relaxed),
+                           std::memory_order_relaxed);
+    owned_column = other.owned_column;
+    stats        = other.stats;
+    return *this;
+  }
+
+  fixed_width_column_page(fixed_width_column_page&& other) noexcept
+    : key(std::move(other.key)),
+      state(other.state),
+      chunk_index(other.chunk_index),
+      page_index(other.page_index),
+      global_row_offset(other.global_row_offset),
+      row_offset(other.row_offset),
+      num_rows(other.num_rows),
+      byte_offset(other.byte_offset),
+      num_bytes(other.num_bytes),
+      element_size_bytes(other.element_size_bytes),
+      type_id(other.type_id),
+      memory_space(other.memory_space),
+      admission_score(other.admission_score),
+      access_count(other.access_count),
+      last_access_tick(other.last_access_tick.load(std::memory_order_relaxed)),
+      owned_column(std::move(other.owned_column)),
+      stats(other.stats)
+  {}
+
+  fixed_width_column_page& operator=(fixed_width_column_page&& other) noexcept
+  {
+    if (this == &other) { return *this; }
+    key                = std::move(other.key);
+    state              = other.state;
+    chunk_index        = other.chunk_index;
+    page_index         = other.page_index;
+    global_row_offset  = other.global_row_offset;
+    row_offset         = other.row_offset;
+    num_rows           = other.num_rows;
+    byte_offset        = other.byte_offset;
+    num_bytes          = other.num_bytes;
+    element_size_bytes = other.element_size_bytes;
+    type_id            = other.type_id;
+    memory_space       = other.memory_space;
+    admission_score    = other.admission_score;
+    access_count       = other.access_count;
+    last_access_tick.store(other.last_access_tick.load(std::memory_order_relaxed),
+                           std::memory_order_relaxed);
+    owned_column = std::move(other.owned_column);
+    stats        = other.stats;
+    return *this;
+  }
+
   fixed_width_page_directory_key key;
   fixed_width_page_state state{fixed_width_page_state::resident};
   std::size_t chunk_index{0};
@@ -168,10 +262,12 @@ struct fixed_width_column_page {
   std::size_t element_size_bytes{0};
   cudf::type_id type_id{cudf::type_id::EMPTY};
   cucascade::memory::memory_space* memory_space{nullptr};
-  /// Admission/eviction hint: lower scores are evicted first under page budget.
+  /// Retained for admission diagnostics; eviction itself is plain LRU.
   double admission_score{0.0};
-  /// Lightweight reuse counter, currently bumped by demand-loaded pages.
+  /// Lightweight reuse counter retained for diagnostics.
   std::size_t access_count{0};
+  /// Monotonic logical timestamp for LRU eviction. Larger means more recently used.
+  mutable std::atomic<std::uint64_t> last_access_tick{0};
   /// Optional page-owned storage. When set, this page can be materialized
   /// without retaining the original full cuDF column chunk.
   std::shared_ptr<cudf::column> owned_column;
@@ -367,6 +463,15 @@ class sirius_scan_manager {
                            std::vector<std::unique_ptr<cudf::table>> data_tables,
                            std::vector<cucascade::memory::memory_space*> chunk_memory_spaces);
 
+  /// Populate an automatic fixed-page entry directly from a materialized GPU
+  /// table view. This skips the transient full-table cache copy used by
+  /// insert_pinned_entry and stores only owned fixed-width pages.
+  [[nodiscard]] bool insert_fixed_page_entry_from_view(const std::string& name,
+                                                        cache_entry_info cache_info,
+                                                        cudf::table_view view,
+                                                        cucascade::memory::memory_space& memory_space,
+                                                        rmm::cuda_stream_view stream);
+
   /// \brief Pin the host-tier entry for a table.
   ///
   /// Each entry in @p host_chunks describes one batch's worth of pinned data
@@ -446,6 +551,7 @@ class sirius_scan_manager {
   std::vector<op::scan::sirius_gpu_scan_operator*> _scan_op_order;
   mutable std::mutex _pinned_entries_mutex;
   std::unordered_map<std::string, pinned_entry> _pinned_entries;
+  std::unordered_set<std::string> _fixed_page_admission_rejected_entries;
 
   /// Per-query sequencer for opportunistic fadvise calls.  Built fresh
   /// in @ref prepare_for_query, gets one @c pipeline_slot per non-cached

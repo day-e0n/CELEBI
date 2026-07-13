@@ -153,6 +153,14 @@ def query_order_from_metadata(metadata: dict[str, object]) -> list[str]:
 
 
 def raw_query_sequence(metadata: dict[str, object], span_count: int) -> list[str]:
+    # scripts/run_fixed_page_all_queries.py stores one case per query with a
+    # singular "query" field, while performance_test.py stores "queries".
+    raw_query = metadata.get("query")
+    if raw_query not in (None, ""):
+        text = str(raw_query)
+        query = text if text.startswith("q") else f"q{text}"
+        return [query] * span_count
+
     queries = query_order_from_metadata(metadata)
     if not queries:
         return ["unknown"] * span_count

@@ -1,0 +1,9 @@
+# Recommended all-22 high-overlap workload order
+q8,q5,q7,q21,q10,q18,q3,q22,q13,q12,q4,q1,q6,q20,q9,q17,q14,q19,q15,q2,q16,q11
+q8 q5 q7 q21 q10 q18 q3 q22 q13 q12 q4 q1 q6 q20 q9 q17 q14 q19 q15 q2 q16 q11
+
+# Cluster rationale
+# q8/q5/q7/q21/q10/q18/q3/q22/q13/q12/q4/q1/q6: lineitem/orders/customer-heavy cluster
+# q20/q9/q17/q14/q19/q15: lineitem/part/supplier-heavy cluster
+# q2/q16/q11: part/partsupp/supplier/nation tail
+# q10 and q14 are included using query-column metadata fallback because they were not valid completed rows in the observed audit run.

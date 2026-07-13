@@ -1,0 +1,2 @@
+comparison,baseline_series,target_series,baseline_total_ms,target_total_ms,speedup,baseline_load_ms,target_load_ms,load_reduction_ratio,paging_fixed_page_cached_gb,paging_cache_management_ms,paging_demand_load_ms,paging_page_backed_provider_count,paging_page_budget_evicted_pages,paging_page_directory_resident_gb_max
+baseline_vs_paging_avg_all,baseline,paging,11837.027913677352,5169.489179000569,2.2897867668940233,4221.829996744792,1374.7750651041667,0.6743651293007591,0.0,0.0,0.0,0.0,0.0,0.5908689

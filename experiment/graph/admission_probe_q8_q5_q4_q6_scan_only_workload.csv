@@ -1,0 +1,4 @@
+metric,label,baseline_series,target_series,baseline_ms,target_ms,saved_ms,reduction_ratio
+scan_materialize_work_ms,Scan Materialize Work,baseline,paging,53223.49633333333,42363.740666666665,10859.755666666664,0.20404062894803307
+scan_wall_ms,Scan Wall,baseline,paging,14774.169840494791,12904.7314453125,1869.438395182291,0.12653424289588938
+load_ms,Load/Materialize Wall,baseline,paging,12609.980143229166,10328.7041015625,2281.276041666666,0.18091035955291176

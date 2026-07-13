@@ -1,0 +1,6 @@
+workload_id,query_count,sequence,total_consecutive_overlap_uncompressed_gb,avg_overlap_byte_ratio_of_second,min_overlap_byte_ratio_of_second,total_materialized_uncompressed_gb,rationale
+max_overlap_gb_10,10,"q20,q9,q21,q7,q18,q5,q8,q17,q19,q1",242.18958475099998,0.9923122188168185,0.9446770958109272,261.195500228,Maximize consecutive observed overlapped materialized GB among 10 distinct valid TPC-H queries.
+max_overlap_gb_8,8,"q20,q9,q21,q7,q18,q8,q17,q1",197.41259798699997,0.9901318021044878,0.9446770958109272,216.418513567,Shorter high-overlap-GB workload; keeps lineitem/orders/supplier/nation/part reuse dense.
+clean_high_ratio_10,10,"q8,q5,q7,q21,q18,q3,q12,q4,q1,q6",192.477187084,0.9976499046305357,0.9788491416748218,220.782220395,"Presentation-friendly broad-to-narrow workload. Starts with broad table footprint, then mostly subsets/tiny-miss transitions."
+lineitem_filter_heavy_6,6,"q8,q17,q19,q1,q6,q12",96.69068023999999,0.9775779459771984,0.8878897298859922,126.376455038,Small scan/filter-heavy lineitem-centered workload for page-cache reuse experiments.
+all_valid_high_overlap_20,20,"q6,q1,q17,q21,q9,q8,q7,q5,q18,q3,q19,q15,q12,q4,q20,q2,q16,q11,q22,q13",327.84195037100005,0.9276071234514675,0.0,347.846486073,"All valid observed queries from the scan-audit run, ordered by high consecutive overlap. Excludes q10/q14 from this run."

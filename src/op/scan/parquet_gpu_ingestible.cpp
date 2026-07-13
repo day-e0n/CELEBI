@@ -56,6 +56,7 @@
 
 // standard library
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
@@ -71,6 +72,33 @@ namespace sirius::op::scan {
 namespace {
 
 bool has_uri_scheme(std::string const& p) { return p.find("://") != std::string::npos; }
+
+std::string join_strings(std::vector<std::string> const& values, char delimiter)
+{
+  std::ostringstream out;
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (i != 0) { out << delimiter; }
+    out << values[i];
+  }
+  return out.str();
+}
+
+std::string scan_audit_row_groups(std::vector<row_group_slice> const& slices)
+{
+  std::ostringstream out;
+  for (std::size_t i = 0; i < slices.size(); ++i) {
+    if (i != 0) { out << '|'; }
+    if (slices[i].row_group_indices.empty()) {
+      out << '-';
+      continue;
+    }
+    for (std::size_t j = 0; j < slices[i].row_group_indices.size(); ++j) {
+      if (j != 0) { out << ','; }
+      out << slices[i].row_group_indices[j];
+    }
+  }
+  return out.str();
+}
 
 bool is_fixed_width_auto_cache_candidate(cudf::column_view const& col) noexcept
 {
@@ -90,6 +118,18 @@ bool fixed_page_auto_cache_enabled()
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_AUTO_CACHE");
   return reuse != nullptr && std::string_view(reuse) == "1" && value != nullptr &&
          std::string_view(value) == "1";
+}
+
+bool fixed_page_owned_pages_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_OWNED_PAGES");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
+bool fixed_page_direct_auto_populate_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_DIRECT_AUTO_POPULATE");
+  return value == nullptr || std::string_view(value) != "0";
 }
 
 bool fixed_page_hybrid_provider_enabled()
@@ -744,14 +784,31 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view
     return;
   }
 
-  auto cache_table = std::make_unique<cudf::table>(view, stream, mem_space.get_default_allocator());
-  std::vector<std::unique_ptr<cudf::table>> tables;
-  tables.push_back(std::move(cache_table));
-  std::vector<cucascade::memory::memory_space*> spaces;
-  spaces.push_back(const_cast<cucascade::memory::memory_space*>(&mem_space));
-
   auto const name = auto_fixed_page_cache_name(_file_paths, cache_info.filter_signature);
   try {
+    if (fixed_page_owned_pages_enabled() && fixed_page_direct_auto_populate_enabled()) {
+      bool const populated = _scan_manager->insert_fixed_page_entry_from_view(
+        name,
+        std::move(cache_info),
+        view,
+        const_cast<cucascade::memory::memory_space&>(mem_space),
+        stream);
+      if (populated) {
+        SIRIUS_LOG_INFO(
+          "[fixed-page-cache] auto_cache_populate_direct table='{}' rows={} columns={}",
+          name,
+          view.num_rows(),
+          view.num_columns());
+      }
+      return;
+    }
+
+    auto cache_table = std::make_unique<cudf::table>(view, stream, mem_space.get_default_allocator());
+    std::vector<std::unique_ptr<cudf::table>> tables;
+    tables.push_back(std::move(cache_table));
+    std::vector<cucascade::memory::memory_space*> spaces;
+    spaces.push_back(const_cast<cucascade::memory::memory_space*>(&mem_space));
+
     _scan_manager->insert_pinned_entry(name, std::move(cache_info), std::move(tables), spaces);
     SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_populate table='{}' rows={} columns={}",
                     name,
@@ -855,9 +912,39 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
 
   if (reader_filter_root) { opts.set_filter(*reader_filter_root); }
 
+  std::vector<std::string> audit_files;
+  audit_files.reserve(split.rg_slices.size());
+  std::size_t audit_uncompressed_bytes = 0;
+  std::size_t audit_compressed_bytes   = 0;
+  for (auto const& slice : split.rg_slices) {
+    audit_files.push_back(slice.file_path);
+    audit_uncompressed_bytes += slice.reserved_uncompressed_bytes;
+    audit_compressed_bytes += slice.reserved_compressed_bytes;
+  }
+  auto const audit_columns    = join_strings(split.plan->data_column_names(), '|');
+  auto const audit_row_groups = scan_audit_row_groups(split.rg_slices);
+
   rmm::device_async_resource_ref mr_ref(mem_space.get_default_allocator());
+  auto const audit_start = std::chrono::steady_clock::now();
   auto [table, _] =
     cudf::io::read_parquet(std::move(sources), std::move(metadatas), opts, stream, mr_ref);
+  auto const audit_end = std::chrono::steady_clock::now();
+  auto const audit_duration_us =
+    std::chrono::duration_cast<std::chrono::microseconds>(audit_end - audit_start).count();
+  SIRIUS_LOG_INFO(
+    "[scan-audit] parquet_materialize target_gpu={} files={} columns={} row_groups={} "
+    "compressed_bytes={} uncompressed_bytes={} output_rows={} output_columns={} split_count={} "
+    "duration_us={}",
+    mem_space.get_device_id(),
+    join_strings(audit_files, '|'),
+    audit_columns,
+    audit_row_groups,
+    audit_compressed_bytes,
+    audit_uncompressed_bytes,
+    table ? table->num_rows() : 0,
+    table ? table->num_columns() : 0,
+    split.rg_slices.size(),
+    audit_duration_us);
 
   if (auto_cache && table) { auto_cache_materialized_table(table->view(), mem_space, stream); }
 

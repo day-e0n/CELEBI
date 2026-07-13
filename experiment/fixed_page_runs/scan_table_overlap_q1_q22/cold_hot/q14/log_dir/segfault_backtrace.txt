@@ -1,0 +1,14 @@
+
+*** SIGABRT — backtrace from faulting thread ***
+Faulting thread id:1236571
+  #0   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x847c96) [0x7273de447c96]
+  #1   /lib/x86_64-linux-gnu/libc.so.6(+0x45330) [0x72740ee45330]
+  #2   /lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x11c) [0x72740ee9eb2c]
+  #3   /lib/x86_64-linux-gnu/libc.so.6(gsignal+0x1e) [0x72740ee4527e]
+  #4   /lib/x86_64-linux-gnu/libc.so.6(abort+0xdf) [0x72740ee288ff]
+  #5   /lib/x86_64-linux-gnu/libc.so.6(+0x297b6) [0x72740ee297b6]
+  #6   /lib/x86_64-linux-gnu/libc.so.6(+0xa8ff5) [0x72740eea8ff5]
+  #7   /lib/x86_64-linux-gnu/libc.so.6(+0xae03c) [0x72740eeae03c]
+  #8   /lib/x86_64-linux-gnu/libc.so.6(+0x9c895) [0x72740ee9c895]
+  #9   /lib/x86_64-linux-gnu/libc.so.6(+0x129c6c) [0x72740ef29c6c]
+*** end backtrace ***
