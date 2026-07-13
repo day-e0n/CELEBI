@@ -89,6 +89,8 @@ FIXED_COUNTER_FIELDS = [
     "fixed_page_backed_provider_count",
     "page_budget_evicted_pages",
     "page_budget_evicted_gb",
+    "page_pressure_evicted_pages",
+    "page_pressure_evicted_gb",
     "page_directory_resident_gb_max",
     "page_directory_entries_max",
     "page_directory_eviction_count_max",
@@ -236,7 +238,7 @@ def make_env(args: argparse.Namespace, condition: str, log_dir: Path, config_pat
         env["SIRIUS_FIXED_PAGE_OWNED_PAGES"] = "1"
         env["SIRIUS_FIXED_PAGE_DEMAND_LOAD"] = "1"
         env["SIRIUS_FIXED_PAGE_BACKED_PROVIDER"] = "1"
-        env["SIRIUS_FIXED_PAGE_HYBRID_PROVIDER"] = "1"
+        env["SIRIUS_FIXED_PAGE_HYBRID_PROVIDER"] = args.fixed_page_hybrid_provider
         if args.provider_coalesce_pages:
             env["SIRIUS_FIXED_PAGE_PROVIDER_COALESCE_PAGES"] = args.provider_coalesce_pages
         if args.page_cache_bytes_per_gpu:
@@ -244,6 +246,10 @@ def make_env(args: argparse.Namespace, condition: str, log_dir: Path, config_pat
         if args.page_cache_workspace_reserve_bytes_per_gpu:
             env["SIRIUS_FIXED_PAGE_CACHE_WORKSPACE_RESERVE_BYTES_PER_GPU"] = (
                 args.page_cache_workspace_reserve_bytes_per_gpu
+            )
+        if args.page_cache_min_free_bytes_per_gpu:
+            env["SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU"] = (
+                args.page_cache_min_free_bytes_per_gpu
             )
         if args.demand_max_bytes_per_split:
             env["SIRIUS_FIXED_PAGE_DEMAND_MAX_BYTES_PER_SPLIT"] = args.demand_max_bytes_per_split
@@ -306,6 +312,8 @@ def summarize_segment(lines: list[str], total_ms: float) -> dict[str, object]:
     fixed_backed_provider_count = 0
     evicted_pages = 0
     evicted_bytes = 0
+    pressure_evicted_pages = 0
+    pressure_evicted_bytes = 0
     demand_pages = 0
     demand_bytes = 0
     demand_ms = 0.0
@@ -362,6 +370,10 @@ def summarize_segment(lines: list[str], total_ms: float) -> dict[str, object]:
             fields = parse_kv(line)
             evicted_pages += to_int(fields.get("evicted_pages"))
             evicted_bytes += to_int(fields.get("evicted_bytes"))
+        elif "[fixed-page-cache] memory_pressure applied" in line:
+            fields = parse_kv(line)
+            pressure_evicted_pages += to_int(fields.get("evicted_pages"))
+            pressure_evicted_bytes += to_int(fields.get("evicted_bytes"))
         elif "[fixed-page-cache] demand_load loaded_pages" in line:
             fields = parse_kv(line)
             demand_pages += to_int(fields.get("loaded_pages"))
@@ -394,6 +406,8 @@ def summarize_segment(lines: list[str], total_ms: float) -> dict[str, object]:
         "fixed_page_backed_provider_count": fixed_backed_provider_count,
         "page_budget_evicted_pages": evicted_pages,
         "page_budget_evicted_gb": evicted_bytes / 1e9,
+        "page_pressure_evicted_pages": pressure_evicted_pages,
+        "page_pressure_evicted_gb": pressure_evicted_bytes / 1e9,
         "page_directory_resident_gb_max": max_resident_bytes / 1e9,
         "page_directory_entries_max": max_directory_entries,
         "page_directory_eviction_count_max": max_eviction_count,
@@ -1011,9 +1025,11 @@ def run_parent(args: argparse.Namespace) -> int:
             "--reservation-limit-fraction", args.reservation_limit_fraction,
             "--page-cache-bytes-per-gpu", args.page_cache_bytes_per_gpu,
             "--page-cache-workspace-reserve-bytes-per-gpu", args.page_cache_workspace_reserve_bytes_per_gpu,
+            "--page-cache-min-free-bytes-per-gpu", args.page_cache_min_free_bytes_per_gpu,
             "--demand-max-bytes-per-split", args.demand_max_bytes_per_split,
             "--fixed-width-page-bytes", args.fixed_width_page_bytes,
             "--provider-coalesce-pages", args.provider_coalesce_pages,
+            "--fixed-page-hybrid-provider", args.fixed_page_hybrid_provider,
             "--repeat-layout", args.repeat_layout,
             "--summary-mode", args.summary_mode,
             "--log-level", args.log_level,
@@ -1053,9 +1069,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--reservation-limit-fraction", default="0.85")
     parser.add_argument("--page-cache-bytes-per-gpu", default="7GB")
     parser.add_argument("--page-cache-workspace-reserve-bytes-per-gpu", default="")
+    parser.add_argument("--page-cache-min-free-bytes-per-gpu", default="4096MB")
     parser.add_argument("--demand-max-bytes-per-split", default="")
     parser.add_argument("--fixed-width-page-bytes", default="")
     parser.add_argument("--provider-coalesce-pages", default="")
+    parser.add_argument("--fixed-page-hybrid-provider", choices=["0", "1"], default="1")
     parser.add_argument("--repeat-layout", choices=["workload", "query"], default="workload")
     parser.add_argument("--condition-timeout-s", type=int, default=2400)
     parser.add_argument("--skip-build", action="store_true")

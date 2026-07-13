@@ -51,6 +51,8 @@
 
 #include <rmm/cuda_device.hpp>
 
+#include <cuda_runtime_api.h>
+
 #include <cucascade/cudf/gpu_data_representation.hpp>
 #include <cucascade/memory/fixed_size_host_memory_resource.hpp>
 #include <cucascade/memory/memory_reservation_manager.hpp>
@@ -190,6 +192,31 @@ void touch_fixed_width_page(fixed_width_column_page const& page)
   page.last_access_tick.store(next_fixed_width_page_lru_tick(), std::memory_order_relaxed);
 }
 
+bool fixed_width_page_is_active(fixed_width_column_page const& page)
+{
+  return page.active_reader_count.load(std::memory_order_relaxed) != 0;
+}
+
+void adjust_fixed_width_page_active_reader(fixed_width_column_page const& page, int delta)
+{
+  if (delta > 0) {
+    page.active_reader_count.fetch_add(static_cast<std::uint32_t>(delta),
+                                       std::memory_order_relaxed);
+    return;
+  }
+  auto const decrement = static_cast<std::uint32_t>(-delta);
+  auto current         = page.active_reader_count.load(std::memory_order_relaxed);
+  while (current != 0) {
+    auto const next = current > decrement ? current - decrement : 0;
+    if (page.active_reader_count.compare_exchange_weak(current,
+                                                       next,
+                                                       std::memory_order_relaxed,
+                                                       std::memory_order_relaxed)) {
+      return;
+    }
+  }
+}
+
 bool fixed_page_covers_range(fixed_width_column_page const& page,
                              std::size_t chunk_index,
                              std::size_t row_offset,
@@ -230,7 +257,10 @@ class fixed_page_databatch_provider final : public databatch_provider {
       _column_names.emplace_back(entry_column_names[idx]);
     });
     build_ranges();
+    adjust_active_pages(1);
   }
+
+  ~fixed_page_databatch_provider() override { adjust_active_pages(-1); }
 
   [[nodiscard]] bool usable() const noexcept
   {
@@ -255,6 +285,25 @@ class fixed_page_databatch_provider final : public databatch_provider {
   }
 
  private:
+  void adjust_active_pages(int delta) const
+  {
+    if (_ranges.empty() || delta == 0) { return; }
+    for (auto const& range : _ranges) {
+      auto const range_end = range.row_offset + range.num_rows;
+      for (auto const& column_name : _column_names) {
+        auto cursor = range.row_offset;
+        while (cursor < range_end) {
+          auto const* page = find_covering_fixed_page(_entry, column_name, range.chunk_index, cursor, 1);
+          if (!page || !page->owned_column) { break; }
+          adjust_fixed_width_page_active_reader(*page, delta);
+          auto const page_end = page->row_offset + page->num_rows;
+          if (page_end <= cursor) { break; }
+          cursor = std::min(page_end, range_end);
+        }
+      }
+    }
+  }
+
   void build_ranges()
   {
     if (_entry.tier != cucascade::memory::Tier::GPU || _column_names.empty() ||
@@ -640,6 +689,67 @@ std::size_t fixed_page_cache_budget_bytes_per_gpu()
       effective_budget);
   }
   return effective_budget;
+}
+
+
+std::size_t fixed_page_cache_min_free_bytes_per_gpu()
+{
+  auto const* configured_text = std::getenv("SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU");
+  if (configured_text == nullptr || configured_text[0] == '\0') { return 0; }
+
+  auto const min_free = parse_byte_size_or_zero(configured_text);
+  if (min_free == 0 && std::string_view(configured_text) != "0") {
+    SIRIUS_LOG_WARN(
+      "[fixed-page-cache] invalid SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU='{}'; "
+      "memory-pressure eviction disabled",
+      configured_text);
+    return 0;
+  }
+
+  static std::atomic<bool> logged_min_free{false};
+  bool expected = false;
+  if (min_free != 0 && logged_min_free.compare_exchange_strong(expected, true)) {
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] memory-pressure eviction configured min_free_bytes_per_gpu={}",
+      min_free);
+  }
+  return min_free;
+}
+
+std::size_t fixed_page_cache_evict_headroom_bytes_per_gpu(std::size_t budget)
+{
+  if (budget == 0) { return 0; }
+
+  auto const* configured_text =
+    std::getenv("SIRIUS_FIXED_PAGE_CACHE_EVICT_HEADROOM_BYTES_PER_GPU");
+  std::size_t headroom = 512ULL * 1024ULL * 1024ULL;
+  if (configured_text != nullptr && configured_text[0] != '\0') {
+    headroom = parse_byte_size_or_zero(configured_text);
+    if (headroom == 0 && std::string_view(configured_text) != "0") {
+      SIRIUS_LOG_WARN(
+        "[fixed-page-cache] invalid SIRIUS_FIXED_PAGE_CACHE_EVICT_HEADROOM_BYTES_PER_GPU='{}'; "
+        "using default 512MiB",
+        configured_text);
+      headroom = 512ULL * 1024ULL * 1024ULL;
+    }
+  }
+
+  headroom = std::min(headroom, budget / 2);
+  static std::atomic<bool> logged_headroom{false};
+  bool expected = false;
+  if (logged_headroom.compare_exchange_strong(expected, true)) {
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] eviction headroom bytes_per_gpu={} low_watermark_bytes_per_gpu={} ",
+      headroom,
+      budget > headroom ? budget - headroom : budget);
+  }
+  return headroom;
+}
+
+std::size_t fixed_page_cache_low_watermark_bytes_per_gpu(std::size_t budget)
+{
+  auto const headroom = fixed_page_cache_evict_headroom_bytes_per_gpu(budget);
+  return budget > headroom ? budget - headroom : budget;
 }
 
 bool is_fixed_width_page_candidate(cudf::column_view const& col) noexcept;
@@ -1062,6 +1172,7 @@ void apply_fixed_width_page_budget(pinned_entry& entry, std::string const& name)
 {
   auto const budget = fixed_page_cache_budget_bytes_per_gpu();
   if (budget == 0) { return; }
+  auto const target_budget = fixed_page_cache_low_watermark_bytes_per_gpu(budget);
 
   std::unordered_map<int, std::size_t> resident_bytes_by_device;
   for (auto const& [_, col_pages] : entry.fixed_width_pages_by_column) {
@@ -1079,7 +1190,10 @@ void apply_fixed_width_page_budget(pinned_entry& entry, std::string const& name)
   std::unordered_map<int, std::vector<eviction_candidate>> candidates_by_device;
   for (auto& [_, col_pages] : entry.fixed_width_pages_by_column) {
     for (auto& page : col_pages) {
-      if (page.state != fixed_width_page_state::resident || page.key.device_id < 0) { continue; }
+      if (page.state != fixed_width_page_state::resident || page.key.device_id < 0 ||
+          fixed_width_page_is_active(page)) {
+        continue;
+      }
       candidates_by_device[page.key.device_id].push_back(
         eviction_candidate{&page, page.last_access_tick.load(std::memory_order_relaxed)});
     }
@@ -1101,9 +1215,11 @@ void apply_fixed_width_page_budget(pinned_entry& entry, std::string const& name)
     });
     auto& device_bytes = resident_bytes_by_device[device_id];
     for (auto const& candidate : candidates) {
-      if (device_bytes <= budget) { break; }
+      if (device_bytes <= target_budget) { break; }
       auto& page = *candidate.page;
-      if (page.state != fixed_width_page_state::resident) { continue; }
+      if (page.state != fixed_width_page_state::resident || fixed_width_page_is_active(page)) {
+        continue;
+      }
       page.state = fixed_width_page_state::evicted;
       page.owned_column.reset();
       device_bytes -= std::min(device_bytes, page.num_bytes);
@@ -1118,9 +1234,11 @@ void apply_fixed_width_page_budget(pinned_entry& entry, std::string const& name)
   if (evicted_pages != 0) {
     SIRIUS_LOG_INFO(
       "[fixed-page-cache] page_budget applied table='{}' policy=lru budget_bytes_per_gpu={} "
-      "evicted_pages={} evicted_bytes={} min_last_access_tick={} max_last_access_tick={}",
+      "target_bytes_per_gpu={} evicted_pages={} evicted_bytes={} min_last_access_tick={} "
+      "max_last_access_tick={}",
       name,
       budget,
+      target_budget,
       evicted_pages,
       evicted_bytes,
       min_evicted_tick,
@@ -1132,6 +1250,7 @@ void apply_global_fixed_width_page_budget(std::unordered_map<std::string, pinned
 {
   auto const budget = fixed_page_cache_budget_bytes_per_gpu();
   if (budget == 0) { return; }
+  auto const target_budget = fixed_page_cache_low_watermark_bytes_per_gpu(budget);
 
   std::unordered_map<int, std::size_t> resident_bytes_by_device;
   struct eviction_candidate {
@@ -1147,6 +1266,7 @@ void apply_global_fixed_width_page_budget(std::unordered_map<std::string, pinned
       for (auto& page : col_pages) {
         if (page.state != fixed_width_page_state::resident || page.key.device_id < 0) { continue; }
         resident_bytes_by_device[page.key.device_id] += page.num_bytes;
+        if (fixed_width_page_is_active(page)) { continue; }
         candidates_by_device[page.key.device_id].push_back(
           eviction_candidate{&entry,
                              &page,
@@ -1177,9 +1297,11 @@ void apply_global_fixed_width_page_budget(std::unordered_map<std::string, pinned
     std::uint64_t min_evicted_tick = std::numeric_limits<std::uint64_t>::max();
     std::uint64_t max_evicted_tick = 0;
     for (auto const& candidate : candidates) {
-      if (device_bytes <= budget) { break; }
+      if (device_bytes <= target_budget) { break; }
       auto& page = *candidate.page;
-      if (page.state != fixed_width_page_state::resident) { continue; }
+      if (page.state != fixed_width_page_state::resident || fixed_width_page_is_active(page)) {
+        continue;
+      }
       page.state = fixed_width_page_state::evicted;
       page.owned_column.reset();
       device_bytes -= std::min(device_bytes, page.num_bytes);
@@ -1193,10 +1315,11 @@ void apply_global_fixed_width_page_budget(std::unordered_map<std::string, pinned
     if (evicted_pages != 0) {
       SIRIUS_LOG_INFO(
         "[fixed-page-cache] page_budget applied scope=global device={} policy=lru "
-        "budget_bytes_per_gpu={} evicted_pages={} evicted_bytes={} resident_bytes_after={} "
-        "min_last_access_tick={} max_last_access_tick={}",
+        "budget_bytes_per_gpu={} target_bytes_per_gpu={} evicted_pages={} evicted_bytes={} "
+        "resident_bytes_after={} min_last_access_tick={} max_last_access_tick={}",
         device_id,
         budget,
+        target_budget,
         evicted_pages,
         evicted_bytes,
         device_bytes,
@@ -1210,6 +1333,156 @@ void apply_global_fixed_width_page_budget(std::unordered_map<std::string, pinned
     entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
     entry.fixed_width_page_metrics.eviction_count = eviction_count;
   }
+}
+
+
+std::size_t fixed_width_page_resident_alloc_bytes(fixed_width_column_page const& page)
+{
+  if (page.owned_column) {
+    return std::max<std::size_t>(page.num_bytes, page.owned_column->alloc_size());
+  }
+  return page.num_bytes;
+}
+
+void apply_global_fixed_width_page_memory_pressure(
+  std::unordered_map<std::string, pinned_entry>& entries,
+  std::string_view reason)
+{
+  auto const min_free = fixed_page_cache_min_free_bytes_per_gpu();
+  if (min_free == 0) { return; }
+
+  struct eviction_candidate {
+    pinned_entry* entry{nullptr};
+    fixed_width_column_page* page{nullptr};
+    std::string table_name;
+    std::uint64_t last_access_tick{0};
+  };
+  std::unordered_map<int, std::vector<eviction_candidate>> candidates_by_device;
+
+  for (auto& [entry_name, entry] : entries) {
+    for (auto& [_, col_pages] : entry.fixed_width_pages_by_column) {
+      for (auto& page : col_pages) {
+        if (page.state != fixed_width_page_state::resident || page.key.device_id < 0 ||
+            !page.owned_column || fixed_width_page_is_active(page)) {
+          continue;
+        }
+        candidates_by_device[page.key.device_id].push_back(
+          eviction_candidate{&entry,
+                             &page,
+                             entry_name,
+                             page.last_access_tick.load(std::memory_order_relaxed)});
+      }
+    }
+  }
+
+  for (auto& [device_id, candidates] : candidates_by_device) {
+    std::sort(candidates.begin(), candidates.end(), [](auto const& lhs, auto const& rhs) {
+      if (lhs.last_access_tick != rhs.last_access_tick) {
+        return lhs.last_access_tick < rhs.last_access_tick;
+      }
+      if (lhs.table_name != rhs.table_name) { return lhs.table_name < rhs.table_name; }
+      if (lhs.page->key.column_name != rhs.page->key.column_name) {
+        return lhs.page->key.column_name < rhs.page->key.column_name;
+      }
+      if (lhs.page->key.chunk_index != rhs.page->key.chunk_index) {
+        return lhs.page->key.chunk_index < rhs.page->key.chunk_index;
+      }
+      return lhs.page->key.page_index < rhs.page->key.page_index;
+    });
+
+    std::size_t free_before = 0;
+    std::size_t total_bytes = 0;
+    {
+      rmm::cuda_set_device_raii device_guard{rmm::cuda_device_id{device_id}};
+      auto const status = cudaMemGetInfo(&free_before, &total_bytes);
+      if (status != cudaSuccess) {
+        SIRIUS_LOG_WARN(
+          "[fixed-page-cache] memory_pressure cudaMemGetInfo failed device={} error='{}'",
+          device_id,
+          cudaGetErrorString(status));
+        continue;
+      }
+    }
+
+    if (free_before >= min_free) { continue; }
+
+    auto const required_bytes = min_free - free_before;
+    std::size_t released_alloc_bytes = 0;
+    std::size_t evicted_pages        = 0;
+    std::size_t evicted_bytes        = 0;
+    std::uint64_t min_evicted_tick   = std::numeric_limits<std::uint64_t>::max();
+    std::uint64_t max_evicted_tick   = 0;
+    for (auto const& candidate : candidates) {
+      if (released_alloc_bytes >= required_bytes) { break; }
+      auto& page = *candidate.page;
+      if (page.state != fixed_width_page_state::resident || !page.owned_column ||
+          fixed_width_page_is_active(page)) {
+        continue;
+      }
+      auto const alloc_bytes = fixed_width_page_resident_alloc_bytes(page);
+      page.state = fixed_width_page_state::evicted;
+      page.owned_column.reset();
+      released_alloc_bytes += alloc_bytes;
+      evicted_bytes += page.num_bytes;
+      ++candidate.entry->fixed_width_page_metrics.eviction_count;
+      ++evicted_pages;
+      min_evicted_tick = std::min(min_evicted_tick, candidate.last_access_tick);
+      max_evicted_tick = std::max(max_evicted_tick, candidate.last_access_tick);
+    }
+
+    if (evicted_pages == 0) { continue; }
+
+    std::size_t free_after = 0;
+    {
+      rmm::cuda_set_device_raii device_guard{rmm::cuda_device_id{device_id}};
+      auto const sync_status = cudaDeviceSynchronize();
+      if (sync_status != cudaSuccess) {
+        SIRIUS_LOG_WARN(
+          "[fixed-page-cache] memory_pressure cudaDeviceSynchronize failed device={} error='{}'",
+          device_id,
+          cudaGetErrorString(sync_status));
+      }
+      auto const info_status = cudaMemGetInfo(&free_after, &total_bytes);
+      if (info_status != cudaSuccess) {
+        SIRIUS_LOG_WARN(
+          "[fixed-page-cache] memory_pressure post-evict cudaMemGetInfo failed device={} error='{}'",
+          device_id,
+          cudaGetErrorString(info_status));
+        free_after = 0;
+      }
+    }
+
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] memory_pressure applied scope=global reason='{}' device={} policy=lru "
+      "min_free_bytes_per_gpu={} free_bytes_before={} free_bytes_after={} total_bytes={} "
+      "evicted_pages={} evicted_bytes={} evicted_alloc_bytes={} "
+      "min_last_access_tick={} max_last_access_tick={}",
+      reason,
+      device_id,
+      min_free,
+      free_before,
+      free_after,
+      total_bytes,
+      evicted_pages,
+      evicted_bytes,
+      released_alloc_bytes,
+      min_evicted_tick,
+      max_evicted_tick);
+  }
+
+  for (auto& [_, entry] : entries) {
+    auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
+    entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
+    entry.fixed_width_page_metrics.eviction_count = eviction_count;
+  }
+}
+
+void apply_global_fixed_width_page_eviction_policies(
+  std::unordered_map<std::string, pinned_entry>& entries,
+  std::string_view reason)
+{
+  apply_global_fixed_width_page_budget(entries);
+  apply_global_fixed_width_page_memory_pressure(entries, reason);
 }
 
 // wdy end
@@ -1340,6 +1613,13 @@ parquet_bind_result sirius_scan_manager::describe_parquet(std::string const& uri
   return result;
 }
 
+
+void sirius_scan_manager::evict_fixed_pages_for_memory_pressure(std::string_view reason)
+{
+  std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
+  apply_global_fixed_width_page_memory_pressure(_pinned_entries, reason);
+}
+
 void sirius_scan_manager::prepare_for_query(const sirius::planner::query& query)
 {
   reset();
@@ -1359,6 +1639,8 @@ void sirius_scan_manager::prepare_for_query(const sirius::planner::query& query)
       if (io_ctx && io_ctx->cache()) { io_ctx->cache()->prepare_for_query(query); }
     }
   }
+
+  evict_fixed_pages_for_memory_pressure("prepare_for_query");
 
   auto const gpu_ids = _topology_index->gpu_ids();
   auto round_robin =
@@ -1622,6 +1904,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
   if (!has_fixed_width_column) { return false; }
 
   std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
+  apply_global_fixed_width_page_memory_pressure(_pinned_entries, "pre_fixed_page_insert");
 
   auto const admission_limit = fixed_page_admission_max_entry_bytes();
   auto const incoming_bytes  = fixed_width_table_view_bytes(view);
@@ -1707,7 +1990,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
       }
       entry.num_rows += static_cast<std::size_t>(view.num_rows());
       entry.fixed_width_page_metrics = {};
-      apply_global_fixed_width_page_budget(_pinned_entries);
+      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -1764,7 +2047,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
   entry.fixed_width_page_metrics = {};
   _pinned_entries[name] = std::move(entry);
   auto& inserted_entry = _pinned_entries.at(name);
-  apply_global_fixed_width_page_budget(_pinned_entries);
+  apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
   auto eviction_count = inserted_entry.fixed_width_page_metrics.eviction_count;
   inserted_entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(inserted_entry);
   inserted_entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -1827,6 +2110,7 @@ void sirius_scan_manager::insert_pinned_entry(
   }
 
   std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
+  apply_global_fixed_width_page_memory_pressure(_pinned_entries, "pre_pinned_insert");
 
   auto existing_it = _pinned_entries.find(name);
   if (existing_it != _pinned_entries.end()) {
@@ -1888,7 +2172,7 @@ void sirius_scan_manager::insert_pinned_entry(
       }
       entry.num_rows += new_num_rows;
       entry.fixed_width_page_metrics = {};
-      apply_global_fixed_width_page_budget(_pinned_entries);
+      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -2024,7 +2308,7 @@ void sirius_scan_manager::insert_pinned_entry(
         entry.cache_info.names.push_back(column_names[i]);
       }
       entry.fixed_width_page_metrics = {};
-      apply_global_fixed_width_page_budget(_pinned_entries);
+      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -2114,7 +2398,7 @@ void sirius_scan_manager::insert_pinned_entry(
   entry.fixed_width_page_metrics = {};
   _pinned_entries[name] = std::move(entry);
   auto& inserted_entry = _pinned_entries.at(name);
-  apply_global_fixed_width_page_budget(_pinned_entries);
+  apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
   auto eviction_count = inserted_entry.fixed_width_page_metrics.eviction_count;
   inserted_entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(inserted_entry);
   inserted_entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -2186,6 +2470,12 @@ void sirius_scan_manager::visit_pinned_entries(
 bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_operator* op)
 {
   const auto& table_info = op->get_ingestible().table_info();
+  auto* parquet = dynamic_cast<op::scan::parquet_gpu_ingestible*>(&op->get_ingestible());
+  if (parquet != nullptr && parquet->fixed_page_cache_has_dynamic_filters()) {
+    SIRIUS_LOG_INFO("[fixed-page-cache] reuse_skip reason=dynamic_filter_scan operator='{}'",
+                    op->get_operator_id());
+    return false;
+  }
 
   try {
     std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
@@ -2200,7 +2490,6 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
                                           op->get_ingestible().materialized_column_order());
       if (cols.empty()) { continue; }  // defensive: materialized set must be a cache subset
       if (!entry.cache_info.filter_signature.empty()) {
-        auto* parquet = dynamic_cast<op::scan::parquet_gpu_ingestible*>(&op->get_ingestible());
         if (parquet == nullptr ||
             parquet->fixed_page_cache_filter_signature() != entry.cache_info.filter_signature) {
           continue;

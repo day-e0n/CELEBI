@@ -741,12 +741,22 @@ std::string parquet_gpu_ingestible::fixed_page_cache_filter_signature() const
 }
 
 
+bool parquet_gpu_ingestible::fixed_page_cache_has_dynamic_filters() const
+{
+  return static_cast<bool>(_sirius_dynamic_filters);
+}
+
+
 void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view,
                                                            const cucascade::memory::memory_space& mem_space,
                                                            rmm::cuda_stream_view stream)
 {
   if (!_scan_manager || !fixed_page_auto_cache_enabled() || view.num_columns() == 0 ||
       view.num_rows() == 0 || _plan->has_partitions()) {
+    return;
+  }
+  if (fixed_page_cache_has_dynamic_filters()) {
+    SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=dynamic_filter_scan");
     return;
   }
 

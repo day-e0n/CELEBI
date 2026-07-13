@@ -178,6 +178,7 @@ struct fixed_width_column_page {
       admission_score(other.admission_score),
       access_count(other.access_count),
       last_access_tick(other.last_access_tick.load(std::memory_order_relaxed)),
+      active_reader_count(other.active_reader_count.load(std::memory_order_relaxed)),
       owned_column(other.owned_column),
       stats(other.stats)
   {}
@@ -201,6 +202,8 @@ struct fixed_width_column_page {
     access_count       = other.access_count;
     last_access_tick.store(other.last_access_tick.load(std::memory_order_relaxed),
                            std::memory_order_relaxed);
+    active_reader_count.store(other.active_reader_count.load(std::memory_order_relaxed),
+                              std::memory_order_relaxed);
     owned_column = other.owned_column;
     stats        = other.stats;
     return *this;
@@ -222,6 +225,7 @@ struct fixed_width_column_page {
       admission_score(other.admission_score),
       access_count(other.access_count),
       last_access_tick(other.last_access_tick.load(std::memory_order_relaxed)),
+      active_reader_count(other.active_reader_count.load(std::memory_order_relaxed)),
       owned_column(std::move(other.owned_column)),
       stats(other.stats)
   {}
@@ -245,6 +249,8 @@ struct fixed_width_column_page {
     access_count       = other.access_count;
     last_access_tick.store(other.last_access_tick.load(std::memory_order_relaxed),
                            std::memory_order_relaxed);
+    active_reader_count.store(other.active_reader_count.load(std::memory_order_relaxed),
+                              std::memory_order_relaxed);
     owned_column = std::move(other.owned_column);
     stats        = other.stats;
     return *this;
@@ -268,6 +274,9 @@ struct fixed_width_column_page {
   std::size_t access_count{0};
   /// Monotonic logical timestamp for LRU eviction. Larger means more recently used.
   mutable std::atomic<std::uint64_t> last_access_tick{0};
+  /// Number of page-backed scan providers currently allowed to read this page.
+  /// Eviction skips active pages so replacement never invalidates an in-flight scan input.
+  mutable std::atomic<std::uint32_t> active_reader_count{0};
   /// Optional page-owned storage. When set, this page can be materialized
   /// without retaining the original full cuDF column chunk.
   std::shared_ptr<cudf::column> owned_column;
@@ -520,6 +529,9 @@ class sirius_scan_manager {
   ///        it. Returns true when a cache hit was assigned (the caller then skips
   ///        the disk-reading split_provider for this operator).
   bool try_assign_cached_entries(op::scan::sirius_gpu_scan_operator* op);
+
+  /// Drop LRU fixed pages when device free memory is below the configured floor.
+  void evict_fixed_pages_for_memory_pressure(std::string_view reason);
 
   /// Resolve the ioctx that should serve @p path (normalized internally, so callers
   /// — including the scan resolver — may pass a raw `file://` / `s3://` URI),

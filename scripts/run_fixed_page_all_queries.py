@@ -87,6 +87,8 @@ BREAKDOWN_FIELDS = [
     "fixed_page_extra_stage_ms",
     "page_budget_evicted_pages",
     "page_budget_evicted_gb",
+    "page_pressure_evicted_pages",
+    "page_pressure_evicted_gb",
     "demand_load_pages",
     "demand_load_gb",
     "demand_load_ms",
@@ -241,11 +243,16 @@ def make_env(args: argparse.Namespace, condition: str, log_dir: Path, config_pat
         env["SIRIUS_FIXED_PAGE_OWNED_PAGES"] = "1"
         env["SIRIUS_FIXED_PAGE_DEMAND_LOAD"] = "1"
         env["SIRIUS_FIXED_PAGE_BACKED_PROVIDER"] = "1"
+        env["SIRIUS_FIXED_PAGE_HYBRID_PROVIDER"] = args.fixed_page_hybrid_provider
         if args.page_cache_bytes_per_gpu:
             env["SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU"] = args.page_cache_bytes_per_gpu
         if args.page_cache_workspace_reserve_bytes_per_gpu:
             env["SIRIUS_FIXED_PAGE_CACHE_WORKSPACE_RESERVE_BYTES_PER_GPU"] = (
                 args.page_cache_workspace_reserve_bytes_per_gpu
+            )
+        if args.page_cache_min_free_bytes_per_gpu:
+            env["SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU"] = (
+                args.page_cache_min_free_bytes_per_gpu
             )
         if args.demand_max_bytes_per_split:
             env["SIRIUS_FIXED_PAGE_DEMAND_MAX_BYTES_PER_SPLIT"] = args.demand_max_bytes_per_split
@@ -290,6 +297,8 @@ def summarize_execution(lines: list[str], total_ms: float) -> dict[str, object]:
     stage = defaultdict(float)
     evicted_pages = 0
     evicted_bytes = 0
+    pressure_evicted_pages = 0
+    pressure_evicted_bytes = 0
     demand_pages = 0
     demand_bytes = 0
     demand_ms = 0.0
@@ -320,6 +329,10 @@ def summarize_execution(lines: list[str], total_ms: float) -> dict[str, object]:
             f = parse_kv(line)
             evicted_pages += to_int(f.get("evicted_pages"))
             evicted_bytes += to_int(f.get("evicted_bytes"))
+        elif "[fixed-page-cache] memory_pressure applied" in line:
+            f = parse_kv(line)
+            pressure_evicted_pages += to_int(f.get("evicted_pages"))
+            pressure_evicted_bytes += to_int(f.get("evicted_bytes"))
         elif "[fixed-page-cache] demand_load loaded_pages" in line:
             f = parse_kv(line)
             demand_pages += to_int(f.get("loaded_pages"))
@@ -350,6 +363,8 @@ def summarize_execution(lines: list[str], total_ms: float) -> dict[str, object]:
         "fixed_page_extra_stage_ms": fixed_extra,
         "page_budget_evicted_pages": evicted_pages,
         "page_budget_evicted_gb": evicted_bytes / 1e9,
+        "page_pressure_evicted_pages": pressure_evicted_pages,
+        "page_pressure_evicted_gb": pressure_evicted_bytes / 1e9,
         "demand_load_pages": demand_pages,
         "demand_load_gb": demand_bytes / 1e9,
         "demand_load_ms": demand_ms,
@@ -568,7 +583,9 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--host-capacity", default="32GB")
     ap.add_argument("--reservation-limit-fraction", default="0.85")
     ap.add_argument("--page-cache-bytes-per-gpu", default="")
-    ap.add_argument("--page-cache-workspace-reserve-bytes-per-gpu", default="3072MB")
+    ap.add_argument("--page-cache-workspace-reserve-bytes-per-gpu", default="")
+    ap.add_argument("--page-cache-min-free-bytes-per-gpu", default="4096MB")
+    ap.add_argument("--fixed-page-hybrid-provider", choices=["0", "1"], default="1")
     ap.add_argument("--demand-max-bytes-per-split", default="3221225472")
     ap.add_argument("--log-level", default="info")
     ap.add_argument("--case-timeout-s", type=int, default=300)

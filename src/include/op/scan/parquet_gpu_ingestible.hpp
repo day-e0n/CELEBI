@@ -245,6 +245,7 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   void set_scan_manager(scan_manager::sirius_scan_manager* manager) noexcept { _scan_manager = manager; }
 
   [[nodiscard]] std::string fixed_page_cache_filter_signature() const;
+  [[nodiscard]] bool fixed_page_cache_has_dynamic_filters() const;
 
   ~parquet_gpu_ingestible() override;
 

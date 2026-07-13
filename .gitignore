@@ -19,6 +19,7 @@ dbgen/
 test_datasets/tpch-dbgen/
 test_datasets/tpch-mod-dbgen/
 test_datasets/hits_0.parquet
+test_datasets/tpch_parquet*/
 .claude/*
 .codex/
 runs/
@@ -35,6 +36,12 @@ cufile.log
 envs/
 compile_commands.json
 .cache
+
+# Local experiment datasets/results. These can be very large and should be
+# regenerated or copied locally instead of committed with code changes.
+/experiment/fixed_page_runs/
+/experiment/tmp/
+/experiment/logs/
 
 # Zed editor settings
 .zed
