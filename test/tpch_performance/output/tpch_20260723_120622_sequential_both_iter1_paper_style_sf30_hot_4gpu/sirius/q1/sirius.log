@@ -1,0 +1,764 @@
+[2026-07-23 12:06:48.579] [info] [sirius_context.cpp:201] QueryBegin: SQL: select l_returnflag, l_linestatus, sum(l_quantity) as sum_qty, sum(l_extendedprice) as sum_base_price, sum(l_extendedprice * (1 - l_discount)) as sum_disc_price, sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) as sum_charge, avg(l_quantity) as avg_qty, avg(l_extendedprice) as avg_price, avg(l_discount) as avg_disc, count(*) as count_order from lineitem where l_shipdate <= date '1995-08-19' group by l_returnflag, l_linestatus order by l_returnflag, l_linestatus
+[2026-07-23 12:06:48.651] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-23 12:06:48.654] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-23 12:06:48.654] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-23 12:06:48.669] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=11) -> PROJECTION (id=6) -> PROJECTION (id=7) -> HASH_GROUP_BY (id=8)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=12)
+  Input: <- Pipeline #0 [on: PARTITION (id=12), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #2: MERGE_GROUP_BY (id=13)
+  Input: <- Pipeline #1 [on: MERGE_GROUP_BY (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #1
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #3: ORDER_BY (id=9)
+  Input: <- Pipeline #2 [on: ORDER_BY (id=9), port: default, barrier: FULL]
+  Dependencies: Pipeline #2
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #4: SORT_SAMPLE (id=14) -> SORT_PARTITION (id=15)
+  Input: <- Pipeline #3 [on: SORT_SAMPLE (id=14), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #3
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #5: MERGE_SORT (id=16)
+  Input: <- Pipeline #4 [on: MERGE_SORT (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #4
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #6: RESULT_COLLECTOR (id=10)
+  Input: <- Pipeline #5 [on: RESULT_COLLECTOR (id=10), port: default, barrier: FULL]
+  Dependencies: Pipeline #5
+
+=== Query Plan DAG ===
+┌──────────────────────────┐
+│ Pipeline #6              │
+│ RESULT_COLLECTOR (id=10) │
+│ Input(#5): FULL          │
+└────────────┬─────────────┘
+             │              
+┌──────────────────────────┐
+│ Pipeline #5              │
+│ MERGE_SORT (id=16)       │
+│ Input(#4): FULL          │
+└────────────┬─────────────┘
+             │              
+┌──────────────────────────┐
+│ Pipeline #4              │
+│ SORT_PARTITION (id=15)   │
+│ SORT_SAMPLE (id=14)      │
+│ Input(#3): PIPELINE      │
+└────────────┬─────────────┘
+             │              
+┌──────────────────────────┐
+│ Pipeline #3              │
+│ ORDER_BY (id=9)          │
+│ Input(#2): FULL          │
+└────────────┬─────────────┘
+             │              
+┌──────────────────────────┐
+│ Pipeline #2              │
+│ MERGE_GROUP_BY (id=13)   │
+│ Input(#1): FULL          │
+└────────────┬─────────────┘
+             │              
+┌──────────────────────────┐
+│ Pipeline #1              │
+│ PARTITION (id=12)        │
+│ Input(#0): FULL          │
+└────────────┬─────────────┘
+             │              
+┌──────────────────────────┐
+│ Pipeline #0              │
+│ HASH_GROUP_BY (id=8)     │
+│ PROJECTION (id=7)        │
+│ PROJECTION (id=6)        │
+│ GPU_SCAN (id=11)         │
+└──────────────────────────┘
+
+[2026-07-23 12:06:48.669] [info] [:] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '11'
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=1
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=2
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=5
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=6
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=7
+[2026-07-23 12:06:48.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=8
+[2026-07-23 12:06:48.670] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=9
+[2026-07-23 12:06:48.670] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10
+[2026-07-23 12:06:48.670] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=11
+[2026-07-23 12:06:48.670] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=12
+[2026-07-23 12:06:48.670] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=14
+[2026-07-23 12:06:48.670] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=15
+[2026-07-23 12:06:48.670] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=13
+[2026-07-23 12:06:48.747] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.749] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.749] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.749] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.749] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.750] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=17
+[2026-07-23 12:06:48.750] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.750] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.750] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.750] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.750] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=21
+[2026-07-23 12:06:48.750] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16
+[2026-07-23 12:06:48.750] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.751] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=25
+[2026-07-23 12:06:48.751] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.751] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.751] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.751] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.751] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=29
+[2026-07-23 12:06:48.751] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=18
+[2026-07-23 12:06:48.752] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=22
+[2026-07-23 12:06:48.752] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=26
+[2026-07-23 12:06:48.752] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.752] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.752] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=19
+[2026-07-23 12:06:48.752] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=30
+[2026-07-23 12:06:48.752] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=23
+[2026-07-23 12:06:48.753] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=20
+[2026-07-23 12:06:48.753] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=24
+[2026-07-23 12:06:48.753] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=27
+[2026-07-23 12:06:48.753] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=28
+[2026-07-23 12:06:48.754] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=31
+[2026-07-23 12:06:48.765] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.765] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.765] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=33
+[2026-07-23 12:06:48.765] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=37
+[2026-07-23 12:06:48.767] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.768] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.768] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.768] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=34
+[2026-07-23 12:06:48.769] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.769] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.769] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.770] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.770] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.770] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.770] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.770] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.770] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.771] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.771] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.774] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.774] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.776] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=38
+[2026-07-23 12:06:48.776] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=41
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=42
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=35
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=32
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=46
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=45
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=36
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=49
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=53
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=40
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=39
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=43
+[2026-07-23 12:06:48.777] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=44
+[2026-07-23 12:06:48.778] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=47
+[2026-07-23 12:06:48.790] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.791] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=48
+[2026-07-23 12:06:48.792] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.793] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=50
+[2026-07-23 12:06:48.794] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.794] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.795] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=51
+[2026-07-23 12:06:48.795] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.795] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=54
+[2026-07-23 12:06:48.795] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.796] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.796] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=52
+[2026-07-23 12:06:48.797] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.797] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=57
+[2026-07-23 12:06:48.797] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.797] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=55
+[2026-07-23 12:06:48.797] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.798] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=61
+[2026-07-23 12:06:48.798] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=56
+[2026-07-23 12:06:48.798] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.798] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=59
+[2026-07-23 12:06:48.798] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.798] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.799] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.799] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.799] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=65
+[2026-07-23 12:06:48.799] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=60
+[2026-07-23 12:06:48.799] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.799] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=58
+[2026-07-23 12:06:48.800] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=63
+[2026-07-23 12:06:48.800] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=62
+[2026-07-23 12:06:48.800] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=69
+[2026-07-23 12:06:48.807] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.808] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=64
+[2026-07-23 12:06:48.811] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.811] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=66
+[2026-07-23 12:06:48.811] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.811] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.811] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=67
+[2026-07-23 12:06:48.812] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=68
+[2026-07-23 12:06:48.813] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.814] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=70
+[2026-07-23 12:06:48.814] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.815] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.816] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.816] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=73
+[2026-07-23 12:06:48.816] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=77
+[2026-07-23 12:06:48.817] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.817] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.817] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=71
+[2026-07-23 12:06:48.817] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.817] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=72
+[2026-07-23 12:06:48.818] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=75
+[2026-07-23 12:06:48.818] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.818] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.818] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.819] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=74
+[2026-07-23 12:06:48.819] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=78
+[2026-07-23 12:06:48.819] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=76
+[2026-07-23 12:06:48.819] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=81
+[2026-07-23 12:06:48.819] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.820] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.820] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=79
+[2026-07-23 12:06:48.821] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=85
+[2026-07-23 12:06:48.826] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.827] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=80
+[2026-07-23 12:06:48.830] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.830] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.831] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=82
+[2026-07-23 12:06:48.831] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=84
+[2026-07-23 12:06:48.831] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.832] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.832] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=83
+[2026-07-23 12:06:48.833] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=86
+[2026-07-23 12:06:48.833] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.834] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=89
+[2026-07-23 12:06:48.835] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.835] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.836] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=87
+[2026-07-23 12:06:48.836] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=90
+[2026-07-23 12:06:48.836] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.837] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.837] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=93
+[2026-07-23 12:06:48.837] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.837] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.837] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=88
+[2026-07-23 12:06:48.838] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=97
+[2026-07-23 12:06:48.838] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=91
+[2026-07-23 12:06:48.838] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.838] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.839] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.839] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=92
+[2026-07-23 12:06:48.839] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=94
+[2026-07-23 12:06:48.840] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=95
+[2026-07-23 12:06:48.840] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.842] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=101
+[2026-07-23 12:06:48.848] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.849] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=96
+[2026-07-23 12:06:48.849] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.850] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.850] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=100
+[2026-07-23 12:06:48.850] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.851] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.851] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=98
+[2026-07-23 12:06:48.851] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=99
+[2026-07-23 12:06:48.851] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.852] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=105
+[2026-07-23 12:06:48.853] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=102
+[2026-07-23 12:06:48.854] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.854] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.855] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=106
+[2026-07-23 12:06:48.855] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=103
+[2026-07-23 12:06:48.856] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.856] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.857] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.857] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=109
+[2026-07-23 12:06:48.857] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=104
+[2026-07-23 12:06:48.858] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=110
+[2026-07-23 12:06:48.858] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.859] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.859] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=108
+[2026-07-23 12:06:48.860] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.860] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.860] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=113
+[2026-07-23 12:06:48.861] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=107
+[2026-07-23 12:06:48.861] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=111
+[2026-07-23 12:06:48.861] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.862] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=117
+[2026-07-23 12:06:48.868] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.868] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.868] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=112
+[2026-07-23 12:06:48.869] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.869] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=114
+[2026-07-23 12:06:48.870] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.870] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=116
+[2026-07-23 12:06:48.870] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.871] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=121
+[2026-07-23 12:06:48.871] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=115
+[2026-07-23 12:06:48.871] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.872] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=118
+[2026-07-23 12:06:48.873] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.874] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.874] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.874] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=122
+[2026-07-23 12:06:48.874] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=119
+[2026-07-23 12:06:48.874] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.875] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=125
+[2026-07-23 12:06:48.875] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.875] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=126
+[2026-07-23 12:06:48.876] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.877] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=120
+[2026-07-23 12:06:48.877] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=124
+[2026-07-23 12:06:48.879] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.879] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.880] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.880] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=123
+[2026-07-23 12:06:48.880] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.880] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=129
+[2026-07-23 12:06:48.880] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=133
+[2026-07-23 12:06:48.881] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=127
+[2026-07-23 12:06:48.884] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.886] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=128
+[2026-07-23 12:06:48.886] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.886] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.887] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=130
+[2026-07-23 12:06:48.887] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=132
+[2026-07-23 12:06:48.887] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.888] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=137
+[2026-07-23 12:06:48.889] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.890] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=131
+[2026-07-23 12:06:48.891] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.891] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.891] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.892] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=134
+[2026-07-23 12:06:48.892] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=138
+[2026-07-23 12:06:48.892] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=135
+[2026-07-23 12:06:48.892] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.893] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=141
+[2026-07-23 12:06:48.895] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.895] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.895] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.896] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.896] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=142
+[2026-07-23 12:06:48.896] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=136
+[2026-07-23 12:06:48.897] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.897] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=139
+[2026-07-23 12:06:48.897] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=140
+[2026-07-23 12:06:48.897] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.898] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=143
+[2026-07-23 12:06:48.898] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=145
+[2026-07-23 12:06:48.898] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.899] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=149
+[2026-07-23 12:06:48.903] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.904] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=144
+[2026-07-23 12:06:48.904] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.905] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=146
+[2026-07-23 12:06:48.906] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.906] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=148
+[2026-07-23 12:06:48.907] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.908] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.908] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=153
+[2026-07-23 12:06:48.908] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.908] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=150
+[2026-07-23 12:06:48.909] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=147
+[2026-07-23 12:06:48.910] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.911] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.911] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=157
+[2026-07-23 12:06:48.912] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=151
+[2026-07-23 12:06:48.912] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.913] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=154
+[2026-07-23 12:06:48.914] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.914] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.914] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.915] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.915] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=158
+[2026-07-23 12:06:48.915] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=152
+[2026-07-23 12:06:48.915] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=161
+[2026-07-23 12:06:48.915] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=156
+[2026-07-23 12:06:48.916] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.916] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.916] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.917] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=155
+[2026-07-23 12:06:48.918] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=159
+[2026-07-23 12:06:48.921] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.922] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=160
+[2026-07-23 12:06:48.922] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.923] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=162
+[2026-07-23 12:06:48.924] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.924] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.926] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.926] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.926] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.927] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.928] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.928] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.929] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.930] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.930] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.930] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.930] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.930] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.931] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'HASH_GROUP_BY' (id=8) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=163
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=165
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=164
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=166
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=167
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=168
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=169
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=171
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=170
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=172
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=173
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=174
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=176
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=175
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=178
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=179
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=177
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=187
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=180
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=183
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=184
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=189
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=181
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=193
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=194
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=182
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=185
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=186
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=192
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=188
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=195
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=196
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=190
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=191
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=199
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=202
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=204
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=203
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=207
+[2026-07-23 12:06:48.932] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=198
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=206
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=212
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=218
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=219
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=197
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=210
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=215
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=220
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=226
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=222
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=228
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=234
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=237
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=200
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=239
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=244
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=209
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=211
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=201
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=249
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=205
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=253
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=214
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=227
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=257
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=208
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=217
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=232
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=260
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=223
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=235
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=213
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=264
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=224
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=240
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=269
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=243
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=216
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=274
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=230
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=248
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=275
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=233
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=252
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=280
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=221
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=236
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=258
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=285
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=225
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=259
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=242
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=291
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=265
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=229
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=292
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=231
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=247
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.933] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=268
+[2026-07-23 12:06:48.933] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=296
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=250
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=273
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=238
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=299
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=276
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=251
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=304
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=241
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=281
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=255
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=306
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=245
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=262
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=284
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=246
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=312
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=266
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=288
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=314
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=254
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=267
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=290
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=317
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=270
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=256
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=298
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=278
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=261
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=282
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=300
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=263
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=283
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=307
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=286
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=271
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=308
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=294
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=272
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=297
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=313
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=277
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=301
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=316
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=279
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=302
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=322
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=287
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=310
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=323
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=315
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=289
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=293
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=318
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=321
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=295
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=325
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=303
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=305
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=309
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=311
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=319
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=320
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=324
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [warning] [gpu_pipeline_task.cpp:59] gpu_pipeline_task: operator 'PARTITION' (id=12) output batch 0 column count mismatch: got 13, expected 10
+[2026-07-23 12:06:48.934] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=326
+[2026-07-23 12:06:49.569] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=327
+[2026-07-23 12:06:49.577] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=328
+[2026-07-23 12:06:49.587] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=329
+[2026-07-23 12:06:49.598] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=330
+[2026-07-23 12:06:49.618] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:06:49.619] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:06:49.619] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:06:49.619] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:06:49.625] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-23 12:06:49.628] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-23 12:06:49.639] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-07-23 12:06:49.639] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=6627863552 bytes peak=7042679340 bytes reserved=0 bytes
+[2026-07-23 12:06:49.639] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=6375178752 bytes peak=6789898816 bytes reserved=0 bytes
+[2026-07-23 12:06:49.639] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=6288236544 bytes peak=6702956608 bytes reserved=0 bytes
+[2026-07-23 12:06:49.639] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=6105967360 bytes peak=6520781100 bytes reserved=0 bytes
+[2026-07-23 12:06:49.639] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-07-23 12:06:49.639] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=6627863552 bytes peak=7042679340 bytes reserved=0 bytes
+[2026-07-23 12:06:49.639] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=6375178752 bytes peak=6789898816 bytes reserved=0 bytes
+[2026-07-23 12:06:49.639] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=6288236544 bytes peak=6702956608 bytes reserved=0 bytes
+[2026-07-23 12:06:49.639] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=6105967360 bytes peak=6520781100 bytes reserved=0 bytes
+[2026-07-23 12:06:49.639] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-23 12:06:49.640] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-23 12:06:49.649] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-07-23 12:06:49.649] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=6627863552 bytes peak=7042679340 bytes reserved=0 bytes
+[2026-07-23 12:06:49.649] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=6375178752 bytes peak=6789898816 bytes reserved=0 bytes
+[2026-07-23 12:06:49.649] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=6288236544 bytes peak=6702956608 bytes reserved=0 bytes
+[2026-07-23 12:06:49.649] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=6105967360 bytes peak=6520781100 bytes reserved=0 bytes
+[2026-07-23 12:06:49.649] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-07-23 12:06:49.649] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=6627863552 bytes peak=7042679340 bytes reserved=0 bytes
+[2026-07-23 12:06:49.649] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=6375178752 bytes peak=6789898816 bytes reserved=0 bytes
+[2026-07-23 12:06:49.649] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=6288236544 bytes peak=6702956608 bytes reserved=0 bytes
+[2026-07-23 12:06:49.649] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=6105967360 bytes peak=6520781100 bytes reserved=0 bytes

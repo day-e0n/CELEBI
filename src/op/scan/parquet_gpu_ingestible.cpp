@@ -139,7 +139,8 @@ bool fixed_page_hybrid_provider_enabled()
 }
 
 std::string auto_fixed_page_cache_name(std::vector<std::string> const& file_paths,
-                                       std::string const& filter_signature)
+                                       std::string const& filter_signature,
+                                       std::vector<std::string> const& column_names)
 {
   std::vector<std::string> paths = file_paths;
   std::sort(paths.begin(), paths.end());
@@ -147,6 +148,18 @@ std::string auto_fixed_page_cache_name(std::vector<std::string> const& file_path
   out << "__wdy_auto_fixed_page:";
   for (auto const& path : paths) { out << path << ";"; }
   if (!filter_signature.empty()) { out << "filter=" << filter_signature; }
+  // Column set is part of the cache identity: two queries over the same
+  // (file, filter) that project different columns are genuinely different
+  // cache entries. Folding the column set into the key -- instead of just
+  // (file, filter) -- lets both projections stay resident side by side
+  // instead of the second one's insert finding a name collision, failing
+  // the "same column set" appendable check, and erasing the first
+  // projection's fully-cached data to rebuild from scratch for its own
+  // columns (see insert_fixed_page_entry_from_view's `appendable` branch).
+  std::vector<std::string> cols = column_names;
+  std::sort(cols.begin(), cols.end());
+  out << ";cols=";
+  for (auto const& col : cols) { out << col << ","; }
   return out.str();
 }
 
@@ -794,7 +807,8 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view
     return;
   }
 
-  auto const name = auto_fixed_page_cache_name(_file_paths, cache_info.filter_signature);
+  auto const name =
+    auto_fixed_page_cache_name(_file_paths, cache_info.filter_signature, cache_info.names);
   try {
     if (fixed_page_owned_pages_enabled() && fixed_page_direct_auto_populate_enabled()) {
       bool const populated = _scan_manager->insert_fixed_page_entry_from_view(

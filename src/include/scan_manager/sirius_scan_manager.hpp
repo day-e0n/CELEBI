@@ -296,15 +296,6 @@ struct fixed_width_page_directory_entry {
   std::size_t page_ordinal{0};
 };
 
-struct fixed_width_filter_mask_cache_entry {
-  std::shared_ptr<cudf::column> mask;
-  int device_id{-1};
-  std::size_t rows{0};
-  std::size_t bytes{0};
-  std::size_t hits{0};
-};
-// wdy end
-
 /**
  * @brief A single pinned-table entry, keyed by table name in the scan_manager.
  *
@@ -335,13 +326,6 @@ struct pinned_entry {
   /// still physically owned by cudf column chunks, but this is the metadata
   /// surface that scan reuse and future page admission/eviction build on.
   fixed_width_page_directory_metrics fixed_width_page_metrics;
-  /// Optional reusable boolean masks for fixed-page cached filter predicates.
-  /// Guarded by fixed_width_filter_mask_cache_mutex because scan splits can
-  /// materialize concurrently on different workers/devices.
-  mutable std::unordered_map<std::string, fixed_width_filter_mask_cache_entry>
-    fixed_width_filter_mask_cache;
-  mutable std::shared_ptr<std::mutex> fixed_width_filter_mask_cache_mutex{
-    std::make_shared<std::mutex>()};
   /// Per-chunk memory space placement. Parallel to the inner vectors of
   /// data_batches_by_column: chunk_memory_spaces[i] is the memory_space*
   /// for every column's chunk at index i. All columns at chunk index i

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from pathlib import Path
 
 
@@ -34,6 +35,16 @@ def to_int(value: object) -> int:
 def read_rows(path: Path) -> list[dict[str, str]]:
     with path.open(newline="") as f:
         return list(csv.DictReader(f))
+
+
+def read_metadata_for_summary(query_summary: Path) -> dict[str, object]:
+    metadata = query_summary.parent.parent / "metadata.json"
+    if not metadata.exists():
+        return {}
+    try:
+        return json.loads(metadata.read_text())
+    except Exception:
+        return {}
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
@@ -159,7 +170,7 @@ def plot_query_scan(rows: list[dict[str, object]], out: Path, title: str) -> Non
     ax.grid(axis="y", alpha=0.24)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.13), ncols=2, frameon=False, fontsize=16)
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=180)
+    fig.savefig(out, dpi=300)
     plt.close(fig)
 
 
@@ -182,7 +193,7 @@ def plot_query_scan_saved(rows: list[dict[str, object]], out: Path, title: str) 
     ax.tick_params(axis="y", labelsize=15)
     ax.grid(axis="y", alpha=0.24)
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=180)
+    fig.savefig(out, dpi=300)
     plt.close(fig)
 
 
@@ -207,7 +218,7 @@ def plot_query_scan_latency(rows: list[dict[str, object]], out: Path, title: str
     ax.grid(axis="y", alpha=0.24)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.13), ncols=2, frameon=False, fontsize=16)
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=180)
+    fig.savefig(out, dpi=300)
     plt.close(fig)
 
 
@@ -230,7 +241,7 @@ def plot_query_scan_latency_saved(rows: list[dict[str, object]], out: Path, titl
     ax.tick_params(axis="y", labelsize=15)
     ax.grid(axis="y", alpha=0.24)
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=180)
+    fig.savefig(out, dpi=300)
     plt.close(fig)
 
 
@@ -255,20 +266,199 @@ def plot_workload_scan(rows: list[dict[str, object]], out: Path, title: str) -> 
     ax.grid(axis="y", alpha=0.24)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.13), ncols=2, frameon=False, fontsize=16)
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=180)
+    fig.savefig(out, dpi=300)
+    plt.close(fig)
+
+
+def build_multi_workload_scan_rows(
+    runs: list[tuple[str, Path, Path]],
+    baseline_series_request: str,
+    target_series: str,
+) -> list[dict[str, object]]:
+    out: list[dict[str, object]] = []
+    for label, query_summary, workload_summary in runs:
+        query_rows = read_rows(query_summary)
+        workload_rows = read_rows(workload_summary)
+        metadata = read_metadata_for_summary(query_summary)
+        baseline_series = pick_baseline_series(query_rows, baseline_series_request)
+        by_series = {row.get("series", ""): row for row in workload_rows}
+        base = by_series.get(baseline_series)
+        target = by_series.get(target_series)
+        if not base or not target:
+            continue
+        baseline_scan = to_float(base.get("scan_materialize_work_ms"))
+        target_scan = to_float(target.get("scan_materialize_work_ms"))
+        reorder_ms = to_float(metadata.get("reorder_elapsed_ms"))
+        target_total = target_scan + reorder_ms
+        out.append({
+            "label": label,
+            "baseline_series": baseline_series,
+            "target_series": target_series,
+            "reorder_policy": metadata.get("reorder_policy", "none"),
+            "reorder_changed": metadata.get("reorder_changed", ""),
+            "reorder_overlap_ratio_before": metadata.get("reorder_overlap_ratio_before", ""),
+            "reorder_overlap_ratio_after": metadata.get("reorder_overlap_ratio_after", ""),
+            "baseline_scan_materialize_work_ms": baseline_scan,
+            "target_scan_materialize_work_ms": target_scan,
+            "reorder_elapsed_ms": reorder_ms,
+            "target_scan_plus_reorder_ms": target_total,
+            "scan_plus_reorder_saved_ms": baseline_scan - target_total,
+            "scan_plus_reorder_reduction_ratio": reduction_ratio(baseline_scan, target_total),
+        })
+    return out
+
+
+def build_multi_workload_pair_scan_rows(
+    runs: list[tuple[str, Path, Path, Path, Path]],
+    baseline_series_request: str,
+    target_series: str,
+) -> list[dict[str, object]]:
+    out: list[dict[str, object]] = []
+    for label, base_query_summary, base_workload_summary, target_query_summary, target_workload_summary in runs:
+        base_query_rows = read_rows(base_query_summary)
+        base_workload_rows = read_rows(base_workload_summary)
+        target_workload_rows = read_rows(target_workload_summary)
+        metadata = read_metadata_for_summary(target_query_summary)
+        baseline_series = pick_baseline_series(base_query_rows, baseline_series_request)
+        base_by_series = {row.get("series", ""): row for row in base_workload_rows}
+        target_by_series = {row.get("series", ""): row for row in target_workload_rows}
+        base = base_by_series.get(baseline_series)
+        target = target_by_series.get(target_series)
+        if not base or not target:
+            continue
+        baseline_scan = to_float(base.get("scan_materialize_work_ms"))
+        target_scan = to_float(target.get("scan_materialize_work_ms"))
+        reorder_ms = to_float(metadata.get("reorder_elapsed_ms"))
+        target_total = target_scan + reorder_ms
+        out.append({
+            "label": label,
+            "baseline_source": str(base_workload_summary),
+            "target_source": str(target_workload_summary),
+            "baseline_series": baseline_series,
+            "target_series": target_series,
+            "reorder_policy": metadata.get("reorder_policy", "none"),
+            "reorder_changed": metadata.get("reorder_changed", ""),
+            "reorder_overlap_ratio_before": metadata.get("reorder_overlap_ratio_before", ""),
+            "reorder_overlap_ratio_after": metadata.get("reorder_overlap_ratio_after", ""),
+            "baseline_scan_materialize_work_ms": baseline_scan,
+            "target_scan_materialize_work_ms": target_scan,
+            "reorder_elapsed_ms": reorder_ms,
+            "target_scan_plus_reorder_ms": target_total,
+            "scan_plus_reorder_saved_ms": baseline_scan - target_total,
+            "scan_plus_reorder_reduction_ratio": reduction_ratio(baseline_scan, target_total),
+        })
+    return out
+
+
+def plot_multi_workload_scan_plus_reorder(rows: list[dict[str, object]], out: Path, title: str) -> None:
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    labels = [str(row["label"]) for row in rows]
+    x = np.arange(len(labels))
+    width = 0.36
+    baseline = np.array([to_float(row["baseline_scan_materialize_work_ms"]) / 1000.0 for row in rows])
+    target_scan = np.array([to_float(row["target_scan_materialize_work_ms"]) / 1000.0 for row in rows])
+    reorder = np.array([to_float(row["reorder_elapsed_ms"]) / 1000.0 for row in rows])
+
+    fig, ax = plt.subplots(figsize=(max(9.5, len(labels) * 2.2), 6.8), constrained_layout=True)
+    ax.bar(x - width / 2, baseline, width=width, color="#4c78a8", label="baseline scan")
+    ax.bar(x + width / 2, target_scan, width=width, color="#59a14f", label="paging scan")
+    ax.bar(x + width / 2, reorder, bottom=target_scan, width=width, color="#f58518", label="reorder")
+
+    for idx, row in enumerate(rows):
+        total = to_float(row["target_scan_plus_reorder_ms"]) / 1000.0
+        pct = to_float(row["scan_plus_reorder_reduction_ratio"]) * 100.0
+        reorder_ms = to_float(row["reorder_elapsed_ms"])
+        ax.text(
+            x[idx] + width / 2,
+            total,
+            f"+{reorder_ms:.1f} ms\n{pct:.1f}% lower" if pct >= 0 else f"+{reorder_ms:.1f} ms\n{abs(pct):.1f}% higher",
+            ha="center",
+            va="bottom",
+            fontsize=12,
+            color="#2f2f2f",
+        )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=15)
+    ax.set_ylabel("Workload scan/materialize work + reorder (s)", fontsize=16)
+    ax.set_title(title, fontsize=20, pad=12)
+    ax.tick_params(axis="y", labelsize=14)
+    ax.grid(axis="y", alpha=0.24)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.13), ncols=3, frameon=False, fontsize=14)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out, dpi=300)
     plt.close(fig)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--query-summary", type=Path, required=True)
-    parser.add_argument("--workload-summary", type=Path, required=True)
+    parser.add_argument("--query-summary", type=Path)
+    parser.add_argument("--workload-summary", type=Path)
     parser.add_argument("--out-dir", type=Path, default=Path("experiment/graph"))
-    parser.add_argument("--prefix", required=True)
+    parser.add_argument("--prefix", default="scan_only")
     parser.add_argument("--baseline-series", default="auto")
     parser.add_argument("--target-series", default="paging")
     parser.add_argument("--title-prefix", default="")
+    parser.add_argument(
+        "--comparison-run",
+        action="append",
+        nargs=3,
+        metavar=("LABEL", "QUERY_SUMMARY", "WORKLOAD_SUMMARY"),
+        help="Add one run to a multi-dataset baseline-vs-paging+reorder scan plot.",
+    )
+    parser.add_argument(
+        "--comparison-pair-run",
+        action="append",
+        nargs=5,
+        metavar=("LABEL", "BASE_QUERY_SUMMARY", "BASE_WORKLOAD_SUMMARY", "TARGET_QUERY_SUMMARY", "TARGET_WORKLOAD_SUMMARY"),
+        help="Add one run where baseline and reordered paging come from different experiment roots.",
+    )
+    parser.add_argument("--comparison-out-prefix", default="scan_plus_reorder")
     args = parser.parse_args()
+
+    if args.comparison_pair_run:
+        runs = [
+            (label, Path(base_query), Path(base_workload), Path(target_query), Path(target_workload))
+            for label, base_query, base_workload, target_query, target_workload in args.comparison_pair_run
+        ]
+        rows = build_multi_workload_pair_scan_rows(runs, args.baseline_series, args.target_series)
+        if not rows:
+            raise SystemExit("no comparison rows to plot")
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        out_csv = args.out_dir / f"{args.comparison_out_prefix}.csv"
+        out_png = args.out_dir / f"{args.comparison_out_prefix}.png"
+        write_csv(out_csv, rows)
+        plot_multi_workload_scan_plus_reorder(
+            rows,
+            out_png,
+            args.title_prefix or "Scan work with reorder overhead",
+        )
+        print(f"wrote {out_csv}")
+        print(f"wrote {out_png}")
+        return 0
+
+    if args.comparison_run:
+        runs = [(label, Path(query), Path(workload)) for label, query, workload in args.comparison_run]
+        rows = build_multi_workload_scan_rows(runs, args.baseline_series, args.target_series)
+        if not rows:
+            raise SystemExit("no comparison rows to plot")
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        out_csv = args.out_dir / f"{args.comparison_out_prefix}.csv"
+        out_png = args.out_dir / f"{args.comparison_out_prefix}.png"
+        write_csv(out_csv, rows)
+        plot_multi_workload_scan_plus_reorder(
+            rows,
+            out_png,
+            args.title_prefix or "Scan work with reorder overhead",
+        )
+        print(f"wrote {out_csv}")
+        print(f"wrote {out_png}")
+        return 0
+
+    if not args.query_summary or not args.workload_summary:
+        raise SystemExit("--query-summary and --workload-summary are required without --comparison-run")
 
     query_rows = read_rows(args.query_summary)
     workload_rows = read_rows(args.workload_summary)

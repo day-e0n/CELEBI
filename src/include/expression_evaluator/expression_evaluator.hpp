@@ -367,14 +367,6 @@ class expression_evaluator {
   std::unique_ptr<cudf::table> select(cudf::table_view input);
 
   /**
-   * @brief Evaluates the executor's singular boolean expression as a BOOL8 mask.
-   *
-   * Callers that need to apply exactly the same filter to multiple table views can reuse the
-   * returned mask with cudf::apply_boolean_mask.
-   */
-  std::unique_ptr<cudf::column> evaluate_filter_mask(cudf::table_view input);
-
-  /**
    * @brief Evaluate a single Sirius AST node and return its execution result.
    *
    * Dispatches via std::visit over @p expr's variant to the matching private

@@ -265,7 +265,6 @@ void task_creator::manager_loop()
           auto local_state =
             std::make_unique<pipeline::gpu_pipeline_task_local_state>(std::move(input_data));
 
-          // wdy start
           // pipelineable_input remains valid here: the cast happened before
           // the move into local_state, and unique_ptr move transfers
           // ownership without relocating the object.
@@ -301,22 +300,15 @@ void task_creator::manager_loop()
                 !pipelineable_input->get_data_batches().empty()) {
               std::unordered_map<int, size_t> gpu_bytes;
               std::unordered_map<int, size_t> host_bytes;
-              size_t input_bytes       = 0;
-              size_t gpu_source_bytes  = 0;
-              size_t host_source_bytes = 0;
-              size_t disk_source_bytes = 0;
               for (const auto& batch : pipelineable_input->get_data_batches()) {
                 if (!batch) { continue; }
                 auto ro     = batch->to_read_only();
                 auto* space = ro.get_memory_space();
                 if (!space || !ro.get_data()) { continue; }
                 auto size = ro.get_data()->get_size_in_bytes();
-                input_bytes += size;
                 if (space->get_tier() == cucascade::memory::Tier::GPU) {
                   gpu_bytes[space->get_device_id()] += size;
-                  gpu_source_bytes += size;
                 } else if (space->get_tier() == cucascade::memory::Tier::HOST) {
-                  host_source_bytes += size;
                   // Normalize numa_id=-1 (non-NUMA / single-NUMA hosts, per
                   // the Linux /sys/bus/pci/devices/*/numa_node convention)
                   // to 0 so the NUMA-affinity lookup matches the normalized
@@ -327,8 +319,6 @@ void task_creator::manager_loop()
                   int host_key = space->get_device_id();
                   if (host_key < 0) host_key = 0;
                   host_bytes[host_key] += size;
-                } else if (space->get_tier() == cucascade::memory::Tier::DISK) {
-                  disk_source_bytes += size;
                 }
               }
               if (!gpu_bytes.empty()) {
@@ -355,21 +345,8 @@ void task_creator::manager_loop()
                   preferred_device_id = it->second[idx];
                 }
               }
-              size_t local_bytes = 0;
-              if (preferred_device_id.has_value()) {
-                auto gpu_it = gpu_bytes.find(preferred_device_id.value());
-                if (gpu_it != gpu_bytes.end()) { local_bytes = gpu_it->second; }
-              }
-              SIRIUS_LOG_INFO(
-                "[locality-audit] task_create operator_id={} input_bytes={} local_bytes={} "
-                "gpu_source_bytes={} host_source_bytes={} disk_source_bytes={} gpu_sources={} "
-                "host_sources={} preferred_device={}",
-                operator_id,
-                input_bytes,
-                local_bytes,
-                gpu_source_bytes,
-                host_source_bytes,
-                disk_source_bytes,
+              SIRIUS_LOG_DEBUG(
+                "Task Creator: locality score gpu_sources={} host_sources={} preferred_device={}",
                 gpu_bytes.size(),
                 host_bytes.size(),
                 preferred_device_id.value_or(-1));
@@ -422,7 +399,6 @@ void task_creator::manager_loop()
               local_state->set_preferred_device_id(preferred_device_id.value());
             }
           }
-          // wdy end
 
           auto task_id = get_next_task_id();
           auto task    = std::make_unique<pipeline::gpu_pipeline_task>(task_id,

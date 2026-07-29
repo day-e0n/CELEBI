@@ -1,0 +1,1830 @@
+[2026-07-23 12:09:27.285] [info] [sirius_context.cpp:201] QueryBegin: SQL: with revenue_view as ( select l_suppkey as supplier_no, sum(l_extendedprice * (1 - l_discount)) as total_revenue from lineitem where l_shipdate >= date '1993-05-01' and l_shipdate < date '1993-08-01' group by l_suppkey ) select s.s_suppkey, s.s_name, s.s_address, s.s_phone, r.total_revenue from supplier s, revenue_view r where s.s_suppkey = r.supplier_no and r.total_revenue = ( select max(total_revenue) from revenue_view ) order by s.s_suppkey
+[2026-07-23 12:09:27.352] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 1 rows).
+[2026-07-23 12:09:27.352] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 300000 rows).
+[2026-07-23 12:09:27.354] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-23 12:09:27.358] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-23 12:09:27.358] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-23 12:09:27.374] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 1 rows).
+[2026-07-23 12:09:27.374] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 300000 rows).
+[2026-07-23 12:09:27.375] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=31)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=33)
+  Input: <- Pipeline #0 [on: PARTITION (id=33), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=32)
+  Input: <- Pipeline #1 [on: CONCAT (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=34) -> PROJECTION (id=16) -> HASH_GROUP_BY (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #4: PARTITION (id=35)
+  Input: <- Pipeline #3 [on: PARTITION (id=35), port: default, barrier: FULL]
+  Dependencies: Pipeline #3
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #5: MERGE_GROUP_BY (id=36)
+  Input: <- Pipeline #4 [on: MERGE_GROUP_BY (id=36), port: default, barrier: FULL]
+  Dependencies: Pipeline #4
+  Output: -> CTE [port: default, barrier: FULL]
+Pipeline #6: CTE (id=29)
+  Input: <- Pipeline #5 [on: CTE (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #5
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #7: PROJECTION (id=20) -> UNGROUPED_AGGREGATE (id=21)
+  Input: <- Pipeline #6 [on: PROJECTION (id=20), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #8: MERGE_AGGREGATE (id=37)
+  Input: <- Pipeline #7 [on: MERGE_AGGREGATE (id=37), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> UNGROUPED_AGGREGATE [port: default, barrier: FULL]
+Pipeline #9: UNGROUPED_AGGREGATE (id=22)
+  Input: <- Pipeline #8 [on: UNGROUPED_AGGREGATE (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #10: MERGE_AGGREGATE (id=38)
+  Input: <- Pipeline #9 [on: MERGE_AGGREGATE (id=38), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #11: PROJECTION (id=23)
+  Input: <- Pipeline #10 [on: PROJECTION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #12: PARTITION (id=40)
+  Input: <- Pipeline #11 [on: PARTITION (id=40), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #13: CONCAT (id=39)
+  Input: <- Pipeline #12 [on: CONCAT (id=39), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #14: PARTITION (id=42)
+  Input: <- Pipeline #6 [on: PARTITION (id=42), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #15: CONCAT (id=41)
+  Input: <- Pipeline #14 [on: CONCAT (id=41), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #14
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #16: HASH_JOIN (id=24)
+  Input: <- Pipeline #15 [on: HASH_JOIN (id=24), port: default, barrier: FULL]
+  Input: <- Pipeline #13 [on: HASH_JOIN (id=24), port: build, barrier: FULL]
+  Dependencies: Pipeline #13, Pipeline #15
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #17: PARTITION (id=44)
+  Input: <- Pipeline #16 [on: PARTITION (id=44), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #18: CONCAT (id=43)
+  Input: <- Pipeline #17 [on: CONCAT (id=43), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #17
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #19: HASH_JOIN (id=26) -> PROJECTION (id=27) -> ORDER_BY (id=28)
+  Input: <- Pipeline #18 [on: HASH_JOIN (id=26), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=26), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #18
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #20: SORT_SAMPLE (id=45) -> SORT_PARTITION (id=46)
+  Input: <- Pipeline #19 [on: SORT_SAMPLE (id=45), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #19
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #21: MERGE_SORT (id=47)
+  Input: <- Pipeline #20 [on: MERGE_SORT (id=47), port: default, barrier: FULL]
+  Dependencies: Pipeline #20
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #22: RESULT_COLLECTOR (id=30)
+  Input: <- Pipeline #21 [on: RESULT_COLLECTOR (id=30), port: default, barrier: FULL]
+  Dependencies: Pipeline #21
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                                                              
+│ Pipeline #22                │                                                              
+│ RESULT_COLLECTOR (id=30)    │                                                              
+│ Input(#21): FULL            │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #21                │                                                              
+│ MERGE_SORT (id=47)          │                                                              
+│ Input(#20): FULL            │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #20                │                                                              
+│ SORT_PARTITION (id=46)      │                                                              
+│ SORT_SAMPLE (id=45)         │                                                              
+│ Input(#19): PIPELINE        │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #19                │                                                              
+│ ORDER_BY (id=28)            │                                                              
+│ PROJECTION (id=27)          │                                                              
+│ HASH_JOIN (id=26)           │                                                              
+│   type: INNER               │                                                              
+│ Input(#18): FULL            │                                                              
+│ Input(#2): FULL             │                                                              
+└──────────────┬──────────────┘                                                              
+               ┌──────────────────────────────┐                                              
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #2                 ││ Pipeline #18                │                               
+│ CONCAT (id=32)              ││ CONCAT (id=43)              │                               
+│ Input(#1): PARTIAL          ││ Input(#17): PARTIAL         │                               
+└──────────────┬──────────────┘└──────────────┬──────────────┘                               
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #1                 ││ Pipeline #17                │                               
+│ PARTITION (id=33)           ││ PARTITION (id=44)           │                               
+│ Input(#0): FULL             ││ Input(#16): PARTIAL         │                               
+└──────────────┬──────────────┘└──────────────┬──────────────┘                               
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #0                 ││ Pipeline #16                │                               
+│ GPU_SCAN (id=31)            ││ HASH_JOIN (id=24)           │                               
+│                             ││   type: INNER               │                               
+│                             ││ Input(#15): FULL            │                               
+│                             ││ Input(#13): FULL            │                               
+└─────────────────────────────┘└──────────────┬──────────────┘                               
+                                              ┌──────────────────────────────┐               
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #13                ││ Pipeline #15                │
+                               │ CONCAT (id=39)              ││ CONCAT (id=41)              │
+                               │ Input(#12): PARTIAL         ││ Input(#14): PARTIAL         │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #12                ││ Pipeline #14                │
+                               │ PARTITION (id=40)           ││ PARTITION (id=42)           │
+                               │ Input(#11): FULL            ││ Input(#6): PARTIAL          │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #11                ││ (-> Pipeline #6)            │
+                               │ PROJECTION (id=23)          ││                             │
+                               │ Input(#10): FULL            ││                             │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #10                │                               
+                               │ MERGE_AGGREGATE (id=38)     │                               
+                               │ Input(#9): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #9                 │                               
+                               │ UNGROUPED_AGGREGATE (id=22) │                               
+                               │ Input(#8): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #8                 │                               
+                               │ MERGE_AGGREGATE (id=37)     │                               
+                               │ Input(#7): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #7                 │                               
+                               │ UNGROUPED_AGGREGATE (id=21) │                               
+                               │ PROJECTION (id=20)          │                               
+                               │ Input(#6): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #6                 │                               
+                               │ CTE (id=29)                 │                               
+                               │ Input(#5): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #5                 │                               
+                               │ MERGE_GROUP_BY (id=36)      │                               
+                               │ Input(#4): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #4                 │                               
+                               │ PARTITION (id=35)           │                               
+                               │ Input(#3): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #3                 │                               
+                               │ HASH_GROUP_BY (id=17)       │                               
+                               │ PROJECTION (id=16)          │                               
+                               │ GPU_SCAN (id=34)            │                               
+                               └─────────────────────────────┘                               
+
+[2026-07-23 12:09:27.375] [info] [:] [sirius_scan_manager] assigned pinned entry 'supplier' to operator '31'
+[2026-07-23 12:09:27.375] [info] [:] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '34'
+[2026-07-23 12:09:27.375] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3394
+[2026-07-23 12:09:27.377] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3395
+[2026-07-23 12:09:27.377] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3396
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3398
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3399
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3400
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3397
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3402
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3403
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3406
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3404
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3408
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3412
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3410
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3401
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3407
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3405
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3411
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3414
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3416
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3415
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3409
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3413
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3418
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3422
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3417
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3421
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3419
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3420
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3423
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3426
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3424
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3425
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3430
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3428
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3427
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3429
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3432
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3431
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3435
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3436
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3439
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3440
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3434
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3438
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3443
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3442
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3444
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3433
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3437
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3441
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3446
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3445
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3447
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3448
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3449
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3450
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3451
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3452
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3453
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3454
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3455
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3456
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3457
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3458
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3459
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3460
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3461
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3462
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3463
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3464
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3465
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3466
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3467
+[2026-07-23 12:09:27.378] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3468
+[2026-07-23 12:09:27.389] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3472
+[2026-07-23 12:09:27.389] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3476
+[2026-07-23 12:09:27.389] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3469
+[2026-07-23 12:09:27.390] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3473
+[2026-07-23 12:09:27.390] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3477
+[2026-07-23 12:09:27.390] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3470
+[2026-07-23 12:09:27.390] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3471
+[2026-07-23 12:09:27.390] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3480
+[2026-07-23 12:09:27.390] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3475
+[2026-07-23 12:09:27.390] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3474
+[2026-07-23 12:09:27.391] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3478
+[2026-07-23 12:09:27.391] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3479
+[2026-07-23 12:09:27.391] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3483
+[2026-07-23 12:09:27.391] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3482
+[2026-07-23 12:09:27.391] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3484
+[2026-07-23 12:09:27.392] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3481
+[2026-07-23 12:09:27.397] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3488
+[2026-07-23 12:09:27.398] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3492
+[2026-07-23 12:09:27.399] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3485
+[2026-07-23 12:09:27.399] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3489
+[2026-07-23 12:09:27.399] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3486
+[2026-07-23 12:09:27.399] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3496
+[2026-07-23 12:09:27.399] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3487
+[2026-07-23 12:09:27.399] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3493
+[2026-07-23 12:09:27.400] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3490
+[2026-07-23 12:09:27.400] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3500
+[2026-07-23 12:09:27.400] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3494
+[2026-07-23 12:09:27.401] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3498
+[2026-07-23 12:09:27.401] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3491
+[2026-07-23 12:09:27.401] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3495
+[2026-07-23 12:09:27.401] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3497
+[2026-07-23 12:09:27.401] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3499
+[2026-07-23 12:09:27.406] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3504
+[2026-07-23 12:09:27.406] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3508
+[2026-07-23 12:09:27.407] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3502
+[2026-07-23 12:09:27.407] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3506
+[2026-07-23 12:09:27.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3503
+[2026-07-23 12:09:27.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3501
+[2026-07-23 12:09:27.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3505
+[2026-07-23 12:09:27.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3509
+[2026-07-23 12:09:27.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3512
+[2026-07-23 12:09:27.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3516
+[2026-07-23 12:09:27.409] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3510
+[2026-07-23 12:09:27.410] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3514
+[2026-07-23 12:09:27.410] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3507
+[2026-07-23 12:09:27.411] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3513
+[2026-07-23 12:09:27.411] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3511
+[2026-07-23 12:09:27.411] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3515
+[2026-07-23 12:09:27.414] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3520
+[2026-07-23 12:09:27.416] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3524
+[2026-07-23 12:09:27.416] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3518
+[2026-07-23 12:09:27.416] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3528
+[2026-07-23 12:09:27.416] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3522
+[2026-07-23 12:09:27.416] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3517
+[2026-07-23 12:09:27.417] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3532
+[2026-07-23 12:09:27.417] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3521
+[2026-07-23 12:09:27.417] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3519
+[2026-07-23 12:09:27.417] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3526
+[2026-07-23 12:09:27.418] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3525
+[2026-07-23 12:09:27.418] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3530
+[2026-07-23 12:09:27.419] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3523
+[2026-07-23 12:09:27.419] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3527
+[2026-07-23 12:09:27.420] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3529
+[2026-07-23 12:09:27.421] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3531
+[2026-07-23 12:09:27.423] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3536
+[2026-07-23 12:09:27.424] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3540
+[2026-07-23 12:09:27.424] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3534
+[2026-07-23 12:09:27.424] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3533
+[2026-07-23 12:09:27.426] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3544
+[2026-07-23 12:09:27.426] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3538
+[2026-07-23 12:09:27.426] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3548
+[2026-07-23 12:09:27.427] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3537
+[2026-07-23 12:09:27.427] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3535
+[2026-07-23 12:09:27.427] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3542
+[2026-07-23 12:09:27.428] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3539
+[2026-07-23 12:09:27.428] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3546
+[2026-07-23 12:09:27.428] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3543
+[2026-07-23 12:09:27.428] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3541
+[2026-07-23 12:09:27.429] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3545
+[2026-07-23 12:09:27.430] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3547
+[2026-07-23 12:09:27.431] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3552
+[2026-07-23 12:09:27.432] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3556
+[2026-07-23 12:09:27.433] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3549
+[2026-07-23 12:09:27.434] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3550
+[2026-07-23 12:09:27.435] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3554
+[2026-07-23 12:09:27.435] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3553
+[2026-07-23 12:09:27.435] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3551
+[2026-07-23 12:09:27.436] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3555
+[2026-07-23 12:09:27.436] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3557
+[2026-07-23 12:09:27.436] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3559
+[2026-07-23 12:09:27.438] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3558
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3560
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3561
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3562
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3565
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3567
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3566
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3563
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3564
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3569
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3568
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3571
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3575
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3570
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3572
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3573
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3574
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3576
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3582
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3578
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3577
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3581
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3579
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3588
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3580
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3589
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3584
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3583
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3590
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3586
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3591
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3587
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3585
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3596
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3592
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3593
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3594
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3595
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3597
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3598
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3599
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3602
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3603
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3600
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3604
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3605
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3606
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3601
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3608
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3609
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3610
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3611
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3607
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3613
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3612
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3615
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3614
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3616
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3617
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3618
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3620
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3619
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3621
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3622
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3623
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3624
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3625
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3626
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3627
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3629
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3631
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3632
+[2026-07-23 12:09:27.470] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3634
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3633
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3635
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3636
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3644
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3639
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3628
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3637
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3638
+[2026-07-23 12:09:27.472] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3630
+[2026-07-23 12:09:27.473] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3646
+[2026-07-23 12:09:27.473] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3648
+[2026-07-23 12:09:27.473] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3640
+[2026-07-23 12:09:27.473] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3641
+[2026-07-23 12:09:27.473] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3642
+[2026-07-23 12:09:27.473] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3647
+[2026-07-23 12:09:27.473] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3649
+[2026-07-23 12:09:27.474] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3653
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3651
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3656
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3650
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3654
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3643
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3662
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3666
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3645
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3663
+[2026-07-23 12:09:27.475] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3652
+[2026-07-23 12:09:27.476] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3658
+[2026-07-23 12:09:27.476] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3655
+[2026-07-23 12:09:27.476] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3659
+[2026-07-23 12:09:27.476] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3657
+[2026-07-23 12:09:27.476] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3664
+[2026-07-23 12:09:27.477] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3669
+[2026-07-23 12:09:27.477] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3670
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3665
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3660
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3679
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3681
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3668
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3667
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3674
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3677
+[2026-07-23 12:09:27.478] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3661
+[2026-07-23 12:09:27.479] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3671
+[2026-07-23 12:09:27.479] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3673
+[2026-07-23 12:09:27.479] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3678
+[2026-07-23 12:09:27.479] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3672
+[2026-07-23 12:09:27.479] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3680
+[2026-07-23 12:09:27.480] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3684
+[2026-07-23 12:09:27.480] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3682
+[2026-07-23 12:09:27.480] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3686
+[2026-07-23 12:09:27.480] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3691
+[2026-07-23 12:09:27.480] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3683
+[2026-07-23 12:09:27.481] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3694
+[2026-07-23 12:09:27.481] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3693
+[2026-07-23 12:09:27.481] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3675
+[2026-07-23 12:09:27.481] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3676
+[2026-07-23 12:09:27.481] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3685
+[2026-07-23 12:09:27.481] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3695
+[2026-07-23 12:09:27.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3699
+[2026-07-23 12:09:27.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3688
+[2026-07-23 12:09:27.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3687
+[2026-07-23 12:09:27.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3689
+[2026-07-23 12:09:27.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3696
+[2026-07-23 12:09:27.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3698
+[2026-07-23 12:09:27.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3702
+[2026-07-23 12:09:27.483] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3697
+[2026-07-23 12:09:27.483] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3700
+[2026-07-23 12:09:27.483] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3711
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3706
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3690
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3709
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3701
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3705
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3713
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3718
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3692
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3703
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3712
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3704
+[2026-07-23 12:09:27.484] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3710
+[2026-07-23 12:09:27.485] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3715
+[2026-07-23 12:09:27.486] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3714
+[2026-07-23 12:09:27.486] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3716
+[2026-07-23 12:09:27.486] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3720
+[2026-07-23 12:09:27.486] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3721
+[2026-07-23 12:09:27.487] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3717
+[2026-07-23 12:09:27.487] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3719
+[2026-07-23 12:09:27.487] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3707
+[2026-07-23 12:09:27.487] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3722
+[2026-07-23 12:09:27.487] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3708
+[2026-07-23 12:09:27.499] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3723
+[2026-07-23 12:09:27.499] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3724
+[2026-07-23 12:09:27.499] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3725
+[2026-07-23 12:09:27.499] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3726
+[2026-07-23 12:09:27.514] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3728
+[2026-07-23 12:09:27.514] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3727
+[2026-07-23 12:09:27.514] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3729
+[2026-07-23 12:09:27.514] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3730
+[2026-07-23 12:09:27.515] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3734
+[2026-07-23 12:09:27.515] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3731
+[2026-07-23 12:09:27.515] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3733
+[2026-07-23 12:09:27.515] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3732
+[2026-07-23 12:09:27.530] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3735
+[2026-07-23 12:09:27.532] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3736
+[2026-07-23 12:09:27.533] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3737
+[2026-07-23 12:09:27.533] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3738
+[2026-07-23 12:09:27.537] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3739
+[2026-07-23 12:09:27.537] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3740
+[2026-07-23 12:09:27.538] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3741
+[2026-07-23 12:09:27.538] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3742
+[2026-07-23 12:09:27.538] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=3743
+[2026-07-23 12:09:27.538] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=3744
+[2026-07-23 12:09:27.539] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3745
+[2026-07-23 12:09:27.540] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3746
+[2026-07-23 12:09:27.543] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3747
+[2026-07-23 12:09:27.543] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3748
+[2026-07-23 12:09:27.544] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3749
+[2026-07-23 12:09:27.547] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3750
+[2026-07-23 12:09:27.547] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3751
+[2026-07-23 12:09:27.548] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=3752
+[2026-07-23 12:09:27.569] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:09:27.569] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:09:27.569] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:09:27.570] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:09:27.574] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-23 12:09:27.577] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-23 12:09:27.608] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-07-23 12:09:27.608] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=6627863552 bytes peak=9001088576 bytes reserved=0 bytes
+[2026-07-23 12:09:27.608] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:09:27.608] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=6288236544 bytes peak=7974783337 bytes reserved=0 bytes
+[2026-07-23 12:09:27.608] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=6105967360 bytes peak=8031655804 bytes reserved=0 bytes
+[2026-07-23 12:09:27.609] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-07-23 12:09:27.609] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=6627863552 bytes peak=9001088576 bytes reserved=0 bytes
+[2026-07-23 12:09:27.609] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:09:27.609] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=6288236544 bytes peak=7974783337 bytes reserved=0 bytes
+[2026-07-23 12:09:27.609] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=6105967360 bytes peak=8031655804 bytes reserved=0 bytes
+[2026-07-23 12:09:27.609] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-23 12:09:27.610] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-23 12:09:27.639] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-07-23 12:09:27.639] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=6627863552 bytes peak=9001088576 bytes reserved=0 bytes
+[2026-07-23 12:09:27.639] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:09:27.639] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=6288236544 bytes peak=7974783337 bytes reserved=0 bytes
+[2026-07-23 12:09:27.639] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=6105967360 bytes peak=8031655804 bytes reserved=0 bytes
+[2026-07-23 12:09:27.639] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-07-23 12:09:27.639] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=6627863552 bytes peak=9001088576 bytes reserved=0 bytes
+[2026-07-23 12:09:27.639] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:09:27.639] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=6288236544 bytes peak=7974783337 bytes reserved=0 bytes
+[2026-07-23 12:09:27.639] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=6105967360 bytes peak=8031655804 bytes reserved=0 bytes
+[2026-07-23 12:10:11.511] [info] [sirius_context.cpp:201] QueryBegin: SQL: with revenue_view as ( select l_suppkey as supplier_no, sum(l_extendedprice * (1 - l_discount)) as total_revenue from lineitem where l_shipdate >= date '1993-05-01' and l_shipdate < date '1993-08-01' group by l_suppkey ) select s.s_suppkey, s.s_name, s.s_address, s.s_phone, r.total_revenue from supplier s, revenue_view r where s.s_suppkey = r.supplier_no and r.total_revenue = ( select max(total_revenue) from revenue_view ) order by s.s_suppkey
+[2026-07-23 12:10:11.577] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 1 rows).
+[2026-07-23 12:10:11.577] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 300000 rows).
+[2026-07-23 12:10:11.579] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-23 12:10:11.582] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-23 12:10:11.582] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-23 12:10:11.597] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 1 rows).
+[2026-07-23 12:10:11.597] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 300000 rows).
+[2026-07-23 12:10:11.597] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=31)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=33)
+  Input: <- Pipeline #0 [on: PARTITION (id=33), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=32)
+  Input: <- Pipeline #1 [on: CONCAT (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=34) -> PROJECTION (id=16) -> HASH_GROUP_BY (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #4: PARTITION (id=35)
+  Input: <- Pipeline #3 [on: PARTITION (id=35), port: default, barrier: FULL]
+  Dependencies: Pipeline #3
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #5: MERGE_GROUP_BY (id=36)
+  Input: <- Pipeline #4 [on: MERGE_GROUP_BY (id=36), port: default, barrier: FULL]
+  Dependencies: Pipeline #4
+  Output: -> CTE [port: default, barrier: FULL]
+Pipeline #6: CTE (id=29)
+  Input: <- Pipeline #5 [on: CTE (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #5
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #7: PROJECTION (id=20) -> UNGROUPED_AGGREGATE (id=21)
+  Input: <- Pipeline #6 [on: PROJECTION (id=20), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #8: MERGE_AGGREGATE (id=37)
+  Input: <- Pipeline #7 [on: MERGE_AGGREGATE (id=37), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> UNGROUPED_AGGREGATE [port: default, barrier: FULL]
+Pipeline #9: UNGROUPED_AGGREGATE (id=22)
+  Input: <- Pipeline #8 [on: UNGROUPED_AGGREGATE (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #10: MERGE_AGGREGATE (id=38)
+  Input: <- Pipeline #9 [on: MERGE_AGGREGATE (id=38), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #11: PROJECTION (id=23)
+  Input: <- Pipeline #10 [on: PROJECTION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #12: PARTITION (id=40)
+  Input: <- Pipeline #11 [on: PARTITION (id=40), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #13: CONCAT (id=39)
+  Input: <- Pipeline #12 [on: CONCAT (id=39), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #14: PARTITION (id=42)
+  Input: <- Pipeline #6 [on: PARTITION (id=42), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #15: CONCAT (id=41)
+  Input: <- Pipeline #14 [on: CONCAT (id=41), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #14
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #16: HASH_JOIN (id=24)
+  Input: <- Pipeline #15 [on: HASH_JOIN (id=24), port: default, barrier: FULL]
+  Input: <- Pipeline #13 [on: HASH_JOIN (id=24), port: build, barrier: FULL]
+  Dependencies: Pipeline #13, Pipeline #15
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #17: PARTITION (id=44)
+  Input: <- Pipeline #16 [on: PARTITION (id=44), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #18: CONCAT (id=43)
+  Input: <- Pipeline #17 [on: CONCAT (id=43), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #17
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #19: HASH_JOIN (id=26) -> PROJECTION (id=27) -> ORDER_BY (id=28)
+  Input: <- Pipeline #18 [on: HASH_JOIN (id=26), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=26), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #18
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #20: SORT_SAMPLE (id=45) -> SORT_PARTITION (id=46)
+  Input: <- Pipeline #19 [on: SORT_SAMPLE (id=45), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #19
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #21: MERGE_SORT (id=47)
+  Input: <- Pipeline #20 [on: MERGE_SORT (id=47), port: default, barrier: FULL]
+  Dependencies: Pipeline #20
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #22: RESULT_COLLECTOR (id=30)
+  Input: <- Pipeline #21 [on: RESULT_COLLECTOR (id=30), port: default, barrier: FULL]
+  Dependencies: Pipeline #21
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                                                              
+│ Pipeline #22                │                                                              
+│ RESULT_COLLECTOR (id=30)    │                                                              
+│ Input(#21): FULL            │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #21                │                                                              
+│ MERGE_SORT (id=47)          │                                                              
+│ Input(#20): FULL            │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #20                │                                                              
+│ SORT_PARTITION (id=46)      │                                                              
+│ SORT_SAMPLE (id=45)         │                                                              
+│ Input(#19): PIPELINE        │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #19                │                                                              
+│ ORDER_BY (id=28)            │                                                              
+│ PROJECTION (id=27)          │                                                              
+│ HASH_JOIN (id=26)           │                                                              
+│   type: INNER               │                                                              
+│ Input(#18): FULL            │                                                              
+│ Input(#2): FULL             │                                                              
+└──────────────┬──────────────┘                                                              
+               ┌──────────────────────────────┐                                              
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #2                 ││ Pipeline #18                │                               
+│ CONCAT (id=32)              ││ CONCAT (id=43)              │                               
+│ Input(#1): PARTIAL          ││ Input(#17): PARTIAL         │                               
+└──────────────┬──────────────┘└──────────────┬──────────────┘                               
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #1                 ││ Pipeline #17                │                               
+│ PARTITION (id=33)           ││ PARTITION (id=44)           │                               
+│ Input(#0): FULL             ││ Input(#16): PARTIAL         │                               
+└──────────────┬──────────────┘└──────────────┬──────────────┘                               
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #0                 ││ Pipeline #16                │                               
+│ GPU_SCAN (id=31)            ││ HASH_JOIN (id=24)           │                               
+│                             ││   type: INNER               │                               
+│                             ││ Input(#15): FULL            │                               
+│                             ││ Input(#13): FULL            │                               
+└─────────────────────────────┘└──────────────┬──────────────┘                               
+                                              ┌──────────────────────────────┐               
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #13                ││ Pipeline #15                │
+                               │ CONCAT (id=39)              ││ CONCAT (id=41)              │
+                               │ Input(#12): PARTIAL         ││ Input(#14): PARTIAL         │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #12                ││ Pipeline #14                │
+                               │ PARTITION (id=40)           ││ PARTITION (id=42)           │
+                               │ Input(#11): FULL            ││ Input(#6): PARTIAL          │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #11                ││ (-> Pipeline #6)            │
+                               │ PROJECTION (id=23)          ││                             │
+                               │ Input(#10): FULL            ││                             │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #10                │                               
+                               │ MERGE_AGGREGATE (id=38)     │                               
+                               │ Input(#9): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #9                 │                               
+                               │ UNGROUPED_AGGREGATE (id=22) │                               
+                               │ Input(#8): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #8                 │                               
+                               │ MERGE_AGGREGATE (id=37)     │                               
+                               │ Input(#7): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #7                 │                               
+                               │ UNGROUPED_AGGREGATE (id=21) │                               
+                               │ PROJECTION (id=20)          │                               
+                               │ Input(#6): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #6                 │                               
+                               │ CTE (id=29)                 │                               
+                               │ Input(#5): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #5                 │                               
+                               │ MERGE_GROUP_BY (id=36)      │                               
+                               │ Input(#4): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #4                 │                               
+                               │ PARTITION (id=35)           │                               
+                               │ Input(#3): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #3                 │                               
+                               │ HASH_GROUP_BY (id=17)       │                               
+                               │ PROJECTION (id=16)          │                               
+                               │ GPU_SCAN (id=34)            │                               
+                               └─────────────────────────────┘                               
+
+[2026-07-23 12:10:11.597] [info] [:] [sirius_scan_manager] assigned pinned entry 'supplier' to operator '31'
+[2026-07-23 12:10:11.597] [info] [:] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '34'
+[2026-07-23 12:10:11.597] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9981
+[2026-07-23 12:10:11.598] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9982
+[2026-07-23 12:10:11.599] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9983
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=9985
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9984
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=9986
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=9987
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9988
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=9990
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=9989
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=9991
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9992
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=9993
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=9994
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=9995
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9996
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=9997
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=9998
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10001
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10000
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=9999
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10002
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10003
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10007
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10004
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10006
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10010
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10008
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10011
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10012
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10005
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10009
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10014
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10013
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10017
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10015
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10018
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10019
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10022
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10021
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10016
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10023
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10020
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10025
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10024
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10028
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10026
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10029
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10030
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10027
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10034
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10033
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10031
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10038
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10035
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10037
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10032
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10039
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10036
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10042
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10041
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10043
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10040
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10046
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10045
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10044
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10050
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10047
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10051
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10049
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10048
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10053
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10054
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10052
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10057
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10056
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10055
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10058
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10059
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10060
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10061
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10062
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10063
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10064
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10067
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10066
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10071
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10075
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10070
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10068
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10074
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10065
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10069
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10072
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10078
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10073
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10079
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10076
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10077
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10081
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10080
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10083
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10084
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10082
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10086
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10085
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10087
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10088
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10089
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10090
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10091
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10092
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10093
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10095
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10094
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10096
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10097
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10098
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10099
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10100
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10103
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10102
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10107
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10106
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10104
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10101
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10110
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10105
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10108
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10114
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10112
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10109
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10113
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10116
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10111
+[2026-07-23 12:10:11.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10115
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10117
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10119
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10118
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10122
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10120
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10121
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10123
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10124
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10125
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10126
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10127
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10128
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10129
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10130
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10131
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10132
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10133
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10134
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10135
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10136
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10138
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10137
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10139
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10140
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10141
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10142
+[2026-07-23 12:10:11.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10143
+[2026-07-23 12:10:11.609] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10144
+[2026-07-23 12:10:11.610] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10146
+[2026-07-23 12:10:11.610] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10145
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10147
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10148
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10149
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10153
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10152
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10150
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10155
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10156
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10151
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10160
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10161
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10158
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10162
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10159
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10165
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10163
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10154
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10164
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10157
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10169
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10166
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10171
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10167
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10168
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10170
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10173
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10172
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10174
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10175
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10176
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10177
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10178
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10179
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10180
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10181
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10182
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10183
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10189
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10186
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10191
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10185
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10190
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10188
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10184
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10187
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10192
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10194
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10193
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10195
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10196
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10197
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10198
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10200
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10199
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10201
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10202
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10205
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10207
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10203
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10206
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10204
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10210
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10208
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10211
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10212
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10209
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10213
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10214
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10215
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10219
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10216
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10217
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10218
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10221
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10220
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10222
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10223
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10224
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10225
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10226
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10227
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10228
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10229
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10230
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10231
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10232
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10233
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10234
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10235
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10236
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10237
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10238
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10240
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10239
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10242
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10241
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10244
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10243
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10245
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10246
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10247
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10248
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10249
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10250
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10251
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10252
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10253
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10254
+[2026-07-23 12:10:11.687] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10255
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10256
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10257
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10258
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10259
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10260
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10261
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10262
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10263
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10264
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10265
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10266
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10267
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10268
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10269
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10270
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10271
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10272
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10273
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10274
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10275
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10277
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10278
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10279
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10276
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10280
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10281
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10282
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10283
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10284
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10287
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10285
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10286
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10288
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10291
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10290
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10289
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10293
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10292
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10294
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10295
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10296
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10297
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10298
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10299
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10300
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10302
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10303
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10304
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10306
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10308
+[2026-07-23 12:10:11.688] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10309
+[2026-07-23 12:10:11.690] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10301
+[2026-07-23 12:10:11.690] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10307
+[2026-07-23 12:10:11.690] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10305
+[2026-07-23 12:10:11.715] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10310
+[2026-07-23 12:10:11.715] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10311
+[2026-07-23 12:10:11.715] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10312
+[2026-07-23 12:10:11.715] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10313
+[2026-07-23 12:10:11.729] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10314
+[2026-07-23 12:10:11.729] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10316
+[2026-07-23 12:10:11.729] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10317
+[2026-07-23 12:10:11.729] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10315
+[2026-07-23 12:10:11.730] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10319
+[2026-07-23 12:10:11.730] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10320
+[2026-07-23 12:10:11.730] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10321
+[2026-07-23 12:10:11.730] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10318
+[2026-07-23 12:10:11.731] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10322
+[2026-07-23 12:10:11.731] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10323
+[2026-07-23 12:10:11.732] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10324
+[2026-07-23 12:10:11.732] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10325
+[2026-07-23 12:10:11.732] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10326
+[2026-07-23 12:10:11.732] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10327
+[2026-07-23 12:10:11.733] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=10329
+[2026-07-23 12:10:11.733] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10330
+[2026-07-23 12:10:11.733] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10331
+[2026-07-23 12:10:11.733] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=10328
+[2026-07-23 12:10:11.733] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10332
+[2026-07-23 12:10:11.734] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10333
+[2026-07-23 12:10:11.735] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10334
+[2026-07-23 12:10:11.735] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10335
+[2026-07-23 12:10:11.735] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10336
+[2026-07-23 12:10:11.738] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10337
+[2026-07-23 12:10:11.738] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10338
+[2026-07-23 12:10:11.738] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=10339
+[2026-07-23 12:10:11.759] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:10:11.759] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:10:11.759] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:10:11.760] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:10:11.764] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-23 12:10:11.768] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-23 12:10:11.793] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=74448896 bytes free_blocks=5051
+[2026-07-23 12:10:11.793] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=6627863552 bytes peak=10486366144 bytes reserved=0 bytes
+[2026-07-23 12:10:11.793] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:10:11.793] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=6288236544 bytes peak=8674252864 bytes reserved=0 bytes
+[2026-07-23 12:10:11.793] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=6105967360 bytes peak=8031655804 bytes reserved=0 bytes
+[2026-07-23 12:10:11.795] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=74448896 bytes free_blocks=5051
+[2026-07-23 12:10:11.795] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=6627863552 bytes peak=10486366144 bytes reserved=0 bytes
+[2026-07-23 12:10:11.795] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:10:11.795] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=6288236544 bytes peak=8674252864 bytes reserved=0 bytes
+[2026-07-23 12:10:11.795] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=6105967360 bytes peak=8031655804 bytes reserved=0 bytes
+[2026-07-23 12:10:11.795] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-23 12:10:11.795] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-23 12:10:11.824] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=74448896 bytes free_blocks=5051
+[2026-07-23 12:10:11.824] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=6627863552 bytes peak=10486366144 bytes reserved=0 bytes
+[2026-07-23 12:10:11.824] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:10:11.824] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=6288236544 bytes peak=8674252864 bytes reserved=0 bytes
+[2026-07-23 12:10:11.824] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=6105967360 bytes peak=8031655804 bytes reserved=0 bytes
+[2026-07-23 12:10:11.825] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=74448896 bytes free_blocks=5051
+[2026-07-23 12:10:11.825] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=6627863552 bytes peak=10486366144 bytes reserved=0 bytes
+[2026-07-23 12:10:11.825] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:10:11.825] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=6288236544 bytes peak=8674252864 bytes reserved=0 bytes
+[2026-07-23 12:10:11.825] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=6105967360 bytes peak=8031655804 bytes reserved=0 bytes
+[2026-07-23 12:10:57.088] [info] [sirius_context.cpp:201] QueryBegin: SQL: with revenue_view as ( select l_suppkey as supplier_no, sum(l_extendedprice * (1 - l_discount)) as total_revenue from lineitem where l_shipdate >= date '1993-05-01' and l_shipdate < date '1993-08-01' group by l_suppkey ) select s.s_suppkey, s.s_name, s.s_address, s.s_phone, r.total_revenue from supplier s, revenue_view r where s.s_suppkey = r.supplier_no and r.total_revenue = ( select max(total_revenue) from revenue_view ) order by s.s_suppkey
+[2026-07-23 12:10:57.151] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 1 rows).
+[2026-07-23 12:10:57.151] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 300000 rows).
+[2026-07-23 12:10:57.154] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-23 12:10:57.156] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-23 12:10:57.157] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-23 12:10:57.172] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 1 rows).
+[2026-07-23 12:10:57.172] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 300000 rows).
+[2026-07-23 12:10:57.172] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=31)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=33)
+  Input: <- Pipeline #0 [on: PARTITION (id=33), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=32)
+  Input: <- Pipeline #1 [on: CONCAT (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=34) -> PROJECTION (id=16) -> HASH_GROUP_BY (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #4: PARTITION (id=35)
+  Input: <- Pipeline #3 [on: PARTITION (id=35), port: default, barrier: FULL]
+  Dependencies: Pipeline #3
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #5: MERGE_GROUP_BY (id=36)
+  Input: <- Pipeline #4 [on: MERGE_GROUP_BY (id=36), port: default, barrier: FULL]
+  Dependencies: Pipeline #4
+  Output: -> CTE [port: default, barrier: FULL]
+Pipeline #6: CTE (id=29)
+  Input: <- Pipeline #5 [on: CTE (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #5
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #7: PROJECTION (id=20) -> UNGROUPED_AGGREGATE (id=21)
+  Input: <- Pipeline #6 [on: PROJECTION (id=20), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #8: MERGE_AGGREGATE (id=37)
+  Input: <- Pipeline #7 [on: MERGE_AGGREGATE (id=37), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> UNGROUPED_AGGREGATE [port: default, barrier: FULL]
+Pipeline #9: UNGROUPED_AGGREGATE (id=22)
+  Input: <- Pipeline #8 [on: UNGROUPED_AGGREGATE (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #10: MERGE_AGGREGATE (id=38)
+  Input: <- Pipeline #9 [on: MERGE_AGGREGATE (id=38), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #11: PROJECTION (id=23)
+  Input: <- Pipeline #10 [on: PROJECTION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #12: PARTITION (id=40)
+  Input: <- Pipeline #11 [on: PARTITION (id=40), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #13: CONCAT (id=39)
+  Input: <- Pipeline #12 [on: CONCAT (id=39), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #14: PARTITION (id=42)
+  Input: <- Pipeline #6 [on: PARTITION (id=42), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #15: CONCAT (id=41)
+  Input: <- Pipeline #14 [on: CONCAT (id=41), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #14
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #16: HASH_JOIN (id=24)
+  Input: <- Pipeline #15 [on: HASH_JOIN (id=24), port: default, barrier: FULL]
+  Input: <- Pipeline #13 [on: HASH_JOIN (id=24), port: build, barrier: FULL]
+  Dependencies: Pipeline #13, Pipeline #15
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #17: PARTITION (id=44)
+  Input: <- Pipeline #16 [on: PARTITION (id=44), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #18: CONCAT (id=43)
+  Input: <- Pipeline #17 [on: CONCAT (id=43), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #17
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #19: HASH_JOIN (id=26) -> PROJECTION (id=27) -> ORDER_BY (id=28)
+  Input: <- Pipeline #18 [on: HASH_JOIN (id=26), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=26), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #18
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #20: SORT_SAMPLE (id=45) -> SORT_PARTITION (id=46)
+  Input: <- Pipeline #19 [on: SORT_SAMPLE (id=45), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #19
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #21: MERGE_SORT (id=47)
+  Input: <- Pipeline #20 [on: MERGE_SORT (id=47), port: default, barrier: FULL]
+  Dependencies: Pipeline #20
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #22: RESULT_COLLECTOR (id=30)
+  Input: <- Pipeline #21 [on: RESULT_COLLECTOR (id=30), port: default, barrier: FULL]
+  Dependencies: Pipeline #21
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                                                              
+│ Pipeline #22                │                                                              
+│ RESULT_COLLECTOR (id=30)    │                                                              
+│ Input(#21): FULL            │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #21                │                                                              
+│ MERGE_SORT (id=47)          │                                                              
+│ Input(#20): FULL            │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #20                │                                                              
+│ SORT_PARTITION (id=46)      │                                                              
+│ SORT_SAMPLE (id=45)         │                                                              
+│ Input(#19): PIPELINE        │                                                              
+└──────────────┬──────────────┘                                                              
+               │                                                                             
+┌─────────────────────────────┐                                                              
+│ Pipeline #19                │                                                              
+│ ORDER_BY (id=28)            │                                                              
+│ PROJECTION (id=27)          │                                                              
+│ HASH_JOIN (id=26)           │                                                              
+│   type: INNER               │                                                              
+│ Input(#18): FULL            │                                                              
+│ Input(#2): FULL             │                                                              
+└──────────────┬──────────────┘                                                              
+               ┌──────────────────────────────┐                                              
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #2                 ││ Pipeline #18                │                               
+│ CONCAT (id=32)              ││ CONCAT (id=43)              │                               
+│ Input(#1): PARTIAL          ││ Input(#17): PARTIAL         │                               
+└──────────────┬──────────────┘└──────────────┬──────────────┘                               
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #1                 ││ Pipeline #17                │                               
+│ PARTITION (id=33)           ││ PARTITION (id=44)           │                               
+│ Input(#0): FULL             ││ Input(#16): PARTIAL         │                               
+└──────────────┬──────────────┘└──────────────┬──────────────┘                               
+               │                              │                                              
+┌─────────────────────────────┐┌─────────────────────────────┐                               
+│ Pipeline #0                 ││ Pipeline #16                │                               
+│ GPU_SCAN (id=31)            ││ HASH_JOIN (id=24)           │                               
+│                             ││   type: INNER               │                               
+│                             ││ Input(#15): FULL            │                               
+│                             ││ Input(#13): FULL            │                               
+└─────────────────────────────┘└──────────────┬──────────────┘                               
+                                              ┌──────────────────────────────┐               
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #13                ││ Pipeline #15                │
+                               │ CONCAT (id=39)              ││ CONCAT (id=41)              │
+                               │ Input(#12): PARTIAL         ││ Input(#14): PARTIAL         │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #12                ││ Pipeline #14                │
+                               │ PARTITION (id=40)           ││ PARTITION (id=42)           │
+                               │ Input(#11): FULL            ││ Input(#6): PARTIAL          │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                              │               
+                               ┌─────────────────────────────┐┌─────────────────────────────┐
+                               │ Pipeline #11                ││ (-> Pipeline #6)            │
+                               │ PROJECTION (id=23)          ││                             │
+                               │ Input(#10): FULL            ││                             │
+                               └──────────────┬──────────────┘└──────────────┬──────────────┘
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #10                │                               
+                               │ MERGE_AGGREGATE (id=38)     │                               
+                               │ Input(#9): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #9                 │                               
+                               │ UNGROUPED_AGGREGATE (id=22) │                               
+                               │ Input(#8): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #8                 │                               
+                               │ MERGE_AGGREGATE (id=37)     │                               
+                               │ Input(#7): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #7                 │                               
+                               │ UNGROUPED_AGGREGATE (id=21) │                               
+                               │ PROJECTION (id=20)          │                               
+                               │ Input(#6): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #6                 │                               
+                               │ CTE (id=29)                 │                               
+                               │ Input(#5): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #5                 │                               
+                               │ MERGE_GROUP_BY (id=36)      │                               
+                               │ Input(#4): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #4                 │                               
+                               │ PARTITION (id=35)           │                               
+                               │ Input(#3): FULL             │                               
+                               └──────────────┬──────────────┘                               
+                                              │                                              
+                               ┌─────────────────────────────┐                               
+                               │ Pipeline #3                 │                               
+                               │ HASH_GROUP_BY (id=17)       │                               
+                               │ PROJECTION (id=16)          │                               
+                               │ GPU_SCAN (id=34)            │                               
+                               └─────────────────────────────┘                               
+
+[2026-07-23 12:10:57.172] [info] [:] [sirius_scan_manager] assigned pinned entry 'supplier' to operator '31'
+[2026-07-23 12:10:57.172] [info] [:] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '34'
+[2026-07-23 12:10:57.173] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16560
+[2026-07-23 12:10:57.174] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16561
+[2026-07-23 12:10:57.175] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16562
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16565
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16563
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16567
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16566
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16564
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16569
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16568
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16570
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16572
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16571
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16574
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16573
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16576
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16577
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16575
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16578
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16579
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16580
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16581
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16582
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16583
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16584
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16585
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16586
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16587
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16588
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16589
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16590
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16591
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16592
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16593
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16597
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16594
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16596
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16595
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16599
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16600
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16598
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16603
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16604
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16602
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16601
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16607
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16605
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16609
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16606
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16608
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16610
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16612
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16611
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16613
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16614
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16615
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16616
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16618
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16622
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16617
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16619
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16621
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16620
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16624
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16626
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16625
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16623
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16627
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16628
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16630
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16629
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16632
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16633
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16634
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16631
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16635
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16636
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16637
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16638
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16639
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16640
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16641
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16642
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16643
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16644
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16645
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16646
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16647
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16648
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16649
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16650
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16651
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16652
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16653
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16654
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16655
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16656
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16657
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16658
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16659
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16660
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16661
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16662
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16663
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16664
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16665
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16666
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16667
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16668
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16669
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16670
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16671
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16672
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16673
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16674
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16675
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16676
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16677
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16678
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16679
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16680
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16681
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16682
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16683
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16685
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16684
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16686
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16687
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16688
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16689
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16690
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16691
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16692
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16693
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16694
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16695
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16696
+[2026-07-23 12:10:57.176] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16697
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16698
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16699
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16700
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16701
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16702
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16703
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16704
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16705
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16706
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16707
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16708
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16709
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16710
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16711
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16712
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16713
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16714
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16715
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16716
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16717
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16718
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16719
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16720
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16721
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16722
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16723
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16724
+[2026-07-23 12:10:57.177] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16725
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16727
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16730
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16728
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16733
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16731
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16738
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16732
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16737
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16734
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16740
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16743
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16726
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16745
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16739
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16729
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16741
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16735
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16748
+[2026-07-23 12:10:57.263] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16736
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16747
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16749
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16750
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16742
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16744
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16746
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16752
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16753
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16751
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16754
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16755
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16756
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16757
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16758
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16759
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16760
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16761
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16762
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16763
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16764
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16765
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16766
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16767
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16768
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16769
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16770
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16771
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16773
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16772
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16774
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16775
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16776
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16777
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16778
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16779
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16780
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16781
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16782
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16783
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16784
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16786
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16785
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16787
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16788
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16789
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16790
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16791
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16792
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16793
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16794
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16795
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16796
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16797
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16798
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16799
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16800
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16801
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16802
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16803
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16804
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16805
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16806
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16807
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16808
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16809
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16810
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16811
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16812
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16813
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16814
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16815
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16816
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16817
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16818
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16819
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16820
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16821
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16822
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16823
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16824
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16825
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16826
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16827
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16828
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16829
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16830
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16831
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16832
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16833
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16834
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16835
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16836
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16837
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16838
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16840
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16839
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16841
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16842
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16843
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16844
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16845
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16846
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16847
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16848
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16849
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16850
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16851
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16852
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16853
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16854
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16855
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16856
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16857
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16858
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16859
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16860
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16861
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16862
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16863
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16864
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16865
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16866
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16867
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16868
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16869
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16870
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16871
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16872
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16873
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16874
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16875
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16876
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16877
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16878
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16879
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16880
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16881
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16882
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16883
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16884
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16885
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16886
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16887
+[2026-07-23 12:10:57.264] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16888
+[2026-07-23 12:10:57.291] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16889
+[2026-07-23 12:10:57.291] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16890
+[2026-07-23 12:10:57.291] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16891
+[2026-07-23 12:10:57.291] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16892
+[2026-07-23 12:10:57.308] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16894
+[2026-07-23 12:10:57.308] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16896
+[2026-07-23 12:10:57.308] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16893
+[2026-07-23 12:10:57.308] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16895
+[2026-07-23 12:10:57.309] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16898
+[2026-07-23 12:10:57.309] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16897
+[2026-07-23 12:10:57.309] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16899
+[2026-07-23 12:10:57.309] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16900
+[2026-07-23 12:10:57.311] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16901
+[2026-07-23 12:10:57.311] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16902
+[2026-07-23 12:10:57.312] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16903
+[2026-07-23 12:10:57.312] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16904
+[2026-07-23 12:10:57.313] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16905
+[2026-07-23 12:10:57.313] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16906
+[2026-07-23 12:10:57.313] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16907
+[2026-07-23 12:10:57.313] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 3 task_id=16908
+[2026-07-23 12:10:57.313] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16909
+[2026-07-23 12:10:57.313] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 1 task_id=16910
+[2026-07-23 12:10:57.314] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16911
+[2026-07-23 12:10:57.315] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16912
+[2026-07-23 12:10:57.316] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16913
+[2026-07-23 12:10:57.316] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16914
+[2026-07-23 12:10:57.316] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16915
+[2026-07-23 12:10:57.318] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16916
+[2026-07-23 12:10:57.319] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16917
+[2026-07-23 12:10:57.319] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 2 task_id=16918
+[2026-07-23 12:10:57.339] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:10:57.340] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:10:57.340] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:10:57.341] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-23 12:10:57.345] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-23 12:10:57.348] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-23 12:10:57.380] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=74448896 bytes free_blocks=5051
+[2026-07-23 12:10:57.380] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=6627863552 bytes peak=10486366144 bytes reserved=0 bytes
+[2026-07-23 12:10:57.380] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:10:57.380] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=6288236544 bytes peak=8674252864 bytes reserved=0 bytes
+[2026-07-23 12:10:57.380] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=6105967360 bytes peak=8031657084 bytes reserved=0 bytes
+[2026-07-23 12:10:57.381] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=74448896 bytes free_blocks=5051
+[2026-07-23 12:10:57.381] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=6627863552 bytes peak=10486366144 bytes reserved=0 bytes
+[2026-07-23 12:10:57.381] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:10:57.381] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=6288236544 bytes peak=8674252864 bytes reserved=0 bytes
+[2026-07-23 12:10:57.381] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=6105967360 bytes peak=8031657084 bytes reserved=0 bytes
+[2026-07-23 12:10:57.381] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-23 12:10:57.382] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-23 12:10:57.410] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=74448896 bytes free_blocks=5051
+[2026-07-23 12:10:57.410] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=6627863552 bytes peak=10486366144 bytes reserved=0 bytes
+[2026-07-23 12:10:57.410] [info] [:] [gpu_pool] GPU:1 QueryEnd allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:10:57.410] [info] [:] [gpu_pool] GPU:2 QueryEnd allocated=6288236544 bytes peak=8674252864 bytes reserved=0 bytes
+[2026-07-23 12:10:57.410] [info] [:] [gpu_pool] GPU:3 QueryEnd allocated=6105967360 bytes peak=8031657084 bytes reserved=0 bytes
+[2026-07-23 12:10:57.411] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=74448896 bytes free_blocks=5051
+[2026-07-23 12:10:57.411] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=6627863552 bytes peak=10486366144 bytes reserved=0 bytes
+[2026-07-23 12:10:57.411] [info] [:] [gpu_pool] GPU:1 QueryBegin allocated=6375178752 bytes peak=8887801864 bytes reserved=0 bytes
+[2026-07-23 12:10:57.411] [info] [:] [gpu_pool] GPU:2 QueryBegin allocated=6288236544 bytes peak=8674252864 bytes reserved=0 bytes
+[2026-07-23 12:10:57.411] [info] [:] [gpu_pool] GPU:3 QueryBegin allocated=6105967360 bytes peak=8031657084 bytes reserved=0 bytes

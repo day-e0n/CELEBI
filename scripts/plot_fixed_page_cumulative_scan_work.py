@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from pathlib import Path
 
 
@@ -29,6 +30,16 @@ def to_int(value: object) -> int:
 def read_rows(path: Path) -> list[dict[str, str]]:
     with path.open(newline="") as f:
         return list(csv.DictReader(f))
+
+
+def read_reorder_metadata(query_summary_path: Path) -> dict[str, object]:
+    metadata_path = query_summary_path.parent.parent / "metadata.json"
+    if not metadata_path.exists():
+        return {}
+    try:
+        return json.loads(metadata_path.read_text())
+    except Exception:
+        return {}
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
@@ -62,6 +73,8 @@ def build_cumulative_rows(
     rows: list[dict[str, str]],
     baseline_series: str,
     paging_series: str,
+    reorder_elapsed_ms: float = 0.0,
+    reorder_policy: str = "none",
 ) -> list[dict[str, object]]:
     by_key = {(row.get("series", ""), to_int(row.get("position"))): row for row in rows}
     positions = sorted(
@@ -88,6 +101,8 @@ def build_cumulative_rows(
                 "query": baseline.get("query", f"q{position}"),
                 "baseline_series": baseline_series,
                 "paging_series": paging_series,
+                "reorder_policy": reorder_policy,
+                "reorder_elapsed_ms": reorder_elapsed_ms,
                 "baseline_scan_materialize_work_ms": baseline_scan,
                 "paging_scan_materialize_work_ms": paging_scan,
                 "scan_materialize_work_saved_ms": saved,
@@ -147,6 +162,19 @@ def plot_cumulative(
             end_x = x[-1]
             y_mid = (baseline[-1] + paging[-1]) / 2.0
             label = f"{abs(pct):.1f}% lower" if pct >= 0 else f"{abs(pct):.1f}% higher"
+            reorder_ms = to_float(final.get("reorder_elapsed_ms"))
+            if reorder_ms > 0:
+                ax.text(
+                    0.02,
+                    0.96,
+                    f"reorder: {reorder_ms:.2f} ms",
+                    transform=ax.transAxes,
+                    va="top",
+                    ha="left",
+                    fontsize=14,
+                    color="#2f2f2f",
+                    bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "#cccccc", "alpha": 0.9},
+                )
             ax.annotate(
                 label,
                 xy=(end_x, y_mid),
@@ -197,9 +225,18 @@ def main() -> int:
     all_rows: list[dict[str, object]] = []
     grouped: list[tuple[str, list[dict[str, object]]]] = []
     for workload_name, query_summary_path in args.workload:
-        query_rows = read_rows(Path(query_summary_path))
+        query_summary = Path(query_summary_path)
+        query_rows = read_rows(query_summary)
+        metadata = read_reorder_metadata(query_summary)
         baseline = pick_baseline(query_rows, args.baseline_series)
-        cumulative = build_cumulative_rows(workload_name, query_rows, baseline, args.paging_series)
+        cumulative = build_cumulative_rows(
+            workload_name,
+            query_rows,
+            baseline,
+            args.paging_series,
+            to_float(metadata.get("reorder_elapsed_ms")),
+            str(metadata.get("reorder_policy", "none")),
+        )
         if not cumulative:
             raise SystemExit(f"no cumulative rows for {workload_name}")
         grouped.append((workload_name, cumulative))

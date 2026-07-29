@@ -63,14 +63,6 @@ struct Config {
   // Whether to fall back to duckdb execution after an error is detected
   static bool ENABLE_DUCKDB_FALLBACK;
 
-  // wdy start
-  // Experimental: retain HASH_JOIN output batches after query-local repositories are cleared.
-  static bool JOIN_OUTPUT_RETENTION;
-  static uint64_t JOIN_OUTPUT_RETENTION_LIMIT_BYTES;
-  static uint64_t JOIN_OUTPUT_RETENTION_MAX_BATCH_BYTES;
-  static bool JOIN_OUTPUT_REUSE;
-  // wdy end
-
   // For duckdb scan task:
   //  - the default batch size
   //  - the default varchar size for estimating rows per batch

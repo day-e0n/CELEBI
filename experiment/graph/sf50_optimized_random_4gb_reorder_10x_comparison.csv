@@ -1,0 +1,3 @@
+comparison,baseline_series,target_series,baseline_total_ms,target_total_ms,speedup,baseline_load_ms,target_load_ms,load_reduction_ratio,paging_fixed_page_cached_gb,paging_cache_management_ms,paging_demand_load_ms,paging_page_backed_provider_count,paging_page_budget_evicted_pages,paging_page_directory_resident_gb_max
+cold_vs_hot,cold,hot,53014.98921797611,51782.912261654725,1.0237931182799416,49925.6611328125,48957.45968967014,0.019392861730298274,,,,,,
+hot_vs_paging,hot,paging,51782.912261654725,47873.12829339256,1.081669698798476,48957.45968967014,44949.137234157984,0.0818735792445109,0.0,0.0,0.0,34.0,0.0,0.9

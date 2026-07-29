@@ -94,18 +94,27 @@ struct cached_databatch_provider : public databatch_provider {
     } else if (_entry.tier == cucascade::memory::Tier::HOST) {
       _n_chunks = _entry.host_chunks.size();
     }
+
+    // Resolve every chunk now, while the caller (try_assign_cached_entries) still holds
+    // _pinned_entries_mutex -- see the matching comment on fixed_page_databatch_provider.
+    // get_next_batch() runs later, unlocked, on pipeline worker threads; reading _entry's
+    // vectors lazily there could race a concurrent insert_fixed_page_entry_from_view()
+    // append.
+    _prebuilt_batches.reserve(_n_chunks);
+    for (std::size_t index = 0; index < _n_chunks; ++index) {
+      if (_entry.tier == cucascade::memory::Tier::GPU) {
+        _prebuilt_batches.push_back(get_device_databatch(index));
+      } else if (_entry.tier == cucascade::memory::Tier::HOST) {
+        _prebuilt_batches.push_back(get_host_databatch(index));
+      }
+    }
   }
 
   std::shared_ptr<cucascade::data_batch> get_next_batch() override
   {
     auto index = _index.fetch_add(1);
-    if (index >= _n_chunks) { return nullptr; }
-    if (_entry.tier == cucascade::memory::Tier::GPU) {
-      return get_device_databatch(index);
-    } else if (_entry.tier == cucascade::memory::Tier::HOST) {
-      return get_host_databatch(index);
-    }
-    return nullptr;
+    if (index >= _prebuilt_batches.size()) { return nullptr; }
+    return _prebuilt_batches[index];
   }
 
  private:
@@ -144,6 +153,7 @@ struct cached_databatch_provider : public databatch_provider {
   std::vector<size_t> _column_indices;
   const pinned_entry& _entry;
   std::atomic<std::size_t> _index{0};
+  std::vector<std::shared_ptr<cucascade::data_batch>> _prebuilt_batches;
 };
 
 struct fixed_page_batch_range {
@@ -258,6 +268,18 @@ class fixed_page_databatch_provider final : public databatch_provider {
     });
     build_ranges();
     adjust_active_pages(1);
+    // Materialize every batch now, while the caller (try_assign_cached_entries) still
+    // holds _pinned_entries_mutex. get_next_batch() is invoked later from pipeline
+    // worker threads with no lock held; if it read _entry's containers lazily at that
+    // point, a concurrent insert_fixed_page_entry_from_view() append (which mutates
+    // those same std::vectors under the mutex) could race a vector reallocation
+    // against this read -- undefined behavior that surfaced as intermittent, exact
+    // duplicate rows. Resolving everything up front removes that read from the
+    // unsynchronized path entirely.
+    _prebuilt_batches.reserve(_ranges.size());
+    for (auto const& range : _ranges) {
+      _prebuilt_batches.push_back(build_device_databatch(range));
+    }
   }
 
   ~fixed_page_databatch_provider() override { adjust_active_pages(-1); }
@@ -272,8 +294,13 @@ class fixed_page_databatch_provider final : public databatch_provider {
   std::shared_ptr<cucascade::data_batch> get_next_batch() override
   {
     auto index = _index.fetch_add(1);
-    if (index >= _ranges.size()) { return nullptr; }
-    auto const& range = _ranges[index];
+    if (index >= _prebuilt_batches.size()) { return nullptr; }
+    return _prebuilt_batches[index];
+  }
+
+ private:
+  std::shared_ptr<cucascade::data_batch> build_device_databatch(fixed_page_batch_range const& range)
+  {
     if (!range.memory_space) { return nullptr; }
 
     if (range.memory_space->get_device_id() >= 0) {
@@ -284,7 +311,6 @@ class fixed_page_databatch_provider final : public databatch_provider {
     return get_device_databatch(range);
   }
 
- private:
   void adjust_active_pages(int delta) const
   {
     if (_ranges.empty() || delta == 0) { return; }
@@ -544,6 +570,7 @@ class fixed_page_databatch_provider final : public databatch_provider {
   std::size_t _covered_rows{0};
   pinned_entry const& _entry;
   std::atomic<std::size_t> _index{0};
+  std::vector<std::shared_ptr<cucascade::data_batch>> _prebuilt_batches;
 };
 
 bool has_chunk_backing_for_selected_columns(pinned_entry const& entry,
@@ -1483,6 +1510,17 @@ void apply_global_fixed_width_page_eviction_policies(
 {
   apply_global_fixed_width_page_budget(entries);
   apply_global_fixed_width_page_memory_pressure(entries, reason);
+
+  std::size_t true_total = 0;
+  for (auto const& [name, entry] : entries) {
+    for (auto const& [col_name, pages] : entry.fixed_width_pages_by_column) {
+      for (auto const& page : pages) {
+        if (page.state == fixed_width_page_state::resident) { true_total += page.num_bytes; }
+      }
+    }
+  }
+  SIRIUS_LOG_INFO("[bug-hunt] true_global_resident_bytes={} ({:.3f} GB) reason={} num_entries={}",
+                  true_total, true_total / 1e9, reason, entries.size());
 }
 
 // wdy end
@@ -1946,6 +1984,24 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
     if (!appendable) {
       _pinned_entries.erase(existing_it);
       existing_it = _pinned_entries.end();
+    } else if (static_cast<std::size_t>(view.num_rows()) == entry.num_rows) {
+      // Two concurrent scan tasks can both miss the cache for the same brand-new
+      // (name, filter) key, both read it from disk, and both land here to populate
+      // it. The first call legitimately creates the entry; without this guard the
+      // second call's "appendable" branch below treats its own from-scratch copy of
+      // the SAME rows as a genuinely new chunk and appends it, silently doubling
+      // entry.num_rows (and every future query's join/aggregate output) for that
+      // table. A real incremental chunk of a large table essentially never has a
+      // row count that exactly equals the running total accumulated so far, so
+      // this is a safe, cheap signature for "this is a duplicate of what we
+      // already have," not a genuinely new chunk to fold in.
+      SIRIUS_LOG_INFO(
+        "[fixed-page-cache] auto_cache_skip reason=duplicate_concurrent_populate table='{}' "
+        "incoming_rows={} existing_rows={}",
+        name,
+        view.num_rows(),
+        entry.num_rows);
+      return true;
     } else {
       auto const existing_bytes  = fixed_width_entry_logical_bytes(entry);
       auto const projected_bytes = existing_bytes + incoming_bytes;

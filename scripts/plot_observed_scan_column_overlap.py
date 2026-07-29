@@ -139,7 +139,6 @@ def plot_heatmap(
     path: Path,
     labels: list[str],
     matrix: dict[tuple[str, str], float | str],
-    title: str,
     cbar_label: str,
     fmt: str,
     cmap_name: str,
@@ -173,14 +172,14 @@ def plot_heatmap(
     fig, ax = plt.subplots(figsize=(13, 11))
     im = ax.imshow(arr, cmap=cmap, aspect="auto")
     cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label(cbar_label, fontsize=13)
+    cbar.set_label(cbar_label, fontsize=19)
+    cbar.ax.tick_params(labelsize=17)
     ax.set_xticks(range(len(labels)))
     ax.set_yticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=90, fontsize=11)
-    ax.set_yticklabels(labels, fontsize=11)
-    ax.set_xlabel("Second query (Qj)", fontsize=13)
-    ax.set_ylabel("Previous query (Qi)", fontsize=13)
-    ax.set_title(title, fontsize=16)
+    ax.set_xticklabels(labels, rotation=90, fontsize=17)
+    ax.set_yticklabels(labels, fontsize=17)
+    ax.set_xlabel("Second query (Qj)", fontsize=19)
+    ax.set_ylabel("Previous query (Qi)", fontsize=19)
 
     threshold = max(finite) * 0.55 if finite else 0.0
     for i in range(arr.shape[0]):
@@ -192,7 +191,8 @@ def plot_heatmap(
             ax.text(j, i, format(value, fmt), ha="center", va="center", fontsize=7, color=color)
 
     fig.tight_layout()
-    fig.savefig(path, dpi=180)
+    fig.savefig(path, dpi=600)
+    fig.savefig(path.with_suffix(".pdf"))
     plt.close(fig)
 
 
@@ -280,7 +280,6 @@ def main() -> int:
             args.output_dir / f"{args.prefix}_overlap_column_count_heatmap.png",
             labels,
             count_matrix,
-            "Observed GPU-loaded column overlap count",
             "Shared loaded columns",
             ".0f",
             "soft_blue",
@@ -289,7 +288,6 @@ def main() -> int:
             args.output_dir / f"{args.prefix}_overlap_column_ratio_heatmap.png",
             labels,
             ratio_matrix,
-            "Observed GPU-loaded column overlap ratio of second query",
             "Shared Qj loaded columns / Qj loaded columns",
             ".2f",
             "soft_teal",

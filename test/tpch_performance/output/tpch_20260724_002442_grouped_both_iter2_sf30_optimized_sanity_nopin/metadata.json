@@ -1,0 +1,17 @@
+{
+  "commit": "bcc79c885ebd63a4be025872afb754f42150ac0a",
+  "branch_name": "main",
+  "date": "2026-07-24T00:24:42",
+  "mode": "grouped",
+  "iterations": 2,
+  "engine": "both",
+  "data_source": "parquet",
+  "queries": [
+    "q1",
+    "q9",
+    "q21"
+  ],
+  "pin": "none",
+  "nsys_profile": false,
+  "runtime_file": "csv/runtimes.csv"
+}

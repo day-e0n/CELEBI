@@ -1,0 +1,15 @@
+{
+  "commit": "bcc79c885ebd63a4be025872afb754f42150ac0a",
+  "branch_name": "main",
+  "date": "2026-07-23T11:58:34",
+  "mode": "grouped",
+  "iterations": 2,
+  "engine": "gpu",
+  "data_source": "parquet",
+  "queries": [
+    "q1"
+  ],
+  "pin": "gpu",
+  "nsys_profile": false,
+  "runtime_file": "csv/runtimes.csv"
+}
