@@ -1,0 +1,2035 @@
+[2026-07-30 14:27:30.663] [info] [sirius_context.cpp:957] Loaded Sirius configuration from file: /home/dy1013/sirius_multi-gpu/experiment/perquery_breakdown_sf50/cold_hot/configs/q13.yaml
+[2026-07-30 14:27:30.693] [info] [telemetry_context.cpp:78] Telemetry context initialized (engine=siriusDB)
+[2026-07-30 14:27:30.693] [info] [sirius_context.cpp:296] SiriusContext: topology summary — 1 GPU(s), 1 NUMA node(s), host='hicys76'
+[2026-07-30 14:27:30.693] [info] [sirius_context.cpp:301]   GPU 0: NVIDIA RTX A5000 (numa=0, pci=00000000:CA:00.0)
+[2026-07-30 14:27:30.876] [info] [sirius_context.cpp:323] SiriusContext: 1 host memory space(s) created for 1 NUMA node(s)
+[2026-07-30 14:27:30.876] [info] [sirius_context.cpp:386] SiriusContext: skipping peer-access enable loop (num_gpus=1); single-GPU host has no pairs to enable
+[2026-07-30 14:27:30.896] [info] [sirius_context.cpp:436] SiriusContext: cuDF pinned memory resource configured (NUMA-aware, max slab 8192 B, fallback node=0)
+[2026-07-30 14:27:30.898] [info] [sirius_context.cpp:918] Connection opened.
+[2026-07-30 14:27:30.898] [info] [sirius_context.cpp:931] Extension loaded: sirius
+[2026-07-30 14:27:30.898] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:30.908] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-30 14:27:30.908] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-30 14:27:30.908] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-30 14:27:30.908] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-30 14:27:30.908] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec1')
+[2026-07-30 14:27:30.908] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:30.918] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-30 14:27:30.918] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-30 14:27:30.918] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-30 14:27:30.918] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-30 14:27:30.918] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:30.918] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:30.928] [info] [:] [host_pool] HOST:0 QueryEnd allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-30 14:27:30.928] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-30 14:27:30.928] [info] [:] [host_pool] HOST:0 QueryBegin allocated=67108864 bytes peak=67108864 bytes free_blocks=448
+[2026-07-30 14:27:30.928] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=0 bytes reserved=0 bytes
+[2026-07-30 14:27:30.928] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:30.930] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af11090).
+[2026-07-30 14:27:30.930] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:30.930] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:30.930] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:30.930] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:30.931] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af11090).
+[2026-07-30 14:27:30.931] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:30.931] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:30.931] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:30.931] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:30.932] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:30.932] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:30.932] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=0
+[2026-07-30 14:27:30.933] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:30.933] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:31.028] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=95511
+[2026-07-30 14:27:31.028] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=1
+[2026-07-30 14:27:31.028] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=2
+[2026-07-30 14:27:31.029] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3
+[2026-07-30 14:27:31.030] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4
+[2026-07-30 14:27:33.806] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=2775797
+[2026-07-30 14:27:33.806] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=2776056
+[2026-07-30 14:27:33.935] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5
+[2026-07-30 14:27:33.935] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=6
+[2026-07-30 14:27:33.935] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=7
+[2026-07-30 14:27:33.956] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=8
+[2026-07-30 14:27:34.128] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=9
+[2026-07-30 14:27:34.128] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=10
+[2026-07-30 14:27:34.128] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=11
+[2026-07-30 14:27:34.131] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=12
+[2026-07-30 14:27:34.131] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=13
+[2026-07-30 14:27:34.131] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=14
+[2026-07-30 14:27:34.136] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=15
+[2026-07-30 14:27:34.136] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=16
+[2026-07-30 14:27:34.136] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=17
+[2026-07-30 14:27:34.157] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:34.157] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:34.158] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:34.173] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:34.173] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:34.173] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:34.173] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:34.173] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec2')
+[2026-07-30 14:27:34.173] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:34.183] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:34.183] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:34.183] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:34.183] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:34.183] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:34.183] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:34.193] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:34.193] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:34.193] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:34.193] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:34.193] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:34.195] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af4c940).
+[2026-07-30 14:27:34.195] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:34.195] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:34.195] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:34.195] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:34.195] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af4c940).
+[2026-07-30 14:27:34.195] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:34.196] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:34.196] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:34.196] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:34.196] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:34.196] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:34.196] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:34.196] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:34.196] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=18
+[2026-07-30 14:27:34.265] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=67993
+[2026-07-30 14:27:34.265] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=19
+[2026-07-30 14:27:34.265] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=20
+[2026-07-30 14:27:34.266] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=21
+[2026-07-30 14:27:34.267] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=22
+[2026-07-30 14:27:37.012] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=2744587
+[2026-07-30 14:27:37.072] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=2805102
+[2026-07-30 14:27:37.136] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=23
+[2026-07-30 14:27:37.138] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=24
+[2026-07-30 14:27:37.138] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=25
+[2026-07-30 14:27:37.159] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=26
+[2026-07-30 14:27:37.297] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=27
+[2026-07-30 14:27:37.297] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=28
+[2026-07-30 14:27:37.298] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=29
+[2026-07-30 14:27:37.299] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=30
+[2026-07-30 14:27:37.300] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=31
+[2026-07-30 14:27:37.300] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=32
+[2026-07-30 14:27:37.300] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=33
+[2026-07-30 14:27:37.300] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=34
+[2026-07-30 14:27:37.300] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=35
+[2026-07-30 14:27:37.321] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:37.322] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:37.322] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:37.337] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:37.337] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:37.337] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:37.337] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:37.337] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec3')
+[2026-07-30 14:27:37.338] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:37.347] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:37.347] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:37.347] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:37.347] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:37.347] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:37.347] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:37.357] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:37.357] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:37.357] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:37.357] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:37.357] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:37.362] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af12cb0).
+[2026-07-30 14:27:37.362] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:37.362] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:37.362] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:37.362] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:37.362] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af12cb0).
+[2026-07-30 14:27:37.362] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:37.362] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:37.362] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:37.362] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:37.363] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:37.363] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:37.363] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=36
+[2026-07-30 14:27:37.364] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:37.364] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:37.511] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=147290
+[2026-07-30 14:27:37.511] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=37
+[2026-07-30 14:27:37.512] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=38
+[2026-07-30 14:27:37.513] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=39
+[2026-07-30 14:27:37.513] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=40
+[2026-07-30 14:27:40.783] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=3269296
+[2026-07-30 14:27:40.783] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=3270610
+[2026-07-30 14:27:40.905] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=41
+[2026-07-30 14:27:40.907] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=42
+[2026-07-30 14:27:40.907] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=43
+[2026-07-30 14:27:40.928] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=44
+[2026-07-30 14:27:41.066] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=45
+[2026-07-30 14:27:41.066] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=46
+[2026-07-30 14:27:41.066] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=47
+[2026-07-30 14:27:41.068] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=48
+[2026-07-30 14:27:41.068] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=49
+[2026-07-30 14:27:41.068] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=50
+[2026-07-30 14:27:41.069] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=51
+[2026-07-30 14:27:41.069] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=52
+[2026-07-30 14:27:41.069] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=53
+[2026-07-30 14:27:41.090] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:41.090] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:41.091] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:41.104] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:41.104] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:41.105] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:41.105] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:41.105] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec4')
+[2026-07-30 14:27:41.105] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:41.114] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:41.114] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:41.115] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:41.115] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:41.115] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:41.115] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:41.125] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:41.125] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:41.125] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:41.125] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:41.125] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:41.129] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af75010).
+[2026-07-30 14:27:41.129] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:41.129] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:41.130] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:41.130] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:41.131] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af75010).
+[2026-07-30 14:27:41.131] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:41.132] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:41.133] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:41.133] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:41.133] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:41.133] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:41.133] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:41.133] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:41.133] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=54
+[2026-07-30 14:27:41.195] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=61301
+[2026-07-30 14:27:41.195] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=55
+[2026-07-30 14:27:41.195] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=56
+[2026-07-30 14:27:41.196] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=57
+[2026-07-30 14:27:41.197] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=58
+[2026-07-30 14:27:44.195] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=2998054
+[2026-07-30 14:27:44.255] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=3057879
+[2026-07-30 14:27:44.318] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=59
+[2026-07-30 14:27:44.321] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=60
+[2026-07-30 14:27:44.321] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=61
+[2026-07-30 14:27:44.342] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=62
+[2026-07-30 14:27:44.480] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=63
+[2026-07-30 14:27:44.480] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=64
+[2026-07-30 14:27:44.480] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=65
+[2026-07-30 14:27:44.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=66
+[2026-07-30 14:27:44.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=67
+[2026-07-30 14:27:44.482] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=68
+[2026-07-30 14:27:44.483] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=69
+[2026-07-30 14:27:44.483] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=70
+[2026-07-30 14:27:44.483] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=71
+[2026-07-30 14:27:44.504] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:44.504] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:44.505] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:44.515] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:44.515] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:44.515] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:44.515] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:44.515] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec5')
+[2026-07-30 14:27:44.515] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:44.525] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:44.525] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:44.525] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:44.525] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:44.525] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:44.525] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:44.535] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:44.535] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:44.535] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:44.535] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:44.535] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:44.538] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af90790).
+[2026-07-30 14:27:44.538] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:44.538] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:44.538] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:44.538] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:44.538] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af90790).
+[2026-07-30 14:27:44.538] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:44.538] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:44.539] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:44.539] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:44.539] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:44.539] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:44.539] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=72
+[2026-07-30 14:27:44.539] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:44.539] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:44.600] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=60895
+[2026-07-30 14:27:44.600] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=73
+[2026-07-30 14:27:44.601] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=74
+[2026-07-30 14:27:44.602] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=75
+[2026-07-30 14:27:44.602] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=76
+[2026-07-30 14:27:47.307] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=2704817
+[2026-07-30 14:27:47.367] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=2765005
+[2026-07-30 14:27:47.368] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=77
+[2026-07-30 14:27:47.433] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=78
+[2026-07-30 14:27:47.433] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=79
+[2026-07-30 14:27:47.455] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=80
+[2026-07-30 14:27:47.592] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=81
+[2026-07-30 14:27:47.592] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=82
+[2026-07-30 14:27:47.593] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=83
+[2026-07-30 14:27:47.595] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=84
+[2026-07-30 14:27:47.595] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=85
+[2026-07-30 14:27:47.595] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=86
+[2026-07-30 14:27:47.595] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=87
+[2026-07-30 14:27:47.595] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=88
+[2026-07-30 14:27:47.595] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=89
+[2026-07-30 14:27:47.616] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:47.617] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:47.617] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:47.633] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:47.633] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:47.634] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:47.634] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:47.634] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec6')
+[2026-07-30 14:27:47.635] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:47.643] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:47.643] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:47.643] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:47.643] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:47.643] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:47.644] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:47.653] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:47.653] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:47.654] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:47.654] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:47.654] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:47.656] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af3b080).
+[2026-07-30 14:27:47.656] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:47.656] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:47.656] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:47.656] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:47.657] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af3b080).
+[2026-07-30 14:27:47.657] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:47.657] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:47.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:47.657] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:47.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:47.657] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:47.658] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=90
+[2026-07-30 14:27:47.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:47.658] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:47.704] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=46353
+[2026-07-30 14:27:47.704] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=91
+[2026-07-30 14:27:47.705] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=92
+[2026-07-30 14:27:47.706] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=93
+[2026-07-30 14:27:47.706] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=94
+[2026-07-30 14:27:49.649] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=1943059
+[2026-07-30 14:27:49.710] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=2003998
+[2026-07-30 14:27:49.776] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=95
+[2026-07-30 14:27:49.778] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=96
+[2026-07-30 14:27:49.778] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=97
+[2026-07-30 14:27:49.801] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=98
+[2026-07-30 14:27:49.939] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=99
+[2026-07-30 14:27:49.939] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=100
+[2026-07-30 14:27:49.940] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=101
+[2026-07-30 14:27:49.942] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=102
+[2026-07-30 14:27:49.942] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=103
+[2026-07-30 14:27:49.942] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=104
+[2026-07-30 14:27:49.943] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=105
+[2026-07-30 14:27:49.943] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=106
+[2026-07-30 14:27:49.943] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=107
+[2026-07-30 14:27:49.964] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:49.964] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:49.965] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:49.978] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:49.978] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:49.979] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:49.979] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:49.979] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec7')
+[2026-07-30 14:27:49.980] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:49.989] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:49.989] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:49.989] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:49.989] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:49.989] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:49.989] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:49.999] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:49.999] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:49.999] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:49.999] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:49.999] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:50.001] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af5cf10).
+[2026-07-30 14:27:50.001] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:50.001] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:50.001] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:50.001] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:50.003] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af5cf10).
+[2026-07-30 14:27:50.003] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:50.004] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:50.004] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:50.004] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:50.005] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:50.005] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:50.005] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=108
+[2026-07-30 14:27:50.006] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:50.006] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:50.053] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=47384
+[2026-07-30 14:27:50.053] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=109
+[2026-07-30 14:27:50.053] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=110
+[2026-07-30 14:27:50.054] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=111
+[2026-07-30 14:27:50.054] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=112
+[2026-07-30 14:27:52.254] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=2199202
+[2026-07-30 14:27:52.254] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=2200309
+[2026-07-30 14:27:52.380] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=113
+[2026-07-30 14:27:52.382] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=114
+[2026-07-30 14:27:52.382] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=115
+[2026-07-30 14:27:52.404] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=116
+[2026-07-30 14:27:52.541] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=117
+[2026-07-30 14:27:52.542] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=118
+[2026-07-30 14:27:52.542] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=119
+[2026-07-30 14:27:52.544] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=120
+[2026-07-30 14:27:52.544] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=121
+[2026-07-30 14:27:52.544] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=122
+[2026-07-30 14:27:52.544] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=123
+[2026-07-30 14:27:52.544] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=124
+[2026-07-30 14:27:52.545] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=125
+[2026-07-30 14:27:52.565] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:52.566] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:52.566] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:52.574] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:52.574] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:52.574] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:52.574] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:52.574] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec8')
+[2026-07-30 14:27:52.575] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:52.584] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:52.584] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:52.584] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:52.584] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:52.584] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:52.584] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:52.594] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:52.594] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:52.595] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:52.595] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:52.595] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:52.597] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af18e60).
+[2026-07-30 14:27:52.597] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:52.597] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:52.597] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:52.598] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:52.598] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af18e60).
+[2026-07-30 14:27:52.598] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:52.598] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:52.599] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:52.599] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:52.599] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:52.599] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:52.599] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=126
+[2026-07-30 14:27:52.600] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:52.600] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:52.650] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=50361
+[2026-07-30 14:27:52.650] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=127
+[2026-07-30 14:27:52.651] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=128
+[2026-07-30 14:27:52.652] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=129
+[2026-07-30 14:27:52.652] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=130
+[2026-07-30 14:27:55.120] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=2467863
+[2026-07-30 14:27:55.180] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=2527336
+[2026-07-30 14:27:55.181] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=131
+[2026-07-30 14:27:55.246] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=132
+[2026-07-30 14:27:55.246] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=133
+[2026-07-30 14:27:55.267] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=134
+[2026-07-30 14:27:55.405] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=135
+[2026-07-30 14:27:55.405] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=136
+[2026-07-30 14:27:55.405] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=137
+[2026-07-30 14:27:55.407] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=138
+[2026-07-30 14:27:55.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=139
+[2026-07-30 14:27:55.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=140
+[2026-07-30 14:27:55.408] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=141
+[2026-07-30 14:27:55.409] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=142
+[2026-07-30 14:27:55.409] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=143
+[2026-07-30 14:27:55.429] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:55.430] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:55.430] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:55.437] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:55.437] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:55.437] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:55.437] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:55.437] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec9')
+[2026-07-30 14:27:55.438] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:55.447] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:55.447] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:55.447] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:55.447] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:55.447] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:55.447] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:55.457] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:55.457] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:55.458] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:55.458] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:55.458] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:55.460] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af60cf0).
+[2026-07-30 14:27:55.460] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:55.460] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:55.460] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:55.460] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:55.460] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x62626af60cf0).
+[2026-07-30 14:27:55.460] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:55.460] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:55.460] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:55.460] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:55.461] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:55.461] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:55.461] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=144
+[2026-07-30 14:27:55.462] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:55.462] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:55.605] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=143673
+[2026-07-30 14:27:55.605] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=145
+[2026-07-30 14:27:55.606] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=146
+[2026-07-30 14:27:55.607] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=147
+[2026-07-30 14:27:55.607] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=148
+[2026-07-30 14:27:58.679] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=3071899
+[2026-07-30 14:27:58.738] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=3131149
+[2026-07-30 14:27:58.808] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=149
+[2026-07-30 14:27:58.810] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=150
+[2026-07-30 14:27:58.810] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=151
+[2026-07-30 14:27:58.833] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=152
+[2026-07-30 14:27:58.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=153
+[2026-07-30 14:27:58.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=154
+[2026-07-30 14:27:58.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=155
+[2026-07-30 14:27:58.973] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=156
+[2026-07-30 14:27:58.973] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=157
+[2026-07-30 14:27:58.974] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=158
+[2026-07-30 14:27:58.974] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=159
+[2026-07-30 14:27:58.974] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=160
+[2026-07-30 14:27:58.974] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=161
+[2026-07-30 14:27:58.995] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:27:58.995] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:27:58.995] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:59.009] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:59.009] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:59.010] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:59.010] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:59.010] [info] [sirius_context.cpp:201] QueryBegin: SQL: CALL sirius_set_query_label('cold_hot_q13_exec10')
+[2026-07-30 14:27:59.011] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:59.019] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:59.019] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:59.019] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:59.019] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:59.019] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-07-30 14:27:59.020] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:27:59.029] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:59.029] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:59.030] [info] [:] [host_pool] HOST:0 QueryBegin allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:27:59.030] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:27:59.030] [info] [sirius_context.cpp:201] QueryBegin: SQL: select c_count, count(*) as custdist from ( select c.c_custkey, count(o.o_orderkey) from customer c left outer join orders o on c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%' group by c.c_custkey ) as orders (c_custkey, c_count) group by c_count order by custdist desc, c_count desc
+[2026-07-30 14:27:59.032] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x626268856f00).
+[2026-07-30 14:27:59.032] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:59.032] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-07-30 14:27:59.032] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-07-30 14:27:59.032] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-07-30 14:27:59.034] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x626268856f00).
+[2026-07-30 14:27:59.034] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 7500000 rows).
+[2026-07-30 14:27:59.034] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=17)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=19)
+  Input: <- Pipeline #0 [on: PARTITION (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=18)
+  Input: <- Pipeline #1 [on: CONCAT (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=20)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=22)
+  Input: <- Pipeline #3 [on: PARTITION (id=22), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=21)
+  Input: <- Pipeline #4 [on: CONCAT (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> PROJECTION (id=11) -> HASH_GROUP_BY (id=12)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=23)
+  Input: <- Pipeline #6 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #8: MERGE_GROUP_BY (id=24)
+  Input: <- Pipeline #7 [on: MERGE_GROUP_BY (id=24), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #9: PROJECTION (id=13) -> HASH_GROUP_BY (id=14)
+  Input: <- Pipeline #8 [on: PROJECTION (id=13), port: default, barrier: FULL]
+  Dependencies: Pipeline #8
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=25)
+  Input: <- Pipeline #9 [on: PARTITION (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #11: MERGE_GROUP_BY (id=26)
+  Input: <- Pipeline #10 [on: MERGE_GROUP_BY (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #10
+  Output: -> ORDER_BY [port: default, barrier: FULL]
+Pipeline #12: ORDER_BY (id=15)
+  Input: <- Pipeline #11 [on: ORDER_BY (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #11
+  Output: -> SORT_SAMPLE [port: default, barrier: PIPELINE]
+Pipeline #13: SORT_SAMPLE (id=27) -> SORT_PARTITION (id=28)
+  Input: <- Pipeline #12 [on: SORT_SAMPLE (id=27), port: default, barrier: PIPELINE]
+  Dependencies: Pipeline #12
+  Output: -> MERGE_SORT [port: default, barrier: FULL]
+Pipeline #14: MERGE_SORT (id=29)
+  Input: <- Pipeline #13 [on: MERGE_SORT (id=29), port: default, barrier: FULL]
+  Dependencies: Pipeline #13
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #15: RESULT_COLLECTOR (id=16)
+  Input: <- Pipeline #14 [on: RESULT_COLLECTOR (id=16), port: default, barrier: FULL]
+  Dependencies: Pipeline #14
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                            
+│ Pipeline #15             │                            
+│ RESULT_COLLECTOR (id=16) │                            
+│ Input(#14): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #14             │                            
+│ MERGE_SORT (id=29)       │                            
+│ Input(#13): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #13             │                            
+│ SORT_PARTITION (id=28)   │                            
+│ SORT_SAMPLE (id=27)      │                            
+│ Input(#12): PIPELINE     │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #12             │                            
+│ ORDER_BY (id=15)         │                            
+│ Input(#11): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #11             │                            
+│ MERGE_GROUP_BY (id=26)   │                            
+│ Input(#10): FULL         │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #10             │                            
+│ PARTITION (id=25)        │                            
+│ Input(#9): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #9              │                            
+│ HASH_GROUP_BY (id=14)    │                            
+│ PROJECTION (id=13)       │                            
+│ Input(#8): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #8              │                            
+│ MERGE_GROUP_BY (id=24)   │                            
+│ Input(#7): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #7              │                            
+│ PARTITION (id=23)        │                            
+│ Input(#6): FULL          │                            
+└────────────┬─────────────┘                            
+             │                                          
+┌──────────────────────────┐                            
+│ Pipeline #6              │                            
+│ HASH_GROUP_BY (id=12)    │                            
+│ PROJECTION (id=11)       │                            
+│ HASH_JOIN (id=10)        │                            
+│   type: RIGHT            │                            
+│ Input(#5): FULL          │                            
+│ Input(#2): FULL          │                            
+└────────────┬─────────────┘                            
+             ┌───────────────────────────┐              
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #2              ││ Pipeline #5              │
+│ CONCAT (id=18)           ││ CONCAT (id=21)           │
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #1              ││ Pipeline #4              │
+│ PARTITION (id=19)        ││ PARTITION (id=22)        │
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       │
+└────────────┬─────────────┘└────────────┬─────────────┘
+             │                           │              
+┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #0              ││ Pipeline #3              │
+│ GPU_SCAN (id=17)         ││ GPU_SCAN (id=20)         │
+└──────────────────────────┘└──────────────────────────┘
+
+[2026-07-30 14:27:59.034] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=30937500, cap=536870912
+[2026-07-30 14:27:59.034] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-07-30 14:27:59.035] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=488021878, cap=536870912
+[2026-07-30 14:27:59.035] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:59.035] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=162
+[2026-07-30 14:27:59.036] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=430728114, cap=536870912
+[2026-07-30 14:27:59.036] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-07-30 14:27:59.122] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/customer.parquet columns=c_custkey row_groups=0 compressed_bytes=30591972 uncompressed_bytes=30937500 output_rows=7500000 output_columns=1 split_count=1 duration_us=86216
+[2026-07-30 14:27:59.122] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=163
+[2026-07-30 14:27:59.122] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=164
+[2026-07-30 14:27:59.123] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=165
+[2026-07-30 14:27:59.124] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=166
+[2026-07-30 14:28:02.218] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=4,5,6,7 compressed_bytes=975583223 uncompressed_bytes=430728114 output_rows=35161479 output_columns=3 split_count=1 duration_us=3094278
+[2026-07-30 14:28:02.219] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized/orders.parquet columns=o_orderkey|o_custkey|o_comment row_groups=0,1,2,3 compressed_bytes=1104867179 uncompressed_bytes=488021878 output_rows=39838521 output_columns=3 split_count=1 duration_us=3095362
+[2026-07-30 14:28:02.341] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=167
+[2026-07-30 14:28:02.343] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=168
+[2026-07-30 14:28:02.343] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=169
+[2026-07-30 14:28:02.364] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=170
+[2026-07-30 14:28:02.501] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=171
+[2026-07-30 14:28:02.502] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=172
+[2026-07-30 14:28:02.502] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=173
+[2026-07-30 14:28:02.504] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=174
+[2026-07-30 14:28:02.504] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=175
+[2026-07-30 14:28:02.504] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=176
+[2026-07-30 14:28:02.504] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=177
+[2026-07-30 14:28:02.504] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=178
+[2026-07-30 14:28:02.505] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=179
+[2026-07-30 14:28:02.525] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-30 14:28:02.525] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-07-30 14:28:02.526] [info] [sirius_context.cpp:217] QueryEnd
+[2026-07-30 14:28:02.533] [info] [:] [host_pool] HOST:0 QueryEnd allocated=70254592 bytes peak=71303168 bytes free_blocks=445
+[2026-07-30 14:28:02.533] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=0 bytes peak=12053686784 bytes reserved=0 bytes
+[2026-07-30 14:28:02.533] [info] [sirius_context.cpp:924] Connection closed.
+[2026-07-30 14:28:02.535] [info] [task_scheduler.cpp:368] Task request channel closed, exiting management event loop.
+[2026-07-30 14:28:02.536] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop

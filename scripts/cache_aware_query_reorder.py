@@ -190,6 +190,38 @@ def sequence_overlap_summary(queries: Iterable[int], scope: str = "fixed_width")
     return SequenceOverlapSummary(shared, next_total, transitions, ratio)
 
 
+def worst_case_order(queries: Iterable[int], scope: str = "fixed_width") -> tuple[int, ...]:
+    """의도적으로 overlap이 최소가 되는 순서를 만든다 (`_build_greedy_overlap_path`의 반대).
+
+    각 단계에서 직전 쿼리와의 overlap ratio가 가장 낮은 후보를 고른다 -- CELEBI가
+    "reorder 전" 상태로 잡아야 할, 인접 쿼리끼리 최대한 안 겹치는 최악의 baseline
+    도착 순서를 만들 때 쓴다. 같은 템플릿(qnum) 반복도 최대한 서로 멀리 떨어뜨린다.
+    """
+
+    original = list(queries)
+    if len(original) <= 1:
+        return tuple(original)
+
+    positions = list(range(len(original)))
+    signatures = {pos: query_signature(q, scope) for pos, q in enumerate(original)}
+
+    path = [positions[0]]
+    remaining = positions[1:]
+    while remaining:
+        prev_sig = signatures[path[-1]]
+
+        def rank(pos: int) -> tuple[float, int, int]:
+            candidate = signatures[pos]
+            shared = len(prev_sig & candidate)
+            ratio = shared / len(candidate) if candidate else 0.0
+            return ratio, shared, pos
+
+        best = min(remaining, key=rank)
+        path.append(best)
+        remaining.remove(best)
+    return tuple(original[pos] for pos in path)
+
+
 def _touch_resident(
     resident_lru: list[ColumnKey],
     resident_set: set[ColumnKey],

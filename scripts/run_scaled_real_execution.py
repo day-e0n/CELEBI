@@ -36,7 +36,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(TPCH_DIR))
 from performance_test import open_connection  # noqa: E402
 from parse_qgen_streams import load_all_streams  # noqa: E402
-from cache_aware_query_reorder import ReorderConfig, reorder_query_sequence  # noqa: E402
+from cache_aware_query_reorder import ReorderConfig, reorder_query_sequence, worst_case_order  # noqa: E402
 
 NUM_STREAMS = 10
 
@@ -81,7 +81,7 @@ def reorder_with_streams(base_pairs: list[tuple[int, int]], keep_first: bool = T
 
 
 def make_env(condition: str, devices: str, log_dir: Path, config_path: Path,
-             cache_budget: str = "3GB") -> dict[str, str]:
+             cache_budget: str = "3GB", min_free_bytes_per_gpu: str = "4096MB") -> dict[str, str]:
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = devices
     env["SIRIUS_CONFIG_FILE"] = str(config_path)
@@ -104,12 +104,14 @@ def make_env(condition: str, devices: str, log_dir: Path, config_path: Path,
         env["SIRIUS_FIXED_PAGE_BACKED_PROVIDER"] = "1"
         env["SIRIUS_FIXED_PAGE_HYBRID_PROVIDER"] = "1"
         env["SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU"] = cache_budget
+        if min_free_bytes_per_gpu:
+            env["SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU"] = min_free_bytes_per_gpu
     else:
         raise ValueError(condition)
     return env
 
 
-def write_config(path: Path, telemetry_dir: Path) -> None:
+def write_config(path: Path, telemetry_dir: Path, gpu_usage_limit: str = "20GB") -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     telemetry_dir.mkdir(parents=True, exist_ok=True)
     # root filesystem is nearly full (17GB free) -- downgrade scratch space
@@ -123,7 +125,7 @@ def write_config(path: Path, telemetry_dir: Path) -> None:
         "    num_gpus: 1\n"
         "  memory:\n"
         "    gpu:\n"
-        "      usage_limit_bytes: 20GB\n"
+        f"      usage_limit_bytes: {gpu_usage_limit}\n"
         "      reservation_limit_fraction: 0.85\n"
         "      downgrade_trigger_fraction: 0.8\n"
         "      downgrade_stop_fraction: 0.7\n"
@@ -160,13 +162,14 @@ def run_query(con, label: str, sql: str) -> None:
 def run_condition(input_dir: str, condition: str, pairs: list[tuple[int, int]],
                    streams: dict[tuple[int, int], str], executions: int,
                    devices: str, output: Path, execution_start: int = 1,
-                   cache_budget: str = "3GB") -> None:
+                   cache_budget: str = "3GB", min_free_bytes_per_gpu: str = "4096MB",
+                   gpu_usage_limit: str = "20GB") -> None:
     case_dir = output / condition
     log_dir = case_dir / "log_dir"
     log_dir.mkdir(parents=True, exist_ok=True)
     config_path = case_dir / "sirius.yaml"
-    write_config(config_path, case_dir / "telemetry_data")
-    env = make_env(condition, devices, log_dir, config_path, cache_budget)
+    write_config(config_path, case_dir / "telemetry_data", gpu_usage_limit)
+    env = make_env(condition, devices, log_dir, config_path, cache_budget, min_free_bytes_per_gpu)
     os.environ.update(env)
 
     con = open_connection(input_dir, gpu_execution=True)
@@ -196,23 +199,44 @@ def main() -> int:
     parser.add_argument("--reorder-exhaustive", action="store_true",
                         help="Use the exhaustive (all-starting-positions) reorder search instead "
                         "of the default fixed-start (keep_first) heuristic.")
+    parser.add_argument("--no-reorder", action="store_true",
+                        help="For --condition paging: skip reordering entirely, keep the natural "
+                        "tiled query order (caching on, arrival order) -- 'baseline+paging'.")
+    parser.add_argument("--scramble-order", action="store_true",
+                        help="Replace the natural tiled arrival order with a deliberately "
+                        "worst-case (minimum adjacent overlap) order before any condition-specific "
+                        "logic runs -- gives CELEBI's reorder something real to fix instead of the "
+                        "already-benign natural cyclic tiling.")
     parser.add_argument("--cache-budget", default="3GB",
                         help="SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU for the paging condition "
                         "(ignored for cold_hot).")
+    parser.add_argument("--gpu-usage-limit", default="20GB",
+                        help="sirius.yaml gpu.usage_limit_bytes. Physical card is 24GB; raise "
+                        "this (e.g. 22GB) when the GPU is exclusively available to give query "
+                        "execution more headroom above the fixed-page cache's resident footprint.")
+    parser.add_argument("--min-free-bytes-per-gpu", default="4096MB",
+                        help="SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU for the paging "
+                        "condition -- without this, memory-pressure eviction is disabled "
+                        "(min_free==0) and the fixed-page cache only evicts once ITS OWN budget "
+                        "is exceeded, never in response to overall GPU memory pressure from query "
+                        "execution buffers. Matches run_fixed_page_workload_sequence.py's default.")
     args = parser.parse_args()
 
     streams = load_all_streams()
     qnum_seq = tiled_qnum_sequence(args.n)
+    if args.scramble_order:
+        qnum_seq = list(worst_case_order(qnum_seq))
     base_pairs = assign_streams(qnum_seq)
 
-    if args.condition == "cold_hot":
+    if args.condition == "cold_hot" or args.no_reorder:
         pairs = base_pairs
     else:
         pairs = reorder_with_streams(base_pairs, keep_first=not args.reorder_exhaustive)
 
     print(f"N={args.n} condition={args.condition} pairs[:10]={pairs[:10]}", flush=True)
     run_condition(args.input, args.condition, pairs, streams, args.executions, args.devices,
-                  args.output.resolve(), args.execution_start, args.cache_budget)
+                  args.output.resolve(), args.execution_start, args.cache_budget,
+                  args.min_free_bytes_per_gpu, args.gpu_usage_limit)
     return 0
 
 

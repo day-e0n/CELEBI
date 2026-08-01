@@ -1,0 +1,19 @@
+sirius:
+  topology:
+    num_gpus: 1
+  memory:
+    gpu:
+      usage_limit_bytes: 20GB
+      reservation_limit_fraction: 0.85
+      downgrade_trigger_fraction: 0.8
+      downgrade_stop_fraction: 0.7
+    host:
+      capacity_bytes: 32GB
+    disk:
+      disk_id: 0
+      capacity_bytes: 100GB
+      downgrade_root_dirs: "/mnt/nvme/sirius_scratch/random22_disk_downgrade/cold_hot"
+  telemetry:
+    enable_quent: true
+    output_directory: /home/dy1013/sirius_multi-gpu/experiment/random22_breakdown_sf50_10x/cold_hot/telemetry_data
+    engine_name: siriusDB

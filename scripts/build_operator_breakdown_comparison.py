@@ -65,6 +65,7 @@ def main() -> int:
     parser.add_argument("--out-csv", type=Path, required=True)
     parser.add_argument("--out-png", type=Path, default=None)
     parser.add_argument("--out-pdf", type=Path, default=None)
+    parser.add_argument("--proposed-label", default="Baseline+page caching")
     args = parser.parse_args()
 
     baseline = aggregate_by_query(read_rows(args.baseline_bucket_csv))
@@ -157,9 +158,10 @@ def main() -> int:
                 bottoms += vals
 
         ax.set_xticks(x)
-        ax.set_xticklabels(queries, rotation=0, fontsize=16, color=ink_primary)
-        ax.set_ylabel("GPU operator work time (ms)", fontsize=18, color=ink_primary)
-        ax.tick_params(axis="y", labelsize=16, colors=ink_primary)
+        ax.set_xticklabels(queries, rotation=0, fontsize=20, color=ink_primary)
+        ax.set_xlabel("TPC-H query", fontsize=22, color=ink_primary)
+        ax.set_ylabel("GPU operator work time (ms)", fontsize=22, color=ink_primary)
+        ax.tick_params(axis="y", labelsize=20, colors=ink_primary)
         ax.tick_params(axis="x", colors=ink_primary)
         for spine in ax.spines.values():
             spine.set_visible(True)
@@ -194,14 +196,15 @@ def main() -> int:
 
         style_handles = [
             Patch(facecolor="white", edgecolor="black", linewidth=0.8, label="Baseline"),
-            Patch(facecolor="white", edgecolor="black", linewidth=0.8, hatch="///", label="CELEBI"),
+            Patch(facecolor="white", edgecolor="black", linewidth=0.8, hatch="///",
+                  label=args.proposed_label),
         ]
         style_legend = ax.legend(
             handles=style_handles,
             loc="upper left",
             ncols=1,
             frameon=True,
-            fontsize=19,
+            fontsize=16,
             labelcolor=ink_primary,
             handlelength=3.2,
             handleheight=0.9,

@@ -256,6 +256,41 @@ fixed_width_column_page const* find_covering_fixed_page(
   return nullptr;
 }
 
+bool pinned_entry_has_active_reader(pinned_entry const& entry)
+{
+  for (auto const& [_, pages] : entry.fixed_width_pages_by_column) {
+    for (auto const& page : pages) {
+      if (fixed_width_page_is_active(page)) { return true; }
+    }
+  }
+  return false;
+}
+
+/// Drop `it` from `entries` when replacing it with an incompatible re-insert
+/// (schema/filter mismatch under the same cache name). fixed_page_databatch_provider
+/// and cached_databatch_provider hold a raw `pinned_entry const&` into this map,
+/// grabbed under _pinned_entries_mutex at construction time but read again later
+/// (e.g. the destructor's adjust_active_pages(-1)) with no lock held and no
+/// shared ownership of the entry itself. A plain erase() here would free that
+/// map node out from under any provider still using it -- a real use-after-free
+/// that can surface much later as unrelated-looking heap corruption. If any page
+/// still has an active reader, keep the node alive by re-keying it into the map
+/// under a throwaway name instead of erasing it outright; it becomes unreachable
+/// to future lookups (which only ever look up the canonical name) but its
+/// storage stays valid until the referencing provider(s) are done with it.
+void orphan_or_erase_pinned_entry(std::unordered_map<std::string, pinned_entry>& entries,
+                                  std::unordered_map<std::string, pinned_entry>::iterator it)
+{
+  if (!pinned_entry_has_active_reader(it->second)) {
+    entries.erase(it);
+    return;
+  }
+  static std::atomic<std::uint64_t> orphan_id{0};
+  auto node = entries.extract(it);
+  node.key() = node.key() + "::orphan#" + std::to_string(orphan_id.fetch_add(1));
+  entries.insert(std::move(node));
+}
+
 class fixed_page_databatch_provider final : public databatch_provider {
  public:
   explicit fixed_page_databatch_provider(pinned_entry const& entry,
@@ -290,6 +325,17 @@ class fixed_page_databatch_provider final : public databatch_provider {
   }
 
   [[nodiscard]] std::size_t batch_count() const noexcept { return _ranges.size(); }
+
+  /// Total physical 16MB fixed-width pages served by this hit, across all
+  /// selected columns -- range.page_count is the coalesced page run along the
+  /// driver column, and all_columns_cover_tiled (build_ranges) guarantees every
+  /// selected column shares the same page-aligned row boundaries for that run.
+  [[nodiscard]] std::size_t total_page_count() const noexcept
+  {
+    std::size_t pages = 0;
+    for (auto const& range : _ranges) { pages += range.page_count; }
+    return pages * _column_names.size();
+  }
 
   std::shared_ptr<cucascade::data_batch> get_next_batch() override
   {
@@ -596,9 +642,10 @@ std::unique_ptr<databatch_provider> make_provider_for_pinned_entry(
     auto fixed_page_provider =
       std::make_unique<fixed_page_databatch_provider>(entry, selected_columns);
     if (fixed_page_provider->usable()) {
-      SIRIUS_LOG_INFO("[fixed-page-cache] using {} cached provider batches={}",
+      SIRIUS_LOG_INFO("[fixed-page-cache] using {} cached provider batches={} pages={}",
                       fixed_page_hybrid_provider_enabled() ? "hybrid page/chunk" : "page-backed",
-                      fixed_page_provider->batch_count());
+                      fixed_page_provider->batch_count(),
+                      fixed_page_provider->total_page_count());
       return fixed_page_provider;
     }
     SIRIUS_LOG_INFO("[fixed-page-cache] page-backed cached provider unavailable; falling back to "
@@ -1323,6 +1370,12 @@ void apply_global_fixed_width_page_budget(std::unordered_map<std::string, pinned
     std::size_t evicted_bytes = 0;
     std::uint64_t min_evicted_tick = std::numeric_limits<std::uint64_t>::max();
     std::uint64_t max_evicted_tick = 0;
+    // The actual device_buffer free below (via owned_column.reset()) must run with
+    // this page's owning device current -- cuMemFreeAsync resolves the pool/context
+    // from the calling thread's current device, not from the stream captured in the
+    // buffer, and this function can be invoked from a worker thread whose current
+    // device is left over from unrelated prior work.
+    rmm::cuda_set_device_raii device_guard{rmm::cuda_device_id{device_id}};
     for (auto const& candidate : candidates) {
       if (device_bytes <= target_budget) { break; }
       auto& page = *candidate.page;
@@ -1439,6 +1492,9 @@ void apply_global_fixed_width_page_memory_pressure(
     std::size_t evicted_bytes        = 0;
     std::uint64_t min_evicted_tick   = std::numeric_limits<std::uint64_t>::max();
     std::uint64_t max_evicted_tick   = 0;
+    // See the matching comment in apply_global_fixed_width_page_budget: the actual
+    // free below needs this page's owning device current on this thread.
+    rmm::cuda_set_device_raii device_guard{rmm::cuda_device_id{device_id}};
     for (auto const& candidate : candidates) {
       if (released_alloc_bytes >= required_bytes) { break; }
       auto& page = *candidate.page;
@@ -1510,17 +1566,6 @@ void apply_global_fixed_width_page_eviction_policies(
 {
   apply_global_fixed_width_page_budget(entries);
   apply_global_fixed_width_page_memory_pressure(entries, reason);
-
-  std::size_t true_total = 0;
-  for (auto const& [name, entry] : entries) {
-    for (auto const& [col_name, pages] : entry.fixed_width_pages_by_column) {
-      for (auto const& page : pages) {
-        if (page.state == fixed_width_page_state::resident) { true_total += page.num_bytes; }
-      }
-    }
-  }
-  SIRIUS_LOG_INFO("[bug-hunt] true_global_resident_bytes={} ({:.3f} GB) reason={} num_entries={}",
-                  true_total, true_total / 1e9, reason, entries.size());
 }
 
 // wdy end
@@ -1904,7 +1949,7 @@ std::vector<std::size_t> cache_entry_info::can_serve_with_columns(
   return {};
 }
 
-bool sirius_scan_manager::insert_fixed_page_entry_from_view(
+std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
   const std::string& name,
   cache_entry_info cache_info,
   cudf::table_view view,
@@ -1912,7 +1957,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
   rmm::cuda_stream_view stream)
 {
   (void)stream;
-  if (view.num_columns() <= 0 || view.num_rows() <= 0) { return false; }
+  if (view.num_columns() <= 0 || view.num_rows() <= 0) { return 0; }
 
   std::vector<std::string> column_names = cache_info.column_names();
   if (cache_info.column_ids.size() != column_names.size()) {
@@ -1939,14 +1984,14 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
         "[sirius_scan_manager::insert_fixed_page_entry_from_view] non fixed-width column");
     }
   }
-  if (!has_fixed_width_column) { return false; }
+  if (!has_fixed_width_column) { return 0; }
 
   std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
   apply_global_fixed_width_page_memory_pressure(_pinned_entries, "pre_fixed_page_insert");
 
   auto const admission_limit = fixed_page_admission_max_entry_bytes();
   auto const incoming_bytes  = fixed_width_table_view_bytes(view);
-  auto reject_admission = [&](std::size_t existing_bytes, std::size_t projected_bytes) {
+  auto reject_admission = [&](std::size_t existing_bytes, std::size_t projected_bytes) -> std::size_t {
     _pinned_entries.erase(name);
     _fixed_page_admission_rejected_entries.insert(name);
     SIRIUS_LOG_INFO(
@@ -1957,7 +2002,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
       incoming_bytes,
       projected_bytes,
       admission_limit);
-    return false;
+    return 0;
   };
 
   if (_fixed_page_admission_rejected_entries.contains(name)) {
@@ -1967,7 +2012,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
       name,
       incoming_bytes,
       admission_limit);
-    return false;
+    return 0;
   }
 
   if (admission_limit != 0 && incoming_bytes > admission_limit) {
@@ -1982,7 +2027,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
                             entry.cache_info.names == column_names &&
                             entry.cache_info.filter_signature == cache_info.filter_signature;
     if (!appendable) {
-      _pinned_entries.erase(existing_it);
+      orphan_or_erase_pinned_entry(_pinned_entries, existing_it);
       existing_it = _pinned_entries.end();
     } else if (static_cast<std::size_t>(view.num_rows()) == entry.num_rows) {
       // Two concurrent scan tasks can both miss the cache for the same brand-new
@@ -2001,13 +2046,14 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
         name,
         view.num_rows(),
         entry.num_rows);
-      return true;
+      return 0;
     } else {
       auto const existing_bytes  = fixed_width_entry_logical_bytes(entry);
       auto const projected_bytes = existing_bytes + incoming_bytes;
       if (admission_limit != 0 && projected_bytes > admission_limit) {
         return reject_admission(existing_bytes, projected_bytes);
       }
+      auto const pages_before = fixed_width_page_count(entry);
       if (entry.fixed_width_page_size_bytes == 0) {
         entry.fixed_width_page_size_bytes = fixed_width_page_size_bytes();
       }
@@ -2044,6 +2090,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
                                        true);
         chunks.emplace_back(nullptr);
       }
+      auto const pages_just_added = fixed_width_page_count(entry) - pages_before;
       entry.num_rows += static_cast<std::size_t>(view.num_rows());
       entry.fixed_width_page_metrics = {};
       apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
@@ -2052,11 +2099,12 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
       SIRIUS_LOG_INFO(
         "[fixed-page-cache] page_directory direct_appended table='{}' fixed_cols={} pages={} "
-        "resident_pages={} resident_bytes={} stats_pages={} evicted_pages={} eviction_count={} "
-        "directory_entries={} page_bytes={} rows={} owned_pages=1",
+        "pages_added={} resident_pages={} resident_bytes={} stats_pages={} evicted_pages={} "
+        "eviction_count={} directory_entries={} page_bytes={} rows={} owned_pages=1",
         name,
         entry.fixed_width_pages_by_column.size(),
         fixed_width_page_count(entry),
+        pages_just_added,
         entry.fixed_width_page_metrics.resident_pages,
         entry.fixed_width_page_metrics.resident_bytes,
         entry.fixed_width_page_metrics.stats_pages,
@@ -2065,7 +2113,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
         entry.fixed_width_page_directory.size(),
         entry.fixed_width_page_size_bytes,
         entry.num_rows);
-      return true;
+      return pages_just_added;
     }
   }
 
@@ -2100,6 +2148,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
     chunks.emplace_back(nullptr);
   }
 
+  auto const pages_just_added = fixed_width_page_count(entry);
   entry.fixed_width_page_metrics = {};
   _pinned_entries[name] = std::move(entry);
   auto& inserted_entry = _pinned_entries.at(name);
@@ -2109,11 +2158,12 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
   inserted_entry.fixed_width_page_metrics.eviction_count = eviction_count;
   SIRIUS_LOG_INFO(
     "[fixed-page-cache] page_directory direct_indexed table='{}' fixed_cols={} pages={} "
-    "resident_pages={} resident_bytes={} stats_pages={} evicted_pages={} eviction_count={} "
-    "directory_entries={} page_bytes={} rows={} owned_pages=1",
+    "pages_added={} resident_pages={} resident_bytes={} stats_pages={} evicted_pages={} "
+    "eviction_count={} directory_entries={} page_bytes={} rows={} owned_pages=1",
     name,
     inserted_entry.fixed_width_pages_by_column.size(),
     fixed_width_page_count(inserted_entry),
+    pages_just_added,
     inserted_entry.fixed_width_page_metrics.resident_pages,
     inserted_entry.fixed_width_page_metrics.resident_bytes,
     inserted_entry.fixed_width_page_metrics.stats_pages,
@@ -2122,7 +2172,7 @@ bool sirius_scan_manager::insert_fixed_page_entry_from_view(
     inserted_entry.fixed_width_page_directory.size(),
     inserted_entry.fixed_width_page_size_bytes,
     inserted_entry.num_rows);
-  return true;
+  return pages_just_added;
 }
 
 void sirius_scan_manager::insert_pinned_entry(
@@ -2387,7 +2437,7 @@ void sirius_scan_manager::insert_pinned_entry(
       return;
     }
     // Row count or completeness contract differs → drop the stale entry and rebuild below.
-    _pinned_entries.erase(existing_it);
+    orphan_or_erase_pinned_entry(_pinned_entries, existing_it);
   }
 
   pinned_entry entry;

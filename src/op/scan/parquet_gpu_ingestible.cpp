@@ -811,18 +811,19 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view
     auto_fixed_page_cache_name(_file_paths, cache_info.filter_signature, cache_info.names);
   try {
     if (fixed_page_owned_pages_enabled() && fixed_page_direct_auto_populate_enabled()) {
-      bool const populated = _scan_manager->insert_fixed_page_entry_from_view(
+      auto const pages_added = _scan_manager->insert_fixed_page_entry_from_view(
         name,
         std::move(cache_info),
         view,
         const_cast<cucascade::memory::memory_space&>(mem_space),
         stream);
-      if (populated) {
+      if (pages_added) {
         SIRIUS_LOG_INFO(
-          "[fixed-page-cache] auto_cache_populate_direct table='{}' rows={} columns={}",
+          "[fixed-page-cache] auto_cache_populate_direct table='{}' rows={} columns={} pages={}",
           name,
           view.num_rows(),
-          view.num_columns());
+          view.num_columns(),
+          pages_added);
       }
       return;
     }

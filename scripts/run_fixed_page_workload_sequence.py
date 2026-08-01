@@ -314,6 +314,13 @@ def make_env(args: argparse.Namespace, condition: str, log_dir: Path, config_pat
             env["SIRIUS_FIXED_PAGE_ADMISSION_MAX_ENTRY_BYTES"] = (
                 args.page_cache_admission_max_entry_bytes
             )
+        if args.ablation_disable_auto_cache:
+            # Ablation: keep every other "paging" flag identical (owned_pages,
+            # backed_provider, hybrid_provider, ...) but force auto-caching off,
+            # so no entry is ever populated and every scan is a structural miss.
+            # Isolates whether merely taking the fixed-page code path (regardless
+            # of whether caching ever succeeds) affects scan speed.
+            env["SIRIUS_FIXED_PAGE_AUTO_CACHE"] = "0"
     else:
         raise ValueError(f"unknown condition: {condition}")
     return env
@@ -1113,6 +1120,8 @@ def run_parent(args: argparse.Namespace) -> int:
         ]
         if args.enable_telemetry:
             cmd.append("--enable-telemetry")
+        if args.ablation_disable_auto_cache:
+            cmd.append("--ablation-disable-auto-cache")
         print(f"[RUN] {condition}", flush=True)
         try:
             proc = subprocess.run(cmd, cwd=REPO_ROOT, timeout=args.condition_timeout_s)
@@ -1178,6 +1187,10 @@ def build_parser() -> argparse.ArgumentParser:
                         "per-entry admission cap from budget/2 so a small eviction budget "
                         "doesn't cause outright admission-rejection of large entries.")
     parser.add_argument("--demand-max-bytes-per-split", default="")
+    parser.add_argument("--ablation-disable-auto-cache", action="store_true",
+                        help="Ablation: under --conditions paging, force SIRIUS_FIXED_PAGE_AUTO_CACHE=0 "
+                        "after all other paging-condition flags are set, so caching never engages "
+                        "but everything else about the paging code path is unchanged.")
     parser.add_argument("--fixed-width-page-bytes", default="")
     parser.add_argument("--provider-coalesce-pages", default="")
     parser.add_argument("--fixed-page-hybrid-provider", choices=["0", "1"], default="1")

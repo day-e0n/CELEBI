@@ -459,11 +459,14 @@ class sirius_scan_manager {
   /// Populate an automatic fixed-page entry directly from a materialized GPU
   /// table view. This skips the transient full-table cache copy used by
   /// insert_pinned_entry and stores only owned fixed-width pages.
-  [[nodiscard]] bool insert_fixed_page_entry_from_view(const std::string& name,
-                                                        cache_entry_info cache_info,
-                                                        cudf::table_view view,
-                                                        cucascade::memory::memory_space& memory_space,
-                                                        rmm::cuda_stream_view stream);
+  /// \return Number of new fixed-width pages actually added (0 means not
+  ///         populated -- rejected, skipped, or a detected duplicate).
+  [[nodiscard]] std::size_t insert_fixed_page_entry_from_view(
+    const std::string& name,
+    cache_entry_info cache_info,
+    cudf::table_view view,
+    cucascade::memory::memory_space& memory_space,
+    rmm::cuda_stream_view stream);
 
   /// \brief Pin the host-tier entry for a table.
   ///

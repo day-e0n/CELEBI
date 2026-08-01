@@ -64,6 +64,128 @@ def segment_counts(lines: list[str]) -> tuple[int, int, int]:
     return backed, eligible_denom_extra, excluded_dynamic_filter
 
 
+FIXED_WIDTH_PAGE_BYTES = 16 * 1024 * 1024  # sirius_scan_manager.cpp kDefaultPageBytes
+
+TRAILING_PAGES_RE = re.compile(r"pages=(\d+)\s*$")
+SCAN_AUDIT_BYTES_RE = re.compile(r"uncompressed_bytes=(\d+)")
+
+
+def segment_page_counts(lines: list[str]) -> tuple[int, int, int]:
+    """Page-granular version of segment_counts: (backed_pages, miss_pages,
+    excluded_pages) counted in units of the cache's actual 16MB fixed-width
+    page, not split-count events.
+
+    backed (cache-hit) and successful auto_cache_populate_direct events log an
+    exact `pages=N` field (sirius_scan_manager.cpp total_page_count() /
+    pages_added). Skipped events (dynamic_filter_scan, admission rejections,
+    duplicate-concurrent-populate) never reach that instrumentation -- they
+    still did a full disk read first, though, so the immediately preceding
+    [scan-audit] parquet_materialize log line's uncompressed_bytes is used as
+    a bytes/16MB fallback approximation for those.
+    """
+    backed_pages = 0
+    miss_pages = 0
+    excluded_pages = 0
+    pending_audit_bytes: int | None = None
+    for line in lines:
+        if "[scan-audit] parquet_materialize" in line:
+            m = SCAN_AUDIT_BYTES_RE.search(line)
+            if m:
+                pending_audit_bytes = int(m.group(1))
+            continue
+        if "using page-backed cached provider" in line or "using hybrid page/chunk cached provider" in line:
+            m = TRAILING_PAGES_RE.search(line)
+            if m:
+                backed_pages += int(m.group(1))
+        elif "auto_cache_populate_direct" in line:
+            m = TRAILING_PAGES_RE.search(line)
+            if m:
+                miss_pages += int(m.group(1))
+            pending_audit_bytes = None
+        elif "auto_cache_populate" in line:
+            # non-direct insert_pinned_entry path: no exact pages= field, fall
+            # back to the preceding audit bytes like a skip.
+            if pending_audit_bytes is not None:
+                miss_pages += max(1, round(pending_audit_bytes / FIXED_WIDTH_PAGE_BYTES))
+                pending_audit_bytes = None
+        elif "auto_cache_skip" in line:
+            m = SKIP_REASON_RE.search(line)
+            reason = m.group(1) if m else ""
+            approx_pages = max(1, round(pending_audit_bytes / FIXED_WIDTH_PAGE_BYTES)) if pending_audit_bytes else 0
+            if reason == "dynamic_filter_scan":
+                excluded_pages += approx_pages
+            else:
+                miss_pages += approx_pages
+            pending_audit_bytes = None
+    return backed_pages, miss_pages, excluded_pages
+
+
+def stage_page_series(
+    log_dir: Path, query_order: list[str], expected_iterations: int | None = None
+) -> list[tuple[str, int, int, int]]:
+    """Page-granular counterpart to stage_eligible_series: sums
+    segment_page_counts over the same 'hot' executions (skip warmup pass 0).
+    Returns [(query, backed_pages, miss_pages, excluded_pages), ...].
+
+    `expected_iterations`: if the log file has been appended to across more than
+    one invocation (same day, same log_dir), all_query_segments() returns every
+    run's segments concatenated. Pass the --executions count used for the run
+    you actually want, and only the trailing expected_iterations*n segments
+    (the most recent run) are used -- otherwise stale pre-instrumentation lines
+    from an earlier run silently zero out backed/miss counts they don't match.
+    """
+    n = len(query_order)
+    segments = all_query_segments(log_dir)
+    if expected_iterations is not None:
+        segments = segments[-(expected_iterations * n):]
+    if len(segments) % n != 0:
+        raise ValueError(f"{log_dir}: {len(segments)} query segments not divisible by {n} queries")
+    num_iterations = len(segments) // n
+    if num_iterations < 2:
+        raise ValueError(f"{log_dir}: only {num_iterations} iteration(s) found; need >=2 (1 warmup + >=1 counted)")
+
+    out = []
+    for p, query in enumerate(query_order):
+        backed = miss = excluded = 0
+        for it in range(1, num_iterations):
+            b, m, x = segment_page_counts(segments[it * n + p])
+            backed += b
+            miss += m
+            excluded += x
+        out.append((query, backed, miss, excluded))
+    return out
+
+
+def stage_event_series(
+    log_dir: Path, query_order: list[str], expected_iterations: int | None = None
+) -> list[tuple[str, int, int, int]]:
+    """Event-count counterpart to stage_page_series: sums segment_counts (not
+    segment_page_counts) over the same 'hot' executions. Returns
+    [(query, backed, miss, excluded), ...] where each count is a log-line EVENT
+    (one per scan attempt), unweighted by page/byte size -- see segment_counts.
+    """
+    n = len(query_order)
+    segments = all_query_segments(log_dir)
+    if expected_iterations is not None:
+        segments = segments[-(expected_iterations * n):]
+    if len(segments) % n != 0:
+        raise ValueError(f"{log_dir}: {len(segments)} query segments not divisible by {n} queries")
+    num_iterations = len(segments) // n
+    if num_iterations < 2:
+        raise ValueError(f"{log_dir}: only {num_iterations} iteration(s) found; need >=2 (1 warmup + >=1 counted)")
+
+    out = []
+    for p, query in enumerate(query_order):
+        backed = miss = excluded = 0
+        for it in range(1, num_iterations):
+            b, e, x = segment_counts(segments[it * n + p])
+            backed += b
+            miss += e
+            excluded += x
+        out.append((query, backed, miss, excluded))
+    return out
+
+
 def all_query_segments(log_dir: Path) -> list[list[str]]:
     """Segments the raw Sirius log per timed query, across the *entire* log file
     (all repeated executions), unlike run_fixed_page_workload_sequence.log_segments
@@ -80,15 +202,22 @@ def all_query_segments(log_dir: Path) -> list[list[str]]:
     return segments
 
 
-def stage_eligible_series(log_dir: Path, query_order: list[str]) -> list[tuple[str, float, int, int, int]]:
+def stage_eligible_series(
+    log_dir: Path, query_order: list[str], expected_iterations: int | None = None
+) -> list[tuple[str, float, int, int, int]]:
     """Sums counts over the executions that query_summary_breakdown.csv's series
     actually includes: the first execution of the workload is a warmup pass
     excluded from both the 'hot'/'cold' and 'paging'/'paging_warmup' series
     (see run_fixed_page_workload_sequence.series_for) -- only executions 2..N
     are included, so we skip the first `len(query_order)` segments here too.
+
+    `expected_iterations`: see stage_page_series -- pass this when log_dir's log
+    file may have been appended to by more than one run invocation.
     """
     n = len(query_order)
     segments = all_query_segments(log_dir)
+    if expected_iterations is not None:
+        segments = segments[-(expected_iterations * n):]
     if len(segments) % n != 0:
         raise ValueError(f"{log_dir}: {len(segments)} query segments not divisible by {n} queries")
     num_iterations = len(segments) // n
@@ -150,8 +279,9 @@ def main() -> int:
         final_backed = sum(s[2] for s in series)
         final_denom = sum(s[3] for s in series)
         final_excluded = sum(s[4] for s in series)
+        rate_pct = final_backed / final_denom * 100.0 if final_denom else 0.0
         print(
-            f"{label}: eligible_hit_rate={final_backed / final_denom * 100.0:.1f}% "
+            f"{label}: eligible_hit_rate={rate_pct:.1f}% "
             f"(backed={final_backed} eligible_denom={final_denom} excluded_dynamic_filter={final_excluded})"
         )
 

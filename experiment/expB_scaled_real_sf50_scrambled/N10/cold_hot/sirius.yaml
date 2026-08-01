@@ -1,0 +1,19 @@
+sirius:
+  topology:
+    num_gpus: 1
+  memory:
+    gpu:
+      usage_limit_bytes: 20GB
+      reservation_limit_fraction: 0.85
+      downgrade_trigger_fraction: 0.8
+      downgrade_stop_fraction: 0.7
+    host:
+      capacity_bytes: 32GB
+    disk:
+      disk_id: 0
+      capacity_bytes: 100GB
+      downgrade_root_dirs: "/mnt/nvme/sirius_scratch/expB_disk_downgrade/N10_cold_hot"
+  telemetry:
+    enable_quent: true
+    output_directory: /home/dy1013/sirius_multi-gpu/experiment/expB_scaled_real_sf50_scrambled/N10/cold_hot/telemetry_data
+    engine_name: siriusDB
