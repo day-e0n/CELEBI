@@ -1,0 +1,687 @@
+[2026-08-01 15:07:14.782] [info] [sirius_context.cpp:201] QueryBegin: SQL: select 100.00 * sum(case when p.p_type like 'PROMO%' then l.l_extendedprice * (1 - l.l_discount) else 0 end) / sum(l.l_extendedprice * (1 - l.l_discount)) as promo_revenue from lineitem l, part p where l.l_partkey = p.p_partkey and l.l_shipdate >= date '1994-08-01' and l.l_shipdate < date '1994-09-01'
+[2026-08-01 15:07:14.785] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3ac8dd0).
+[2026-08-01 15:07:14.785] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 6000000 rows).
+[2026-08-01 15:07:14.785] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-08-01 15:07:14.785] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-08-01 15:07:14.786] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-08-01 15:07:14.786] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3ac8dd0).
+[2026-08-01 15:07:14.786] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 6000000 rows).
+[2026-08-01 15:07:14.786] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=13)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=15)
+  Input: <- Pipeline #0 [on: PARTITION (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=14)
+  Input: <- Pipeline #1 [on: CONCAT (id=14), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=16)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=18)
+  Input: <- Pipeline #3 [on: PARTITION (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=17)
+  Input: <- Pipeline #4 [on: CONCAT (id=17), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=8) -> PROJECTION (id=9) -> UNGROUPED_AGGREGATE (id=10)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=8), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=8), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #7: MERGE_AGGREGATE (id=19)
+  Input: <- Pipeline #6 [on: MERGE_AGGREGATE (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #8: PROJECTION (id=11) -> RESULT_COLLECTOR (id=12)
+  Input: <- Pipeline #7 [on: PROJECTION (id=11), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                               
+│ Pipeline #8                 │                               
+│ RESULT_COLLECTOR (id=12)    │                               
+│ PROJECTION (id=11)          │                               
+│ Input(#7): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #7                 │                               
+│ MERGE_AGGREGATE (id=19)     │                               
+│ Input(#6): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #6                 │                               
+│ UNGROUPED_AGGREGATE (id=10) │                               
+│ PROJECTION (id=9)           │                               
+│ HASH_JOIN (id=8)            │                               
+│   type: INNER               │                               
+│ Input(#5): FULL             │                               
+│ Input(#2): FULL             │                               
+└──────────────┬──────────────┘                               
+               ┌──────────────────────────────┐               
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #2                 ││ Pipeline #5                 │
+│ CONCAT (id=14)              ││ CONCAT (id=17)              │
+│ Input(#1): PARTIAL          ││ Input(#4): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #1                 ││ Pipeline #4                 │
+│ PARTITION (id=15)           ││ PARTITION (id=18)           │
+│ Input(#0): FULL             ││ Input(#3): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #0                 ││ Pipeline #3                 │
+│ GPU_SCAN (id=13)            ││ GPU_SCAN (id=16)            │
+└─────────────────────────────┘└─────────────────────────────┘
+
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=173097449, cap=100000000
+[2026-08-01 15:07:14.787] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=202827194, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=202832982, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=202811303, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=202854598, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=202857492, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=202826888, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=202842556, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=202838218, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=202867578, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=202827031, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=202842436, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=202840906, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=202857472, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=202837789, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=202836159, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=202884490, cap=100000000
+[2026-08-01 15:07:14.787] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3160
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=202806576, cap=100000000
+[2026-08-01 15:07:14.787] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=199813344, cap=100000000
+[2026-08-01 15:07:14.787] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.789] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.789] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.790] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.791] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.791] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.792] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.792] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.792] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.792] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.793] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.793] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.793] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.793] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.793] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.794] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.794] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.794] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.794] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=19361792, cap=100000000
+[2026-08-01 15:07:14.794] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:14.809] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/part.parquet columns=p_partkey|p_type row_groups=0 compressed_bytes=30626731 uncompressed_bytes=173097449 output_rows=6000000 output_columns=2 split_count=1 duration_us=21083
+[2026-08-01 15:07:14.810] [info] [sirius_scan_manager.cpp:2185] [fixed-page-cache] page_directory direct_indexed table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/part.parquet;;cols=p_partkey,p_type,' fixed_cols=1 pages=2 pages_added=2 resident_pages=2 resident_bytes=24000000 stats_pages=2 evicted_pages=0 eviction_count=0 directory_entries=2 page_bytes=16777216 rows=6000000 owned_pages=1
+[2026-08-01 15:07:14.810] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/part.parquet;;cols=p_partkey,p_type,' rows=6000000 columns=2 pages=2
+[2026-08-01 15:07:14.810] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3161
+[2026-08-01 15:07:14.811] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3162
+[2026-08-01 15:07:14.812] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3163
+[2026-08-01 15:07:14.813] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3164
+[2026-08-01 15:07:14.814] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3165
+[2026-08-01 15:07:14.814] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3166
+[2026-08-01 15:07:14.814] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3167
+[2026-08-01 15:07:14.814] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3168
+[2026-08-01 15:07:14.814] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3169
+[2026-08-01 15:07:14.815] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3170
+[2026-08-01 15:07:14.815] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3171
+[2026-08-01 15:07:14.815] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3172
+[2026-08-01 15:07:14.815] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3173
+[2026-08-01 15:07:14.815] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3174
+[2026-08-01 15:07:14.816] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3175
+[2026-08-01 15:07:14.816] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3176
+[2026-08-01 15:07:14.816] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3177
+[2026-08-01 15:07:14.816] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3178
+[2026-08-01 15:07:14.816] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3179
+[2026-08-01 15:07:14.817] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3180
+[2026-08-01 15:07:14.817] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3181
+[2026-08-01 15:07:14.958] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=0 compressed_bytes=113300716 uncompressed_bytes=202827194 output_rows=9954709 output_columns=4 split_count=1 duration_us=144461
+[2026-08-01 15:07:14.961] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=1 compressed_bytes=113306182 uncompressed_bytes=202832982 output_rows=9954993 output_columns=4 split_count=1 duration_us=147421
+[2026-08-01 15:07:14.962] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=2 compressed_bytes=113290267 uncompressed_bytes=202811303 output_rows=9953929 output_columns=4 split_count=1 duration_us=146188
+[2026-08-01 15:07:14.964] [info] [sirius_scan_manager.cpp:2185] [fixed-page-cache] page_directory direct_indexed table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=16 pages_added=16 resident_pages=16 resident_bytes=238913016 stats_pages=6 evicted_pages=0 eviction_count=0 directory_entries=16 page_bytes=16777216 rows=9954709 owned_pages=1
+[2026-08-01 15:07:14.964] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9954709 columns=4 pages=16
+[2026-08-01 15:07:14.965] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3182
+[2026-08-01 15:07:14.967] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=32 pages_added=16 resident_pages=32 resident_bytes=477832848 stats_pages=12 evicted_pages=0 eviction_count=0 directory_entries=32 page_bytes=16777216 rows=19909702 owned_pages=1
+[2026-08-01 15:07:14.967] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9954993 columns=4 pages=16
+[2026-08-01 15:07:14.968] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3183
+[2026-08-01 15:07:14.971] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=48 pages_added=16 resident_pages=48 resident_bytes=716727144 stats_pages=18 evicted_pages=0 eviction_count=0 directory_entries=48 page_bytes=16777216 rows=29863631 owned_pages=1
+[2026-08-01 15:07:14.971] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9953929 columns=4 pages=16
+[2026-08-01 15:07:14.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3184
+[2026-08-01 15:07:15.114] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=6 compressed_bytes=113307752 uncompressed_bytes=202842556 output_rows=9955463 output_columns=4 split_count=1 duration_us=141947
+[2026-08-01 15:07:15.116] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=64 pages_added=16 resident_pages=64 resident_bytes=955658256 stats_pages=24 evicted_pages=0 eviction_count=0 directory_entries=64 page_bytes=16777216 rows=39819094 owned_pages=1
+[2026-08-01 15:07:15.117] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9955463 columns=4 pages=16
+[2026-08-01 15:07:15.117] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3185
+[2026-08-01 15:07:15.153] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=3 compressed_bytes=113316054 uncompressed_bytes=202854598 output_rows=9956054 output_columns=4 split_count=1 duration_us=187838
+[2026-08-01 15:07:15.154] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=4 compressed_bytes=113313866 uncompressed_bytes=202857492 output_rows=9956196 output_columns=4 split_count=1 duration_us=188144
+[2026-08-01 15:07:15.156] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=5 compressed_bytes=113299611 uncompressed_bytes=202826888 output_rows=9954694 output_columns=4 split_count=1 duration_us=187485
+[2026-08-01 15:07:15.158] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=80 pages_added=16 resident_pages=80 resident_bytes=1194603552 stats_pages=30 evicted_pages=0 eviction_count=0 directory_entries=80 page_bytes=16777216 rows=49775148 owned_pages=1
+[2026-08-01 15:07:15.158] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9956054 columns=4 pages=16
+[2026-08-01 15:07:15.159] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3186
+[2026-08-01 15:07:15.162] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=96 pages_added=16 resident_pages=96 resident_bytes=1433552256 stats_pages=36 evicted_pages=0 eviction_count=0 directory_entries=96 page_bytes=16777216 rows=59731344 owned_pages=1
+[2026-08-01 15:07:15.162] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9956196 columns=4 pages=16
+[2026-08-01 15:07:15.163] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3187
+[2026-08-01 15:07:15.165] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=112 pages_added=16 resident_pages=112 resident_bytes=1672464912 stats_pages=42 evicted_pages=0 eviction_count=0 directory_entries=112 page_bytes=16777216 rows=69686038 owned_pages=1
+[2026-08-01 15:07:15.165] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9954694 columns=4 pages=16
+[2026-08-01 15:07:15.166] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3188
+[2026-08-01 15:07:15.193] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=7 compressed_bytes=113303332 uncompressed_bytes=202838218 output_rows=9955250 output_columns=4 split_count=1 duration_us=75064
+[2026-08-01 15:07:15.195] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=128 pages_added=16 resident_pages=128 resident_bytes=1911390912 stats_pages=48 evicted_pages=0 eviction_count=0 directory_entries=128 page_bytes=16777216 rows=79641288 owned_pages=1
+[2026-08-01 15:07:15.195] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9955250 columns=4 pages=16
+[2026-08-01 15:07:15.196] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3189
+[2026-08-01 15:07:15.335] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=11 compressed_bytes=113306670 uncompressed_bytes=202840906 output_rows=9955382 output_columns=4 split_count=1 duration_us=138644
+[2026-08-01 15:07:15.338] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=144 pages_added=16 resident_pages=144 resident_bytes=2150320080 stats_pages=54 evicted_pages=0 eviction_count=0 directory_entries=144 page_bytes=16777216 rows=89596670 owned_pages=1
+[2026-08-01 15:07:15.338] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9955382 columns=4 pages=16
+[2026-08-01 15:07:15.339] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3190
+[2026-08-01 15:07:15.362] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=8 compressed_bytes=113322988 uncompressed_bytes=202867578 output_rows=9956691 output_columns=4 split_count=1 duration_us=202784
+[2026-08-01 15:07:15.365] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=9 compressed_bytes=113299952 uncompressed_bytes=202827031 output_rows=9954701 output_columns=4 split_count=1 duration_us=202493
+[2026-08-01 15:07:15.366] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=10 compressed_bytes=113306353 uncompressed_bytes=202842436 output_rows=9955457 output_columns=4 split_count=1 duration_us=199673
+[2026-08-01 15:07:15.368] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=160 pages_added=16 resident_pages=160 resident_bytes=2389280664 stats_pages=60 evicted_pages=0 eviction_count=0 directory_entries=160 page_bytes=16777216 rows=99553361 owned_pages=1
+[2026-08-01 15:07:15.368] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9956691 columns=4 pages=16
+[2026-08-01 15:07:15.369] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3191
+[2026-08-01 15:07:15.372] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=176 pages_added=16 resident_pages=176 resident_bytes=2628193488 stats_pages=66 evicted_pages=0 eviction_count=0 directory_entries=176 page_bytes=16777216 rows=109508062 owned_pages=1
+[2026-08-01 15:07:15.372] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9954701 columns=4 pages=16
+[2026-08-01 15:07:15.373] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3192
+[2026-08-01 15:07:15.375] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=192 pages_added=16 resident_pages=192 resident_bytes=2867124456 stats_pages=72 evicted_pages=0 eviction_count=0 directory_entries=192 page_bytes=16777216 rows=119463519 owned_pages=1
+[2026-08-01 15:07:15.375] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9955457 columns=4 pages=16
+[2026-08-01 15:07:15.376] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3193
+[2026-08-01 15:07:15.402] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=12 compressed_bytes=113315214 uncompressed_bytes=202857472 output_rows=9956195 output_columns=4 split_count=1 duration_us=62956
+[2026-08-01 15:07:15.405] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' fixed_cols=4 pages=208 pages_added=16 resident_pages=208 resident_bytes=3106073136 stats_pages=78 evicted_pages=0 eviction_count=0 directory_entries=208 page_bytes=16777216 rows=129419714 owned_pages=1
+[2026-08-01 15:07:15.405] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' rows=9956195 columns=4 pages=16
+[2026-08-01 15:07:15.406] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3194
+[2026-08-01 15:07:15.543] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=16 compressed_bytes=113288800 uncompressed_bytes=202806576 output_rows=9953697 output_columns=4 split_count=1 duration_us=136561
+[2026-08-01 15:07:15.543] [info] [sirius_scan_manager.cpp:2023] [fixed-page-cache] auto_cache_skip reason=admission_entry_bytes table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' existing_bytes=3106073136 incoming_bytes=238888728 projected_bytes=3344961864 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.544] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3195
+[2026-08-01 15:07:15.570] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=13 compressed_bytes=113302952 uncompressed_bytes=202837789 output_rows=9955229 output_columns=4 split_count=1 duration_us=200612
+[2026-08-01 15:07:15.570] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238925496 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.572] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=15 compressed_bytes=113329226 uncompressed_bytes=202884490 output_rows=9957521 output_columns=4 split_count=1 duration_us=195667
+[2026-08-01 15:07:15.572] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238980504 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.572] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3196
+[2026-08-01 15:07:15.574] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=14 compressed_bytes=113305082 uncompressed_bytes=202836159 output_rows=9955149 output_columns=4 split_count=1 duration_us=200853
+[2026-08-01 15:07:15.574] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3197
+[2026-08-01 15:07:15.574] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238923576 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.575] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3198
+[2026-08-01 15:07:15.607] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=18 compressed_bytes=11590230 uncompressed_bytes=19361792 output_rows=950272 output_columns=4 split_count=1 duration_us=34462
+[2026-08-01 15:07:15.607] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=22806528 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.608] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3199
+[2026-08-01 15:07:15.609] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=17 compressed_bytes=111628370 uncompressed_bytes=199813344 output_rows=9806790 output_columns=4 split_count=1 duration_us=64312
+[2026-08-01 15:07:15.609] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=235362960 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.609] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3200
+[2026-08-01 15:07:15.610] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3201
+[2026-08-01 15:07:15.610] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3202
+[2026-08-01 15:07:15.617] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3203
+[2026-08-01 15:07:15.617] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3204
+[2026-08-01 15:07:15.638] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-08-01 15:07:15.638] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-08-01 15:07:15.639] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:15.641] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:15.641] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:15.642] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:15.642] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:15.642] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-08-01 15:07:15.642] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:15.651] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:15.651] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:15.652] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:15.652] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:15.652] [info] [sirius_context.cpp:201] QueryBegin: SQL: select 100.00 * sum(case when p.p_type like 'PROMO%' then l.l_extendedprice * (1 - l.l_discount) else 0 end) / sum(l.l_extendedprice * (1 - l.l_discount)) as promo_revenue from lineitem l, part p where l.l_partkey = p.p_partkey and l.l_shipdate >= date '1994-08-01' and l.l_shipdate < date '1994-09-01'
+[2026-08-01 15:07:15.655] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3b21b80).
+[2026-08-01 15:07:15.655] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 6000000 rows).
+[2026-08-01 15:07:15.655] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-08-01 15:07:15.655] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-08-01 15:07:15.655] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-08-01 15:07:15.655] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3b21b80).
+[2026-08-01 15:07:15.655] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 6000000 rows).
+[2026-08-01 15:07:15.656] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=13)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=15)
+  Input: <- Pipeline #0 [on: PARTITION (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=14)
+  Input: <- Pipeline #1 [on: CONCAT (id=14), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=16)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=18)
+  Input: <- Pipeline #3 [on: PARTITION (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=17)
+  Input: <- Pipeline #4 [on: CONCAT (id=17), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=8) -> PROJECTION (id=9) -> UNGROUPED_AGGREGATE (id=10)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=8), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=8), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #7: MERGE_AGGREGATE (id=19)
+  Input: <- Pipeline #6 [on: MERGE_AGGREGATE (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #8: PROJECTION (id=11) -> RESULT_COLLECTOR (id=12)
+  Input: <- Pipeline #7 [on: PROJECTION (id=11), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                               
+│ Pipeline #8                 │                               
+│ RESULT_COLLECTOR (id=12)    │                               
+│ PROJECTION (id=11)          │                               
+│ Input(#7): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #7                 │                               
+│ MERGE_AGGREGATE (id=19)     │                               
+│ Input(#6): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #6                 │                               
+│ UNGROUPED_AGGREGATE (id=10) │                               
+│ PROJECTION (id=9)           │                               
+│ HASH_JOIN (id=8)            │                               
+│   type: INNER               │                               
+│ Input(#5): FULL             │                               
+│ Input(#2): FULL             │                               
+└──────────────┬──────────────┘                               
+               ┌──────────────────────────────┐               
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #2                 ││ Pipeline #5                 │
+│ CONCAT (id=14)              ││ CONCAT (id=17)              │
+│ Input(#1): PARTIAL          ││ Input(#4): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #1                 ││ Pipeline #4                 │
+│ PARTITION (id=15)           ││ PARTITION (id=18)           │
+│ Input(#0): FULL             ││ Input(#3): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #0                 ││ Pipeline #3                 │
+│ GPU_SCAN (id=13)            ││ GPU_SCAN (id=16)            │
+└─────────────────────────────┘└─────────────────────────────┘
+
+[2026-08-01 15:07:15.656] [info] [sirius_scan_manager.cpp:663] [fixed-page-cache] using hybrid page/chunk cached provider batches=2 pages=4
+[2026-08-01 15:07:15.656] [info] [:] [sirius_scan_manager] assigned pinned entry '__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/part.parquet;;cols=p_partkey,p_type,' to operator '13'
+[2026-08-01 15:07:15.657] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3205
+[2026-08-01 15:07:15.657] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3206
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=202827194, cap=100000000
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=202832982, cap=100000000
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=202811303, cap=100000000
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=202854598, cap=100000000
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=202857492, cap=100000000
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=202826888, cap=100000000
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=202842556, cap=100000000
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=202838218, cap=100000000
+[2026-08-01 15:07:15.657] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=202867578, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=202827031, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=202842436, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=202840906, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=202857472, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=202837789, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=202836159, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=202884490, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=202806576, cap=100000000
+[2026-08-01 15:07:15.658] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=199813344, cap=100000000
+[2026-08-01 15:07:15.658] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.658] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3207
+[2026-08-01 15:07:15.658] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3208
+[2026-08-01 15:07:15.659] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3209
+[2026-08-01 15:07:15.659] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3210
+[2026-08-01 15:07:15.660] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.661] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3211
+[2026-08-01 15:07:15.661] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.662] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.662] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3212
+[2026-08-01 15:07:15.662] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.662] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3213
+[2026-08-01 15:07:15.663] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.663] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3214
+[2026-08-01 15:07:15.663] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.663] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3215
+[2026-08-01 15:07:15.664] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.664] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3216
+[2026-08-01 15:07:15.664] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.664] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3217
+[2026-08-01 15:07:15.665] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.665] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3218
+[2026-08-01 15:07:15.665] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3219
+[2026-08-01 15:07:15.665] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.666] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3220
+[2026-08-01 15:07:15.666] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.666] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3221
+[2026-08-01 15:07:15.666] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.666] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3222
+[2026-08-01 15:07:15.667] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.667] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3223
+[2026-08-01 15:07:15.667] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.667] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3224
+[2026-08-01 15:07:15.668] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.668] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3225
+[2026-08-01 15:07:15.668] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.668] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3226
+[2026-08-01 15:07:15.668] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3227
+[2026-08-01 15:07:15.669] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=19361792, cap=100000000
+[2026-08-01 15:07:15.669] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:15.669] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3228
+[2026-08-01 15:07:15.670] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3229
+[2026-08-01 15:07:15.808] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=2 compressed_bytes=113290267 uncompressed_bytes=202811303 output_rows=9953929 output_columns=4 split_count=1 duration_us=145290
+[2026-08-01 15:07:15.808] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238894296 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.810] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=1 compressed_bytes=113306182 uncompressed_bytes=202832982 output_rows=9954993 output_columns=4 split_count=1 duration_us=146465
+[2026-08-01 15:07:15.810] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238919832 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.810] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3230
+[2026-08-01 15:07:15.812] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=0 compressed_bytes=113300716 uncompressed_bytes=202827194 output_rows=9954709 output_columns=4 split_count=1 duration_us=149373
+[2026-08-01 15:07:15.812] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238913016 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.812] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3231
+[2026-08-01 15:07:15.813] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3232
+[2026-08-01 15:07:15.955] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=6 compressed_bytes=113307752 uncompressed_bytes=202842556 output_rows=9955463 output_columns=4 split_count=1 duration_us=141653
+[2026-08-01 15:07:15.955] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238931112 max_entry_bytes=3221225472
+[2026-08-01 15:07:15.956] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3233
+[2026-08-01 15:07:16.012] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=3 compressed_bytes=113316054 uncompressed_bytes=202854598 output_rows=9956054 output_columns=4 split_count=1 duration_us=200197
+[2026-08-01 15:07:16.012] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238945296 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.014] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=5 compressed_bytes=113299611 uncompressed_bytes=202826888 output_rows=9954694 output_columns=4 split_count=1 duration_us=201871
+[2026-08-01 15:07:16.014] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3234
+[2026-08-01 15:07:16.014] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238912656 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.017] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=4 compressed_bytes=113313866 uncompressed_bytes=202857492 output_rows=9956196 output_columns=4 split_count=1 duration_us=206389
+[2026-08-01 15:07:16.017] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238948704 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.017] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3235
+[2026-08-01 15:07:16.018] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3236
+[2026-08-01 15:07:16.036] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=7 compressed_bytes=113303332 uncompressed_bytes=202838218 output_rows=9955250 output_columns=4 split_count=1 duration_us=80209
+[2026-08-01 15:07:16.037] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238926000 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.037] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3237
+[2026-08-01 15:07:16.179] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=11 compressed_bytes=113306670 uncompressed_bytes=202840906 output_rows=9955382 output_columns=4 split_count=1 duration_us=141060
+[2026-08-01 15:07:16.179] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238929168 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.180] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3238
+[2026-08-01 15:07:16.210] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=10 compressed_bytes=113306353 uncompressed_bytes=202842436 output_rows=9955457 output_columns=4 split_count=1 duration_us=191660
+[2026-08-01 15:07:16.210] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238930968 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.213] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3239
+[2026-08-01 15:07:16.213] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=8 compressed_bytes=113322988 uncompressed_bytes=202867578 output_rows=9956691 output_columns=4 split_count=1 duration_us=198406
+[2026-08-01 15:07:16.213] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238960584 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.214] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=9 compressed_bytes=113299952 uncompressed_bytes=202827031 output_rows=9954701 output_columns=4 split_count=1 duration_us=196043
+[2026-08-01 15:07:16.214] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238912824 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.215] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3240
+[2026-08-01 15:07:16.215] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3241
+[2026-08-01 15:07:16.251] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=12 compressed_bytes=113315214 uncompressed_bytes=202857472 output_rows=9956195 output_columns=4 split_count=1 duration_us=71318
+[2026-08-01 15:07:16.251] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238948680 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.252] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3242
+[2026-08-01 15:07:16.389] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=16 compressed_bytes=113288800 uncompressed_bytes=202806576 output_rows=9953697 output_columns=4 split_count=1 duration_us=136993
+[2026-08-01 15:07:16.389] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238888728 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.390] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3243
+[2026-08-01 15:07:16.417] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=14 compressed_bytes=113305082 uncompressed_bytes=202836159 output_rows=9955149 output_columns=4 split_count=1 duration_us=202058
+[2026-08-01 15:07:16.417] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238923576 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.421] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=15 compressed_bytes=113329226 uncompressed_bytes=202884490 output_rows=9957521 output_columns=4 split_count=1 duration_us=205529
+[2026-08-01 15:07:16.421] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238980504 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.421] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=13 compressed_bytes=113302952 uncompressed_bytes=202837789 output_rows=9955229 output_columns=4 split_count=1 duration_us=207776
+[2026-08-01 15:07:16.421] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238925496 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.421] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3244
+[2026-08-01 15:07:16.422] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3245
+[2026-08-01 15:07:16.422] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3246
+[2026-08-01 15:07:16.454] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=18 compressed_bytes=11590230 uncompressed_bytes=19361792 output_rows=950272 output_columns=4 split_count=1 duration_us=32638
+[2026-08-01 15:07:16.454] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=22806528 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.455] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3247
+[2026-08-01 15:07:16.456] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=17 compressed_bytes=111628370 uncompressed_bytes=199813344 output_rows=9806790 output_columns=4 split_count=1 duration_us=65488
+[2026-08-01 15:07:16.456] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=235362960 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.457] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3248
+[2026-08-01 15:07:16.457] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3249
+[2026-08-01 15:07:16.458] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3250
+[2026-08-01 15:07:16.458] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3251
+[2026-08-01 15:07:16.466] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3252
+[2026-08-01 15:07:16.466] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3253
+[2026-08-01 15:07:16.487] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-08-01 15:07:16.487] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-08-01 15:07:16.488] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:16.500] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:16.500] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:16.502] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:16.502] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:16.502] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-08-01 15:07:16.502] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:16.510] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:16.510] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:16.511] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:16.511] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:16.511] [info] [sirius_context.cpp:201] QueryBegin: SQL: select 100.00 * sum(case when p.p_type like 'PROMO%' then l.l_extendedprice * (1 - l.l_discount) else 0 end) / sum(l.l_extendedprice * (1 - l.l_discount)) as promo_revenue from lineitem l, part p where l.l_partkey = p.p_partkey and l.l_shipdate >= date '1994-08-01' and l.l_shipdate < date '1994-09-01'
+[2026-08-01 15:07:16.516] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb21acb50).
+[2026-08-01 15:07:16.516] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 6000000 rows).
+[2026-08-01 15:07:16.516] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-08-01 15:07:16.516] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-08-01 15:07:16.516] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-08-01 15:07:16.517] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb21acb50).
+[2026-08-01 15:07:16.517] [info] [sirius_plan_comparison_join.cpp:540] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 6000000 rows).
+[2026-08-01 15:07:16.517] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=13)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=15)
+  Input: <- Pipeline #0 [on: PARTITION (id=15), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=14)
+  Input: <- Pipeline #1 [on: CONCAT (id=14), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=16)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=18)
+  Input: <- Pipeline #3 [on: PARTITION (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=17)
+  Input: <- Pipeline #4 [on: CONCAT (id=17), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=8) -> PROJECTION (id=9) -> UNGROUPED_AGGREGATE (id=10)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=8), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=8), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #7: MERGE_AGGREGATE (id=19)
+  Input: <- Pipeline #6 [on: MERGE_AGGREGATE (id=19), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> PROJECTION [port: default, barrier: FULL]
+Pipeline #8: PROJECTION (id=11) -> RESULT_COLLECTOR (id=12)
+  Input: <- Pipeline #7 [on: PROJECTION (id=11), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                               
+│ Pipeline #8                 │                               
+│ RESULT_COLLECTOR (id=12)    │                               
+│ PROJECTION (id=11)          │                               
+│ Input(#7): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #7                 │                               
+│ MERGE_AGGREGATE (id=19)     │                               
+│ Input(#6): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #6                 │                               
+│ UNGROUPED_AGGREGATE (id=10) │                               
+│ PROJECTION (id=9)           │                               
+│ HASH_JOIN (id=8)            │                               
+│   type: INNER               │                               
+│ Input(#5): FULL             │                               
+│ Input(#2): FULL             │                               
+└──────────────┬──────────────┘                               
+               ┌──────────────────────────────┐               
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #2                 ││ Pipeline #5                 │
+│ CONCAT (id=14)              ││ CONCAT (id=17)              │
+│ Input(#1): PARTIAL          ││ Input(#4): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #1                 ││ Pipeline #4                 │
+│ PARTITION (id=15)           ││ PARTITION (id=18)           │
+│ Input(#0): FULL             ││ Input(#3): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #0                 ││ Pipeline #3                 │
+│ GPU_SCAN (id=13)            ││ GPU_SCAN (id=16)            │
+└─────────────────────────────┘└─────────────────────────────┘
+
+[2026-08-01 15:07:16.518] [info] [sirius_scan_manager.cpp:663] [fixed-page-cache] using hybrid page/chunk cached provider batches=2 pages=4
+[2026-08-01 15:07:16.518] [info] [:] [sirius_scan_manager] assigned pinned entry '__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/part.parquet;;cols=p_partkey,p_type,' to operator '13'
+[2026-08-01 15:07:16.518] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3254
+[2026-08-01 15:07:16.518] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3255
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=202827194, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=202832982, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=202811303, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=202854598, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=202857492, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=202826888, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=202842556, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=202838218, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=202867578, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=202827031, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=202842436, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=202840906, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=202857472, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=202837789, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=202836159, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=202884490, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=202806576, cap=100000000
+[2026-08-01 15:07:16.519] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=199813344, cap=100000000
+[2026-08-01 15:07:16.519] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.519] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3256
+[2026-08-01 15:07:16.519] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3257
+[2026-08-01 15:07:16.520] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3258
+[2026-08-01 15:07:16.520] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3259
+[2026-08-01 15:07:16.520] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.520] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.521] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.521] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3260
+[2026-08-01 15:07:16.522] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.522] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3261
+[2026-08-01 15:07:16.522] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.523] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.523] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3262
+[2026-08-01 15:07:16.523] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.523] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3263
+[2026-08-01 15:07:16.523] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.523] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3264
+[2026-08-01 15:07:16.523] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.523] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3265
+[2026-08-01 15:07:16.524] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3266
+[2026-08-01 15:07:16.524] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.524] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3267
+[2026-08-01 15:07:16.524] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.524] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3268
+[2026-08-01 15:07:16.524] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.524] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3269
+[2026-08-01 15:07:16.524] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.524] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3270
+[2026-08-01 15:07:16.524] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.525] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3271
+[2026-08-01 15:07:16.525] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.525] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3272
+[2026-08-01 15:07:16.525] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.525] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3273
+[2026-08-01 15:07:16.525] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.525] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3274
+[2026-08-01 15:07:16.525] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=19361792, cap=100000000
+[2026-08-01 15:07:16.525] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:16.525] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3275
+[2026-08-01 15:07:16.526] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3276
+[2026-08-01 15:07:16.526] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3277
+[2026-08-01 15:07:16.526] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3278
+[2026-08-01 15:07:16.668] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=1 compressed_bytes=113306182 uncompressed_bytes=202832982 output_rows=9954993 output_columns=4 split_count=1 duration_us=144706
+[2026-08-01 15:07:16.668] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238919832 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.672] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=2 compressed_bytes=113290267 uncompressed_bytes=202811303 output_rows=9953929 output_columns=4 split_count=1 duration_us=148591
+[2026-08-01 15:07:16.672] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238894296 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.672] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3279
+[2026-08-01 15:07:16.674] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=0 compressed_bytes=113300716 uncompressed_bytes=202827194 output_rows=9954709 output_columns=4 split_count=1 duration_us=150964
+[2026-08-01 15:07:16.674] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238913016 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.674] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3280
+[2026-08-01 15:07:16.675] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3281
+[2026-08-01 15:07:16.819] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=5 compressed_bytes=113299611 uncompressed_bytes=202826888 output_rows=9954694 output_columns=4 split_count=1 duration_us=144510
+[2026-08-01 15:07:16.819] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238912656 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.821] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3282
+[2026-08-01 15:07:16.861] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=3 compressed_bytes=113316054 uncompressed_bytes=202854598 output_rows=9956054 output_columns=4 split_count=1 duration_us=188720
+[2026-08-01 15:07:16.861] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238945296 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.864] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=4 compressed_bytes=113313866 uncompressed_bytes=202857492 output_rows=9956196 output_columns=4 split_count=1 duration_us=191186
+[2026-08-01 15:07:16.864] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238948704 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.865] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3283
+[2026-08-01 15:07:16.865] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=6 compressed_bytes=113307752 uncompressed_bytes=202842556 output_rows=9955463 output_columns=4 split_count=1 duration_us=189806
+[2026-08-01 15:07:16.865] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238931112 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.865] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3284
+[2026-08-01 15:07:16.866] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3285
+[2026-08-01 15:07:16.902] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=7 compressed_bytes=113303332 uncompressed_bytes=202838218 output_rows=9955250 output_columns=4 split_count=1 duration_us=80266
+[2026-08-01 15:07:16.902] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238926000 max_entry_bytes=3221225472
+[2026-08-01 15:07:16.903] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3286
+[2026-08-01 15:07:17.043] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=11 compressed_bytes=113306670 uncompressed_bytes=202840906 output_rows=9955382 output_columns=4 split_count=1 duration_us=139875
+[2026-08-01 15:07:17.043] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238929168 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.045] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3287
+[2026-08-01 15:07:17.066] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=8 compressed_bytes=113322988 uncompressed_bytes=202867578 output_rows=9956691 output_columns=4 split_count=1 duration_us=201077
+[2026-08-01 15:07:17.066] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238960584 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.066] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=10 compressed_bytes=113306353 uncompressed_bytes=202842436 output_rows=9955457 output_columns=4 split_count=1 duration_us=199888
+[2026-08-01 15:07:17.066] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238930968 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.068] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3288
+[2026-08-01 15:07:17.068] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3289
+[2026-08-01 15:07:17.069] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=9 compressed_bytes=113299952 uncompressed_bytes=202827031 output_rows=9954701 output_columns=4 split_count=1 duration_us=203718
+[2026-08-01 15:07:17.069] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238912824 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.070] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3290
+[2026-08-01 15:07:17.108] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=12 compressed_bytes=113315214 uncompressed_bytes=202857472 output_rows=9956195 output_columns=4 split_count=1 duration_us=63281
+[2026-08-01 15:07:17.108] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238948680 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.109] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3291
+[2026-08-01 15:07:17.248] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=16 compressed_bytes=113288800 uncompressed_bytes=202806576 output_rows=9953697 output_columns=4 split_count=1 duration_us=138040
+[2026-08-01 15:07:17.248] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238888728 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.249] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3292
+[2026-08-01 15:07:17.275] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=13 compressed_bytes=113302952 uncompressed_bytes=202837789 output_rows=9955229 output_columns=4 split_count=1 duration_us=207269
+[2026-08-01 15:07:17.275] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238925496 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.278] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3293
+[2026-08-01 15:07:17.279] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=14 compressed_bytes=113305082 uncompressed_bytes=202836159 output_rows=9955149 output_columns=4 split_count=1 duration_us=211234
+[2026-08-01 15:07:17.279] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=15 compressed_bytes=113329226 uncompressed_bytes=202884490 output_rows=9957521 output_columns=4 split_count=1 duration_us=208751
+[2026-08-01 15:07:17.279] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238923576 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.279] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=238980504 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.281] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3294
+[2026-08-01 15:07:17.281] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3295
+[2026-08-01 15:07:17.317] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=18 compressed_bytes=11590230 uncompressed_bytes=19361792 output_rows=950272 output_columns=4 split_count=1 duration_us=38785
+[2026-08-01 15:07:17.317] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=22806528 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.317] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3296
+[2026-08-01 15:07:17.319] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_extendedprice|l_discount|l_shipdate row_groups=17 compressed_bytes=111628370 uncompressed_bytes=199813344 output_rows=9806790 output_columns=4 split_count=1 duration_us=70181
+[2026-08-01 15:07:17.319] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=((#3 >= '1994-08-01'::DATE) AND (#3 < '1994-09-01'::DATE));cols=l_discount,l_extendedprice,l_partkey,l_shipdate,' incoming_bytes=235362960 max_entry_bytes=3221225472
+[2026-08-01 15:07:17.320] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3297
+[2026-08-01 15:07:17.320] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3298
+[2026-08-01 15:07:17.321] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3299
+[2026-08-01 15:07:17.321] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3300
+[2026-08-01 15:07:17.328] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3301
+[2026-08-01 15:07:17.329] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=3302
+[2026-08-01 15:07:17.349] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-08-01 15:07:17.350] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-08-01 15:07:17.351] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:17.359] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:17.359] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:17.360] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:17.360] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:17.360] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-08-01 15:07:17.361] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:17.369] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:17.369] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes
+[2026-08-01 15:07:17.369] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=73400320 bytes free_blocks=5051
+[2026-08-01 15:07:17.369] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=5982534400 bytes peak=12010972272 bytes reserved=0 bytes

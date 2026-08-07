@@ -296,6 +296,19 @@ struct fixed_width_page_directory_entry {
   std::size_t page_ordinal{0};
 };
 
+/// O(1) lookup aid: for a given (column, chunk_index), the contiguous run of
+/// pages that chunk contributed to fixed_width_pages_by_column[column] --
+/// [page_start_index, page_start_index + page_count). Combined with
+/// rows_per_page, a page covering a given in-chunk row_offset is found by
+/// direct arithmetic instead of scanning the page list. page_count == 0 means
+/// no pages were recorded for this chunk (e.g. a column merged in after this
+/// chunk_index already existed for other columns), matching a lookup miss.
+struct fixed_width_chunk_page_span {
+  std::size_t page_start_index{0};
+  std::size_t page_count{0};
+  std::size_t rows_per_page{0};
+};
+
 /**
  * @brief A single pinned-table entry, keyed by table name in the scan_manager.
  *
@@ -320,6 +333,12 @@ struct pinned_entry {
   /// Directory lookup keyed by table/file/column/chunk/page/device. Values point
   /// back into fixed_width_pages_by_column without owning page storage.
   std::unordered_map<std::string, fixed_width_page_directory_entry> fixed_width_page_directory;
+  /// Per-column, chunk_index-indexed page spans (see fixed_width_chunk_page_span) --
+  /// lets find_covering_fixed_page locate the page covering a given row by direct
+  /// arithmetic instead of scanning fixed_width_pages_by_column. Populated by
+  /// index_fixed_width_column_pages alongside the page list itself.
+  std::unordered_map<std::string, std::vector<fixed_width_chunk_page_span>>
+    fixed_width_chunk_page_spans;
   /// Target page size used when fixed_width_pages_by_column was built.
   std::size_t fixed_width_page_size_bytes{0};
   /// Lightweight page-directory accounting for the current prototype. Pages are

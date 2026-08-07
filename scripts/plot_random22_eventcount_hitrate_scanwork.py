@@ -228,7 +228,7 @@ def main() -> int:
     print(f"wrote {out_png2}")
 
     # --- third figure: per-query (non-cumulative) hit rate + cumulative scan work ---
-    fig3, (cx1, cx2) = plt.subplots(1, 2, figsize=(15.5, 6.5))
+    fig3, (cx1, cx2) = plt.subplots(1, 2, figsize=(17, 5))
 
     for idx, (label, hit_rate, _) in enumerate(stage_data):  # stage_data: per-query hit_rate
         cx1.plot(x, hit_rate, color=colors[idx % len(colors)], linewidth=2.0,
@@ -238,7 +238,7 @@ def main() -> int:
     cx1.tick_params(axis="y", colors=ink_primary, labelcolor=ink_primary, labelsize=15)
     cx1.tick_params(axis="x", colors=ink_primary, labelcolor=ink_primary)
     cx1.set_xticks(x)
-    cx1.set_xticklabels(x_labels, fontsize=10, color=ink_primary, rotation=90)
+    cx1.set_xticklabels(x_labels, fontsize=15, color=ink_primary, rotation=90)
     cx1.set_ylim(0, max(v for _, hit_rate, _ in stage_data for v in hit_rate) * 1.15)
     cx1.set_xlim(0, n + 1)
     cx1.grid(axis="y", alpha=0.2)
@@ -249,24 +249,27 @@ def main() -> int:
         final = scan_work[-1]
         pct = (baseline_final2 - final) / baseline_final2 * 100.0 if baseline_final2 else 0.0
         text = f"{final:.1f}s" if idx == 0 else f"{final:.1f}s ({pct:+.1f}%)"
-        cx2.annotate(text, xy=(x[-1], final), xytext=(x[-1] + 0.5, label_ys2[idx]),
-                     textcoords="data", ha="left", va="center", fontsize=12, color=ink_primary)
+        cx2.annotate(text, xy=(1.0, label_ys2[idx]), xycoords=("axes fraction", "data"),
+                     xytext=(8, 0), textcoords="offset points",
+                     ha="left", va="center", fontsize=12, color=ink_primary, annotation_clip=False)
     cx2.set_ylim(top=max(finals2) * 1.14)
     cx2.set_xlabel("TPC-H query", fontsize=18, color=ink_primary)
     cx2.set_ylabel("Cumulative scan work (s)", fontsize=18, color=ink_primary)
     cx2.tick_params(axis="y", colors=ink_primary, labelcolor=ink_primary, labelsize=15)
     cx2.tick_params(axis="x", colors=ink_primary, labelcolor=ink_primary)
     cx2.set_xticks(x)
-    cx2.set_xticklabels(x_labels, fontsize=10, color=ink_primary, rotation=90)
-    cx2.set_xlim(0, n + 3)
+    cx2.set_xticklabels(x_labels, fontsize=15, color=ink_primary, rotation=90)
+    cx2.set_xlim(0, n + 1)
     cx2.grid(axis="y", alpha=0.2)
+
+    fig3.tight_layout(rect=(0, 0, 0.93, 0.86), w_pad=6)
+    fig3.canvas.draw()
+    center_x = (cx1.get_position().x0 + cx2.get_position().x1) / 2
 
     handles3, labels3 = cx1.get_legend_handles_labels()
     fig3.legend(handles3, labels3, frameon=True, edgecolor=ink_primary, fontsize=17,
-                loc="upper center", bbox_to_anchor=(0.5, 1.1), ncol=len(stage_data),
+                loc="upper center", bbox_to_anchor=(center_x, 1.0), ncol=len(stage_data),
                 labelcolor=ink_primary)
-
-    fig3.tight_layout()
     out_png3 = REPO_ROOT / "experiment" / "graph" / "random22_sf50_3stage_perquery_hitrate_cumulative_scanwork.png"
     fig3.savefig(out_png3, dpi=200, bbox_inches="tight")
     print(f"wrote {out_png3}")

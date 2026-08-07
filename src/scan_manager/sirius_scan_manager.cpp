@@ -250,8 +250,26 @@ fixed_width_column_page const* find_covering_fixed_page(
 {
   auto pages_it = entry.fixed_width_pages_by_column.find(column_name);
   if (pages_it == entry.fixed_width_pages_by_column.end()) { return nullptr; }
-  for (auto const& page : pages_it->second) {
-    if (fixed_page_covers_range(page, chunk_index, row_offset, num_rows)) { return &page; }
+
+  // O(1) path: within a chunk, pages are laid out contiguously in row order with a
+  // constant rows_per_page (the last page may be a shorter remainder), so the page
+  // covering row_offset is `row_offset / rows_per_page` -- no scan needed. The
+  // subsequent fixed_page_covers_range check is retained as-is: it still verifies
+  // residency and the exact [row_offset, row_offset+num_rows) bound (rejecting a
+  // range that spans into a following page, or a stale/evicted page), so behavior
+  // is identical to the previous linear scan, just located in O(1) instead of O(P).
+  auto spans_it = entry.fixed_width_chunk_page_spans.find(column_name);
+  if (spans_it != entry.fixed_width_chunk_page_spans.end() &&
+      chunk_index < spans_it->second.size()) {
+    auto const& span = spans_it->second[chunk_index];
+    if (span.page_count > 0 && span.rows_per_page > 0) {
+      auto const page_index_within_chunk = row_offset / span.rows_per_page;
+      if (page_index_within_chunk < span.page_count) {
+        auto const& page = pages_it->second[span.page_start_index + page_index_within_chunk];
+        if (fixed_page_covers_range(page, chunk_index, row_offset, num_rows)) { return &page; }
+        return nullptr;
+      }
+    }
   }
   return nullptr;
 }
@@ -1154,6 +1172,7 @@ void index_fixed_width_column_pages(pinned_entry& entry,
     static_cast<std::size_t>(std::max<cudf::size_type>(view.offset(), 0));
   auto const rows_per_page = std::max<std::size_t>(1, page_size_bytes / element_size);
   auto& pages              = entry.fixed_width_pages_by_column[column_name];
+  auto const page_start_index = pages.size();
 
   for (std::size_t row_offset = 0; row_offset < rows; row_offset += rows_per_page) {
     auto const page_rows = std::min(rows_per_page, rows - row_offset);
@@ -1200,6 +1219,13 @@ void index_fixed_width_column_pages(pinned_entry& entry,
     entry.fixed_width_page_directory[directory_key] =
       fixed_width_page_directory_entry{column_name, pages.size()};
     pages.emplace_back(page);
+  }
+
+  auto const page_count = pages.size() - page_start_index;
+  if (page_count > 0) {
+    auto& spans = entry.fixed_width_chunk_page_spans[column_name];
+    if (spans.size() <= chunk_index) { spans.resize(chunk_index + 1); }
+    spans[chunk_index] = fixed_width_chunk_page_span{page_start_index, page_count, rows_per_page};
   }
 }
 

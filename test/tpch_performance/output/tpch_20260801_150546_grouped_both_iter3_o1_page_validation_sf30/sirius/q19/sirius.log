@@ -1,0 +1,707 @@
+[2026-08-01 15:07:26.141] [info] [sirius_context.cpp:201] QueryBegin: SQL: select sum(l.l_extendedprice* (1 - l.l_discount)) as revenue from lineitem l, part p where ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#41' and p.p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') and l.l_quantity >= 2 and l.l_quantity <= 2 + 10 and p.p_size between 1 and 5 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' ) or ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#13' and p.p_container in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK') and l.l_quantity >= 14 and l.l_quantity <= 14 + 10 and p.p_size between 1 and 10 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' ) or ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#55' and p.p_container in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG') and l.l_quantity >= 23 and l.l_quantity <= 23 + 10 and p.p_size between 1 and 15 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' )
+[2026-08-01 15:07:26.145] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3b49c70).
+[2026-08-01 15:07:26.145] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 179998372 rows).
+[2026-08-01 15:07:26.145] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-08-01 15:07:26.145] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-08-01 15:07:26.145] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-08-01 15:07:26.148] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3b49c70).
+[2026-08-01 15:07:26.149] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 179998372 rows).
+[2026-08-01 15:07:26.149] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=15) -> FILTER (id=9)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=17)
+  Input: <- Pipeline #0 [on: PARTITION (id=17), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=16)
+  Input: <- Pipeline #1 [on: CONCAT (id=16), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=18) -> DYNAMIC_FILTER (id=19)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=21)
+  Input: <- Pipeline #3 [on: PARTITION (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=20)
+  Input: <- Pipeline #4 [on: CONCAT (id=20), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> FILTER (id=11) -> PROJECTION (id=12) -> UNGROUPED_AGGREGATE (id=13)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #7: MERGE_AGGREGATE (id=22)
+  Input: <- Pipeline #6 [on: MERGE_AGGREGATE (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #8: RESULT_COLLECTOR (id=14)
+  Input: <- Pipeline #7 [on: RESULT_COLLECTOR (id=14), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                               
+│ Pipeline #8                 │                               
+│ RESULT_COLLECTOR (id=14)    │                               
+│ Input(#7): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #7                 │                               
+│ MERGE_AGGREGATE (id=22)     │                               
+│ Input(#6): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #6                 │                               
+│ UNGROUPED_AGGREGATE (id=13) │                               
+│ PROJECTION (id=12)          │                               
+│ FILTER (id=11)              │                               
+│ HASH_JOIN (id=10)           │                               
+│   type: INNER               │                               
+│ Input(#5): FULL             │                               
+│ Input(#2): FULL             │                               
+└──────────────┬──────────────┘                               
+               ┌──────────────────────────────┐               
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #2                 ││ Pipeline #5                 │
+│ CONCAT (id=16)              ││ CONCAT (id=20)              │
+│ Input(#1): PARTIAL          ││ Input(#4): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #1                 ││ Pipeline #4                 │
+│ PARTITION (id=17)           ││ PARTITION (id=21)           │
+│ Input(#0): FULL             ││ Input(#3): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #0                 ││ Pipeline #3                 │
+│ FILTER (id=9)               ││ DYNAMIC_FILTER (id=19)      │
+│ GPU_SCAN (id=15)            ││ GPU_SCAN (id=18)            │
+└─────────────────────────────┘└─────────────────────────────┘
+
+[2026-08-01 15:07:26.149] [info] [sirius_scan_manager.cpp:2607] [fixed-page-cache] reuse_skip reason=dynamic_filter_scan operator='18'
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=367441363, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=367451927, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=367405697, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=367485494, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=367488880, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=367434734, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=367459361, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=367451299, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=367510174, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=367436029, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=367453983, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=367462845, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=367491853, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=367459602, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=367451432, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=367539071, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=367397531, cap=100000000
+[2026-08-01 15:07:26.150] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=361976568, cap=100000000
+[2026-08-01 15:07:26.150] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.152] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.153] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.153] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.153] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4967
+[2026-08-01 15:07:26.153] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.154] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.154] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.154] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.154] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4968
+[2026-08-01 15:07:26.154] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.155] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.155] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.155] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.155] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.155] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4969
+[2026-08-01 15:07:26.155] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.156] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.156] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.156] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4970
+[2026-08-01 15:07:26.156] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.156] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.157] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4971
+[2026-08-01 15:07:26.157] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=35073348, cap=100000000
+[2026-08-01 15:07:26.157] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:26.157] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=192450019, cap=100000000
+[2026-08-01 15:07:26.157] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:26.157] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4972
+[2026-08-01 15:07:26.157] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4973
+[2026-08-01 15:07:26.157] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4974
+[2026-08-01 15:07:26.158] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4975
+[2026-08-01 15:07:26.158] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4976
+[2026-08-01 15:07:26.158] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4977
+[2026-08-01 15:07:26.158] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4978
+[2026-08-01 15:07:26.159] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4979
+[2026-08-01 15:07:26.159] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4980
+[2026-08-01 15:07:26.159] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4981
+[2026-08-01 15:07:26.160] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4982
+[2026-08-01 15:07:26.160] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4983
+[2026-08-01 15:07:26.160] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4984
+[2026-08-01 15:07:26.160] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4985
+[2026-08-01 15:07:26.218] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=0 compressed_bytes=112152776 uncompressed_bytes=367441363 output_rows=9954709 output_columns=6 split_count=1 duration_us=62631
+[2026-08-01 15:07:26.221] [info] [sirius_scan_manager.cpp:1422] [fixed-page-cache] page_budget applied scope=global device=0 policy=lru budget_bytes_per_gpu=6442450944 target_bytes_per_gpu=5905580032 evicted_pages=38 evicted_bytes=282397692 resident_bytes_after=5900778932 min_last_access_tick=964 max_last_access_tick=1089
+[2026-08-01 15:07:26.221] [info] [sirius_scan_manager.cpp:2185] [fixed-page-cache] page_directory direct_indexed table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' fixed_cols=4 pages=18 pages_added=18 resident_pages=18 resident_bytes=278731852 stats_pages=3 evicted_pages=0 eviction_count=0 directory_entries=18 page_bytes=16777216 rows=9954709 owned_pages=1
+[2026-08-01 15:07:26.221] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' rows=9954709 columns=6 pages=18
+[2026-08-01 15:07:26.224] [warning] [downgrade_executor.cpp:335] [downgrade] [GPU:0] downgrade request not satisfied and disk memory space is not configured; data cannot be spilled to disk. Consider configuring a disk memory space to enable spilling.
+[2026-08-01 15:07:26.224] [warning] [gpu_pipeline_executor.cpp:250] GPU Pipeline Executor: after downgrade (10124496 bytes freed), reservation still partial (2775160064/2939615416 bytes) for pipeline 0 task 4968 -- proceeding with partial reservation
+[2026-08-01 15:07:26.290] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=1 compressed_bytes=112158199 uncompressed_bytes=367451927 output_rows=9954993 output_columns=6 split_count=1 duration_us=63838
+[2026-08-01 15:07:26.293] [info] [sirius_scan_manager.cpp:1422] [fixed-page-cache] page_budget applied scope=global device=0 policy=lru budget_bytes_per_gpu=6442450944 target_bytes_per_gpu=5905580032 evicted_pages=20 evicted_bytes=283222784 resident_bytes_after=5896295952 min_last_access_tick=1090 max_last_access_tick=1114
+[2026-08-01 15:07:26.293] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' fixed_cols=4 pages=36 pages_added=18 resident_pages=36 resident_bytes=557471656 stats_pages=6 evicted_pages=0 eviction_count=0 directory_entries=36 page_bytes=16777216 rows=19909702 owned_pages=1
+[2026-08-01 15:07:26.293] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' rows=9954993 columns=6 pages=18
+[2026-08-01 15:07:26.405] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=2 compressed_bytes=112142412 uncompressed_bytes=367405697 output_rows=9953929 output_columns=6 split_count=1 duration_us=108460
+[2026-08-01 15:07:26.405] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=3 compressed_bytes=112167958 uncompressed_bytes=367485494 output_rows=9956054 output_columns=6 split_count=1 duration_us=107652
+[2026-08-01 15:07:26.409] [info] [sirius_scan_manager.cpp:1422] [fixed-page-cache] page_budget applied scope=global device=0 policy=lru budget_bytes_per_gpu=6442450944 target_bytes_per_gpu=5905580032 evicted_pages=20 evicted_bytes=272422784 resident_bytes_after=5902583180 min_last_access_tick=1115 max_last_access_tick=1569
+[2026-08-01 15:07:26.409] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' fixed_cols=4 pages=54 pages_added=18 resident_pages=54 resident_bytes=836181668 stats_pages=9 evicted_pages=0 eviction_count=0 directory_entries=54 page_bytes=16777216 rows=29863631 owned_pages=1
+[2026-08-01 15:07:26.409] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' rows=9953929 columns=6 pages=18
+[2026-08-01 15:07:26.414] [info] [sirius_scan_manager.cpp:1422] [fixed-page-cache] page_budget applied scope=global device=0 policy=lru budget_bytes_per_gpu=6442450944 target_bytes_per_gpu=5905580032 evicted_pages=21 evicted_bytes=280932388 resident_bytes_after=5900420304 min_last_access_tick=1570 max_last_access_tick=1884
+[2026-08-01 15:07:26.414] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' fixed_cols=4 pages=72 pages_added=18 resident_pages=72 resident_bytes=1114951180 stats_pages=12 evicted_pages=0 eviction_count=0 directory_entries=72 page_bytes=16777216 rows=39819685 owned_pages=1
+[2026-08-01 15:07:26.414] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' rows=9956054 columns=6 pages=18
+[2026-08-01 15:07:26.475] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=4 compressed_bytes=112165749 uncompressed_bytes=367488880 output_rows=9956196 output_columns=6 split_count=1 duration_us=62014
+[2026-08-01 15:07:26.479] [info] [sirius_scan_manager.cpp:1422] [fixed-page-cache] page_budget applied scope=global device=0 policy=lru budget_bytes_per_gpu=6442450944 target_bytes_per_gpu=5905580032 evicted_pages=19 evicted_bytes=289264212 resident_bytes_after=5889929580 min_last_access_tick=1885 max_last_access_tick=1903
+[2026-08-01 15:07:26.479] [info] [sirius_scan_manager.cpp:2126] [fixed-page-cache] page_directory direct_appended table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' fixed_cols=4 pages=90 pages_added=18 resident_pages=90 resident_bytes=1393724668 stats_pages=15 evicted_pages=0 eviction_count=0 directory_entries=90 page_bytes=16777216 rows=49775881 owned_pages=1
+[2026-08-01 15:07:26.479] [info] [parquet_gpu_ingestible.cpp:821] [fixed-page-cache] auto_cache_populate_direct table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' rows=9956196 columns=6 pages=18
+[2026-08-01 15:07:26.545] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=5 compressed_bytes=112151675 uncompressed_bytes=367434734 output_rows=9954694 output_columns=6 split_count=1 duration_us=62779
+[2026-08-01 15:07:26.546] [info] [sirius_scan_manager.cpp:2023] [fixed-page-cache] auto_cache_skip reason=admission_entry_bytes table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' existing_bytes=2614985498 incoming_bytes=915831848 projected_bytes=3530817346 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.696] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=7 compressed_bytes=112155328 uncompressed_bytes=367451299 output_rows=9955250 output_columns=6 split_count=1 duration_us=147551
+[2026-08-01 15:07:26.696] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915883000 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.732] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=6 compressed_bytes=112159720 uncompressed_bytes=367459361 output_rows=9955463 output_columns=6 split_count=1 duration_us=183603
+[2026-08-01 15:07:26.732] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915902596 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.736] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=8 compressed_bytes=112174803 uncompressed_bytes=367510174 output_rows=9956691 output_columns=6 split_count=1 duration_us=186007
+[2026-08-01 15:07:26.736] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=916015572 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.751] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=9 compressed_bytes=112152027 uncompressed_bytes=367436029 output_rows=9954701 output_columns=6 split_count=1 duration_us=201008
+[2026-08-01 15:07:26.751] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915832492 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.778] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=10 compressed_bytes=112158325 uncompressed_bytes=367453983 output_rows=9955457 output_columns=6 split_count=1 duration_us=79299
+[2026-08-01 15:07:26.778] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915902044 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.917] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=14 compressed_bytes=112157083 uncompressed_bytes=367451432 output_rows=9955149 output_columns=6 split_count=1 duration_us=137028
+[2026-08-01 15:07:26.917] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915873708 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.951] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=11 compressed_bytes=112158642 uncompressed_bytes=367462845 output_rows=9955382 output_columns=6 split_count=1 duration_us=211083
+[2026-08-01 15:07:26.951] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915895144 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.951] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=12 compressed_bytes=112167082 uncompressed_bytes=367491853 output_rows=9956195 output_columns=6 split_count=1 duration_us=210429
+[2026-08-01 15:07:26.951] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915969940 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.951] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=13 compressed_bytes=112154939 uncompressed_bytes=367459602 output_rows=9955229 output_columns=6 split_count=1 duration_us=198053
+[2026-08-01 15:07:26.951] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915881068 max_entry_bytes=3221225472
+[2026-08-01 15:07:26.984] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=15 compressed_bytes=112180947 uncompressed_bytes=367539071 output_rows=9957521 output_columns=6 split_count=1 duration_us=64157
+[2026-08-01 15:07:26.984] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=916091932 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.068] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=18 compressed_bytes=11471933 uncompressed_bytes=35073348 output_rows=950272 output_columns=6 split_count=1 duration_us=110636
+[2026-08-01 15:07:27.068] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=87425024 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.075] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=16 compressed_bytes=112140985 uncompressed_bytes=367397531 output_rows=9953697 output_columns=6 split_count=1 duration_us=118029
+[2026-08-01 15:07:27.075] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915740124 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.075] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=17 compressed_bytes=110497392 uncompressed_bytes=361976568 output_rows=9806790 output_columns=6 split_count=1 duration_us=118481
+[2026-08-01 15:07:27.075] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=902224680 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4986
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4987
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4988
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4989
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4990
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4991
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4992
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4993
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4994
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4995
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4996
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4997
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4998
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=4999
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5000
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5001
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5002
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5003
+[2026-08-01 15:07:27.079] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5004
+[2026-08-01 15:07:27.080] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5005
+[2026-08-01 15:07:27.080] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5006
+[2026-08-01 15:07:27.080] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5007
+[2026-08-01 15:07:27.080] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5008
+[2026-08-01 15:07:27.081] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5009
+[2026-08-01 15:07:27.106] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/part.parquet columns=p_partkey|p_brand|p_size|p_container row_groups=0 compressed_bytes=37430218 uncompressed_bytes=192450019 output_rows=6000000 output_columns=4 split_count=1 duration_us=23727
+[2026-08-01 15:07:27.106] [info] [parquet_gpu_ingestible.cpp:772] [fixed-page-cache] auto_cache_skip reason=dynamic_filter_scan
+[2026-08-01 15:07:27.106] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5010
+[2026-08-01 15:07:27.106] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5011
+[2026-08-01 15:07:27.107] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5012
+[2026-08-01 15:07:27.107] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5013
+[2026-08-01 15:07:27.107] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5014
+[2026-08-01 15:07:27.107] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5015
+[2026-08-01 15:07:27.133] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5016
+[2026-08-01 15:07:27.133] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5017
+[2026-08-01 15:07:27.154] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-08-01 15:07:27.154] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-08-01 15:07:27.155] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:27.171] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:27.171] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:27.172] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:27.172] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:27.172] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-08-01 15:07:27.173] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:27.192] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:27.192] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:27.193] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:27.193] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:27.193] [info] [sirius_context.cpp:201] QueryBegin: SQL: select sum(l.l_extendedprice* (1 - l.l_discount)) as revenue from lineitem l, part p where ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#41' and p.p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') and l.l_quantity >= 2 and l.l_quantity <= 2 + 10 and p.p_size between 1 and 5 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' ) or ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#13' and p.p_container in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK') and l.l_quantity >= 14 and l.l_quantity <= 14 + 10 and p.p_size between 1 and 10 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' ) or ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#55' and p.p_container in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG') and l.l_quantity >= 23 and l.l_quantity <= 23 + 10 and p.p_size between 1 and 15 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' )
+[2026-08-01 15:07:27.197] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3adba10).
+[2026-08-01 15:07:27.197] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 179998372 rows).
+[2026-08-01 15:07:27.198] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-08-01 15:07:27.198] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-08-01 15:07:27.198] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-08-01 15:07:27.198] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3adba10).
+[2026-08-01 15:07:27.198] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 179998372 rows).
+[2026-08-01 15:07:27.198] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=15) -> FILTER (id=9)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=17)
+  Input: <- Pipeline #0 [on: PARTITION (id=17), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=16)
+  Input: <- Pipeline #1 [on: CONCAT (id=16), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=18) -> DYNAMIC_FILTER (id=19)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=21)
+  Input: <- Pipeline #3 [on: PARTITION (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=20)
+  Input: <- Pipeline #4 [on: CONCAT (id=20), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> FILTER (id=11) -> PROJECTION (id=12) -> UNGROUPED_AGGREGATE (id=13)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #7: MERGE_AGGREGATE (id=22)
+  Input: <- Pipeline #6 [on: MERGE_AGGREGATE (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #8: RESULT_COLLECTOR (id=14)
+  Input: <- Pipeline #7 [on: RESULT_COLLECTOR (id=14), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                               
+│ Pipeline #8                 │                               
+│ RESULT_COLLECTOR (id=14)    │                               
+│ Input(#7): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #7                 │                               
+│ MERGE_AGGREGATE (id=22)     │                               
+│ Input(#6): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #6                 │                               
+│ UNGROUPED_AGGREGATE (id=13) │                               
+│ PROJECTION (id=12)          │                               
+│ FILTER (id=11)              │                               
+│ HASH_JOIN (id=10)           │                               
+│   type: INNER               │                               
+│ Input(#5): FULL             │                               
+│ Input(#2): FULL             │                               
+└──────────────┬──────────────┘                               
+               ┌──────────────────────────────┐               
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #2                 ││ Pipeline #5                 │
+│ CONCAT (id=16)              ││ CONCAT (id=20)              │
+│ Input(#1): PARTIAL          ││ Input(#4): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #1                 ││ Pipeline #4                 │
+│ PARTITION (id=17)           ││ PARTITION (id=21)           │
+│ Input(#0): FULL             ││ Input(#3): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #0                 ││ Pipeline #3                 │
+│ FILTER (id=9)               ││ DYNAMIC_FILTER (id=19)      │
+│ GPU_SCAN (id=15)            ││ GPU_SCAN (id=18)            │
+└─────────────────────────────┘└─────────────────────────────┘
+
+[2026-08-01 15:07:27.199] [info] [sirius_scan_manager.cpp:2607] [fixed-page-cache] reuse_skip reason=dynamic_filter_scan operator='18'
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=367441363, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=367451927, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=367405697, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=367485494, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=367488880, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=367434734, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=367459361, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=367451299, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=367510174, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=367436029, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=367453983, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=367462845, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=367491853, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=367459602, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=367451432, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=367539071, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=367397531, cap=100000000
+[2026-08-01 15:07:27.200] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=361976568, cap=100000000
+[2026-08-01 15:07:27.200] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.201] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.201] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.202] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.202] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5018
+[2026-08-01 15:07:27.202] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.203] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.203] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.203] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5019
+[2026-08-01 15:07:27.204] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.204] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.204] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5020
+[2026-08-01 15:07:27.205] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.205] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5021
+[2026-08-01 15:07:27.205] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.205] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5022
+[2026-08-01 15:07:27.205] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.205] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5023
+[2026-08-01 15:07:27.205] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.206] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5024
+[2026-08-01 15:07:27.206] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.206] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.206] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.206] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5025
+[2026-08-01 15:07:27.206] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.206] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.207] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=35073348, cap=100000000
+[2026-08-01 15:07:27.207] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:27.207] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5026
+[2026-08-01 15:07:27.207] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=192450019, cap=100000000
+[2026-08-01 15:07:27.207] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:27.208] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5027
+[2026-08-01 15:07:27.208] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5028
+[2026-08-01 15:07:27.209] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5029
+[2026-08-01 15:07:27.209] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5030
+[2026-08-01 15:07:27.209] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5031
+[2026-08-01 15:07:27.209] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5032
+[2026-08-01 15:07:27.210] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5033
+[2026-08-01 15:07:27.210] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5034
+[2026-08-01 15:07:27.210] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5035
+[2026-08-01 15:07:27.210] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5036
+[2026-08-01 15:07:27.266] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=0 compressed_bytes=112152776 uncompressed_bytes=367441363 output_rows=9954709 output_columns=6 split_count=1 duration_us=61962
+[2026-08-01 15:07:27.266] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915833228 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.378] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=1 compressed_bytes=112158199 uncompressed_bytes=367451927 output_rows=9954993 output_columns=6 split_count=1 duration_us=108194
+[2026-08-01 15:07:27.378] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915859356 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.379] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=2 compressed_bytes=112142412 uncompressed_bytes=367405697 output_rows=9953929 output_columns=6 split_count=1 duration_us=108523
+[2026-08-01 15:07:27.379] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915761468 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.529] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=3 compressed_bytes=112167958 uncompressed_bytes=367485494 output_rows=9956054 output_columns=6 split_count=1 duration_us=145750
+[2026-08-01 15:07:27.529] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915956968 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.559] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=5 compressed_bytes=112151675 uncompressed_bytes=367434734 output_rows=9954694 output_columns=6 split_count=1 duration_us=176083
+[2026-08-01 15:07:27.559] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915831848 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.582] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=4 compressed_bytes=112165749 uncompressed_bytes=367488880 output_rows=9956196 output_columns=6 split_count=1 duration_us=196938
+[2026-08-01 15:07:27.582] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915970032 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.582] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=6 compressed_bytes=112159720 uncompressed_bytes=367459361 output_rows=9955463 output_columns=6 split_count=1 duration_us=198798
+[2026-08-01 15:07:27.582] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915902596 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.695] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=7 compressed_bytes=112155328 uncompressed_bytes=367451299 output_rows=9955250 output_columns=6 split_count=1 duration_us=163592
+[2026-08-01 15:07:27.695] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915883000 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.740] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=9 compressed_bytes=112152027 uncompressed_bytes=367436029 output_rows=9954701 output_columns=6 split_count=1 duration_us=153658
+[2026-08-01 15:07:27.740] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915832492 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.747] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=8 compressed_bytes=112174803 uncompressed_bytes=367510174 output_rows=9956691 output_columns=6 split_count=1 duration_us=184556
+[2026-08-01 15:07:27.747] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=916015572 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.748] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=10 compressed_bytes=112158325 uncompressed_bytes=367453983 output_rows=9955457 output_columns=6 split_count=1 duration_us=161494
+[2026-08-01 15:07:27.748] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915902044 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.779] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=11 compressed_bytes=112158642 uncompressed_bytes=367462845 output_rows=9955382 output_columns=6 split_count=1 duration_us=80718
+[2026-08-01 15:07:27.779] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915895144 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.922] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=15 compressed_bytes=112180947 uncompressed_bytes=367539071 output_rows=9957521 output_columns=6 split_count=1 duration_us=140229
+[2026-08-01 15:07:27.922] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=916091932 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.943] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=12 compressed_bytes=112167082 uncompressed_bytes=367491853 output_rows=9956195 output_columns=6 split_count=1 duration_us=192796
+[2026-08-01 15:07:27.943] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915969940 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.947] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=13 compressed_bytes=112154939 uncompressed_bytes=367459602 output_rows=9955229 output_columns=6 split_count=1 duration_us=194994
+[2026-08-01 15:07:27.947] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915881068 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.952] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=14 compressed_bytes=112157083 uncompressed_bytes=367451432 output_rows=9955149 output_columns=6 split_count=1 duration_us=199732
+[2026-08-01 15:07:27.952] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915873708 max_entry_bytes=3221225472
+[2026-08-01 15:07:27.993] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=16 compressed_bytes=112140985 uncompressed_bytes=367397531 output_rows=9953697 output_columns=6 split_count=1 duration_us=68388
+[2026-08-01 15:07:27.993] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915740124 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.027] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=18 compressed_bytes=11471933 uncompressed_bytes=35073348 output_rows=950272 output_columns=6 split_count=1 duration_us=72629
+[2026-08-01 15:07:28.027] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=87425024 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.031] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=17 compressed_bytes=110497392 uncompressed_bytes=361976568 output_rows=9806790 output_columns=6 split_count=1 duration_us=78390
+[2026-08-01 15:07:28.031] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=902224680 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5037
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5038
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5039
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5040
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5041
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5042
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5043
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5044
+[2026-08-01 15:07:28.033] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5045
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5046
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5047
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5048
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5049
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5050
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5051
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5052
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5053
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5054
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5055
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5056
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5057
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5058
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5059
+[2026-08-01 15:07:28.034] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5060
+[2026-08-01 15:07:28.035] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5061
+[2026-08-01 15:07:28.059] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/part.parquet columns=p_partkey|p_brand|p_size|p_container row_groups=0 compressed_bytes=37430218 uncompressed_bytes=192450019 output_rows=6000000 output_columns=4 split_count=1 duration_us=23671
+[2026-08-01 15:07:28.059] [info] [parquet_gpu_ingestible.cpp:772] [fixed-page-cache] auto_cache_skip reason=dynamic_filter_scan
+[2026-08-01 15:07:28.059] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5062
+[2026-08-01 15:07:28.060] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5063
+[2026-08-01 15:07:28.060] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5064
+[2026-08-01 15:07:28.060] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5065
+[2026-08-01 15:07:28.060] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5066
+[2026-08-01 15:07:28.060] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5067
+[2026-08-01 15:07:28.060] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5068
+[2026-08-01 15:07:28.088] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5069
+[2026-08-01 15:07:28.089] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5070
+[2026-08-01 15:07:28.110] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-08-01 15:07:28.111] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-08-01 15:07:28.112] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:28.122] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:28.122] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:28.123] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:28.123] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:28.123] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-08-01 15:07:28.123] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:28.132] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:28.132] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:28.132] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:28.132] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:28.132] [info] [sirius_context.cpp:201] QueryBegin: SQL: select sum(l.l_extendedprice* (1 - l.l_discount)) as revenue from lineitem l, part p where ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#41' and p.p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') and l.l_quantity >= 2 and l.l_quantity <= 2 + 10 and p.p_size between 1 and 5 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' ) or ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#13' and p.p_container in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK') and l.l_quantity >= 14 and l.l_quantity <= 14 + 10 and p.p_size between 1 and 10 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' ) or ( p.p_partkey = l.l_partkey and p.p_brand = 'Brand#55' and p.p_container in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG') and l.l_quantity >= 23 and l.l_quantity <= 23 + 10 and p.p_size between 1 and 15 and l.l_shipmode in ('AIR', 'AIR REG') and l.l_shipinstruct = 'DELIVER IN PERSON' )
+[2026-08-01 15:07:28.136] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3a02940).
+[2026-08-01 15:07:28.136] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 179998372 rows).
+[2026-08-01 15:07:28.136] [info] [sirius_context.cpp:865] Transparent execution: Sirius physical plan generated successfully
+[2026-08-01 15:07:28.136] [info] [sirius_context.cpp:877] Transparent execution: physical plan replaced with GPU operator
+[2026-08-01 15:07:28.136] [info] [physical_sirius_execution.cpp:97] Transparent GPU execution: executing query
+[2026-08-01 15:07:28.136] [info] [sirius_plan_get.cpp:267] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0x5b5eb3a02940).
+[2026-08-01 15:07:28.136] [info] [sirius_plan_comparison_join.cpp:601] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 179998372 rows).
+[2026-08-01 15:07:28.137] [info] [sirius_engine.cpp:375] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=15) -> FILTER (id=9)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=17)
+  Input: <- Pipeline #0 [on: PARTITION (id=17), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=16)
+  Input: <- Pipeline #1 [on: CONCAT (id=16), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: FULL]
+Pipeline #3: GPU_SCAN (id=18) -> DYNAMIC_FILTER (id=19)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=21)
+  Input: <- Pipeline #3 [on: PARTITION (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=20)
+  Input: <- Pipeline #4 [on: CONCAT (id=20), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: FULL]
+Pipeline #6: HASH_JOIN (id=10) -> FILTER (id=11) -> PROJECTION (id=12) -> UNGROUPED_AGGREGATE (id=13)
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=10), port: default, barrier: FULL]
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=10), port: build, barrier: FULL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #7: MERGE_AGGREGATE (id=22)
+  Input: <- Pipeline #6 [on: MERGE_AGGREGATE (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #8: RESULT_COLLECTOR (id=14)
+  Input: <- Pipeline #7 [on: RESULT_COLLECTOR (id=14), port: default, barrier: FULL]
+  Dependencies: Pipeline #7
+
+=== Query Plan DAG ===
+┌─────────────────────────────┐                               
+│ Pipeline #8                 │                               
+│ RESULT_COLLECTOR (id=14)    │                               
+│ Input(#7): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #7                 │                               
+│ MERGE_AGGREGATE (id=22)     │                               
+│ Input(#6): FULL             │                               
+└──────────────┬──────────────┘                               
+               │                                              
+┌─────────────────────────────┐                               
+│ Pipeline #6                 │                               
+│ UNGROUPED_AGGREGATE (id=13) │                               
+│ PROJECTION (id=12)          │                               
+│ FILTER (id=11)              │                               
+│ HASH_JOIN (id=10)           │                               
+│   type: INNER               │                               
+│ Input(#5): FULL             │                               
+│ Input(#2): FULL             │                               
+└──────────────┬──────────────┘                               
+               ┌──────────────────────────────┐               
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #2                 ││ Pipeline #5                 │
+│ CONCAT (id=16)              ││ CONCAT (id=20)              │
+│ Input(#1): PARTIAL          ││ Input(#4): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #1                 ││ Pipeline #4                 │
+│ PARTITION (id=17)           ││ PARTITION (id=21)           │
+│ Input(#0): FULL             ││ Input(#3): PARTIAL          │
+└──────────────┬──────────────┘└──────────────┬──────────────┘
+               │                              │               
+┌─────────────────────────────┐┌─────────────────────────────┐
+│ Pipeline #0                 ││ Pipeline #3                 │
+│ FILTER (id=9)               ││ DYNAMIC_FILTER (id=19)      │
+│ GPU_SCAN (id=15)            ││ GPU_SCAN (id=18)            │
+└─────────────────────────────┘└─────────────────────────────┘
+
+[2026-08-01 15:07:28.137] [info] [sirius_scan_manager.cpp:2607] [fixed-page-cache] reuse_skip reason=dynamic_filter_scan operator='18'
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=367441363, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #2: 1 slice(s), acc_bytes=367451927, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #3: 1 slice(s), acc_bytes=367405697, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #4: 1 slice(s), acc_bytes=367485494, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #5: 1 slice(s), acc_bytes=367488880, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #6: 1 slice(s), acc_bytes=367434734, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #7: 1 slice(s), acc_bytes=367459361, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #8: 1 slice(s), acc_bytes=367451299, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #9: 1 slice(s), acc_bytes=367510174, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #10: 1 slice(s), acc_bytes=367436029, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #11: 1 slice(s), acc_bytes=367453983, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #12: 1 slice(s), acc_bytes=367462845, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #13: 1 slice(s), acc_bytes=367491853, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #14: 1 slice(s), acc_bytes=367459602, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #15: 1 slice(s), acc_bytes=367451432, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #16: 1 slice(s), acc_bytes=367539071, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #17: 1 slice(s), acc_bytes=367397531, cap=100000000
+[2026-08-01 15:07:28.138] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #18: 1 slice(s), acc_bytes=361976568, cap=100000000
+[2026-08-01 15:07:28.138] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.140] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.141] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5071
+[2026-08-01 15:07:28.141] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.141] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5072
+[2026-08-01 15:07:28.141] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.142] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5073
+[2026-08-01 15:07:28.142] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.143] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5074
+[2026-08-01 15:07:28.143] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.143] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5075
+[2026-08-01 15:07:28.143] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.144] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5076
+[2026-08-01 15:07:28.144] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.145] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5077
+[2026-08-01 15:07:28.145] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.145] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5078
+[2026-08-01 15:07:28.145] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.146] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5079
+[2026-08-01 15:07:28.146] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.146] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5080
+[2026-08-01 15:07:28.147] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.147] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5081
+[2026-08-01 15:07:28.147] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.148] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5082
+[2026-08-01 15:07:28.148] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.148] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5083
+[2026-08-01 15:07:28.148] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.149] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5084
+[2026-08-01 15:07:28.149] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.149] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5085
+[2026-08-01 15:07:28.150] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.150] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5086
+[2026-08-01 15:07:28.150] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.151] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5087
+[2026-08-01 15:07:28.151] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #19: 1 slice(s), acc_bytes=35073348, cap=100000000
+[2026-08-01 15:07:28.151] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=0 -> preferred GPU 0
+[2026-08-01 15:07:28.151] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5088
+[2026-08-01 15:07:28.152] [info] [parquet_gpu_ingestible.cpp:303] [coalesce-debug] parquet_batch_coalescer emit #1: 1 slice(s), acc_bytes=192450019, cap=100000000
+[2026-08-01 15:07:28.152] [info] [load_balancing_scan_batch_coalescer.cpp:96] [coalesce-debug] load_balancer emit pipeline=3 -> preferred GPU 0
+[2026-08-01 15:07:28.152] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5089
+[2026-08-01 15:07:28.206] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=0 compressed_bytes=112152776 uncompressed_bytes=367441363 output_rows=9954709 output_columns=6 split_count=1 duration_us=63570
+[2026-08-01 15:07:28.206] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915833228 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.318] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=2 compressed_bytes=112142412 uncompressed_bytes=367405697 output_rows=9953929 output_columns=6 split_count=1 duration_us=108691
+[2026-08-01 15:07:28.318] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915761468 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.319] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=1 compressed_bytes=112158199 uncompressed_bytes=367451927 output_rows=9954993 output_columns=6 split_count=1 duration_us=107862
+[2026-08-01 15:07:28.319] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915859356 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.468] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=4 compressed_bytes=112165749 uncompressed_bytes=367488880 output_rows=9956196 output_columns=6 split_count=1 duration_us=145537
+[2026-08-01 15:07:28.468] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915970032 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.508] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=5 compressed_bytes=112151675 uncompressed_bytes=367434734 output_rows=9954694 output_columns=6 split_count=1 duration_us=185578
+[2026-08-01 15:07:28.508] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915831848 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.513] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=6 compressed_bytes=112159720 uncompressed_bytes=367459361 output_rows=9955463 output_columns=6 split_count=1 duration_us=189022
+[2026-08-01 15:07:28.513] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915902596 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.518] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=3 compressed_bytes=112167958 uncompressed_bytes=367485494 output_rows=9956054 output_columns=6 split_count=1 duration_us=193993
+[2026-08-01 15:07:28.518] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915956968 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.550] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=7 compressed_bytes=112155328 uncompressed_bytes=367451299 output_rows=9955250 output_columns=6 split_count=1 duration_us=78891
+[2026-08-01 15:07:28.550] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915883000 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.692] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=11 compressed_bytes=112158642 uncompressed_bytes=367462845 output_rows=9955382 output_columns=6 split_count=1 duration_us=138805
+[2026-08-01 15:07:28.692] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915895144 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.720] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=8 compressed_bytes=112174803 uncompressed_bytes=367510174 output_rows=9956691 output_columns=6 split_count=1 duration_us=200656
+[2026-08-01 15:07:28.721] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=916015572 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.726] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=10 compressed_bytes=112158325 uncompressed_bytes=367453983 output_rows=9955457 output_columns=6 split_count=1 duration_us=204830
+[2026-08-01 15:07:28.727] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915902044 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.727] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=9 compressed_bytes=112152027 uncompressed_bytes=367436029 output_rows=9954701 output_columns=6 split_count=1 duration_us=206379
+[2026-08-01 15:07:28.727] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915832492 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.760] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=12 compressed_bytes=112167082 uncompressed_bytes=367491853 output_rows=9956195 output_columns=6 split_count=1 duration_us=65979
+[2026-08-01 15:07:28.760] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915969940 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.902] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=16 compressed_bytes=112140985 uncompressed_bytes=367397531 output_rows=9953697 output_columns=6 split_count=1 duration_us=138585
+[2026-08-01 15:07:28.902] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915740124 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.931] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=15 compressed_bytes=112180947 uncompressed_bytes=367539071 output_rows=9957521 output_columns=6 split_count=1 duration_us=199087
+[2026-08-01 15:07:28.931] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=916091932 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.938] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=14 compressed_bytes=112157083 uncompressed_bytes=367451432 output_rows=9955149 output_columns=6 split_count=1 duration_us=206210
+[2026-08-01 15:07:28.938] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915873708 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.939] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=13 compressed_bytes=112154939 uncompressed_bytes=367459602 output_rows=9955229 output_columns=6 split_count=1 duration_us=207603
+[2026-08-01 15:07:28.939] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=915881068 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.965] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=18 compressed_bytes=11471933 uncompressed_bytes=35073348 output_rows=950272 output_columns=6 split_count=1 duration_us=24119
+[2026-08-01 15:07:28.965] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=87425024 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.969] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet columns=l_partkey|l_quantity|l_extendedprice|l_discount|l_shipmode|l_shipinstruct row_groups=17 compressed_bytes=110497392 uncompressed_bytes=361976568 output_rows=9806790 output_columns=6 split_count=1 duration_us=64664
+[2026-08-01 15:07:28.969] [info] [sirius_scan_manager.cpp:2035] [fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='__wdy_auto_fixed_page:/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/lineitem.parquet;filter=(#5 = 'DELIVER IN PERSON');cols=l_discount,l_extendedprice,l_partkey,l_quantity,l_shipinstruct,l_shipmode,' incoming_bytes=902224680 max_entry_bytes=3221225472
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5090
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5091
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5092
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5093
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5094
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5095
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5096
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5097
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5098
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5099
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5100
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5101
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5102
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5103
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5104
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5105
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5106
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5107
+[2026-08-01 15:07:28.971] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5108
+[2026-08-01 15:07:28.972] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5109
+[2026-08-01 15:07:28.972] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5110
+[2026-08-01 15:07:28.972] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5111
+[2026-08-01 15:07:28.972] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5112
+[2026-08-01 15:07:28.974] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5113
+[2026-08-01 15:07:28.998] [info] [parquet_gpu_ingestible.cpp:959] [scan-audit] parquet_materialize target_gpu=0 files=/mnt/nvme/sirius_tpch/tpch_parquet_sf30_optimized/part.parquet columns=p_partkey|p_brand|p_size|p_container row_groups=0 compressed_bytes=37430218 uncompressed_bytes=192450019 output_rows=6000000 output_columns=4 split_count=1 duration_us=23630
+[2026-08-01 15:07:28.998] [info] [parquet_gpu_ingestible.cpp:772] [fixed-page-cache] auto_cache_skip reason=dynamic_filter_scan
+[2026-08-01 15:07:28.998] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5114
+[2026-08-01 15:07:28.998] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5115
+[2026-08-01 15:07:28.998] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5116
+[2026-08-01 15:07:28.998] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5117
+[2026-08-01 15:07:28.998] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5118
+[2026-08-01 15:07:28.998] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5119
+[2026-08-01 15:07:29.024] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5120
+[2026-08-01 15:07:29.024] [info] [task_scheduler.cpp:459] [mgpu-audit] pipeline_task dispatched to GPU 0 task_id=5121
+[2026-08-01 15:07:29.044] [info] [gpu_pipeline_executor.cpp:118] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-08-01 15:07:29.045] [info] [physical_sirius_execution.cpp:165] Transparent GPU execution: query completed
+[2026-08-01 15:07:29.045] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:29.052] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:29.052] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:29.053] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:29.053] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:29.053] [info] [sirius_context.cpp:201] QueryBegin: SQL: SET gpu_execution = true;
+[2026-08-01 15:07:29.053] [info] [sirius_context.cpp:217] QueryEnd
+[2026-08-01 15:07:29.062] [info] [:] [host_pool] HOST:0 QueryEnd allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:29.062] [info] [:] [gpu_pool] GPU:0 QueryEnd allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
+[2026-08-01 15:07:29.063] [info] [:] [host_pool] HOST:0 QueryBegin allocated=72351744 bytes peak=93323264 bytes free_blocks=5051
+[2026-08-01 15:07:29.063] [info] [:] [gpu_pool] GPU:0 QueryBegin allocated=8189543936 bytes peak=12642811904 bytes reserved=0 bytes
