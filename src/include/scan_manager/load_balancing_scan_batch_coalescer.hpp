@@ -89,6 +89,10 @@ class load_balancing_scan_batch_coalescer {
       assert(this->balancer);
     }
 
+    /// True when the page cache serves only some of this scan's row groups and the
+    /// ingestible must read the rest. Both sources then feed the same connector.
+    bool has_residual_scan{false};
+
     void attach_batch_provider(std::unique_ptr<databatch_provider> provider)
     {
       batch_provider = std::move(provider);
@@ -117,7 +121,8 @@ class load_balancing_scan_batch_coalescer {
                                                std::shared_ptr<balancing_strategy> balancer);
 
   void use_cached_entries_for_pipeline(op::scan::sirius_gpu_scan_operator* scan_op,
-                                       std::unique_ptr<databatch_provider> provider);
+                                       std::unique_ptr<databatch_provider> provider,
+                                       bool has_residual_scan = false);
 
   std::function<void(exec::try_t<std::unique_ptr<op::scan::scan_info>>&&)>
   get_split_provider_bridge(op::scan::sirius_gpu_scan_operator* scan_op);
@@ -139,7 +144,12 @@ class load_balancing_scan_batch_coalescer {
 
   void process_provider_inputs(metadata_processing_state& state, std::stop_token const& stop);
 
-  void process_cached_entries(metadata_processing_state& state, std::stop_token const& stop);
+  /// Push the cached provider's batches into the connector. Closes the connector
+  /// only when nothing else will feed it -- with a residual scan the split path
+  /// owns the close, so the two sources are not racing to end the stream.
+  void process_cached_entries(metadata_processing_state& state,
+                              std::stop_token const& stop,
+                              bool close_when_done = true);
 
   /// unique_ptr storage: the slot contains a semaphore and a moodycamel
   /// queue, both of which are non-movable, so we need stable addresses

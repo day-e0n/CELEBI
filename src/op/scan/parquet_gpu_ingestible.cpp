@@ -64,6 +64,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -136,6 +137,30 @@ bool fixed_page_hybrid_provider_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_HYBRID_PROVIDER");
   return value != nullptr && std::string_view(value) == "1";
+}
+
+/// Stamp the cache entry's filter identity only when the reader actually applied a
+/// filter. Default on; set SIRIUS_FIXED_PAGE_HONEST_FILTER_SIGNATURE=0 to restore the
+/// previous behaviour of stamping unconditionally, which labels unfiltered tables as
+/// filtered whenever AST translation rejected the predicate.
+/// Cache the table BEFORE the reader's filter is applied, so an entry is valid for
+/// any query over the same columns rather than only for the one predicate it was
+/// built with. Forces reader-side pushdown off; post_filter_and_project then
+/// applies each consuming query's predicate post-decode, which the cached-batch
+/// path already does (batches leave as filter_state::UNFILTERED).
+///
+/// The trade is I/O and memory: the reader stops skipping rows, so every scan
+/// reads its columns whole and the cached entry is the full column, not a subset.
+bool cache_before_filter_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_BEFORE_FILTER");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
+bool honest_filter_signature_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_HONEST_FILTER_SIGNATURE");
+  return value == nullptr || std::string_view(value) != "0";
 }
 
 std::string auto_fixed_page_cache_name(std::vector<std::string> const& file_paths,
@@ -569,7 +594,9 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
     auto const names = _plan->data_column_names();
     scanned_column_names.insert(names.begin(), names.end());
   }
-  bool disable_filter_pushdown = false;
+  // Pre-filter caching: keep the reader from dropping rows so what lands in the
+  // cache is the whole column. Only meaningful when auto-caching is on.
+  bool disable_filter_pushdown = cache_before_filter_enabled() && fixed_page_auto_cache_enabled();
   for (auto const& elem : metadata.schema) {
     if (restrict_to_scanned && !scanned_column_names.contains(elem.name)) { continue; }
     bool const is_decimal = (elem.converted_type.has_value() &&
@@ -612,6 +639,10 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
   // selected leaf chunk's column, or 0 for VARCHAR / nested / unknown types
   // (which fall back to the parquet encoded-uncompressed size in rg_contribution).
   std::vector<std::size_t> selected_chunk_decoded_width;
+  // Parallel to selected_chunk_indices: which data column (index into
+  // data_column_names) each selected leaf chunk belongs to, so the cache-entry
+  // estimate below can be accumulated per column rather than only in total.
+  std::vector<std::size_t> selected_chunk_column_idx;
   std::unordered_set<std::size_t> pure_filter_chunk_indices;
   if (_plan->is_projected()) {
     auto const pure_filter_positions = _plan->pure_filter_batch_positions();
@@ -643,12 +674,31 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
       for (auto const leaf : leaves) {
         selected_chunk_indices.push_back(leaf);
         selected_chunk_decoded_width.push_back(decoded_width);
+        selected_chunk_column_idx.push_back(k);
         if (is_pure_filter) { pure_filter_chunk_indices.insert(leaf); }
       }
     }
   }
 
   auto row_group_indices = reader.all_row_groups(opts);
+  // Drop what the page cache is serving. Done before stats pruning so the two
+  // compose: pruning removes row groups the predicate cannot match, this removes
+  // ones already resident, and what survives is exactly the residual to read.
+  if (!_cached_row_groups.empty()) {
+    auto const cached = _cached_row_groups.find(file_path);
+    if (cached != _cached_row_groups.end() && !cached->second.empty()) {
+      auto const before = row_group_indices.size();
+      std::erase_if(row_group_indices, [&](auto rg) {
+        return cached->second.contains(static_cast<int>(rg));
+      });
+      SIRIUS_LOG_INFO(
+        "[fixed-page-cache] residual_scan file='{}' row_groups {} -> {} (cache serves {})",
+        file_path,
+        before,
+        row_group_indices.size(),
+        cached->second.size());
+    }
+  }
   if (ast_expression && !disable_filter_pushdown) {
     auto const rgs_before = row_group_indices.size();
     row_group_indices     = reader.filter_row_groups_with_stats(row_group_indices, opts, stream);
@@ -722,6 +772,37 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
     return std::pair{rg_decoded, rg_compressed};
   };
 
+  // Cache-entry pre-sizing. Same decoded-byte estimate as rg_contribution above,
+  // except pure-filter columns are INCLUDED: cache_entry_info::column_ids is built
+  // from all of _plan->data_columns (trailing pure-filter columns included), so an
+  // estimate that skipped them would under-count the entry the cache actually
+  // builds. Deliberately a separate lambda rather than a flag on rg_contribution --
+  // that value feeds split sizing, and perturbing it would change batch coalescing.
+  auto rg_cache_contribution = [&](cudf::io::parquet::RowGroup const& row_group,
+                                  std::vector<std::size_t>& per_column) {
+    std::size_t rg_decoded = 0;
+    auto const row_count   = static_cast<std::size_t>(row_group.num_rows);
+    for (std::size_t i = 0; i < selected_chunk_indices.size(); ++i) {
+      auto const& column_metadata = row_group.columns[selected_chunk_indices[i]].meta_data;
+      auto const decoded_width    = selected_chunk_decoded_width[i];
+      auto const before           = rg_decoded;
+      if (decoded_width > 0) {
+        rg_decoded += row_count * decoded_width + row_count / 8;
+      } else {
+        std::size_t const char_bytes =
+          (column_metadata.size_statistics &&
+           column_metadata.size_statistics->unencoded_byte_array_data_bytes)
+            ? static_cast<std::size_t>(
+                *column_metadata.size_statistics->unencoded_byte_array_data_bytes)
+            : static_cast<std::size_t>(column_metadata.total_uncompressed_size);
+        rg_decoded += char_bytes + row_count * sizeof(std::uint32_t) + row_count / 8;
+      }
+      auto const k = selected_chunk_column_idx[i];
+      if (k < per_column.size()) { per_column[k] += rg_decoded - before; }
+    }
+    return rg_decoded;
+  };
+
   auto out                     = std::make_unique<parquet_file_scan_info>();
   out->file_metadata           = file_metadata;
   out->file_path               = file_path;
@@ -729,9 +810,34 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
   out->reader_options          = _reader_options;
   out->disable_filter_pushdown = disable_filter_pushdown;
   out->row_groups.reserve(row_group_indices.size());
+  std::size_t projected_cache_bytes = 0;
+  std::vector<std::size_t> per_column_bytes(data_column_names.size(), 0);
   for (auto const rg_idx : row_group_indices) {
-    auto const [rg_unc, rg_comp] = rg_contribution(metadata.row_groups[rg_idx]);
-    out->row_groups.push_back({rg_idx, rg_unc, rg_comp, metadata.row_groups[rg_idx].num_rows});
+    auto const& row_group        = metadata.row_groups[rg_idx];
+    auto const [rg_unc, rg_comp] = rg_contribution(row_group);
+    out->row_groups.push_back({rg_idx, rg_unc, rg_comp, row_group.num_rows});
+    // Unprojected scans read every column, so rg_contribution's estimate already
+    // covers the whole entry; only the projected path needs the pure-filter add-back.
+    projected_cache_bytes +=
+      _plan->is_projected() ? rg_cache_contribution(row_group, per_column_bytes) : rg_unc;
+  }
+  // Monotone across files: a multi-file scan can hand out an early split before the
+  // total is known, so the gate below can admit a doomed entry until enough footers
+  // have been read. reject_admission remains the backstop for that case.
+  _projected_cache_entry_bytes.fetch_add(projected_cache_bytes, std::memory_order_relaxed);
+  {
+    std::lock_guard lock{_projected_column_bytes_mutex};
+    auto& expected = _expected_row_groups[file_path];
+    for (auto const rg_idx : row_group_indices) { expected.insert(static_cast<int>(rg_idx)); }
+  }
+  {
+    std::lock_guard lock{_projected_column_bytes_mutex};
+    if (_projected_column_bytes.size() < per_column_bytes.size()) {
+      _projected_column_bytes.resize(per_column_bytes.size(), 0);
+    }
+    for (std::size_t k = 0; k < per_column_bytes.size(); ++k) {
+      _projected_column_bytes[k] += per_column_bytes[k];
+    }
   }
 
   // Hive partition values for this file, in scan_plan::partition_columns order.
@@ -759,16 +865,65 @@ bool parquet_gpu_ingestible::fixed_page_cache_has_dynamic_filters() const
   return static_cast<bool>(_sirius_dynamic_filters);
 }
 
+/// Whether a scan carrying dynamic filters may still populate the page cache.
+///
+/// Such a scan is skipped by default, which on TPC-H/JCC-H means most of lineitem: a
+/// probe-side scan almost always has a join's dynamic filter attached (measured on an
+/// SF50 22-query run: 675 of 795 `dynamic_filter_scan` skips were lineitem, 58 orders).
+/// Nothing about the decoded data forces that, though -- `disable_filter_pushdown`
+/// already keeps dynamic filters off the reader whenever auto-caching is on, so the
+/// reader hands back the whole column exactly as it does for a static predicate, and
+/// cached batches leave as filter_state::UNFILTERED for each consumer to re-filter.
+/// The real trade is that a dynamic filter can be far more selective than a static one,
+/// so caching the unfiltered column costs I/O and cache capacity for rows the query
+/// would have skipped. Off by default so that trade stays opt-in and measurable.
+bool dynamic_filter_scan_cache_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_DYNAMIC_FILTER_SCANS");
+  return value != nullptr && std::string_view(value) == "1";
+}
 
-void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view,
-                                                           const cucascade::memory::memory_space& mem_space,
-                                                           rmm::cuda_stream_view stream)
+/// Whether to reject an oversized cache entry from the parquet footer, before the
+/// decoded copy is made.
+///
+/// The cache already rejects entries larger than its per-entry ceiling, but only
+/// after each chunk has been decoded and copied into the entry -- so a table that
+/// can never fit still inflates resident bytes on its way to being erased. That
+/// transient pushes the cache over its budget and fires the per-page LRU, which
+/// evicts pages belonging to OTHER, well-sized entries; those entries then fail
+/// `incomplete resident coverage` on every later query and nothing repopulates
+/// them. Measured on an SF50 22-query run: 58.9 GiB copied-then-erased, peak
+/// resident 5.61 GiB against a 5.5 GiB target, 36 page-budget evictions, and 87
+/// coverage failures that persisted through executions 2 and 3.
+///
+/// Off by default: the footer estimate can under-count (a writer that omits
+/// SizeStatistics leaves dictionary-encoded strings sized by their ENCODED bytes),
+/// and an over-count costs a cache hit that would have been legal.
+bool presize_admission_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_PRESIZE_ADMISSION");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
+
+void parquet_gpu_ingestible::set_cached_row_groups(
+  std::unordered_map<std::string, std::unordered_set<int>> groups)
+{
+  _cached_row_groups = std::move(groups);
+}
+
+void parquet_gpu_ingestible::auto_cache_materialized_table(
+  cudf::table_view view,
+  const cucascade::memory::memory_space& mem_space,
+  rmm::cuda_stream_view stream,
+  bool reader_applied_filter,
+  std::vector<row_group_slice> const& rg_slices)
 {
   if (!_scan_manager || !fixed_page_auto_cache_enabled() || view.num_columns() == 0 ||
       view.num_rows() == 0 || _plan->has_partitions()) {
     return;
   }
-  if (fixed_page_cache_has_dynamic_filters()) {
+  if (fixed_page_cache_has_dynamic_filters() && !dynamic_filter_scan_cache_enabled()) {
     SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=dynamic_filter_scan");
     return;
   }
@@ -785,6 +940,20 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view
       return;
     }
   }
+  // NOTE: a batch of nothing but STRING columns is refused here even when the
+  // variable-width index is on, which makes insert_fixed_page_entry_from_view's
+  // widening for that case ("so a batch made up entirely of STRING columns ...
+  // still reaches the per-column loop") unreachable. That looks like a bug and
+  // it was measured as one -- 120 skips on ClickBench, all of them `URL` (90)
+  // and `URL|SearchPhrase` (30), the projections of the four queries holding
+  // 17.1s of scan time the fixed-width cache cannot touch.
+  //
+  // Opening it was tried and reverted: with no per-column size admission, a
+  // URL-only entry (~9 GB decoded against a 2 GB variable budget) is admitted
+  // and then thrashes, and q35 OOMs at the 22 GB device limit with the cache
+  // holding only 1.6 GB. The gate can only be opened together with a per-column
+  // decision that refuses a column too large to ever be resident -- at which
+  // point a URL-only batch is refused again anyway, just more cheaply.
   if (!has_fixed_width_column) {
     SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=no_fixed_width_column");
     return;
@@ -792,12 +961,70 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view
 
   scan_manager::cache_entry_info cache_info;
   cache_info.resolved_file_paths = _file_paths;
-  cache_info.filter_signature = fixed_page_cache_filter_signature();
+  // Only claim a filter identity when the reader actually applied one. When AST
+  // translation rejects the predicate (LIKE / contains / prefix / suffix /
+  // substring) the reader returns the FULL table, and this function runs before
+  // post_filter_and_project -- so the view being cached is unfiltered. Stamping a
+  // filter signature on it made an unfiltered table masquerade as a filtered one:
+  // it could only ever be reused by a query carrying the byte-identical predicate,
+  // even though it is valid for any query over the same columns. Measured on SF30:
+  // 7 of 22 filter-stamped entries held 100% of their base table.
+  //
+  // Leaving the signature empty is safe because cached batches are handed out as
+  // filter_state::UNFILTERED (gpu_ingestible.cpp), so post_filter_and_project
+  // re-applies each consuming query's own predicate post-decode.
+  cache_info.filter_signature =
+    (reader_applied_filter || !honest_filter_signature_enabled())
+      ? fixed_page_cache_filter_signature()
+      : std::string{};
   cache_info.column_ids.reserve(_plan->data_columns.size());
   cache_info.names.reserve(_plan->data_columns.size());
   for (auto const& dc : _plan->data_columns) {
     cache_info.column_ids.emplace_back(duckdb::ColumnIndex(dc.primary_idx));
     cache_info.names.push_back(dc.name);
+  }
+  {
+    std::lock_guard lock{_projected_column_bytes_mutex};
+    if (_projected_column_bytes.size() == cache_info.names.size()) {
+      cache_info.projected_column_bytes = _projected_column_bytes;
+    }
+  }
+  // Row groups this batch came from, and the table's true row count. Together they
+  // are what lets a later query tell a complete entry from a short one, and name
+  // the rows a partial entry does NOT hold.
+  scan_manager::chunk_provenance provenance;
+  provenance.num_rows = static_cast<std::size_t>(view.num_rows());
+  provenance.slices.reserve(rg_slices.size());
+  for (auto const& slice : rg_slices) {
+    provenance.slices.emplace_back(slice.file_path, slice.row_group_indices);
+  }
+  std::size_t table_total_rows = 0;
+  for (auto const& slice : rg_slices) {
+    if (!slice.file_metadata) {
+      table_total_rows = 0;
+      break;
+    }
+    table_total_rows += static_cast<std::size_t>(slice.file_metadata->num_rows);
+  }
+  // A multi-file scan sums each file once; a slice per file repeats it, so only
+  // trust the total when every file appears exactly once.
+  {
+    std::unordered_set<std::string> seen;
+    std::size_t recomputed = 0;
+    bool ok                = true;
+    for (auto const& slice : rg_slices) {
+      if (!slice.file_metadata) { ok = false; break; }
+      if (seen.insert(slice.file_path).second) {
+        recomputed += static_cast<std::size_t>(slice.file_metadata->num_rows);
+      }
+    }
+    table_total_rows = ok ? recomputed : 0;
+  }
+  cache_info.table_total_rows = table_total_rows;
+  {
+    std::lock_guard lock{_projected_column_bytes_mutex};
+    cache_info.expected_row_groups.assign(_expected_row_groups.begin(),
+                                          _expected_row_groups.end());
   }
   if (cache_info.column_ids.size() != static_cast<std::size_t>(view.num_columns())) {
     SIRIUS_LOG_INFO(
@@ -809,6 +1036,34 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view
 
   auto const name =
     auto_fixed_page_cache_name(_file_paths, cache_info.filter_signature, cache_info.names);
+
+  // Footer-based fixed-width pre-rejection. This is deliberately NOT an early
+  // return: the verdict is about the fixed-width columns only, and vetoing the
+  // whole insert also disables the variable-width (STRING) page index, which has
+  // its own separate budget. Measured on SF50 when this did return early:
+  // lineitem's variable-width indexing dropped 61 -> 0 and scan time rose 2.10%
+  // -> 4.18% over the fixed-only baseline, wiping out the gain from removing
+  // 53.6 GiB of copied-then-erased admission waste.
+  bool fixed_width_pre_rejected = false;
+  if (presize_admission_enabled()) {
+    auto const projected_bytes = _projected_cache_entry_bytes.load(std::memory_order_relaxed);
+    auto const admission_limit =
+      scan_manager::sirius_scan_manager::fixed_page_admission_limit_bytes();
+    fixed_width_pre_rejected =
+      projected_bytes != 0 && admission_limit != 0 && projected_bytes > admission_limit;
+    // projected_bytes is logged on both paths: comparing it against the eventual
+    // incoming_bytes on the admission log line is how the footer estimate's
+    // accuracy gets checked (notably whether cuDF widens FLBA decimals to
+    // decimal128, which would make this estimate 2x low for the decimal columns).
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] projected_entry_bytes table='{}' projected_bytes={} "
+      "max_entry_bytes={} fixed_width_pre_rejected={}",
+      name,
+      projected_bytes,
+      admission_limit,
+      fixed_width_pre_rejected);
+  }
+
   try {
     if (fixed_page_owned_pages_enabled() && fixed_page_direct_auto_populate_enabled()) {
       auto const pages_added = _scan_manager->insert_fixed_page_entry_from_view(
@@ -816,7 +1071,9 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(cudf::table_view view
         std::move(cache_info),
         view,
         const_cast<cucascade::memory::memory_space&>(mem_space),
-        stream);
+        stream,
+        fixed_width_pre_rejected,
+        provenance);
       if (pages_added) {
         SIRIUS_LOG_INFO(
           "[fixed-page-cache] auto_cache_populate_direct table='{}' rows={} columns={} pages={}",
@@ -971,7 +1228,15 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     split.rg_slices.size(),
     audit_duration_us);
 
-  if (auto_cache && table) { auto_cache_materialized_table(table->view(), mem_space, stream); }
+  if (auto_cache && table) {
+    // reader_filter_root is non-null exactly when opts.set_filter() above ran, i.e.
+    // when the rows in `table` are already filtered.
+    auto_cache_materialized_table(table->view(),
+                                  mem_space,
+                                  stream,
+                                  /*reader_applied_filter=*/reader_filter_root != nullptr,
+                                  split.rg_slices);
+  }
 
   // Hive-partition scans assemble inline here: partition_values are per-split
   // (carried on parquet_split_info) and do not travel to the pipeline-shared

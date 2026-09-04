@@ -40,6 +40,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <mutex>
+#include <unordered_set>
+#include <unordered_map>
 #include <span>
 #include <string>
 #include <vector>
@@ -247,6 +250,15 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   [[nodiscard]] std::string fixed_page_cache_filter_signature() const;
   [[nodiscard]] bool fixed_page_cache_has_dynamic_filters() const;
 
+  /// Row groups a cached entry will serve, so this scan reads only the rest.
+  ///
+  /// Set before the scan starts when the page cache covers the query only partly.
+  /// The two sets must be exact complements -- every row emitted once, none twice
+  /// -- which is why the unit is a row group and why the cache side works from
+  /// recorded provenance rather than arithmetic on chunk indices.
+  void set_cached_row_groups(std::unordered_map<std::string, std::unordered_set<int>> groups);
+
+
   ~parquet_gpu_ingestible() override;
 
   std::unique_ptr<batch_coalescer> create_batch_coalescer() const override;
@@ -276,9 +288,12 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   std::unique_ptr<scan_info> build_file_scan_info(std::string const& file_path,
                                                   std::shared_ptr<io::sirius_ioctx> const& io_ctx);
 
+
   void auto_cache_materialized_table(cudf::table_view view,
                                      const cucascade::memory::memory_space& mem_space,
-                                     rmm::cuda_stream_view stream);
+                                     rmm::cuda_stream_view stream,
+                                     bool reader_applied_filter,
+                                    std::vector<row_group_slice> const& rg_slices);
 
   std::unique_ptr<parquet_ingestible_table_info> _info;
 
@@ -297,6 +312,29 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   // Per-file metadata-scan cursor. next_split_provider hands out one file index
   // per claim; the coalescer downstream batches files and chunks row groups.
   std::atomic<std::size_t> _next_file_idx{0};
+
+  // Footer-derived estimate of the decoded (GPU-resident) byte size of the cache
+  // entry this scan would build, accumulated across files in build_file_scan_info.
+  // Read by auto_cache_materialized_table to reject an entry that provably exceeds
+  // the page cache's per-entry admission ceiling BEFORE decoding and copying it.
+  std::atomic<std::size_t> _projected_cache_entry_bytes{0};
+
+  // Same estimate broken out per data column, in _plan->data_columns order.
+  // Lets variable-width paging decide ONCE, from the footer, whether a column's
+  // whole-table decoded size can ever be resident -- replacing an incremental
+  // "have I cached 512MB of this yet" test that necessarily cuts mid-column.
+  mutable std::mutex _projected_column_bytes_mutex;
+  std::vector<std::size_t> _projected_column_bytes;
+
+  // Row groups this scan will actually read, per file, after stats pruning.
+  // A cached entry is complete when it holds all of them -- the only completeness
+  // test that works for a FILTERED entry, whose row count is legitimately smaller
+  // than the table's and so cannot be compared against the footer total.
+  std::unordered_map<std::string, std::unordered_set<int>> _expected_row_groups;
+
+  // Row groups the page cache serves; excluded from this scan's reads. Empty when
+  // the cache serves everything or nothing.
+  std::unordered_map<std::string, std::unordered_set<int>> _cached_row_groups;
 
   // Dynamic join filters shared with the producing hash join; null when none are wired.
   // AST-capable filters are ANDed into the parquet reader filter; membership filtering happens in

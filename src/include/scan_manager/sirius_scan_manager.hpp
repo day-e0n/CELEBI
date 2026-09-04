@@ -24,6 +24,7 @@
 #include "scan_manager/config.hpp"
 #include "scan_manager/load_balancing_scan_batch_coalescer.hpp"
 #include "scan_manager/split_provider.hpp"
+#include "scan_manager/variable_width_page_index.hpp"
 
 // Forward-declare sirius_ioctx via <io/types.hpp> for the gpu_ioctxs map type
 // used by prepare_for_query / create_provider_for.
@@ -99,6 +100,22 @@ class cache_entry_info {
   std::string filter_signature;                    ///< non-empty for filter-specific auto caches
   duckdb::vector<duckdb::ColumnIndex> column_ids;  ///< cached columns, by primary index
   std::vector<std::string> names;                  ///< aligned with column_ids; gather keys
+  /// Footer estimate of each column's whole-table decoded size, aligned with
+  /// @c names. Empty when the reader could not supply it. Variable-width paging
+  /// uses it to refuse, once and up front, a column that can never be resident
+  /// -- see index_variable_width_columns_for_chunk.
+  std::vector<std::size_t> projected_column_bytes;
+  /// Rows the whole table has, from the parquet footer. Nothing else here can
+  /// answer "is this entry complete?" -- pinned_entry::num_rows is a running total
+  /// of what happened to be inserted, so a scan that failed halfway leaves a short
+  /// entry that reads as valid and silently serves fewer rows. 0 when the reader
+  /// could not supply it; completeness is then unknown and the entry is treated as
+  /// complete, which is today's behaviour.
+  std::size_t table_total_rows{0};
+  /// Row groups the scan reads, per file, after stats pruning. An entry is
+  /// complete when its chunk provenance covers all of them. Works for filtered
+  /// entries too, unlike a row-count comparison. Empty when unknown.
+  std::vector<std::pair<std::string, std::unordered_set<int>>> expected_row_groups;
 
   /// Build the cache descriptor from a read-side ingestible_table_info (parquet
   /// or duckdb-native): captures the format's identity, the kept @c column_ids,
@@ -316,6 +333,24 @@ struct fixed_width_chunk_page_span {
  * which columns the user pinned) along with the data batches making up the
  * pinned table. The vector may be empty until splits are populated.
  */
+/// Which parquet row groups a cached chunk actually holds.
+///
+/// chunk_index is an arrival counter (`entry.chunk_memory_spaces.size()` at insert
+/// time) and a page's global_row_offset is a running total in that same arrival
+/// order -- neither names a position in the table. A COMPLETE entry does not care:
+/// holding every chunk makes the concatenation a permutation of the table, and
+/// every operator above the scan is order-insensitive. A PARTIAL entry does care,
+/// because serving part of a scan from cache means asking parquet for the exact
+/// complement, and without this there is no way to name it.
+///
+/// Keyed by file path, never by a flat index: chunk_index == row_group_index holds
+/// only while a single row group exceeds the coalescer's byte cap, which is a
+/// tuning parameter rather than an invariant.
+struct chunk_provenance {
+  std::vector<std::pair<std::string, std::vector<cudf::size_type>>> slices;
+  std::size_t num_rows{0};
+};
+
 struct pinned_entry {
   /// Cache identity + column layout for this pinned table. Drives the cache-hit
   /// match (@ref cache_entry_info::can_serve_with_columns) and the per-column
@@ -341,6 +376,16 @@ struct pinned_entry {
     fixed_width_chunk_page_spans;
   /// Target page size used when fixed_width_pages_by_column was built.
   std::size_t fixed_width_page_size_bytes{0};
+  /// Prototype variable-width (STRING) page index, entirely separate from the
+  /// fixed-width members above -- see variable_width_page_index.hpp. Keyed by
+  /// column name; each entry is this column's pages for one chunk, indexed by
+  /// chunk_index (parallel in spirit to fixed_width_chunk_page_spans, but one
+  /// full variable_width_chunk_page_index per chunk since page row-counts
+  /// aren't a single constant to summarize).
+  std::unordered_map<std::string, std::vector<variable_width_chunk_page_index>>
+    variable_width_pages_by_column;
+  /// Target page size used when variable_width_pages_by_column was built.
+  std::size_t variable_width_page_size_bytes{0};
   /// Lightweight page-directory accounting for the current prototype. Pages are
   /// still physically owned by cudf column chunks, but this is the metadata
   /// surface that scan reuse and future page admission/eviction build on.
@@ -351,6 +396,13 @@ struct pinned_entry {
   /// share the same memory_space because they came from the same
   /// chunked_parquet_reader::read_chunk() call.
   std::vector<cucascade::memory::memory_space*> chunk_memory_spaces;
+  /// Parallel to chunk_memory_spaces: the row groups each chunk came from.
+  std::vector<chunk_provenance> chunk_provenance_by_index;
+  /// Columns stored as dictionary CODES rather than as strings. Their pages live in
+  /// fixed_width_pages_by_column like any int32 column; the keys needed to turn a
+  /// code back into a string live in the scan manager's shared dictionary store,
+  /// once per (identity, column) rather than once per chunk.
+  std::unordered_set<std::string> dictionary_encoded_columns;
   /// HOST-tier storage: one host_data_representation per chunk, each holding all
   /// pinned columns. The cached_split_provider slices these by column index when
   /// serving a particular scan. Populated by @ref insert_pinned_entry_host.
@@ -387,6 +439,19 @@ struct parquet_bind_result {
  * The scan manager owns a configurable-size thread pool and is given a chance
  * to set up per-scan state before a query runs (via prepare_for_query).
  */
+/// Page metadata plus NON-OWNING handles to the buffers, for sharing one column
+/// chunk's pages across the several cache entries whose projections all contain
+/// that column. Owning the buffers here would make eviction a no-op:
+/// apply_global_variable_width_page_budget resets the entries' owned_column, and a
+/// strong reference in the store would keep the allocation alive while the sweep
+/// reports the bytes as freed -- the same "eviction that cannot move its own
+/// metric" failure as the memory-pressure loop. Weak handles mean the last real
+/// holder still frees, and a stale row simply fails to lock and is dropped.
+struct shared_variable_pages {
+  variable_width_chunk_page_index index;             ///< pages with owned_column left null
+  std::vector<std::weak_ptr<cudf::column>> buffers;  ///< parallel to index.pages
+};
+
 class sirius_scan_manager {
  public:
   /**
@@ -413,6 +478,21 @@ class sirius_scan_manager {
   sirius_scan_manager& operator=(sirius_scan_manager&&)      = delete;
 
   using ingestible_table_info = op::scan::ingestible_table_info;
+
+  /// \brief Per-entry admission ceiling for the fixed-width page cache, in bytes
+  /// (0 = no limit; defaults to half the per-GPU budget).
+  ///
+  /// Exposed so scan-side code can size a prospective entry from its parquet
+  /// footer and skip it before decoding, instead of building the copy and having
+  /// it erased by the same limit after the fact.
+  [[nodiscard]] static std::size_t fixed_page_admission_limit_bytes();
+
+  /// \brief Whether the variable-width (STRING) page index is enabled.
+  ///
+  /// Exposed so scan-side admission can tell that a batch of nothing but STRING
+  /// columns is still cacheable, rather than refusing it for having no
+  /// fixed-width column.
+  [[nodiscard]] static bool variable_width_page_cache_is_enabled();
 
   /// \brief Prepare per-scan state for the given query.
   ///
@@ -480,12 +560,25 @@ class sirius_scan_manager {
   /// insert_pinned_entry and stores only owned fixed-width pages.
   /// \return Number of new fixed-width pages actually added (0 means not
   ///         populated -- rejected, skipped, or a detected duplicate).
+  ///
+  /// @param fixed_width_pre_rejected  The caller has already determined (from the
+  ///        parquet footer) that this entry's fixed-width columns cannot fit under
+  ///        fixed_page_admission_limit_bytes(). Their pages are then skipped
+  ///        outright -- no copy is made and no admission check runs -- while STRING
+  ///        columns still populate the variable-width page index, which has its own
+  ///        independent budget. Without this split, a fixed-width size verdict also
+  ///        silently disables variable-width caching for the table (measured on SF50:
+  ///        lineitem's variable-width indexing went 61 -> 0). The resulting entry
+  ///        holds nullptr chunks for its fixed-width columns, which is the same shape
+  ///        SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED=0 already produces.
   [[nodiscard]] std::size_t insert_fixed_page_entry_from_view(
     const std::string& name,
     cache_entry_info cache_info,
     cudf::table_view view,
     cucascade::memory::memory_space& memory_space,
-    rmm::cuda_stream_view stream);
+    rmm::cuda_stream_view stream,
+    bool fixed_width_pre_rejected = false,
+    chunk_provenance provenance   = {});
 
   /// \brief Pin the host-tier entry for a table.
   ///
@@ -534,7 +627,11 @@ class sirius_scan_manager {
   /// \brief Attach a cached batch_provider to @p op if a pinned entry can serve
   ///        it. Returns true when a cache hit was assigned (the caller then skips
   ///        the disk-reading split_provider for this operator).
-  bool try_assign_cached_entries(op::scan::sirius_gpu_scan_operator* op);
+  /// @param residual_out  Set to true when the cache covers the scan only partly,
+  ///        meaning the caller must still build a split_provider for the row groups
+  ///        the cache does not hold.
+  bool try_assign_cached_entries(op::scan::sirius_gpu_scan_operator* op,
+                                 bool* residual_out = nullptr);
 
   /// Drop LRU fixed pages when device free memory is below the configured floor.
   void evict_fixed_pages_for_memory_pressure(std::string_view reason);
@@ -569,6 +666,44 @@ class sirius_scan_manager {
   std::vector<op::scan::sirius_gpu_scan_operator*> _scan_op_order;
   mutable std::mutex _pinned_entries_mutex;
   std::unordered_map<std::string, pinned_entry> _pinned_entries;
+
+  /// Canonical variable-width pages, shared across cache entries.
+  ///
+  /// The cache name folds in the projection (";cols=A,B,C"), so a column read by
+  /// three different projections was paged three times and stored three times.
+  /// Measured on ClickBench 100M: SearchPhrase (1.2 GB decoded) appeared in three
+  /// keys, so 3.6 GB competed for a 2 GB budget and the sweep evicted 25 times --
+  /// and an evicted page is an outright lost hit, because a paged column has no
+  /// whole-chunk copy to fall back on.
+  ///
+  /// Keyed by (file identity + filter signature, column, chunk index, chunk rows)
+  /// so only genuinely identical row ranges are shared. Safe here because the
+  /// coalescer's byte cap is smaller than one row group, so every projection
+  /// chunks on row-group boundaries and the cut points coincide -- verified in
+  /// the page_directory log, where all unfiltered SearchPhrase entries cut at
+  /// exactly 10,000,000 rows regardless of projection.
+  ///
+  /// Entries keep their own page metadata and take a reference to the buffers, so
+  /// usable()/coverage logic is unchanged; only the device allocation is shared.
+  /// Guarded by _pinned_entries_mutex.
+  std::unordered_map<std::string, shared_variable_pages> _shared_variable_pages;
+
+  /// Distinct values of dictionary-encoded columns, keyed by (file identity +
+  /// filter signature, column).
+  ///
+  /// A decoded STRING column costs its characters plus 4 bytes of offsets per row,
+  /// which is why ClickBench's Title (9.22 GB) and URL (8.80 GB) can never be
+  /// admitted and the queries that read them get no cache at all. Encoding splits
+  /// the column into one int32 code per row -- which is fixed-width, so it needs no
+  /// variable-width paging machinery and goes through the existing page path -- plus
+  /// one copy of the distinct values, kept here. Measured on ClickBench: Title
+  /// 9.22 GB -> 1.58 GB (5.8x), and the keys do not grow as chunks are added
+  /// (per-chunk 0.38 GB, unified across chunks 0.38 GB), so this store's size is a
+  /// property of the column rather than of how much of it has been cached.
+  ///
+  /// Held strongly: the codes are meaningless without the keys, so evicting these
+  /// while code pages remain would leave unreadable pages behind.
+  std::unordered_map<std::string, std::shared_ptr<cudf::column>> _shared_dictionaries;
   std::unordered_set<std::string> _fixed_page_admission_rejected_entries;
 
   /// Per-query sequencer for opportunistic fadvise calls.  Built fresh

@@ -145,6 +145,25 @@ def format_query_sequence(queries: Iterable[int]) -> str:
     return ",".join(f"q{q}" for q in queries)
 
 
+def load_column_set(module_name: str) -> str:
+    """다른 벤치마크의 컬럼 맵으로 QUERY_COLUMNS / FIXED_WIDTH_COLUMNS를 갈아끼운다.
+
+    이름을 rebind하지 않고 dict 내용을 in-place로 바꾼다. query_signature()가
+    모듈 레벨 이름을 직접 읽기 때문에, rebind하면 이미 import된 쪽이 옛 객체를
+    계속 보게 된다. performance_test.load_query_set()이 같은 이유로 같은 방식을
+    쓴다.
+    """
+    import importlib
+
+    mod = importlib.import_module(module_name)
+    QUERY_COLUMNS.clear()
+    QUERY_COLUMNS.update(mod.QUERY_COLUMNS)
+    FIXED_WIDTH_COLUMNS.clear()
+    FIXED_WIDTH_COLUMNS.update(mod.FIXED_WIDTH_COLUMNS)
+    n_fixed = sum(len(v) for v in FIXED_WIDTH_COLUMNS.values())
+    return f"{module_name}: {len(QUERY_COLUMNS)} queries, {n_fixed} fixed-width columns"
+
+
 def query_signature(qnum: int, scope: str = "fixed_width") -> frozenset[ColumnKey]:
     """쿼리 하나가 필요로 하는 `(table, column)` 집합을 만든다.
 
