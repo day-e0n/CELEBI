@@ -181,6 +181,15 @@ std::string auto_fixed_page_cache_name(std::vector<std::string> const& file_path
   // the "same column set" appendable check, and erasing the first
   // projection's fully-cached data to rebuild from scratch for its own
   // columns (see insert_fixed_page_entry_from_view's `appendable` branch).
+  // Column-keyed mode drops the column set from the identity so every projection
+  // over the same (file, filter) shares ONE entry, and inserts merge into it
+  // instead of colliding. Measured on ClickBench: SearchPhrase is read by 13 of
+  // 37 queries but, split across three projection keys, no key was reused more
+  // than 3 times -- and each key stored its own 1.07 GB copy. Merging turns both
+  // halves of that around at once. Requires the merge path below to key chunks by
+  // their row groups rather than by arrival order, which is what
+  // chunk_provenance_by_index records.
+  if (scan_manager::sirius_scan_manager::column_keyed_cache_is_enabled()) { return out.str(); }
   std::vector<std::string> cols = column_names;
   std::sort(cols.begin(), cols.end());
   out << ";cols=";

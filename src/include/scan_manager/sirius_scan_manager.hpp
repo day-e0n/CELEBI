@@ -494,6 +494,13 @@ class sirius_scan_manager {
   /// fixed-width column.
   [[nodiscard]] static bool variable_width_page_cache_is_enabled();
 
+  /// \brief Whether one cache entry per (file, filter) holds the union of every
+  /// projection's columns, instead of one entry per projection.
+  ///
+  /// Exposed so the scan-side name builder can drop the column set from the cache
+  /// identity, which is what makes the merge possible.
+  [[nodiscard]] static bool column_keyed_cache_is_enabled();
+
   /// \brief Prepare per-scan state for the given query.
   ///
   /// Walks @p query 's pipelines in scan-operator order. For each GPU parquet

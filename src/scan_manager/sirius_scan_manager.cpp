@@ -385,6 +385,26 @@ std::size_t variable_width_column_resident_bytes(pinned_entry const& entry,
 /// test that replaces the old row-count heuristic. Empty provenance (non-parquet
 /// reader) can never match, so those callers fall back to appending, which is the
 /// behaviour they had before provenance existed.
+/// Index of the chunk holding exactly these row groups, or npos.
+///
+/// With one entry per projection, chunk_index was just an arrival counter and that
+/// was harmless -- every column of an entry arrived together in the same insert.
+/// Merging projections breaks that: a later insert brings different columns for
+/// row groups already present, and appending them at a fresh index would make the
+/// same chunk_index mean different rows for different columns, which
+/// all_columns_cover_tiled would then assemble into one batch. Wrong results, not
+/// a miss. Looking the chunk up by its row groups is what keeps a chunk index
+/// meaning one fixed range of the table.
+std::size_t find_chunk_by_provenance(pinned_entry const& entry,
+                                     chunk_provenance const& incoming)
+{
+  if (incoming.slices.empty()) { return std::numeric_limits<std::size_t>::max(); }
+  for (std::size_t i = 0; i < entry.chunk_provenance_by_index.size(); ++i) {
+    if (entry.chunk_provenance_by_index[i].slices == incoming.slices) { return i; }
+  }
+  return std::numeric_limits<std::size_t>::max();
+}
+
 bool chunk_already_present(pinned_entry const& entry, chunk_provenance const& incoming)
 {
   if (incoming.slices.empty()) { return false; }
@@ -422,6 +442,15 @@ bool entry_covers_all_row_groups(pinned_entry const& entry)
 /// Off until the residual read path lands -- see make_provider_for_pinned_entry.
 /// Whether an oversized STRING column is cached as dictionary codes instead of
 /// being refused. Off by default until measured.
+/// Whether one cache entry per (file, filter) holds the union of every projection's
+/// columns. Off until measured -- it changes cache identity, so every entry built
+/// under one setting is unusable under the other.
+bool column_keyed_cache_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_COLUMN_KEYED_CACHE");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
 bool dictionary_encoding_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_DICTIONARY_ENCODE");
@@ -558,6 +587,9 @@ std::shared_ptr<cudf::column> encode_column_as_dictionary(
     auto codes = std::make_shared<cudf::column>(
       merged_view.get_indices_annotated(), stream, memory_space.get_default_allocator());
     existing->second = std::move(keys);
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] dictionary_remapped table='{}' column='{}' rows={} keys={}",
+      name, column_name, column_view.size(), merged_view.keys_size());
     return codes;
   } catch (std::exception const& e) {
     SIRIUS_LOG_INFO("[fixed-page-cache] dictionary_encode_failed table='{}' column='{}' what='{}'",
@@ -1681,6 +1713,17 @@ std::size_t fixed_width_table_view_bytes(cudf::table_view view)
       bytes += static_cast<std::size_t>(col.size()) * element_size;
       continue;
     }
+    // With dictionary encoding on, a STRING column enters the entry as one int32
+    // code per row -- the characters go to the shared key store, whose size is a
+    // property of the column's distinct values rather than of the rows cached
+    // here. Charging the string estimate instead rejected exactly the columns the
+    // encoding exists to admit: measured on ClickBench, the four entries carrying
+    // URL/Title were refused at identical incoming_bytes with the encoding on and
+    // off, so no oversized string column ever reached the encoder.
+    if (dictionary_encoding_enabled() && col.type().id() == cudf::type_id::STRING) {
+      bytes += static_cast<std::size_t>(col.size()) * sizeof(std::int32_t);
+      continue;
+    }
     // Conservative admission estimate for variable-width hybrid chunks.
     bytes += static_cast<std::size_t>(col.size()) * 32ULL;
   }
@@ -2063,6 +2106,85 @@ std::size_t fixed_width_page_count(pinned_entry const& entry)
   }
   return pages;
 }
+
+/// Add columns this entry does not yet have, at an EXISTING chunk index.
+///
+/// Used when projections share one entry: a later query over the same row groups
+/// brings different columns, and they belong to the chunk that already holds those
+/// rows rather than to a new one. Columns already present are skipped -- re-adding
+/// one would append a second page list for the same rows and double the column's
+/// contribution to every later batch.
+///
+/// Returns the number of pages added.
+std::size_t merge_columns_into_chunk(
+  pinned_entry& entry,
+  std::string const& name,
+  std::vector<std::string> const& column_names,
+  std::vector<bool> const& fixed_columns,
+  cudf::table_view const& view,
+  std::size_t chunk_index,
+  cucascade::memory::memory_space& memory_space,
+  rmm::cuda_stream_view stream,
+  std::unordered_map<std::string, std::shared_ptr<cudf::column>>* dictionaries)
+{
+  auto const pages_before = fixed_width_page_count(entry);
+  for (std::size_t i = 0; i < column_names.size(); ++i) {
+    auto const column = std::string{column_names[i]};
+    if (entry.fixed_width_pages_by_column.contains(column) ||
+        entry.data_batches_by_column.contains(column)) {
+      continue;  // already held for every chunk; nothing to add
+    }
+    auto const column_view = view.column(static_cast<cudf::size_type>(i));
+
+    if (!fixed_columns[i]) {
+      if (dictionary_encoding_enabled() && column_view.type().id() == cudf::type_id::STRING &&
+          column_view.size() > 0) {
+        if (auto codes = encode_column_as_dictionary(
+              entry, name, column, column_view, memory_space, stream, dictionaries)) {
+          index_fixed_width_column_pages(entry,
+                                         name,
+                                         entry.cache_info.resolved_file_paths.empty()
+                                           ? std::string{}
+                                           : entry.cache_info.resolved_file_paths.front(),
+                                         column,
+                                         codes->view(),
+                                         chunk_index,
+                                         0,
+                                         &memory_space,
+                                         entry.fixed_width_page_size_bytes,
+                                         true);
+          entry.dictionary_encoded_columns.insert(column);
+          entry.data_batches_by_column[column].emplace_back(nullptr);
+          entry.cache_info.names.push_back(column);
+          continue;
+        }
+      }
+      if (is_intrinsically_fixed_width_type(column_view)) { continue; }
+      entry.data_batches_by_column[column].emplace_back(
+        std::make_shared<cudf::column>(column_view, stream, memory_space.get_default_allocator()));
+      entry.cache_info.names.push_back(column);
+      continue;
+    }
+
+    index_fixed_width_column_pages(entry,
+                                   name,
+                                   entry.cache_info.resolved_file_paths.empty()
+                                     ? std::string{}
+                                     : entry.cache_info.resolved_file_paths.front(),
+                                   column,
+                                   column_view,
+                                   chunk_index,
+                                   0,
+                                   &memory_space,
+                                   entry.fixed_width_page_size_bytes,
+                                   true);
+    entry.data_batches_by_column[column].emplace_back(nullptr);
+    entry.cache_info.names.push_back(column);
+  }
+  auto const after = fixed_width_page_count(entry);
+  return after > pages_before ? after - pages_before : 0;
+}
+
 
 std::size_t fixed_width_page_stats_count(pinned_entry const& entry)
 {
@@ -2786,6 +2908,8 @@ bool sirius_scan_manager::variable_width_page_cache_is_enabled()
   return variable_width_page_cache_enabled();
 }
 
+bool sirius_scan_manager::column_keyed_cache_is_enabled() { return column_keyed_cache_enabled(); }
+
 sirius_scan_manager::sirius_scan_manager(
   const scan_manager_config& config,
   cucascade::memory::memory_reservation_manager& reservation_manager,
@@ -3241,6 +3365,20 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
   auto const incoming_bytes =
     fixed_width_pre_rejected ? std::size_t{0} : fixed_width_table_view_bytes(view);
   auto reject_admission = [&](std::size_t existing_bytes, std::size_t projected_bytes) -> std::size_t {
+    // Column-keyed mode has ONE entry per (file, filter), so erasing it on an
+    // oversized insert throws away every column already cached and blacklists the
+    // name for the rest of the run -- measured as hits 49 -> 21. There the right
+    // response is to stop widening the entry, not to destroy it: the columns
+    // already resident keep serving the queries that ask for them, because
+    // build_ranges and has_chunk_backing_for_selected_columns only ever look at
+    // the columns a query actually selected.
+    if (column_keyed_cache_enabled()) {
+      SIRIUS_LOG_INFO(
+        "[fixed-page-cache] admission_stop_widening table='{}' existing_bytes={} "
+        "incoming_bytes={} projected_bytes={} max_entry_bytes={}",
+        name, existing_bytes, incoming_bytes, projected_bytes, admission_limit);
+      return 0;
+    }
     _pinned_entries.erase(name);
     _fixed_page_admission_rejected_entries.insert(name);
     SIRIUS_LOG_INFO(
@@ -3254,7 +3392,7 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
     return 0;
   };
 
-  if (_fixed_page_admission_rejected_entries.contains(name)) {
+  if (!column_keyed_cache_enabled() && _fixed_page_admission_rejected_entries.contains(name)) {
     SIRIUS_LOG_INFO(
       "[fixed-page-cache] auto_cache_skip reason=admission_previously_rejected table='{}' "
       "incoming_bytes={} max_entry_bytes={}",
@@ -3271,13 +3409,38 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
   auto existing_it = _pinned_entries.find(name);
   if (existing_it != _pinned_entries.end()) {
     auto& entry = existing_it->second;
-    bool const appendable = is_auto_fixed_page_entry(name) &&
-                            entry.cache_info.column_ids.size() == cache_info.column_ids.size() &&
-                            entry.cache_info.names == column_names &&
-                            entry.cache_info.filter_signature == cache_info.filter_signature;
+    // Column-keyed mode merges projections into one entry, so a differing column
+    // set is expected rather than a reason to erase what is already cached.
+    bool const appendable =
+      is_auto_fixed_page_entry(name) &&
+      entry.cache_info.filter_signature == cache_info.filter_signature &&
+      (column_keyed_cache_enabled() ||
+       (entry.cache_info.column_ids.size() == cache_info.column_ids.size() &&
+        entry.cache_info.names == column_names));
     if (!appendable) {
       orphan_or_erase_pinned_entry(_pinned_entries, existing_it);
       existing_it = _pinned_entries.end();
+    } else if (column_keyed_cache_enabled() &&
+               find_chunk_by_provenance(entry, provenance) !=
+                 std::numeric_limits<std::size_t>::max() &&
+               !std::ranges::all_of(column_names, [&entry](std::string_view col) {
+                 return entry.data_batches_by_column.contains(std::string{col}) ||
+                        entry.fixed_width_pages_by_column.contains(std::string{col});
+               })) {
+      // Merge: these row groups are already here, but this projection brings
+      // columns the entry does not have yet. Add them AT THE EXISTING CHUNK INDEX
+      // so a chunk index keeps meaning one range of the table for every column --
+      // appending at a fresh index would let all_columns_cover_tiled assemble
+      // columns covering different rows into one batch. num_rows is not touched:
+      // the rows are already counted, only the column set widens.
+      auto const chunk_index = find_chunk_by_provenance(entry, provenance);
+      auto const added       = merge_columns_into_chunk(
+        entry, name, column_names, fixed_columns, view, chunk_index, memory_space, stream,
+        &_shared_dictionaries);
+      SIRIUS_LOG_INFO(
+        "[fixed-page-cache] merged_columns table='{}' chunk_index={} added={} entry_columns={}",
+        name, chunk_index, added, entry.cache_info.names.size());
+      return added;
     } else if (chunk_already_present(entry, provenance)) {
       // Two concurrent scan tasks can both miss the cache for the same brand-new
       // (name, filter) key, both read it from disk, and both land here to populate
