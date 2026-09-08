@@ -95,6 +95,10 @@ def main() -> int:
                              "overlap between adjacent queries, which is the order a reorder has "
                              "the most to recover from; the benchmark's natural order can already "
                              "be favourable and then understates what reordering is worth.")
+    parser.add_argument("--order",
+                        help="Explicit comma-separated query order. Overrides --arrival and "
+                             "suppresses the reorder; for testing a hypothesis order the "
+                             "built-in policies cannot express.")
     parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
@@ -123,10 +127,13 @@ def main() -> int:
     if skip:
         print(f"skipping q{', q'.join(str(q) for q in sorted(skip))} "
               f"({len(qnums)} queries per execution)", flush=True)
-    if args.arrival == "worst":
+    if args.order:
+        qnums = [int(x) for x in args.order.split(",") if x.strip()]
+        print(f"explicit order: {','.join(f'q{q}' for q in qnums)}", flush=True)
+    elif args.arrival == "worst":
         qnums = reorder.worst_case_sequence(qnums, "fixed_width")
         print(f"arrival(worst): {','.join(f'q{q}' for q in qnums)}", flush=True)
-    if args.condition != "baseline" and not args.no_reorder:
+    if args.condition != "baseline" and not args.no_reorder and not args.order:
         if args.reorder_policy == "byte-lru":
             if not args.column_bytes:
                 parser.error("--reorder-policy byte-lru requires --column-bytes")

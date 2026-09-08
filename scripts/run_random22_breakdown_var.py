@@ -140,7 +140,8 @@ def main() -> int:
                         help="Key cache entries by the projected column list instead of by "
                              "(file, filter). Measured worse (-27.3%% vs -38.9%%); kept only to "
                              "reproduce the older configuration.")
-    parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending"),
+    parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
+                                 "cost-seeded-overlap"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
                              "COLUMNS, so a 25-row nation column scores like a 600M-row "
@@ -179,13 +180,14 @@ def main() -> int:
         qnums = worst_case_sequence(qnums, "fixed_width")
         print(f"arrival(worst): {','.join(f'q{q}' for q in qnums)}", flush=True)
     if args.condition != "baseline" and not args.no_reorder and not args.order:
-        if args.reorder_policy in ("byte-lru", "byte-overlap", "cost-ascending"):
+        if args.reorder_policy in ("byte-lru", "byte-overlap", "cost-ascending",
+                                   "cost-seeded-overlap"):
             if not args.column_bytes:
                 parser.error(f"--reorder-policy {args.reorder_policy} requires --column-bytes")
             print(f"column bytes: {load_column_bytes(args.column_bytes)} columns", flush=True)
-        if args.reorder_policy == "cost-ascending":
+        if args.reorder_policy in ("cost-ascending", "cost-seeded-overlap"):
             if not args.query_table_columns:
-                parser.error("--reorder-policy cost-ascending requires --query-table-columns")
+                parser.error(f"--reorder-policy {args.reorder_policy} requires --query-table-columns")
             print(f"query columns: {load_query_table_columns(args.query_table_columns)} queries",
                   flush=True)
         cfg = ReorderConfig(policy=args.reorder_policy, scope="fixed_width", window=0,

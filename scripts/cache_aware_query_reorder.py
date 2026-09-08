@@ -58,7 +58,8 @@ FIXED_WIDTH_COLUMNS: dict[str, set[str]] = {
 }
 
 SCOPE_CHOICES = ("fixed_width", "all_columns")
-POLICY_CHOICES = ("none", "fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending")
+POLICY_CHOICES = ("none", "fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
+                  "cost-seeded-overlap")
 
 # {query: {table: [column, ...]}}, filled by load_query_table_columns().
 # The union of a scan's projection AND filter columns, which is what the
@@ -463,6 +464,28 @@ def estimated_scan_bytes(qnum: int) -> int:
                for table, columns in per_table.items() for column in columns)
 
 
+def _cost_seeded_overlap_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """가장 싼 쿼리에서 출발해, 그 뒤로는 overlap greedy 로 잇는다.
+
+    `fixed-overlap` 은 시작점을 "전체 overlap ratio 가 가장 커지는 자리"로 고르는데,
+    그 목적함수의 분모(`sum(|next|)`)에는 첫 쿼리가 들어가지 않는다. 첫 자리는
+    공짜로 보이고, 그래서 SF100 에서 가장 비싼 q21(baseline scan 22.2s)이 1번으로
+    간다 -- 캐시가 비어 히트가 보장되지 않는 유일한 자리인데.
+
+    여기서는 그 한 자리만 비용으로 고정한다. 콜드 구간을 가장 싼 스캔으로 소모하고,
+    나머지 21개는 그대로 overlap 이 정한다.
+    """
+
+    del start_position
+    seed = min(positions, key=lambda pos: (estimated_scan_bytes(_QUERY_AT[pos]), pos))
+    return _build_greedy_overlap_path(seed, positions, signatures, cfg)
+
+
 def _cost_ascending_path(
     start_position: int,
     positions: list[int],
@@ -689,6 +712,10 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
     best_rank = (before.overlap_ratio, before.shared_columns, -positions[0])
     global _QUERY_AT
     _QUERY_AT = queries_by_position
+    if cfg.policy == "cost-seeded-overlap":
+        path = _cost_seeded_overlap_path(positions[0], positions, signatures, cfg)
+        reordered = tuple(queries_by_position[pos] for pos in path)
+        return finish(reordered, tuple(), sequence_overlap_summary(reordered, cfg.scope))
     if cfg.policy == "cost-ascending":
         # 시작점 탐색이 없다 -- 정렬 하나로 순서가 결정되므로, 아래의
         # "여러 start_position 중 최고를 고른다" 루프와 그 뒤의 overlap

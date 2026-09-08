@@ -38,15 +38,22 @@ to "no mean change, 5x less variance".
 
 22 solo runs, one query each, reading the engine's own entry names:
 
-- **7 entries, one per table, all UNFILTERED.** `disable_filter_pushdown` is set
-  whenever auto-caching is on, so a predicate reaches neither the reader nor the
-  cache key. Filters do not fragment the cache. (An `EXPLAIN`-derived model that
-  split entries by filter predicted 31 entries and scored r = -0.13.)
+- **16 entries, keyed by (file, pushed-down filter).** 8 are unfiltered and 8
+  carry a predicate (`lineitem;filter=((#1 <`, `orders;filter=((#2 >=`, ...), so
+  filters DO fragment the cache. An earlier version of this file claimed 7
+  entries, all unfiltered, on the grounds that `disable_filter_pushdown` is set
+  whenever auto-caching is on; that is wrong twice over. The flag is
+  `cache_before_filter_enabled() && fixed_page_auto_cache_enabled()`, and
+  `SIRIUS_FIXED_PAGE_CACHE_BEFORE_FILTER` is not set by the runners, so pushdown
+  stays ON. The "7 unfiltered" count came from reading only
+  `auto_cache_populate_direct` lines, which do not cover every entry a query
+  touches.
 - **An entry holds a scan's projection AND filter columns.** q6 projects 2
   lineitem columns and caches 4. Reproduced on 26 of 29 (query, table) pairs;
   the 3 misses are scans carrying a dynamic filter, which are skipped entirely.
 - **Entries accumulate and freeze at the per-entry ceiling** (budget/2 = 3 GB);
-  `admission_stop_widening` fires 476-732 times per run.
+  `admission_stop_widening` fires 476-732 times per run. A single SF100 lineitem
+  column is 4.47 GB decoded (600M rows x 8 B), so not even one column fits whole.
 
 ## What predicts total time (n=14 orders)
 
