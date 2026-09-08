@@ -58,7 +58,18 @@ FIXED_WIDTH_COLUMNS: dict[str, set[str]] = {
 }
 
 SCOPE_CHOICES = ("fixed_width", "all_columns")
-POLICY_CHOICES = ("none", "fixed-overlap")
+POLICY_CHOICES = ("none", "fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending")
+
+# {query: {table: [column, ...]}}, filled by load_query_table_columns().
+# The union of a scan's projection AND filter columns, which is what the
+# engine puts in an entry -- q6 projects 2 lineitem columns and caches 4.
+QUERY_TABLE_COLUMNS: dict[str, dict[str, list[str]]] = {}
+
+# {table: {column: bytes}}, filled by load_column_bytes(). Empty means "no size
+# information", and every byte-weighted path falls back to counting columns.
+COLUMN_BYTES: dict[str, dict[str, int]] = {}
+
+_QUERY_AT: dict[int, int] = {}
 
 
 @dataclass(frozen=True)
@@ -75,6 +86,11 @@ class ReorderConfig:
     window: int = 0
     keep_first: bool = False
     resident_column_budget: int = 0
+    # byte-lru only: simulated cache size. The objective becomes "total bytes
+    # served from cache over the whole sequence", which -- unlike adjacent-pair
+    # overlap -- charges position 1 for its guaranteed miss and lets a column
+    # stay resident across several unrelated queries.
+    cache_budget_bytes: int = 0
 
 
 @dataclass(frozen=True)
@@ -184,6 +200,35 @@ def query_signature(qnum: int, scope: str = "fixed_width") -> frozenset[ColumnKe
     return frozenset(columns)
 
 
+def worst_case_sequence(queries: Iterable[int], scope: str = "fixed_width") -> list[int]:
+    """가장 불리한 도착 순서: 인접 쿼리끼리 컬럼이 최대한 안 겹치게 배치한다.
+
+    재정렬이 무엇을 회복해 주는지 재려면 회복할 것이 있는 순서가 필요하다.
+    벤치마크의 자연 순서는 우연히 이미 괜찮을 수 있고 (ClickBench 에서 재정렬
+    효과가 -4.0%, TPC-H 에서 ±0.2% 로 작게 나온 이유이기도 하다), 그러면
+    재정렬의 값이 과소평가된다. 이 순서는 그 반대쪽 끝 - "순서가 최악일 때"를
+    준다.
+
+    greedy: 남은 후보 중 직전 쿼리와 겹치는 컬럼이 가장 적은 것을 고른다.
+    동점이면 쿼리 번호가 작은 쪽 (재현 가능하도록).
+    """
+    remaining = list(queries)
+    if not remaining:
+        return []
+    sig = {q: query_signature(q, scope) for q in remaining}
+    # 시작점은 컬럼이 가장 많은 쿼리 -- 이후 어떤 선택도 겹침을 만들기 쉬워지므로
+    # 최악을 만들기에는 여기서 출발하는 편이 낫다.
+    first = max(remaining, key=lambda q: (len(sig[q]), -q))
+    order = [first]
+    remaining.remove(first)
+    while remaining:
+        prev = sig[order[-1]]
+        nxt = min(remaining, key=lambda q: (len(prev & sig[q]), q))
+        order.append(nxt)
+        remaining.remove(nxt)
+    return order
+
+
 def sequence_overlap_summary(queries: Iterable[int], scope: str = "fixed_width") -> SequenceOverlapSummary:
     """시퀀스의 인접 쿼리들이 fixed-width 컬럼을 얼마나 공유하는지 계산한다.
 
@@ -286,6 +331,206 @@ def _pair_overlap_rank(
         len(candidate & signatures[pos]) for pos in remaining_positions if pos != candidate_position
     )
     return ratio, shared, future_overlap, -candidate_position
+
+
+def column_bytes(column: ColumnKey) -> int:
+    """한 컬럼이 캐시에서 차지하는 바이트. 크기 정보가 없으면 1(= 개수 세기)."""
+
+    table, name = column
+    return COLUMN_BYTES.get(table, {}).get(name, 1)
+
+
+def signature_bytes(signature: Iterable[ColumnKey]) -> int:
+    return sum(column_bytes(column) for column in signature)
+
+
+def load_column_bytes(path: str | Path) -> int:
+    """probe_column_bytes.py가 만든 JSON을 COLUMN_BYTES에 적재한다.
+
+    컬럼 "개수" 겹침은 25행짜리 nation.n_nationkey를 6억행 lineitem.l_orderkey와
+    같은 1로 세기 때문에, byte-lru 정책은 실측 크기가 있어야 의미가 있다.
+    """
+
+    import json
+
+    COLUMN_BYTES.clear()
+    COLUMN_BYTES.update(json.loads(Path(path).read_text()))
+    return sum(len(cols) for cols in COLUMN_BYTES.values())
+
+
+def simulate_cache_hit_bytes(
+    queries: Iterable[int],
+    scope: str,
+    budget_bytes: int,
+) -> tuple[int, int]:
+    """바이트 예산 LRU를 돌려 (캐시로 서빙된 바이트, 전체 요구 바이트)를 낸다.
+
+    인접 쌍 overlap과 달리 (1) 첫 쿼리는 빈 캐시를 만나 히트가 0으로 계산되고,
+    (2) 컬럼이 여러 쿼리를 건너 살아남는 것을 반영하며, (3) 컬럼 크기로 가중된다.
+    """
+
+    resident: dict[ColumnKey, None] = {}
+    resident_bytes = 0
+    served = 0
+    demanded = 0
+    for qnum in queries:
+        for column in sorted(query_signature(qnum, scope)):
+            size = column_bytes(column)
+            demanded += size
+            if column in resident:
+                served += size
+                del resident[column]
+            else:
+                resident_bytes += size
+            resident[column] = None
+        if budget_bytes > 0:
+            while resident_bytes > budget_bytes and resident:
+                evicted, _ = next(iter(resident.items()))
+                del resident[evicted]
+                resident_bytes -= column_bytes(evicted)
+    return served, demanded
+
+
+def _build_greedy_byte_lru_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """바이트 예산 LRU를 시뮬레이션하며 "캐시에서 가장 많은 바이트를 받아갈"
+    쿼리를 다음으로 고른다.
+
+    `_build_greedy_overlap_path`는 직전 쿼리와 겹치는 컬럼 개수만 보므로
+    lineitem 컬럼 하나(4.5 GB)와 nation 컬럼 하나(100 B)를 구분하지 못하고,
+    이미 밀려난 컬럼도 여전히 겹친 것으로 센다."""
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    resident: dict[ColumnKey, None] = {}
+    resident_bytes = 0
+
+    def admit(signature: frozenset[ColumnKey]) -> None:
+        nonlocal resident_bytes
+        for column in sorted(signature):
+            if column in resident:
+                del resident[column]
+            else:
+                resident_bytes += column_bytes(column)
+            resident[column] = None
+        if cfg.cache_budget_bytes > 0:
+            while resident_bytes > cfg.cache_budget_bytes and resident:
+                evicted, _ = next(iter(resident.items()))
+                del resident[evicted]
+                resident_bytes -= column_bytes(evicted)
+
+    admit(signatures[start_position])
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        candidate_pool = remaining[:window]
+
+        def rank(pos: int) -> tuple[int, float, int]:
+            candidate = signatures[pos]
+            hit = sum(column_bytes(c) for c in candidate if c in resident)
+            total = signature_bytes(candidate)
+            return hit, (hit / total if total else 0.0), -pos
+
+        best_position = max(candidate_pool, key=rank)
+        path.append(best_position)
+        remaining.remove(best_position)
+        admit(signatures[best_position])
+    return path
+
+
+def load_query_table_columns(path: str | Path) -> int:
+    """probe_scan_requests.py가 만든 JSON을 적재한다 (cost-ascending 전용)."""
+
+    import json
+
+    QUERY_TABLE_COLUMNS.clear()
+    QUERY_TABLE_COLUMNS.update(json.loads(Path(path).read_text()))
+    return len(QUERY_TABLE_COLUMNS)
+
+
+def estimated_scan_bytes(qnum: int) -> int:
+    """쿼리가 읽어야 하는 디코딩 후 바이트 추정치.
+
+    SF100 실측 스캔 시간과 r=+0.64 (Spearman +0.63). 정확한 비용 모델은 아니지만
+    plan 만으로 계산되므로, 측정된 실행 시간을 입력으로 요구하지 않는다.
+    """
+
+    per_table = QUERY_TABLE_COLUMNS.get(f"q{qnum}", {})
+    return sum(column_bytes((table, column))
+               for table, columns in per_table.items() for column in columns)
+
+
+def _cost_ascending_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """스캔 비용 오름차순. 인접 overlap 을 아예 보지 않는다.
+
+    이 캐시에서 순서가 중요한 이유는 인접성이 아니라 누적이다: 엔트리는 컬럼을
+    쌓아가다 per-entry 상한(budget/2)에서 얼어붙고, 그 뒤로는 아무도 넓히지
+    못한다 (`admission_stop_widening` 이 런당 480-732회). 따라서 비싼 스캔은
+    엔트리가 최대한 넓어진 뒤에 도착해야 하고, 싼 스캔이 먼저 와서 그것을
+    넓혀 주어야 한다.
+
+    SF100 에서 fixed-overlap 186.0s, 무작위 도착 평균 182.9s, 이 정책 168.7s.
+    """
+
+    del start_position, signatures, cfg
+    return sorted(positions, key=lambda pos: (estimated_scan_bytes(_QUERY_AT[pos]), pos))
+
+
+def _byte_pair_overlap_rank(
+    previous_position: int,
+    candidate_position: int,
+    remaining_positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+) -> tuple[float, int, int, int]:
+    """`_pair_overlap_rank`와 같되 컬럼을 개수가 아니라 바이트로 잰다.
+
+    캐시 시뮬레이션을 하지 않는다는 점이 `byte-lru`와의 차이다. 잔존 집합을
+    모델링하면 그 모델이 틀렸을 때 오차가 그대로 순서에 들어가므로, 여기서는
+    "직전 쿼리와 겹치는 바이트"라는 관측 가능한 양만 쓴다.
+    """
+
+    previous = signatures[previous_position]
+    candidate = signatures[candidate_position]
+    shared = sum(column_bytes(c) for c in previous & candidate)
+    total = signature_bytes(candidate)
+    ratio = shared / total if total else 0.0
+    future = sum(
+        sum(column_bytes(c) for c in candidate & signatures[pos])
+        for pos in remaining_positions
+        if pos != candidate_position
+    )
+    return ratio, shared, future, -candidate_position
+
+
+def _build_greedy_byte_overlap_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """직전 쿼리와 바이트 겹침이 가장 큰 쿼리를 하나씩 잇는다."""
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        candidate_pool = remaining[:window]
+        previous_position = path[-1]
+        best_position = max(
+            candidate_pool,
+            key=lambda pos: _byte_pair_overlap_rank(previous_position, pos, remaining, signatures),
+        )
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
 
 
 def _build_greedy_overlap_path(
@@ -442,14 +687,42 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
     best_queries = original
     best_summary = before
     best_rank = (before.overlap_ratio, before.shared_columns, -positions[0])
-    path_builder = (
-        _build_greedy_resident_aware_path if cfg.resident_column_budget > 0 else _build_greedy_overlap_path
-    )
+    global _QUERY_AT
+    _QUERY_AT = queries_by_position
+    if cfg.policy == "cost-ascending":
+        # 시작점 탐색이 없다 -- 정렬 하나로 순서가 결정되므로, 아래의
+        # "여러 start_position 중 최고를 고른다" 루프와 그 뒤의 overlap
+        # 안전장치를 모두 건너뛴다.
+        path = _cost_ascending_path(positions[0], positions, signatures, cfg)
+        reordered = tuple(queries_by_position[pos] for pos in path)
+        return finish(reordered, tuple(), sequence_overlap_summary(reordered, cfg.scope))
+    if cfg.policy == "byte-lru":
+        path_builder = _build_greedy_byte_lru_path
+    elif cfg.policy == "byte-overlap":
+        path_builder = _build_greedy_byte_overlap_path
+    elif cfg.resident_column_budget > 0:
+        path_builder = _build_greedy_resident_aware_path
+    else:
+        path_builder = _build_greedy_overlap_path
+
+    def score(candidate_queries: tuple[int, ...], summary: SequenceOverlapSummary, start: int):
+        if cfg.policy == "byte-overlap":
+            shared = sum(
+                sum(column_bytes(c) for c in query_signature(a, cfg.scope) & query_signature(b, cfg.scope))
+                for a, b in zip(candidate_queries, candidate_queries[1:])
+            )
+            return (shared, summary.shared_columns, -start)
+        if cfg.policy != "byte-lru":
+            return (summary.overlap_ratio, summary.shared_columns, -start)
+        served, _ = simulate_cache_hit_bytes(candidate_queries, cfg.scope, cfg.cache_budget_bytes)
+        return (served, summary.shared_columns, -start)
+
+    best_rank = score(original, before, positions[0])
     for start_position in start_positions:
         path = path_builder(start_position, positions, signatures, cfg)
         candidate_queries = tuple(queries_by_position[pos] for pos in path)
         summary = sequence_overlap_summary(candidate_queries, cfg.scope)
-        rank = (summary.overlap_ratio, summary.shared_columns, -start_position)
+        rank = score(candidate_queries, summary, start_position)
         if rank > best_rank:
             best_path = path
             best_queries = candidate_queries
@@ -458,7 +731,12 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
 
     # 안전장치: 자동 재정렬이 fixed-column adjacency locality를 개선하지 못하면
     # 괜히 workload를 악화시키지 않도록 사용자가 준 원래 순서를 그대로 쓴다.
-    if best_summary.overlap_ratio <= before.overlap_ratio and best_summary.shared_columns <= before.shared_columns:
+    if best_queries == original:
+        return finish(original, tuple(), before)
+    if cfg.policy not in ("byte-lru", "byte-overlap") and (
+        best_summary.overlap_ratio <= before.overlap_ratio
+        and best_summary.shared_columns <= before.shared_columns
+    ):
         return finish(original, tuple(), before)
 
     resident_lru: list[ColumnKey] = []

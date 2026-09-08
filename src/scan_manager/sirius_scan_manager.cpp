@@ -174,20 +174,37 @@ struct fixed_page_batch_range {
 
 /// Whether a scan carrying dynamic filters may read from the page cache.
 ///
-/// Gated on the same variable as the write side in parquet_gpu_ingestible.cpp, because
-/// opening one without the other is strictly worse than leaving both shut: an SF50 run
-/// with only the write gate open cached lineitem and orders pages that no dynamic-filter
-/// scan could ever read back, and the VRAM they took cut cache hits from 88 to 37 and cost
-/// 8.8% of scan time.
-///
 /// Reading a cached entry here is safe regardless of the filter: DYNAMIC_FILTER is a
 /// separate operator sitting above the scan, so it masks cached batches exactly as it
 /// masks freshly decoded ones. Cached batches are also handed out as
 /// filter_state::UNFILTERED, so nothing downstream assumes the rows were pre-pruned.
+///
+/// The two directions are NOT symmetric, so they get separate variables.
+///
+/// Write-only is strictly worse than leaving both shut: an SF50 run with only the write
+/// gate open cached lineitem and orders pages that no dynamic-filter scan could ever read
+/// back, and the VRAM they took cut cache hits from 88 to 37 and cost 8.8% of scan time.
+/// Opening both is worse still on SF100 -- caching a probe-side lineitem scan means
+/// caching every row the dynamic filter would have discarded, which exceeded the budget
+/// and failed with "GPU pipeline task exceeded maximum OOM retry limit (100)" at the same
+/// query in 3 of 3 runs.
+///
+/// Read-only is the direction those two results leave open, and it is the cheap one: a
+/// dynamic-filter scan reads entries that ordinary unfiltered scans of the same file
+/// already paid for, so it adds hits without adding a single resident byte. Enabling the
+/// read gate therefore does not imply the write gate, and `..._SCANS=1` still opens both
+/// for the older configuration.
 bool dynamic_filter_scan_cache_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_DYNAMIC_FILTER_SCANS");
   return value != nullptr && std::string_view(value) == "1";
+}
+
+bool dynamic_filter_scan_cache_read_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_DYNAMIC_FILTER_REUSE");
+  if (value != nullptr && std::string_view(value) == "1") { return true; }
+  return dynamic_filter_scan_cache_enabled();
 }
 
 bool fixed_page_backed_provider_enabled()
@@ -445,6 +462,16 @@ bool entry_covers_all_row_groups(pinned_entry const& entry)
 /// Whether one cache entry per (file, filter) holds the union of every projection's
 /// columns. Off until measured -- it changes cache identity, so every entry built
 /// under one setting is unusable under the other.
+/// Whether a STRING column may be cached as a whole chunk when variable-width
+/// paging is off. On by default (existing behaviour); set to 0 to get a genuinely
+/// fixed-width-only cache, which is the right control for measuring what caching
+/// strings is worth at all.
+bool string_columns_cacheable()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_STRING_COLUMNS");
+  return value == nullptr || std::string_view(value) != "0";
+}
+
 bool column_keyed_cache_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_COLUMN_KEYED_CACHE");
@@ -3488,6 +3515,16 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
             chunks.emplace_back(nullptr);  // paged copy is authoritative; skip the redundant whole-chunk copy
           } else if (is_intrinsically_fixed_width_type(column_view)) {
             chunks.emplace_back(nullptr);  // SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED=0: leave uncached
+          } else if (!string_columns_cacheable()) {
+            // Fixed-width-only condition: leave the STRING column out of the cache
+            // entirely. Without this the "fixed-width cache" condition still stored
+            // every STRING column as a whole chunk, so a run labelled fixed-only was
+            // really fixed-width-paged plus string-whole-chunk -- and the comparison
+            // against the variable-width cache measured a change of STORAGE FORMAT
+            // for data that was cached either way, not the value of caching strings.
+            // A query that needs this column then misses on has_chunk_backing and
+            // reads it from parquet, which is the honest baseline.
+            chunks.emplace_back(nullptr);
           } else {
             chunks.emplace_back(std::make_shared<cudf::column>(
               column_view, stream, memory_space.get_default_allocator()));
@@ -4048,7 +4085,7 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
   const auto& table_info = op->get_ingestible().table_info();
   auto* parquet = dynamic_cast<op::scan::parquet_gpu_ingestible*>(&op->get_ingestible());
   if (parquet != nullptr && parquet->fixed_page_cache_has_dynamic_filters() &&
-      !dynamic_filter_scan_cache_enabled()) {
+      !dynamic_filter_scan_cache_read_enabled()) {
     SIRIUS_LOG_INFO("[fixed-page-cache] reuse_skip reason=dynamic_filter_scan operator='{}'",
                     op->get_operator_id());
     return false;

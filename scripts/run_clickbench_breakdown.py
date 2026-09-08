@@ -43,6 +43,20 @@ import duckdb  # noqa: E402
 ARRIVAL_ORDER = list(range(1, 44))
 
 
+def _budget_bytes(text: str) -> int:
+    """"6GB" -> bytes, for the byte-lru reorder's simulated cache size.
+
+    Mirrors what SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU is set to, so the
+    simulation evicts at the same point the real cache does.
+    """
+
+    value = text.strip().upper()
+    for suffix, scale in (("GB", 2 ** 30), ("MB", 2 ** 20), ("KB", 2 ** 10), ("B", 1)):
+        if value.endswith(suffix):
+            return int(float(value[: -len(suffix)]) * scale)
+    return int(value)
+
+
 def open_clickbench_connection(parquet_path: str, extension_path: str):
     """In-memory DuckDB with `hits` as a view over the single parquet file.
 
@@ -76,6 +90,25 @@ def main() -> int:
     # while being the entire run-to-run variance (+-2756ms -> +-649ms with it off).
     parser.add_argument("--min-free-bytes-per-gpu", default="0")
     parser.add_argument("--gpu-usage-limit", default="20GB")
+    parser.add_argument("--arrival", choices=("natural", "worst"), default="natural",
+                        help="Arrival order before any reorder. 'worst' minimises the column "
+                             "overlap between adjacent queries, which is the order a reorder has "
+                             "the most to recover from; the benchmark's natural order can already "
+                             "be favourable and then understates what reordering is worth.")
+    parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending"),
+                        default="fixed-overlap",
+                        help="'fixed-overlap' maximises adjacent-pair overlap counted in "
+                             "COLUMNS, so a 25-row nation column scores like a 600M-row "
+                             "lineitem one and position 1 -- which always misses -- is free. "
+                             "'byte-lru' instead maximises the bytes served by a simulated "
+                             "byte-budget LRU over the whole sequence; needs --column-bytes.")
+    parser.add_argument("--column-bytes",
+                        help="JSON from scripts/probe_column_bytes.py, required by byte-lru.")
+    parser.add_argument("--no-reorder", action="store_true",
+                        help="Run the arrival order even for a caching condition. The reorder is "
+                             "normally applied to every non-baseline condition, which makes a "
+                             "cache-vs-baseline comparison measure the CELEBI package rather than "
+                             "the cache; this isolates the two.")
     parser.add_argument("--skip-queries", default="",
                         help="Comma-separated query numbers to drop, e.g. '9,28'. One "
                              "query that aborts the engine would otherwise take the "
@@ -90,10 +123,19 @@ def main() -> int:
     if skip:
         print(f"skipping q{', q'.join(str(q) for q in sorted(skip))} "
               f"({len(qnums)} queries per execution)", flush=True)
-    if args.condition != "baseline":
-        cfg = reorder.ReorderConfig(policy="fixed-overlap", scope="fixed_width",
+    if args.arrival == "worst":
+        qnums = reorder.worst_case_sequence(qnums, "fixed_width")
+        print(f"arrival(worst): {','.join(f'q{q}' for q in qnums)}", flush=True)
+    if args.condition != "baseline" and not args.no_reorder:
+        if args.reorder_policy == "byte-lru":
+            if not args.column_bytes:
+                parser.error("--reorder-policy byte-lru requires --column-bytes")
+            print(f"column bytes: {reorder.load_column_bytes(args.column_bytes)} columns",
+                  flush=True)
+        cfg = reorder.ReorderConfig(policy=args.reorder_policy, scope="fixed_width",
                                     window=0, keep_first=False,
-                                    resident_column_budget=0)
+                                    resident_column_budget=0,
+                                    cache_budget_bytes=_budget_bytes(args.fixed_cache_budget))
         qnums = list(reorder.reorder_query_sequence(qnums, cfg).reordered_queries)
         print(f"reordered: {','.join(f'q{q}' for q in qnums)}", flush=True)
 
