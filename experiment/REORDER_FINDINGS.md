@@ -91,6 +91,74 @@ per-query scan times -- it is an oracle. Recomputed from plan-estimated bytes
 (Spearman +0.63 against measured) it recovers only 5 s of the 14 s:
 181.1 vs 186.0. Closing that gap is the open work.
 
+## What decides the cache's benefit: not its share of the data
+
+Three benchmarks, same 6 GB fixed / 4 GB variable budget, no reordering:
+
+| benchmark | decoded | cache holds | fixed | fixed+variable |
+|---|---|---|---|---|
+| TPC-H SF50 | 52.2 GB | 19.2% | -14.6% | **-16.3%** |
+| TPC-H SF100 | 104.4 GB | 9.6% | -9.6% | **-20.9%** |
+| ClickBench | 61.5 GB | 16.3% | -12.1% | **-35.7%** |
+
+SF50 was run to test the obvious explanation for ClickBench's much larger gain:
+that a 10 GB cache simply covers more of a smaller dataset. It does not hold.
+SF50 is smaller than ClickBench and its cache covers a LARGER share of it
+(19.2% vs 16.3%), yet it gains less than half as much (-16.3% vs -35.7%).
+
+What separates them is how much of the workload's scanning the cache is allowed
+to serve. ClickBench is one denormalised table with no joins, so no scan ever
+carries a dynamic filter and every scan is a cache candidate. On TPC-H, 1032 of
+1165 cache skips per run are `dynamic_filter_scan` -- the cache is shut out of
+89% of scans before capacity is even consulted.
+
+A second reading of the same table: the variable-width cache adds -1.7 points on
+SF50, -11.3 on SF100 and -23.6 on ClickBench. On the smallest dataset the
+fixed-width cache already holds what the workload re-reads, and STRING paging
+has little left to contribute.
+
+## Dynamic-filter scans: why the read gate cannot simply be opened
+
+Serving a dynamic-filter scan from cache is *correct* -- DYNAMIC_FILTER is a
+separate operator above the scan, so cached batches are masked exactly like
+decoded ones -- and it was measured at 173.7 -> 191.4 s (+10.2%), scan +14.4 s.
+
+The cost is rows, not bytes. `disable_filter_pushdown` is gated on
+`SIRIUS_FIXED_PAGE_CACHE_BEFORE_FILTER`, which the runners do not set, so
+pushdown stays ON and the dynamic filter reaches the reader, where it prunes row
+groups by statistics and drops rows during decode. Serving from cache bypasses
+all of it: q12 goes 992 ms -> 7538 ms against a 7697 ms no-cache baseline, i.e.
+straight back to a full scan. Per-query, 9 queries gain 7.7 s and 13 lose 22.2 s.
+
+The proper fix is prune-first-then-serve, and the machinery exists
+(`set_cached_row_groups`, `parquet_gpu_ingestible.cpp:696`, which subtracts the
+cache-served row groups from what the reader reads). Two things block it:
+
+1. **The subtraction happens before pruning**, so cache-served row groups never
+   reach `filter_row_groups_with_stats` at all. The comment there claims the two
+   steps compose; they do not.
+2. **A dynamic filter has no value at cache-assignment time.**
+   `scan_manager_->prepare_for_query` (which runs `try_assign_cached_entries` and
+   builds the provider) is called from `sirius_context.cpp:678`, before any
+   execution; the filter is published by the join's build side during the query.
+   Fixing (1) alone changes nothing, because the provider -- built earlier --
+   still hands over every chunk it holds.
+
+So the fix requires moving cache assignment from query setup to scan activation,
+which also reopens the race the provider's constructor comment documents
+(materialising every batch under `_pinned_entries_mutex` to avoid a concurrent
+insert reallocating the vectors it reads -- previously seen as intermittent
+duplicate rows). Against a measured ceiling of -4.4%, that was judged not worth
+it; the read gate is split out as
+`SIRIUS_FIXED_PAGE_CACHE_DYNAMIC_FILTER_REUSE` and defaults to closed.
+
+The static-filter path has no equivalent problem, and this was checked rather
+than assumed: with the cache on, **22 of 22 SF100 queries are faster than
+baseline and none is slower** (-41.8 s in total). Static predicates are part of
+the cache key, so a filtered scan usually meets an entry holding exactly its
+filtered rows and there is no pruning left to lose -- q12 is 7697 -> 992 ms, the
+mirror image of what the dynamic read gate does to it.
+
 ## Files
 
 - `scripts/probe_column_bytes.py` -- per-column DECODED bytes from parquet.

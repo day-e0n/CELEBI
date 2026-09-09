@@ -22,8 +22,14 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
 
-BENCHMARKS = [("TPC-H SF100", "experiment/tp100_worst"),
-              ("ClickBench 100M", "experiment/cb_worst")]
+# SF50 sits between the other two in size (52.2 GB decoded vs 104.4 and 61.5) and
+# is the control for "does the cache's benefit just track cache/dataset ratio":
+# it holds a LARGER share of its data than ClickBench (19.2% vs 16.3%) and still
+# gains far less, so the answer is no -- what decides it is how much of the
+# workload's scanning the cache is allowed to serve at all.
+BENCHMARKS = [("TPC-H SF50", "experiment/tp50_worst"),
+              ("TPC-H SF100", "experiment/tp100_worst"),
+              ("ClickBench", "experiment/cb_worst")]
 
 
 def totals(root: str, tag: str) -> list[float]:
@@ -45,15 +51,29 @@ def stat(root: str, tag: str) -> tuple[float, float]:
 
 
 def draw(tags: list[tuple[str, str]], stem: str) -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(3.4, 1.95))
+    fig, axes = plt.subplots(1, len(BENCHMARKS), figsize=(5.0, 1.95))
     styles = [ps.NEUTRAL, ps.LIGHT, ps.DARK]
 
     for ax, (bench, root) in zip(axes, BENCHMARKS):
         means, errs = [], []
+        missing = False
         for _, tag in tags:
+            if not totals(root, tag):
+                missing = True
+                break
             m, s = stat(root, tag)
             means.append(m)
             errs.append(s)
+        if missing:
+            # A benchmark that has not been run in this configuration yet: leave
+            # the panel labelled but empty rather than dropping it, so the three
+            # figures keep the same panel order.
+            ax.set_title(bench, fontsize=8.5, pad=4)
+            ax.text(0.5, 0.5, "not run", transform=ax.transAxes, ha="center",
+                    va="center", fontsize=7.4, color="0.45")
+            ax.set_xticks([])
+            ps.finish(ax)
+            continue
         xs = list(range(len(tags)))
         for x, m, e, style in zip(xs, means, errs, styles):
             ax.bar([x], [m], 0.6, yerr=[e], error_kw=ps.ERRBAR, zorder=3, **style)
@@ -73,7 +93,7 @@ def draw(tags: list[tuple[str, str]], stem: str) -> None:
         ax.set_title(bench, fontsize=8.5, pad=4)
         ps.finish(ax)
     axes[0].set_ylabel("workload GPU time (s)", fontsize=8.5)
-    fig.subplots_adjust(wspace=0.34)
+    fig.subplots_adjust(wspace=0.40)
     ps.save(fig, stem)
     plt.close(fig)
 

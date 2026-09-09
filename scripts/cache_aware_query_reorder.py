@@ -217,9 +217,18 @@ def worst_case_sequence(queries: Iterable[int], scope: str = "fixed_width") -> l
     if not remaining:
         return []
     sig = {q: query_signature(q, scope) for q in remaining}
-    # 시작점은 컬럼이 가장 많은 쿼리 -- 이후 어떤 선택도 겹침을 만들기 쉬워지므로
-    # 최악을 만들기에는 여기서 출발하는 편이 낫다.
-    first = max(remaining, key=lambda q: (len(sig[q]), -q))
+    # 시작점은 컬럼이 가장 적은 쿼리.
+    #
+    # 이전 판은 컬럼이 가장 "많은" 쿼리에서 출발했다 -- 이후 선택에서 겹침을 낮게
+    # 유지하기 쉽다는 이유였는데, 그건 overlap 지표만 본 판단이었다. 페이지 캐시에서
+    # 엔트리는 컬럼을 누적하다 per-entry 상한에서 얼어붙고, 그 구성을 확정하는 것은
+    # 엔트리를 처음 건드린 쿼리다. 따라서 가장 넓은 쿼리로 시작하는 것은 캐시에
+    # 가장 유리하다: SF100 에서 그 순서(q8 선두, 16 컬럼)는 173.7s 로, 무작위 도착
+    # 순서 평균 182.9s 보다 오히려 9s 빨랐다. docstring 의 의도와 반대였다.
+    #
+    # 가장 좁은 쿼리로 시작하면 엔트리가 좁게 열린 채 얼어붙는다 -- 실측된 최악의
+    # 배치(q1 을 선두로 옮긴 것만으로 168.7s -> 195.5s)와 같은 메커니즘이다.
+    first = min(remaining, key=lambda q: (len(sig[q]), q))
     order = [first]
     remaining.remove(first)
     while remaining:
