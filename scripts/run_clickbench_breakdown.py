@@ -96,9 +96,9 @@ def main() -> int:
                              "the most to recover from; the benchmark's natural order can already "
                              "be favourable and then understates what reordering is worth.")
     parser.add_argument("--order",
-                        help="Explicit comma-separated query order. Overrides --arrival and "
-                             "suppresses the reorder; for testing a hypothesis order the "
-                             "built-in policies cannot express.")
+                        help="Explicit comma-separated query order. Overrides --arrival but "
+                             "NOT the reorder, which still runs on top of it; for pinning an "
+                             "arrival order the built-in policies cannot express.")
     parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
@@ -130,6 +130,11 @@ def main() -> int:
     if skip:
         print(f"skipping q{', q'.join(str(q) for q in sorted(skip))} "
               f"({len(qnums)} queries per execution)", flush=True)
+    if args.order is not None and not args.order.strip():
+        # An empty --order used to fall through to --arrival's default and run the
+        # natural order, which is favourable to the cache: a whole 24-run sweep was
+        # measured against the wrong workload before anyone noticed.
+        parser.error("--order was given but is empty")
     if args.order:
         qnums = [int(x) for x in args.order.split(",") if x.strip()]
         print(f"explicit order: {','.join(f'q{q}' for q in qnums)}", flush=True)
