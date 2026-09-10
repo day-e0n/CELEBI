@@ -341,6 +341,38 @@ def rewrite_table(
         writer = _make_writer(dest_path, target_schema)
         output_files.append(dest_path)
         total_written = 0
+        pending = []
+
+        def flush(final=False):
+            """Write whole row groups from `pending`, carrying the remainder forward.
+
+            ParquetWriter closes a row group per write_table call, so handing it a
+            batch that is not a multiple of row_group_size_rows leaves a short group
+            behind after every batch: 9,961,294-row source groups against a
+            4,194,304-row target came out 4.19M / 4.19M / 1.57M, and that 1.57M group
+            is exactly the partial page this row group size was chosen to remove.
+            Only the last group of the table is allowed to be short.
+            """
+            nonlocal pending, total_written
+            if not pending:
+                return
+            table = pending[0] if len(pending) == 1 else pa.concat_tables(pending)
+            offset = 0
+            # row_group_size has to be passed on every call: pyarrow's default is
+            # 1,048,576 rows, so an exact-size slice would still be cut into four.
+            while table.num_rows - offset >= row_group_size_rows:
+                writer.write_table(
+                    table.slice(offset, row_group_size_rows),
+                    row_group_size=row_group_size_rows,
+                )
+                offset += row_group_size_rows
+            if final and offset < table.num_rows:
+                rows = table.num_rows - offset
+                writer.write_table(table.slice(offset), row_group_size=rows)
+                offset = table.num_rows
+            total_written += offset
+            rest = table.slice(offset)
+            pending = [rest] if rest.num_rows else []
 
         for batch_start in range(0, num_rgs, rgs_per_batch):
             # Check if current file exceeds limit and roll to a new one
@@ -370,15 +402,16 @@ def rewrite_table(
             if not used_gpu:
                 use_gpu = False  # stay on pyarrow for remaining batches
 
-            writer.write_table(arrow_table, row_group_size=row_group_size_rows)
-            total_written += len(arrow_table)
+            pending.append(arrow_table)
             del arrow_table
+            flush()
 
             pct = total_written * 100 // total_rows
             print(
                 f"    Wrote row group: {total_written:,} / {total_rows:,} rows ({pct}%)"
             )
 
+        flush(final=True)
         writer.close()
 
     elapsed = time.time() - t0
