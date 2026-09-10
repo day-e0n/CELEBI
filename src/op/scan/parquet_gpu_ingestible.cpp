@@ -910,6 +910,67 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
 }
 
 
+std::unordered_map<std::string, std::unordered_set<int>>
+parquet_gpu_ingestible::surviving_row_groups(io::ioctx_resolver const& resolve) const
+{
+  // Row groups this scan's STATIC predicate cannot rule out, from footer
+  // statistics alone -- no data is read.
+  //
+  // Needed by the cache assignment, which happens before any split runs and so
+  // cannot see build_file_scan_info's pruning. Without it a cached entry hands
+  // back every row group it holds, including the ones the predicate would have
+  // skipped; with pre-filter caching (pages hold unfiltered rows) that is the
+  // whole point of the pruning thrown away.
+  //
+  // Static only: a dynamic filter has no value until the join's build side
+  // publishes, which is after this runs. Those scans are refused by the cache
+  // anyway.
+  std::unordered_map<std::string, std::unordered_set<int>> out;
+  if (!_duckdb_filter_expression || !resolve) { return out; }
+
+  auto stream = cudf::get_default_stream();
+  for (auto const& file_path : _file_paths) {
+    std::shared_ptr<io::sirius_ioctx> io_ctx;
+    try {
+      io_ctx = resolve(file_path);
+    } catch (...) {
+      return {};  // cannot resolve one file: claim nothing rather than a wrong subset
+    }
+    if (!io_ctx) { return {}; }
+    auto sirius_ds = io_ctx->open_datasource(file_path);
+    if (!sirius_ds) { return {}; }
+
+    std::shared_ptr<cudf::io::parquet::FileMetaData const> file_metadata;
+    if (auto cached = sirius_ds->metadata()) {
+      if (auto pm = std::dynamic_pointer_cast<parquet_metadata>(std::move(cached))) {
+        file_metadata = pm->file_metadata();
+      }
+    }
+    if (!file_metadata) { return {}; }  // no parked footer: not worth a fetch here
+
+    auto opts = *_reader_options;
+    std::optional<gpu_expression_translator::translated_expression> ast;
+    auto name_resolver = [this](duckdb::idx_t ref_index) -> std::string {
+      return _plan->batch_column_name(ref_index);
+    };
+    try {
+      gpu_expression_translator translator(stream, cudf::get_current_device_resource_ref());
+      auto sirius_filter_ast = sirius::ast::from_duckdb(*_duckdb_filter_expression);
+      ast = translator.translate_expression_with_names(*sirius_filter_ast, name_resolver);
+      if (!ast) { return {}; }
+      opts.set_filter(ast->back());
+      hybrid_scan_reader reader(*file_metadata, opts);
+      auto const survivors = reader.filter_row_groups_with_stats(
+        reader.all_row_groups(opts), opts, stream);
+      auto& set = out[file_path];
+      for (auto const rg : survivors) { set.insert(static_cast<int>(rg)); }
+    } catch (...) {
+      return {};  // translation or pruning failed: claim nothing
+    }
+  }
+  return out;
+}
+
 std::string parquet_gpu_ingestible::fixed_page_cache_filter_signature() const
 {
   return _duckdb_filter_expression ? _duckdb_filter_expression->ToString() : std::string{};

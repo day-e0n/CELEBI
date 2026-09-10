@@ -258,6 +258,13 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   /// recorded provenance rather than arithmetic on chunk indices.
   void set_cached_row_groups(std::unordered_map<std::string, std::unordered_set<int>> groups);
 
+  /// Row groups per file that this scan's STATIC predicate cannot rule out,
+  /// computed from parked footer statistics without reading data. Empty when
+  /// there is no filter, no parked footer, or the predicate does not translate --
+  /// callers must read that as "claims nothing", not "nothing survives".
+  [[nodiscard]] std::unordered_map<std::string, std::unordered_set<int>>
+  surviving_row_groups(io::ioctx_resolver const& resolve) const;
+
 
   ~parquet_gpu_ingestible() override;
 

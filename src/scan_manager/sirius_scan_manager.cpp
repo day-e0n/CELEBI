@@ -1071,8 +1071,9 @@ class fixed_page_databatch_provider final : public databatch_provider {
   explicit fixed_page_databatch_provider(
     pinned_entry const& entry,
     std::span<size_t> selected_columns,
-    std::unordered_map<std::string, std::shared_ptr<cudf::column>> const* dictionaries = nullptr)
-    : _entry(entry), _dictionaries(dictionaries)
+    std::unordered_map<std::string, std::shared_ptr<cudf::column>> const* dictionaries = nullptr,
+    std::unordered_map<std::string, std::unordered_set<int>> const* allowed_row_groups = nullptr)
+    : _entry(entry), _dictionaries(dictionaries), _allowed_row_groups(allowed_row_groups)
   {
     auto const& entry_column_names = _entry.cache_info.column_names();
     std::ranges::for_each(selected_columns, [this, &entry_column_names](size_t idx) {
@@ -1217,6 +1218,27 @@ class fixed_page_databatch_provider final : public databatch_provider {
     drop_partially_covered_chunks();
   }
 
+  /// Whether every row group this chunk holds survives the scan's predicate.
+  ///
+  /// A chunk is all-or-nothing (its row groups are read together), so one pruned
+  /// row group disqualifies it and the reader takes the whole chunk -- where the
+  /// stats filter then skips exactly that row group. Serving it from cache
+  /// instead would deliver rows the pruning exists to avoid, which is the cost
+  /// that made opening the dynamic-filter read gate a 10.2% regression.
+  [[nodiscard]] bool chunk_row_groups_allowed(std::size_t chunk_index) const
+  {
+    if (_allowed_row_groups == nullptr) { return true; }
+    if (chunk_index >= _entry.chunk_provenance_by_index.size()) { return true; }
+    for (auto const& [path, groups] : _entry.chunk_provenance_by_index[chunk_index].slices) {
+      auto it = _allowed_row_groups->find(path);
+      if (it == _allowed_row_groups->end()) { return false; }
+      for (auto const rg : groups) {
+        if (!it->second.contains(static_cast<int>(rg))) { return false; }
+      }
+    }
+    return true;
+  }
+
   /// Keep only chunks whose ranges tile the chunk completely; discard the rest.
   ///
   /// A half-covered chunk cannot be handed out: the missing rows would simply be
@@ -1232,6 +1254,7 @@ class fixed_page_databatch_provider final : public databatch_provider {
 
     std::unordered_set<std::size_t> complete;
     for (auto const& [chunk_index, rows] : rows_by_chunk) {
+      if (!chunk_row_groups_allowed(chunk_index)) { continue; }
       auto const expected = chunk_index < _entry.chunk_provenance_by_index.size()
                               ? _entry.chunk_provenance_by_index[chunk_index].num_rows
                               : 0;
@@ -1498,6 +1521,11 @@ class fixed_page_databatch_provider final : public databatch_provider {
   std::vector<std::size_t> _covered_chunks;
   pinned_entry const& _entry;
   std::unordered_map<std::string, std::shared_ptr<cudf::column>> const* _dictionaries{nullptr};
+  /// Row groups the scan's predicate cannot rule out, or null when the caller
+  /// could not compute them. Chunks outside it are left to the reader, which
+  /// skips them by stats -- serving them from cache would hand back rows the
+  /// pruning exists to avoid.
+  std::unordered_map<std::string, std::unordered_set<int>> const* _allowed_row_groups{nullptr};
   std::atomic<std::size_t> _index{0};
   std::vector<std::shared_ptr<cucascade::data_batch>> _prebuilt_batches;
 };
@@ -1521,11 +1549,13 @@ bool has_chunk_backing_for_selected_columns(pinned_entry const& entry,
 std::unique_ptr<databatch_provider> make_provider_for_pinned_entry(
   pinned_entry const& entry,
   std::span<size_t> selected_columns,
-  std::unordered_map<std::string, std::shared_ptr<cudf::column>> const* dictionaries)
+  std::unordered_map<std::string, std::shared_ptr<cudf::column>> const* dictionaries,
+  std::unordered_map<std::string, std::unordered_set<int>> const* allowed_row_groups)
 {
   if (fixed_page_backed_provider_enabled()) {
     auto fixed_page_provider =
-      std::make_unique<fixed_page_databatch_provider>(entry, selected_columns, dictionaries);
+      std::make_unique<fixed_page_databatch_provider>(
+        entry, selected_columns, dictionaries, allowed_row_groups);
     // Partial residency is only safe once the scan reads the complement. Until the
     // residual path exists (row-group exclusion in the ingestible, and a worker
     // loop that runs the cached and provider sources in sequence rather than as an
@@ -4146,6 +4176,8 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
   std::size_t miss_filter_mismatch = 0;
   std::size_t miss_no_provider     = 0;
   std::size_t candidates_seen      = 0;
+  std::unordered_map<std::string, std::unordered_set<int>> surviving;
+  bool surviving_computed = false;
 
   try {
     std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
@@ -4204,7 +4236,18 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
           continue;
         }
       }
-      auto provider = make_provider_for_pinned_entry(entry, cols, &_shared_dictionaries);
+      // Row groups the scan's static predicate cannot rule out. Computed once,
+      // lazily, and only when an entry is otherwise serviceable -- it parses no
+      // footer that the scan has not already parked.
+      if (parquet != nullptr && !surviving_computed) {
+        surviving = parquet->surviving_row_groups(
+          [this](std::string_view path) -> std::shared_ptr<io::sirius_ioctx> {
+            return ioctx_for_path(path);
+          });
+        surviving_computed = true;
+      }
+      auto provider = make_provider_for_pinned_entry(
+        entry, cols, &_shared_dictionaries, surviving.empty() ? nullptr : &surviving);
       if (!provider) {
         // usable() is false: no page range survived build_ranges, i.e. no chunk is
         // covered by every selected column at page-aligned boundaries.
