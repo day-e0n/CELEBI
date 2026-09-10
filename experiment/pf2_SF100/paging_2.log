@@ -1,0 +1,119 @@
+explicit order: q21,q17,q12,q19,q13,q15,q18,q14,q4,q20,q22,q9,q1,q11,q3,q2,q6,q16,q10,q8,q7,q5
+[04:19:04.919] Opening DuckDB connection over parquet dir /mnt/nvme/sirius_tpch/tpch_parquet_sf100_optimized
+[04:19:04.927] Registering TPC-H parquet views
+[04:19:04.932] All TPC-H views registered
+[04:19:04.933] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[04:19:05.469] Sirius extension loaded
+[celebi_fixed_variable] exec=1/3 pos=1/22 q21 done
+[celebi_fixed_variable] exec=1/3 pos=2/22 q17 done
+[celebi_fixed_variable] exec=1/3 pos=3/22 q12 done
+[celebi_fixed_variable] exec=1/3 pos=4/22 q19 done
+[celebi_fixed_variable] exec=1/3 pos=5/22 q13 done
+[celebi_fixed_variable] exec=1/3 pos=6/22 q15 done
+[celebi_fixed_variable] exec=1/3 pos=7/22 q18 done
+[celebi_fixed_variable] exec=1/3 pos=8/22 q14 done
+[celebi_fixed_variable] exec=1/3 pos=9/22 q4 done
+[celebi_fixed_variable] exec=1/3 pos=10/22 q20 done
+[celebi_fixed_variable] exec=1/3 pos=11/22 q22 done
+[celebi_fixed_variable] exec=1/3 pos=12/22 q9 done
+[celebi_fixed_variable] exec=1/3 pos=13/22 q1 done
+[celebi_fixed_variable] exec=1/3 pos=14/22 q11 done
+[celebi_fixed_variable] exec=1/3 pos=15/22 q3 done
+[celebi_fixed_variable] exec=1/3 pos=16/22 q2 done
+[celebi_fixed_variable] exec=1/3 pos=17/22 q6 done
+[celebi_fixed_variable] exec=1/3 pos=18/22 q16 done
+[celebi_fixed_variable] exec=1/3 pos=19/22 q10 done
+[celebi_fixed_variable] exec=1/3 pos=20/22 q8 done
+[celebi_fixed_variable] exec=1/3 pos=21/22 q7 done
+[celebi_fixed_variable] exec=1/3 pos=22/22 q5 done
+[celebi_fixed_variable] exec=2/3 pos=1/22 q21 done
+[celebi_fixed_variable] exec=2/3 pos=2/22 q17 done
+[celebi_fixed_variable] exec=2/3 pos=3/22 q12 done
+[celebi_fixed_variable] exec=2/3 pos=4/22 q19 done
+[celebi_fixed_variable] exec=2/3 pos=5/22 q13 done
+[celebi_fixed_variable] exec=2/3 pos=6/22 q15 done
+[celebi_fixed_variable] exec=2/3 pos=7/22 q18 done
+[celebi_fixed_variable] exec=2/3 pos=8/22 q14 done
+[celebi_fixed_variable] exec=2/3 pos=9/22 q4 done
+[celebi_fixed_variable] exec=2/3 pos=10/22 q20 done
+[celebi_fixed_variable] exec=2/3 pos=11/22 q22 done
+[celebi_fixed_variable] exec=2/3 pos=12/22 q9 done
+[celebi_fixed_variable] exec=2/3 pos=13/22 q1 done
+[celebi_fixed_variable] exec=2/3 pos=14/22 q11 done
+[celebi_fixed_variable] exec=2/3 pos=15/22 q3 done
+[celebi_fixed_variable] exec=2/3 pos=16/22 q2 done
+[celebi_fixed_variable] exec=2/3 pos=17/22 q6 done
+[celebi_fixed_variable] exec=2/3 pos=18/22 q16 done
+[celebi_fixed_variable] exec=2/3 pos=19/22 q10 done
+[celebi_fixed_variable] exec=2/3 pos=20/22 q8 done
+[celebi_fixed_variable] exec=2/3 pos=21/22 q7 done
+[celebi_fixed_variable] exec=2/3 pos=22/22 q5 done
+[celebi_fixed_variable] exec=3/3 pos=1/22 q21 done
+[celebi_fixed_variable] exec=3/3 pos=2/22 q17 done
+[celebi_fixed_variable] exec=3/3 pos=3/22 q12 done
+[celebi_fixed_variable] exec=3/3 pos=4/22 q19 done
+[celebi_fixed_variable] exec=3/3 pos=5/22 q13 done
+[celebi_fixed_variable] exec=3/3 pos=6/22 q15 done
+[celebi_fixed_variable] exec=3/3 pos=7/22 q18 done
+[celebi_fixed_variable] exec=3/3 pos=8/22 q14 done
+[celebi_fixed_variable] exec=3/3 pos=9/22 q4 done
+[celebi_fixed_variable] exec=3/3 pos=10/22 q20 done
+[celebi_fixed_variable] exec=3/3 pos=11/22 q22 done
+[celebi_fixed_variable] exec=3/3 pos=12/22 q9 done
+[celebi_fixed_variable] exec=3/3 pos=13/22 q1 done
+[celebi_fixed_variable] exec=3/3 pos=14/22 q11 done
+[celebi_fixed_variable] exec=3/3 pos=15/22 q3 done
+[celebi_fixed_variable] exec=3/3 pos=16/22 q2 done
+[celebi_fixed_variable] exec=3/3 pos=17/22 q6 done
+[celebi_fixed_variable] exec=3/3 pos=18/22 q16 done
+[celebi_fixed_variable] exec=3/3 pos=19/22 q10 done
+[celebi_fixed_variable] exec=3/3 pos=20/22 q8 done
+[celebi_fixed_variable] exec=3/3 pos=21/22 q7 done
+[celebi_fixed_variable] exec=3/3 pos=22/22 q5 done
+
+*** SIGSEGV — backtrace from faulting thread ***
+Faulting thread id:1965987
+  #0   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x86b196) [0x7bf454c6b196]
+  #1   /lib/x86_64-linux-gnu/libc.so.6(+0x45330) [0x7bf48b245330]
+  #2   /lib/x86_64-linux-gnu/libcuda.so.1(+0x2e0c4b) [0x7bf4314e0c4b]
+  #3   /lib/x86_64-linux-gnu/libcuda.so.1(+0x1d599d) [0x7bf4313d599d]
+  #4   /lib/x86_64-linux-gnu/libcuda.so.1(+0x3dba8f) [0x7bf4315dba8f]
+  #5   /lib/x86_64-linux-gnu/libcuda.so.1(+0x38ba83) [0x7bf43158ba83]
+  #6   /lib/x86_64-linux-gnu/libcuda.so.1(cuMemFreeAsync+0x1a) [0x7bf43156a11a]
+  #7   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(+0x5a9f0) [0x7bf45ec699f0]
+  #8   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(+0xc96ab) [0x7bf45ecd86ab]
+  #9   rmm::mr::detail::cuda_async_memory_resource_impl::deallocate(cuda::__4::stream_ref, void*, unsigned long, unsigned long) at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(_ZN3rmm2mr6detail31cuda_async_memory_resource_impl10deallocateEN4cuda3__410stream_refEPvmm+0x12) [0x7bf45ec513f2]
+  #10  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x1f7565b) [0x7bf45637565b]
+  #11  rmm::device_buffer::deallocate_async() at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(_ZN3rmm13device_buffer16deallocate_asyncEv+0xd2) [0x7bf45ec361b2]
+  #12  rmm::device_buffer::~device_buffer() at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(_ZN3rmm13device_bufferD2Ev+0x34) [0x7bf45ec362d4]
+  #13  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x5cc523) [0x7bf4549cc523]
+  #14  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x7e6de6) [0x7bf454be6de6]
+  #15  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x7e6c5a) [0x7bf454be6c5a]
+  #16  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x7ee9d0) [0x7bf454bee9d0]
+  #17  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x833ae3) [0x7bf454c33ae3]
+  #18  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x834135) [0x7bf454c34135]
+  #19  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x5ce3a7) [0x7bf4549ce3a7]
+  #20  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x832cd6) [0x7bf454c32cd6]
+  #21  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x16fd7d3) [0x7bf455afd7d3]
+  #22  duckdb::ExtensionCallbackManager::~ExtensionCallbackManager() at /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb24ExtensionCallbackManagerD1Ev+0x51) [0x7bf48925f8c1]
+  #23  duckdb::DBConfig::~DBConfig() at /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8DBConfigD1Ev+0xce) [0x7bf48927832e]
+  #24  duckdb::DatabaseInstance::~DatabaseInstance() at /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16DatabaseInstanceD1Ev+0x8cd) [0x7bf48927915d]
+  #25  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xb9f18a) [0x7bf48779f18a]
+  #26  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbb8377) [0x7bf4877b8377]
+  #27  duckdb::DuckDBPyConnection::Close() at /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection5CloseEv+0xe1) [0x7bf487828581]
+  #28  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc41a34) [0x7bf487841a34]
+  #29  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbafc74) [0x7bf4877afc74]
+  #30  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(PyObject_Vectorcall+0x2e) [0x6459148e8a5e]
+  #31  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(_PyEval_EvalFrameDefault+0xced) [0x6459148f988d]
+  #32  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x1d57c8) [0x6459148f67c8]
+  #33  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(PyEval_EvalCode+0xb5) [0x6459149d2e05]
+  #34  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x2f3f4d) [0x645914a14f4d]
+  #35  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x2f31c8) [0x645914a141c8]
+  #36  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x2f2d2f) [0x645914a13d2f]
+  #37  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x2f297d) [0x645914a1397d]
+  #38  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(Py_RunMain+0x2b9) [0x6459149c2119]
+  #39  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(Py_BytesMain+0x37) [0x6459149bc367]
+  #40  /lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x7bf48b22a1ca]
+  #41  /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x7bf48b22a28b]
+  #42  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x29a72a) [0x6459149bb72a]
+*** end backtrace ***
