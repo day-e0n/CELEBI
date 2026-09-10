@@ -4091,12 +4091,44 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
     return false;
   }
 
+  // Why each candidate entry was rejected. reuse_miss used to log only that the
+  // loop fell through, so a miss could be a wrong table, a filter that did not
+  // match, or a provider that could not tile its pages -- three different bugs
+  // with one symptom. 124 of 252 scans on SF100 end here; the counts say which.
+  std::size_t miss_wrong_files     = 0;
+  std::size_t miss_missing_columns = 0;
+  std::size_t miss_no_columns      = 0;
+  std::size_t miss_filter_mismatch = 0;
+  std::size_t miss_no_provider     = 0;
+  std::size_t candidates_seen      = 0;
+
   try {
     std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
     for (auto const& [pinned_name, entry] : _pinned_entries) {
+      ++candidates_seen;
       // Identity + serviceability gate: empty when this cache cannot serve the scan
       // (wrong format / file-set / table, or missing a requested column).
-      if (entry.cache_info.can_serve_with_columns(table_info).empty()) { continue; }
+      if (entry.cache_info.can_serve_with_columns(table_info).empty()) {
+        // Split the two causes the empty vector conflates: a cache for a
+        // different table (the common case, since the loop walks every entry)
+        // versus one for THIS table that simply lacks a column the scan reads.
+        // Only the second is a cache-design problem.
+        bool same_files = false;
+        if (auto const* p =
+              dynamic_cast<op::scan::parquet_ingestible_table_info const*>(&table_info)) {
+          auto these_files = entry.cache_info.resolved_file_paths;
+          auto those_files = p->resolved_file_paths;
+          std::sort(these_files.begin(), these_files.end());
+          std::sort(those_files.begin(), those_files.end());
+          same_files = these_files == those_files;
+        }
+        if (same_files) {
+          ++miss_missing_columns;
+        } else {
+          ++miss_wrong_files;
+        }
+        continue;
+      }
       // Refuse a short entry. num_rows is only a running total of what was
       // inserted, so an entry left behind by a mid-scan auto_cache_populate_failed
       // looks valid and silently serves fewer rows than the table has. Behaviour-
@@ -4116,15 +4148,24 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
       // projection bind to the same columns they would on the disk read path.
       auto cols = gather_by_primary_index(entry.cache_info.column_ids,
                                           op->get_ingestible().materialized_column_order());
-      if (cols.empty()) { continue; }  // defensive: materialized set must be a cache subset
+      if (cols.empty()) {  // defensive: materialized set must be a cache subset
+        ++miss_no_columns;
+        continue;
+      }
       if (!entry.cache_info.filter_signature.empty()) {
         if (parquet == nullptr ||
             parquet->fixed_page_cache_filter_signature() != entry.cache_info.filter_signature) {
+          ++miss_filter_mismatch;
           continue;
         }
       }
       auto provider = make_provider_for_pinned_entry(entry, cols, &_shared_dictionaries);
-      if (!provider) { continue; }
+      if (!provider) {
+        // usable() is false: no page range survived build_ranges, i.e. no chunk is
+        // covered by every selected column at page-aligned boundaries.
+        ++miss_no_provider;
+        continue;
+      }
 
       // Partial coverage: tell the ingestible which row groups the cache serves so
       // it reads only the complement, and mark the pipeline so both sources feed
@@ -4165,7 +4206,16 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
       "operator '{}'",
       op->get_operator_id());
   }
-  SIRIUS_LOG_INFO("[fixed-page-cache] reuse_miss operator='{}'", op->get_operator_id());
+  SIRIUS_LOG_INFO(
+    "[fixed-page-cache] reuse_miss operator='{}' candidates={} wrong_files={} "
+    "missing_columns={} no_columns={} filter_mismatch={} no_provider={}",
+    op->get_operator_id(),
+    candidates_seen,
+    miss_wrong_files,
+    miss_missing_columns,
+    miss_no_columns,
+    miss_filter_mismatch,
+    miss_no_provider);
   return false;
 }
 

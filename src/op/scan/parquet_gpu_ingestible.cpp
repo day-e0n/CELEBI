@@ -157,6 +157,26 @@ bool cache_before_filter_enabled()
   return value != nullptr && std::string_view(value) == "1";
 }
 
+/// Whether a scan whose rows the READER already filtered may populate the cache.
+///
+/// Such a scan produces an entry holding "the rows matching this predicate", so it
+/// carries a filter signature and can only ever serve a scan with the byte-identical
+/// predicate -- in practice only a later execution of the same query. Measured on
+/// SF100: 84 of 111 populates land in such entries (ClickBench: 27 of 32), and
+/// lineitem alone accumulates 11 distinct filter entries against 12 unfiltered
+/// scans that could all share one. The budget those 11 hold is why the unfiltered
+/// entry stops widening and later scans miss with `missing_columns` (SF100 102,
+/// ClickBench 460).
+///
+/// Skipping them concentrates the budget on the unfiltered entry, which is a
+/// superset of every predicate and therefore reusable by all of them. The cost is
+/// the same-query repeat hits those entries did provide.
+bool cache_filtered_scans_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_FILTERED_SCANS");
+  return value == nullptr || std::string_view(value) != "0";
+}
+
 bool honest_filter_signature_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_HONEST_FILTER_SIGNATURE");
@@ -965,6 +985,10 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
   // point a URL-only batch is refused again anyway, just more cheaply.
   if (!has_fixed_width_column) {
     SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=no_fixed_width_column");
+    return;
+  }
+  if (reader_applied_filter && !cache_filtered_scans_enabled()) {
+    SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=filtered_scan");
     return;
   }
 

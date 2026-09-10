@@ -133,9 +133,10 @@ def main() -> int:
                              "the most to recover from; the benchmark's natural order can already "
                              "be favourable and then understates what reordering is worth.")
     parser.add_argument("--order",
-                        help="Explicit comma-separated query order, e.g. '16,22,2,...'. "
-                             "Overrides --arrival and suppresses the reorder; for testing a "
-                             "hypothesis order the built-in policies cannot express.")
+                        help="Explicit comma-separated ARRIVAL order, e.g. '16,22,2,...'. "
+                             "Replaces --arrival; the reorder still applies on top unless "
+                             "--no-reorder is given, so an order recovered from an earlier "
+                             "experiment can be replayed with and without reordering.")
     parser.add_argument("--projection-keyed-cache", action="store_true",
                         help="Key cache entries by the projected column list instead of by "
                              "(file, filter). Measured worse (-27.3%% vs -38.9%%); kept only to "
@@ -179,7 +180,7 @@ def main() -> int:
     elif args.arrival == "worst":
         qnums = worst_case_sequence(qnums, "fixed_width")
         print(f"arrival(worst): {','.join(f'q{q}' for q in qnums)}", flush=True)
-    if args.condition != "baseline" and not args.no_reorder and not args.order:
+    if args.condition != "baseline" and not args.no_reorder:
         if args.reorder_policy in ("byte-lru", "byte-overlap", "cost-ascending",
                                    "cost-seeded-overlap"):
             if not args.column_bytes:

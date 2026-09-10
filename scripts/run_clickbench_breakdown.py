@@ -106,6 +106,9 @@ def main() -> int:
                              "lineitem one and position 1 -- which always misses -- is free. "
                              "'byte-lru' instead maximises the bytes served by a simulated "
                              "byte-budget LRU over the whole sequence; needs --column-bytes.")
+    parser.add_argument("--query-table-columns",
+                        help="JSON from scripts/probe_scan_requests.py, required by "
+                             "cost-ascending.")
     parser.add_argument("--column-bytes",
                         help="JSON from scripts/probe_column_bytes.py, required by byte-lru.")
     parser.add_argument("--no-reorder", action="store_true",
@@ -133,11 +136,17 @@ def main() -> int:
     elif args.arrival == "worst":
         qnums = reorder.worst_case_sequence(qnums, "fixed_width")
         print(f"arrival(worst): {','.join(f'q{q}' for q in qnums)}", flush=True)
-    if args.condition != "baseline" and not args.no_reorder and not args.order:
-        if args.reorder_policy == "byte-lru":
+    if args.condition != "baseline" and not args.no_reorder:
+        if args.reorder_policy in ("byte-lru", "byte-overlap", "cost-ascending"):
             if not args.column_bytes:
-                parser.error("--reorder-policy byte-lru requires --column-bytes")
+                parser.error(f"--reorder-policy {args.reorder_policy} requires --column-bytes")
             print(f"column bytes: {reorder.load_column_bytes(args.column_bytes)} columns",
+                  flush=True)
+        if args.reorder_policy == "cost-ascending":
+            if not args.query_table_columns:
+                parser.error("--reorder-policy cost-ascending requires --query-table-columns")
+            print(f"query columns: "
+                  f"{reorder.load_query_table_columns(args.query_table_columns)} queries",
                   flush=True)
         cfg = reorder.ReorderConfig(policy=args.reorder_policy, scope="fixed_width",
                                     window=0, keep_first=False,

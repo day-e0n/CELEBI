@@ -77,7 +77,9 @@ def probe(con, table: str, source: str, string_sample: float) -> dict[str, int]:
         # 600M rows and the average length is stable well before that.
         using = f" USING SAMPLE {string_sample}%" if 0 < string_sample < 100 else ""
         projection = ", ".join(
-            f'avg(octet_length(CAST("{name}" AS BLOB)))' for name in variable
+            # CAST(... AS BLOB) rejects non-ASCII; encode() is the byte-safe conversion
+            # (ClickBench's Title/URL carry Cyrillic).
+            f'avg(octet_length(encode("{name}")))' for name in variable
         )
         averages = con.execute(
             f"SELECT {projection} FROM read_parquet('{source}'){using}"
