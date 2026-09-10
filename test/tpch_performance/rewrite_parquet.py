@@ -272,6 +272,9 @@ def rewrite_table(
         print(f"  WARNING: No parquet files found for {table_name}, skipping")
         return
 
+    if row_group_size_rows is None:
+        row_group_size_rows = auto_row_group_rows(source_files[0])
+
     # Get metadata and original schema
     orig_schema = pq.read_schema(source_files[0])
     target_schema = apply_int32_overrides(orig_schema, table_name)
@@ -279,7 +282,10 @@ def rewrite_table(
     for f in source_files:
         total_rows += pq.read_metadata(f).num_rows
     src_size = sum(os.path.getsize(f) for f in source_files)
-    print(f"  {table_name}: {total_rows:,} rows, {src_size / 1e9:.2f} GB on disk")
+    print(
+        f"  {table_name}: {total_rows:,} rows, {src_size / 1e9:.2f} GB on disk, "
+        f"{row_group_size_rows:,} rows/row group"
+    )
 
     t0 = time.time()
     output_files = []
@@ -396,10 +402,11 @@ def main():
     source_dir = sys.argv[1]
     dest_dir = sys.argv[2]
     arg = sys.argv[3] if len(sys.argv) > 3 else "auto"
-    if arg == "auto":
-        row_group_size_rows = auto_row_group_rows(source_dir)
-    else:
-        row_group_size_rows = int(arg)
+    # None means "size each table to its own narrowest column", which is what
+    # auto_row_group_rows documents: a table's row grid only has to line up with
+    # itself, so taking the narrowest column across the whole schema would drag
+    # every table down to the widest row group any one of them needs.
+    row_group_size_rows = None if arg == "auto" else int(arg)
     max_file_gb = float(sys.argv[4]) if len(sys.argv) > 4 else 20
     max_file_bytes = int(max_file_gb * 1024 * 1024 * 1024)
 
@@ -411,7 +418,12 @@ def main():
     backend = "cudf (GPU)" if HAS_CUDF else "pyarrow (CPU)"
     print(f"Rewriting TPC-H parquet: {source_dir} -> {dest_dir}")
     print(f"  Backend: {backend}")
-    print(f"  Row group size: {row_group_size_rows:,} rows")
+    size_desc = (
+        "auto (per table)"
+        if row_group_size_rows is None
+        else f"{row_group_size_rows:,} rows"
+    )
+    print(f"  Row group size: {size_desc}")
     print(f"  Max file size: {max_file_gb:.0f} GiB")
     print(f"  Max page size: {MAX_PAGE_SIZE_BYTES // (1024*1024)} MiB")
     print(f"  Compression: snappy")
