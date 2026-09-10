@@ -998,10 +998,31 @@ fixed_width_column_page const* find_covering_fixed_page(
   if (spans_it != entry.fixed_width_chunk_page_spans.end() &&
       chunk_index < spans_it->second.size()) {
     auto const& span = spans_it->second[chunk_index];
-    if (span.page_count > 0 && span.rows_per_page > 0) {
-      auto const page_index_within_chunk = row_offset / span.rows_per_page;
-      if (page_index_within_chunk < span.page_count) {
-        auto const& page = pages_it->second[span.page_start_index + page_index_within_chunk];
+    if (span.page_count > 0) {
+      auto const first = span.page_start_index;
+      auto const last  = first + span.page_count;
+      if (last <= pages_it->second.size()) {
+        // rows_per_page == 0 marks a chunk whose pages were cut on row-group
+        // boundaries, so the stride is not constant and division cannot locate a
+        // page. Pages within a span stay sorted by row_offset either way, so fall
+        // back to a binary search -- O(log P) over the few dozen pages a chunk
+        // holds, against the O(1) the uniform case keeps.
+        std::size_t index = 0;
+        if (span.rows_per_page > 0) {
+          index = row_offset / span.rows_per_page;
+          if (index >= span.page_count) { return nullptr; }
+          index += first;
+        } else {
+          auto const begin = pages_it->second.begin() + static_cast<std::ptrdiff_t>(first);
+          auto const end   = pages_it->second.begin() + static_cast<std::ptrdiff_t>(last);
+          auto it          = std::upper_bound(
+            begin, end, row_offset, [](std::size_t offset, fixed_width_column_page const& page) {
+              return offset < page.row_offset;
+            });
+          if (it == begin) { return nullptr; }
+          index = static_cast<std::size_t>(std::distance(pages_it->second.begin(), it) - 1);
+        }
+        auto const& page = pages_it->second[index];
         if (fixed_page_covers_range(page, chunk_index, row_offset, num_rows)) { return &page; }
         return nullptr;
       }
@@ -2070,8 +2091,29 @@ void index_fixed_width_column_pages(pinned_entry& entry,
   auto& pages              = entry.fixed_width_pages_by_column[column_name];
   auto const page_start_index = pages.size();
 
-  for (std::size_t row_offset = 0; row_offset < rows; row_offset += rows_per_page) {
-    auto const page_rows = std::min(rows_per_page, rows - row_offset);
+  // Row-group boundaries inside this chunk, as offsets from its start. A page
+  // must not straddle one: the residual path reads whole row groups, so a page
+  // spanning two cannot be dropped or kept as a unit, and the row-group resize
+  // that removes remainder waste only works if pages restart at each boundary.
+  // Empty when the producer supplied no row counts (non-parquet reader), which
+  // falls back to the plain byte grid this used to be.
+  std::vector<std::size_t> boundaries;
+  if (chunk_index < entry.chunk_provenance_by_index.size()) {
+    std::size_t acc = 0;
+    for (auto const rg_rows : entry.chunk_provenance_by_index[chunk_index].row_group_rows) {
+      acc += rg_rows;
+      if (acc >= rows) { break; }
+      boundaries.push_back(acc);
+    }
+  }
+  auto next_boundary = [&](std::size_t from) {
+    auto it = std::upper_bound(boundaries.begin(), boundaries.end(), from);
+    return it == boundaries.end() ? rows : *it;
+  };
+
+  for (std::size_t row_offset = 0; row_offset < rows;) {
+    auto const page_rows =
+      std::min({rows_per_page, rows - row_offset, next_boundary(row_offset) - row_offset});
     fixed_width_column_page page;
     page.key.table_name    = table_name;
     page.key.file_path     = file_path;
@@ -2115,13 +2157,16 @@ void index_fixed_width_column_pages(pinned_entry& entry,
     entry.fixed_width_page_directory[directory_key] =
       fixed_width_page_directory_entry{column_name, pages.size()};
     pages.emplace_back(page);
+    row_offset += page_rows;
   }
 
   auto const page_count = pages.size() - page_start_index;
   if (page_count > 0) {
     auto& spans = entry.fixed_width_chunk_page_spans[column_name];
     if (spans.size() <= chunk_index) { spans.resize(chunk_index + 1); }
-    spans[chunk_index] = fixed_width_chunk_page_span{page_start_index, page_count, rows_per_page};
+    // 0 tells find_covering_fixed_page the stride is not constant.
+    spans[chunk_index] = fixed_width_chunk_page_span{
+      page_start_index, page_count, boundaries.empty() ? rows_per_page : std::size_t{0}};
   }
 }
 

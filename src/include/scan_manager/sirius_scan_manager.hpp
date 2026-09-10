@@ -349,6 +349,16 @@ struct fixed_width_chunk_page_span {
 struct chunk_provenance {
   std::vector<std::pair<std::string, std::vector<cudf::size_type>>> slices;
   std::size_t num_rows{0};
+  /// Row count of each row group in @c slices, flattened in the same order.
+  /// Empty when the producer could not supply it (non-parquet readers), in which
+  /// case page cutting falls back to a plain byte grid over the whole chunk.
+  ///
+  /// Needed because a page must not straddle a row-group boundary: the residual
+  /// path reads whole row groups, so a page spanning two of them cannot be
+  /// dropped or kept as a unit. Cutting on the boundary also removes the
+  /// remainder waste that a chunk-wide grid leaves -- measured 12.9% on TPC-H's
+  /// 9,962,958-row groups and 31.1% on ClickBench's 10,000,000-row ones.
+  std::vector<std::size_t> row_group_rows;
 };
 
 struct pinned_entry {

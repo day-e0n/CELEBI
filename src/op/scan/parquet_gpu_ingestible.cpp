@@ -1057,6 +1057,17 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
   provenance.slices.reserve(rg_slices.size());
   for (auto const& slice : rg_slices) {
     provenance.slices.emplace_back(slice.file_path, slice.row_group_indices);
+    // Per-row-group row counts, flattened in slice order, so the page cutter can
+    // stop a page at every row-group boundary.
+    if (slice.file_metadata) {
+      for (auto const rg : slice.row_group_indices) {
+        auto const idx = static_cast<std::size_t>(rg);
+        if (idx < slice.file_metadata->row_groups.size()) {
+          provenance.row_group_rows.push_back(
+            static_cast<std::size_t>(slice.file_metadata->row_groups[idx].num_rows));
+        }
+      }
+    }
   }
   std::size_t table_total_rows = 0;
   for (auto const& slice : rg_slices) {
