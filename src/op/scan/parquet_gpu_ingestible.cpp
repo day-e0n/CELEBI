@@ -623,9 +623,30 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
     auto const names = _plan->data_column_names();
     scanned_column_names.insert(names.begin(), names.end());
   }
-  // Pre-filter caching: keep the reader from dropping rows so what lands in the
-  // cache is the whole column. Only meaningful when auto-caching is on.
-  bool disable_filter_pushdown = cache_before_filter_enabled() && fixed_page_auto_cache_enabled();
+  // Two independent decisions that used to share one flag.
+  //
+  // Row-group pruning reads footer statistics and nothing else, so it is free and
+  // always worth doing. Row filtering happens during decode and is what makes a
+  // cached page hold "the rows matching this predicate" rather than a contiguous
+  // row range of the table -- which is why such a page needs a filter identity and
+  // can only ever serve a byte-identical predicate.
+  //
+  // Caching before the filter therefore wants pruning ON and row filtering OFF.
+  // Folding both into one flag meant turning off row filtering also turned off
+  // pruning, so the reader read every row group the predicate would have skipped:
+  // measured on ClickBench, 40.5 s -> 73.7 s, i.e. below its own no-cache
+  // baseline. That measurement says nothing about pre-filter caching itself.
+  //
+  // Scoped to scans that can actually be cached: a scan carrying dynamic filters is
+  // refused by auto_cache_materialized_table regardless, so turning its row filter
+  // off would forfeit the reader's pruning and buy nothing.
+  bool const cache_before_filter = cache_before_filter_enabled() &&
+                                   fixed_page_auto_cache_enabled() &&
+                                   !fixed_page_cache_has_dynamic_filters();
+  // FLBA-decimal probe: cudf's row-group stats filter cannot compare a
+  // fixed_point_scalar AST literal against FLBA / BYTE_ARRAY decimal stats, so
+  // such a file must have BOTH off (the filter still applies post-decode).
+  bool decimal_blocks_pushdown = false;
   for (auto const& elem : metadata.schema) {
     if (restrict_to_scanned && !scanned_column_names.contains(elem.name)) { continue; }
     bool const is_decimal = (elem.converted_type.has_value() &&
@@ -635,15 +656,19 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
     if (!is_decimal) { continue; }
     if (elem.type == cudf::io::parquet::Type::FIXED_LEN_BYTE_ARRAY ||
         elem.type == cudf::io::parquet::Type::BYTE_ARRAY) {
-      disable_filter_pushdown = true;
+      decimal_blocks_pushdown = true;
       break;
     }
   }
+  bool const prune_row_groups = !decimal_blocks_pushdown;
+  bool const apply_row_filter = !decimal_blocks_pushdown && !cache_before_filter;
 
   // Translate the filter for reader-side row-group pruning unless disabled. The
   // translated cuDF AST must outlive filter_row_groups_with_stats below.
   std::optional<gpu_expression_translator::translated_expression> ast_expression = std::nullopt;
-  if (_duckdb_filter_expression && !disable_filter_pushdown) {
+  // Translated for PRUNING even when the row filter is off: filter_row_groups_with_stats
+  // reads the predicate off these options.
+  if (_duckdb_filter_expression && prune_row_groups) {
     auto name_resolver = [this](duckdb::idx_t ref_index) -> std::string {
       return _plan->batch_column_name(ref_index);
     };
@@ -728,7 +753,7 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
         cached->second.size());
     }
   }
-  if (ast_expression && !disable_filter_pushdown) {
+  if (ast_expression && prune_row_groups) {
     auto const rgs_before = row_group_indices.size();
     row_group_indices     = reader.filter_row_groups_with_stats(row_group_indices, opts, stream);
     SIRIUS_LOG_DEBUG("[parquet_gpu_ingestible] Row group pruning {}: {} -> {} row group(s)",
@@ -837,7 +862,9 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
   out->file_path               = file_path;
   out->datasource              = std::move(sirius_ds);
   out->reader_options          = _reader_options;
-  out->disable_filter_pushdown = disable_filter_pushdown;
+  // What the split carries is the ROW-FILTER decision; materialize_table reads it
+  // to decide whether to call set_filter on its own reader options.
+  out->disable_filter_pushdown = !apply_row_filter;
   out->row_groups.reserve(row_group_indices.size());
   std::size_t projected_cache_bytes = 0;
   std::vector<std::size_t> per_column_bytes(data_column_names.size(), 0);
