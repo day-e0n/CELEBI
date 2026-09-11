@@ -501,15 +501,14 @@ bool partial_residency_enabled()
   return value != nullptr && std::string_view(value) == "1";
 }
 
-bool entry_is_complete(pinned_entry const& entry)
+/// Whether the entry holds the whole table, ignoring the escape hatch.
+///
+/// Kept separate from entry_is_complete because the residual decision needs the
+/// FACT, not the policy: with the hatch open, entry_is_complete answers "serve it
+/// anyway", and a caller that read that as "it holds everything" would skip naming
+/// the complement and hand the scan a fraction of the table.
+bool entry_holds_whole_table(pinned_entry const& entry)
 {
-  // Escape hatch to reproduce the pre-check behaviour for an A/B. Set to 0 and a
-  // half-populated entry is served again, which is what makes the check worth
-  // having: num_rows accumulates as chunks arrive, so an entry is legitimately
-  // incomplete while it is being filled, and usable()'s
-  // `_covered_rows == _entry.num_rows` is satisfied at every intermediate state.
-  auto const* relax = std::getenv("SIRIUS_FIXED_PAGE_REQUIRE_COMPLETE_ENTRY");
-  if (relax != nullptr && std::string_view(relax) == "0") { return true; }
   // Only an UNFILTERED entry can be checked against the table's row count. A
   // filtered scan legitimately holds fewer rows -- `#4 != ''` keeps 13,172,392 of
   // 99,997,497 -- and comparing those against the footer total rejected 137 of
@@ -530,6 +529,19 @@ bool entry_is_complete(pinned_entry const& entry)
   }
   auto const total = entry.cache_info.table_total_rows;
   return total == 0 || entry.num_rows == total;
+}
+
+bool entry_is_complete(pinned_entry const& entry)
+{
+  // Escape hatch to reproduce the pre-check behaviour for an A/B. Set to 0 and a
+  // half-populated entry is served again, which is only safe now that the caller
+  // names the row groups it did NOT get and the reader fetches them: num_rows
+  // accumulates as chunks arrive, so an entry is legitimately incomplete while it
+  // is being filled, and usable()'s `_covered_rows == _entry.num_rows` is
+  // satisfied at every intermediate state.
+  auto const* relax = std::getenv("SIRIUS_FIXED_PAGE_REQUIRE_COMPLETE_ENTRY");
+  if (relax != nullptr && std::string_view(relax) == "0") { return true; }
+  return entry_holds_whole_table(entry);
 }
 
 std::string shared_variable_page_key(pinned_entry const& entry,
@@ -1104,10 +1116,12 @@ class fixed_page_databatch_provider final : public databatch_provider {
   /// columns that were still fully resident, and why variable-width eviction had
   /// to be entry-granular ("freeing only part of it would strand the rest").
   ///
-  /// Now the provider serves the chunks it fully covers and leaves the rest to the
-  /// scan, which reads their row groups from parquet as it would on a miss. A
-  /// chunk is the unit because provenance maps a chunk to whole row groups;
-  /// splitting one across cache and disk would need sub-row-group reads.
+  /// Now the provider serves the ROW GROUPS it fully covers and leaves the rest to
+  /// the scan, which reads them from parquet as it would on a miss. The row group
+  /// is the unit because that is the unit the reader's residual path excludes
+  /// (set_cached_row_groups) and the unit pages are cut on; a chunk holds several,
+  /// so making the chunk the unit threw away every fully resident row group that
+  /// happened to share a chunk with a missing one.
   [[nodiscard]] bool usable() const noexcept { return !_ranges.empty(); }
 
   /// Whether every chunk the entry holds is served from cache, i.e. the scan has
@@ -1117,11 +1131,19 @@ class fixed_page_databatch_provider final : public databatch_provider {
     return !_ranges.empty() && _covered_rows == _entry.num_rows;
   }
 
-  /// Chunk indices this provider serves in full. The scan excludes their row
-  /// groups and reads only what is left.
+  /// Chunk indices this provider serves at least part of -- for logging only.
+  /// The authoritative set is covered_row_groups().
   [[nodiscard]] std::vector<std::size_t> const& covered_chunks() const noexcept
   {
     return _covered_chunks;
+  }
+
+  /// Row groups this provider serves in full, per file. The scan excludes exactly
+  /// these and reads what is left.
+  [[nodiscard]] std::unordered_map<std::string, std::unordered_set<int>> const&
+  covered_row_groups() const noexcept
+  {
+    return _covered_row_groups;
   }
 
   [[nodiscard]] std::size_t batch_count() const noexcept { return _ranges.size(); }
@@ -1195,12 +1217,22 @@ class fixed_page_databatch_provider final : public databatch_provider {
       std::size_t coalesced_rows  = page.num_rows;
       std::size_t coalesced_pages = 1;
       auto const range_begin      = page.row_offset;
+      // Never coalesce across a row-group boundary. Coverage is decided per row
+      // group below, and a range that straddled two of them could not be assigned
+      // to either without splitting it back apart.
+      auto const& layout            = layout_for(page.chunk_index);
+      auto const coalesce_row_limit = [&] {
+        if (layout.empty()) { return std::numeric_limits<std::size_t>::max(); }
+        auto const ord = row_group_ordinal(layout, range_begin);
+        return ord < layout.size() ? layout[ord].row_end : std::numeric_limits<std::size_t>::max();
+      }();
       while (coalesced_pages < max_coalesce_pages && i + coalesced_pages < driver_pages.size()) {
         auto const& next = driver_pages[i + coalesced_pages];
         if (next.state != fixed_width_page_state::resident || next.num_rows == 0) { break; }
         if (next.chunk_index != page.chunk_index || next.memory_space != page.memory_space) { break; }
         if (next.row_offset != range_begin + coalesced_rows) { break; }
         auto const next_rows = coalesced_rows + next.num_rows;
+        if (range_begin + next_rows > coalesce_row_limit) { break; }
         if (!all_columns_cover_tiled(page.chunk_index, range_begin, next_rows)) { break; }
         coalesced_rows = next_rows;
         ++coalesced_pages;
@@ -1215,7 +1247,71 @@ class fixed_page_databatch_provider final : public databatch_provider {
       i += coalesced_pages - 1;
     }
 
-    drop_partially_covered_chunks();
+    drop_partially_covered_row_groups();
+  }
+
+  /// One row group's extent inside a chunk, in the chunk's own row coordinates.
+  struct chunk_row_group {
+    std::string const* file_path{nullptr};
+    int row_group{0};
+    std::size_t row_begin{0};
+    std::size_t row_end{0};
+  };
+
+  /// Row groups a chunk holds, in the order their rows appear in the chunk.
+  ///
+  /// Empty when the chunk's provenance cannot name them -- a non-parquet producer
+  /// records no per-row-group row counts, and a count list that disagrees with the
+  /// chunk's own row total is not trustworthy enough to cut on. Both cases fall
+  /// back to chunk-granular coverage, which claims less and never claims wrong.
+  [[nodiscard]] std::vector<chunk_row_group> chunk_row_groups(std::size_t chunk_index) const
+  {
+    std::vector<chunk_row_group> layout;
+    if (chunk_index >= _entry.chunk_provenance_by_index.size()) { return layout; }
+    auto const& provenance = _entry.chunk_provenance_by_index[chunk_index];
+    if (provenance.row_group_rows.empty()) { return layout; }
+    std::size_t row   = 0;
+    std::size_t index = 0;
+    for (auto const& [path, groups] : provenance.slices) {
+      for (auto const group : groups) {
+        if (index >= provenance.row_group_rows.size()) { return {}; }
+        auto const rows = provenance.row_group_rows[index++];
+        layout.push_back({&path, static_cast<int>(group), row, row + rows});
+        row += rows;
+      }
+    }
+    if (index != provenance.row_group_rows.size() || row != provenance.num_rows) { return {}; }
+    return layout;
+  }
+
+  [[nodiscard]] std::vector<chunk_row_group> const& layout_for(std::size_t chunk_index) const
+  {
+    auto it = _row_group_layouts.find(chunk_index);
+    if (it == _row_group_layouts.end()) {
+      it = _row_group_layouts.emplace(chunk_index, chunk_row_groups(chunk_index)).first;
+    }
+    return it->second;
+  }
+
+  /// Ordinal of the row group containing @p row_offset, or layout.size() if none.
+  [[nodiscard]] static std::size_t row_group_ordinal(std::vector<chunk_row_group> const& layout,
+                                                     std::size_t row_offset)
+  {
+    for (std::size_t ordinal = 0; ordinal < layout.size(); ++ordinal) {
+      if (row_offset >= layout[ordinal].row_begin && row_offset < layout[ordinal].row_end) {
+        return ordinal;
+      }
+    }
+    return layout.size();
+  }
+
+  /// Whether this one row group survives the scan's predicate.
+  [[nodiscard]] bool row_group_allowed(std::string const& file_path, int row_group) const
+  {
+    if (_allowed_row_groups == nullptr) { return true; }
+    auto it = _allowed_row_groups->find(file_path);
+    if (it == _allowed_row_groups->end()) { return false; }
+    return it->second.contains(row_group);
   }
 
   /// Whether every row group this chunk holds survives the scan's predicate.
@@ -1237,6 +1333,92 @@ class fixed_page_databatch_provider final : public databatch_provider {
       }
     }
     return true;
+  }
+
+  /// Keep the row groups the ranges tile completely; discard the rest.
+  ///
+  /// A half-covered ROW GROUP cannot be handed out -- the missing rows would simply
+  /// be absent from the scan's output, silently. A half-covered CHUNK can be, because
+  /// the reader excludes row groups rather than chunks (set_cached_row_groups), so
+  /// the cached and residual halves stay exactly complementary at this granularity
+  /// too. Deciding per chunk instead threw away every fully resident row group that
+  /// shared a chunk with a missing one: on ClickBench's reorder run that refusal
+  /// fired 54 times at 8,388,608-row row groups against 6 at 10,000,000-row ones,
+  /// and cost 12.5s of the 25.7s best case.
+  void drop_partially_covered_row_groups()
+  {
+    if (_ranges.empty()) { return; }
+
+    for (auto const& range : _ranges) {
+      if (layout_for(range.chunk_index).empty()) {
+        // Provenance cannot name this chunk's row groups; fall back to all-or-nothing.
+        drop_partially_covered_chunks();
+        return;
+      }
+    }
+
+    std::unordered_map<std::size_t, std::vector<std::size_t>> covered_rows;
+    for (auto const& range : _ranges) {
+      auto const& layout = layout_for(range.chunk_index);
+      auto const ordinal = row_group_ordinal(layout, range.row_offset);
+      if (ordinal == layout.size()) { continue; }
+      // A range that crosses a row-group boundary belongs wholly to neither, and
+      // counting it against the one it starts in would credit that row group with
+      // rows it does not hold -- enough to read as complete and then serve short.
+      // build_ranges stops coalescing at boundaries, so this only fires when a
+      // single PAGE straddles one (pages are cut on boundaries only when the
+      // producer recorded row-group row counts). Leave it uncounted: the row group
+      // then reads as incomplete and the scan fetches it from parquet.
+      if (range.row_offset + range.num_rows > layout[ordinal].row_end) { continue; }
+      auto& rows = covered_rows.try_emplace(range.chunk_index, layout.size(), 0).first->second;
+      rows[ordinal] += range.num_rows;
+    }
+
+    // Chunk order is fixed so the choice below is reproducible run to run.
+    std::vector<std::size_t> chunks;
+    chunks.reserve(covered_rows.size());
+    for (auto const& [chunk_index, rows] : covered_rows) { chunks.push_back(chunk_index); }
+    std::sort(chunks.begin(), chunks.end());
+
+    std::unordered_map<std::size_t, std::vector<bool>> served;
+    _covered_row_groups.clear();
+    for (auto const chunk_index : chunks) {
+      auto const& rows   = covered_rows.at(chunk_index);
+      auto const& layout = layout_for(chunk_index);
+      std::vector<bool> keep(layout.size(), false);
+      for (std::size_t ordinal = 0; ordinal < layout.size(); ++ordinal) {
+        auto const expected = layout[ordinal].row_end - layout[ordinal].row_begin;
+        if (expected == 0 || rows[ordinal] != expected) { continue; }
+        if (!row_group_allowed(*layout[ordinal].file_path, layout[ordinal].row_group)) { continue; }
+        // Serve each row group from exactly one chunk. A merged entry can hold the
+        // same row group under two chunk indices; serving both would hand the scan
+        // that row group twice, and the reader -- which excludes a row group once,
+        // by name -- cannot undo the second copy. Seen as counts ABOVE the correct
+        // maximum, not below it.
+        auto& claimed = _covered_row_groups[*layout[ordinal].file_path];
+        if (!claimed.insert(layout[ordinal].row_group).second) { continue; }
+        keep[ordinal] = true;
+      }
+      served.emplace(chunk_index, std::move(keep));
+    }
+
+    std::vector<fixed_page_batch_range> kept;
+    kept.reserve(_ranges.size());
+    _covered_rows = 0;
+    std::unordered_set<std::size_t> touched_chunks;
+    for (auto const& range : _ranges) {
+      auto const& layout = layout_for(range.chunk_index);
+      auto const ordinal = row_group_ordinal(layout, range.row_offset);
+      auto const it      = served.find(range.chunk_index);
+      if (ordinal == layout.size() || it == served.end() || !it->second[ordinal]) { continue; }
+      if (range.row_offset + range.num_rows > layout[ordinal].row_end) { continue; }
+      _covered_rows += range.num_rows;
+      touched_chunks.insert(range.chunk_index);
+      kept.push_back(range);
+    }
+    _ranges = std::move(kept);
+    _covered_chunks.assign(touched_chunks.begin(), touched_chunks.end());
+    std::sort(_covered_chunks.begin(), _covered_chunks.end());
   }
 
   /// Keep only chunks whose ranges tile the chunk completely; discard the rest.
@@ -1274,6 +1456,16 @@ class fixed_page_databatch_provider final : public databatch_provider {
     _ranges = std::move(kept);
     _covered_chunks.assign(complete.begin(), complete.end());
     std::sort(_covered_chunks.begin(), _covered_chunks.end());
+
+    _covered_row_groups.clear();
+    for (auto const chunk_index : _covered_chunks) {
+      if (chunk_index >= _entry.chunk_provenance_by_index.size()) { continue; }
+      for (auto const& [path, groups] : _entry.chunk_provenance_by_index[chunk_index].slices) {
+        for (auto const group : groups) {
+          _covered_row_groups[path].insert(static_cast<int>(group));
+        }
+      }
+    }
   }
 
   [[nodiscard]] std::optional<std::size_t> choose_driver_column() const
@@ -1519,6 +1711,10 @@ class fixed_page_databatch_provider final : public databatch_provider {
   std::vector<fixed_page_batch_range> _ranges;
   std::size_t _covered_rows{0};
   std::vector<std::size_t> _covered_chunks;
+  /// Row groups served in full, per file -- what the scan excludes from its read.
+  std::unordered_map<std::string, std::unordered_set<int>> _covered_row_groups;
+  /// Memoized chunk_row_groups() results; keyed by chunk index.
+  mutable std::unordered_map<std::size_t, std::vector<chunk_row_group>> _row_group_layouts;
   pinned_entry const& _entry;
   std::unordered_map<std::string, std::shared_ptr<cudf::column>> const* _dictionaries{nullptr};
   /// Row groups the scan's predicate cannot rule out, or null when the caller
@@ -4172,6 +4368,9 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
   // with one symptom. 124 of 252 scans on SF100 end here; the counts say which.
   std::size_t miss_wrong_files     = 0;
   std::size_t miss_missing_columns = 0;
+  std::size_t best_overlap         = 0;  // most of the request any same-file entry held
+  std::size_t best_requested       = 0;  // columns the scan asked for
+  std::size_t best_held            = 0;  // columns the widest same-file entry held
   std::size_t miss_no_columns      = 0;
   std::size_t miss_filter_mismatch = 0;
   std::size_t miss_no_provider     = 0;
@@ -4201,6 +4400,28 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
         }
         if (same_files) {
           ++miss_missing_columns;
+          // How CLOSE the entry was, not just that it failed. The gather is
+          // all-or-nothing across columns, so one absent column throws away every
+          // column the entry does hold -- and whether serving those from cache and
+          // the rest from parquet is worth building depends on that ratio, which
+          // "missing_columns=72" alone cannot answer.
+          std::unordered_set<std::size_t> held;
+          held.reserve(entry.cache_info.column_ids.size());
+          for (auto const& c : entry.cache_info.column_ids) {
+            held.insert(static_cast<std::size_t>(c.GetPrimaryIndex()));
+          }
+          std::size_t overlap = 0;
+          std::size_t requested = 0;
+          if (auto const* p =
+                dynamic_cast<op::scan::parquet_ingestible_table_info const*>(&table_info)) {
+            requested = p->column_ids.size();
+            for (auto const& c : p->column_ids) {
+              if (held.contains(static_cast<std::size_t>(c.GetPrimaryIndex()))) { ++overlap; }
+            }
+          }
+          best_overlap     = std::max(best_overlap, overlap);
+          best_requested   = requested;
+          best_held        = std::max(best_held, entry.cache_info.column_ids.size());
         } else {
           ++miss_wrong_files;
         }
@@ -4259,27 +4480,39 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
       // it reads only the complement, and mark the pipeline so both sources feed
       // the connector. The row groups come from the entry's recorded provenance --
       // never from arithmetic on chunk_index, which is an arrival counter.
-      bool residual = false;
+      // An entry that does not hold the whole table needs a residual even when the
+      // provider covers every row the entry HAS -- covers_entire_entry() is about
+      // the entry, not the table, so an entry caught at 10,000,000 of 99,997,497
+      // rows reads as fully covered and would hand the scan a tenth of the table.
+      bool const whole_table = entry_holds_whole_table(entry);
+      bool residual          = false;
       if (auto const* page_provider =
             dynamic_cast<fixed_page_databatch_provider const*>(provider.get());
           page_provider != nullptr && parquet != nullptr &&
-          !page_provider->covers_entire_entry()) {
-        std::unordered_map<std::string, std::unordered_set<int>> cached_groups;
-        for (auto const chunk_index : page_provider->covered_chunks()) {
-          if (chunk_index >= entry.chunk_provenance_by_index.size()) { continue; }
-          for (auto const& [path, groups] : entry.chunk_provenance_by_index[chunk_index].slices) {
-            for (auto const rg : groups) { cached_groups[path].insert(static_cast<int>(rg)); }
-          }
-        }
+          (!page_provider->covers_entire_entry() || !whole_table)) {
+        auto cached_groups = page_provider->covered_row_groups();
         if (cached_groups.empty()) { continue; }  // nothing nameable: take the miss
+        std::size_t cached_row_group_count = 0;
+        for (auto const& [path, groups] : cached_groups) { cached_row_group_count += groups.size(); }
         parquet->set_cached_row_groups(std::move(cached_groups));
         residual = true;
         SIRIUS_LOG_INFO(
-          "[fixed-page-cache] partial_reuse table='{}' cached_chunks={} of {} operator='{}'",
+          "[fixed-page-cache] partial_reuse table='{}' cached_row_groups={} across {} chunk(s) of "
+          "{} operator='{}'",
           pinned_name,
+          cached_row_group_count,
           page_provider->covered_chunks().size(),
           entry.chunk_provenance_by_index.size(),
           op->get_operator_id());
+      }
+      if (!whole_table && !residual) {
+        // Partial entry whose complement cannot be named (no parquet reader, or no
+        // row group survived): serving it would silently drop the rest.
+        SIRIUS_LOG_INFO(
+          "[fixed-page-cache] reuse_skip reason=unnameable_residual table='{}' operator='{}'",
+          pinned_name,
+          op->get_operator_id());
+        continue;
       }
       _metadata_processor->use_cached_entries_for_pipeline(op, std::move(provider), residual);
       if (residual_out != nullptr) { *residual_out = residual; }
@@ -4296,14 +4529,18 @@ bool sirius_scan_manager::try_assign_cached_entries(op::scan::sirius_gpu_scan_op
   }
   SIRIUS_LOG_INFO(
     "[fixed-page-cache] reuse_miss operator='{}' candidates={} wrong_files={} "
-    "missing_columns={} no_columns={} filter_mismatch={} no_provider={}",
+    "missing_columns={} no_columns={} filter_mismatch={} no_provider={} "
+    "requested_columns={} best_overlap={} best_entry_columns={}",
     op->get_operator_id(),
     candidates_seen,
     miss_wrong_files,
     miss_missing_columns,
     miss_no_columns,
     miss_filter_mismatch,
-    miss_no_provider);
+    miss_no_provider,
+    best_requested,
+    best_overlap,
+    best_held);
   return false;
 }
 

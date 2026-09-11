@@ -62,7 +62,30 @@ def results_match(cpu, gpu) -> tuple[bool, str]:
 
 
 def main() -> int:
-    os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
+    # Build the engine environment with the SAME function the benchmark runner
+    # uses. Setting a couple of variables by hand is not enough and fails silently:
+    # without SIRIUS_FIXED_PAGE_BACKED_PROVIDER the page-cache provider never runs
+    # at all, so the run reports "all match" having exercised none of the code it
+    # was meant to check. Flags this script does not own (pre/post-filter caching,
+    # partial residency, entry cap) are read from the caller's environment, which
+    # make_env copies rather than overwrites.
+    from run_random22_breakdown import write_config
+    from run_random22_breakdown_var import make_env
+
+    out = Path(os.environ.get("CHECK_OUT_DIR", ".tmp/check_correctness")).resolve()
+    log_dir, config_path = out / "log_dir", out / "sirius.yaml"
+    out.mkdir(parents=True, exist_ok=True)
+    write_config(config_path, out / "telemetry_data", os.environ.get("CHECK_GPU_LIMIT", "20GB"))
+    os.environ.update(make_env(
+        os.environ.get("CHECK_CONDITION", "celebi_fixed_variable"),
+        os.environ.get("CUDA_VISIBLE_DEVICES", "0"),
+        log_dir, config_path,
+        os.environ.get("CHECK_FIXED_BUDGET", "6GB"),
+        os.environ.get("CHECK_VARIABLE_BUDGET", "4GB"),
+        os.environ.get("CHECK_VARIABLE_PAGE_BYTES", "16777216"),
+        os.environ.get("CHECK_MIN_FREE_BYTES", "0"),
+    ))
+    print(f"engine log dir: {log_dir}", flush=True)
     import duckdb
     from clickbench_queries import QUERIES
 
@@ -82,9 +105,23 @@ def main() -> int:
     con.execute(f"LOAD '{REPO}/build/release/extension/sirius/sirius.duckdb_extension'")
     con.execute("SET gpu_execution = true;")
 
+    # Arrival order matters to what ends up resident: the benchmark's adversarial
+    # order is what produces partially-covered entries, and query-number order can
+    # miss that path entirely -- a correctness run that never reaches the code it
+    # is checking reports "all match" for the wrong reason.
+    order_env = os.environ.get("CHECK_ORDER", "")
+    if order_env:
+        order = [int(x) for x in order_env.split(",") if x.strip()]
+        order = [q for q in order if q in expected]
+        missing = [q for q in sorted(expected) if q not in order]
+        order += missing
+        print(f"arrival order: {','.join(f'q{q}' for q in order)}", flush=True)
+    else:
+        order = sorted(expected)
+
     mismatches = []
     for execution in range(1, EXECUTIONS + 1):
-        for q in sorted(expected):
+        for q in order:
             got = con.execute(QUERIES[f"q{q}"]).fetchall()
             same, why = results_match(expected[q], got)
             if not same:
