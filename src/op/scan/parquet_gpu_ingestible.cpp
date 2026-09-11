@@ -24,6 +24,10 @@
 #include <io/io_context.hpp>
 #include <io/sirius_datasource.hpp>
 #include <log/logging.hpp>
+#include <duckdb/planner/expression/bound_comparison_expression.hpp>
+#include <duckdb/planner/expression/bound_conjunction_expression.hpp>
+#include <duckdb/planner/expression/bound_constant_expression.hpp>
+#include <duckdb/planner/expression/bound_reference_expression.hpp>
 #include <op/scan/dynamic_filter_merge.hpp>
 #include <op/scan/parquet_gpu_ingestible.hpp>
 #include <op/scan/parquet_metadata.hpp>
@@ -177,6 +181,13 @@ bool cache_filtered_scans_enabled()
   return value == nullptr || std::string_view(value) != "0";
 }
 
+/// Drop the predicate from the cache key and rely on per-chunk value ranges.
+bool filter_keyless_cache_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_FILTER_KEYLESS_CACHE");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
 bool honest_filter_signature_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_HONEST_FILTER_SIGNATURE");
@@ -192,7 +203,14 @@ std::string auto_fixed_page_cache_name(std::vector<std::string> const& file_path
   std::ostringstream out;
   out << "__wdy_auto_fixed_page:";
   for (auto const& path : paths) { out << path << ";"; }
-  if (!filter_signature.empty()) { out << "filter=" << filter_signature; }
+  // Keyless mode: the predicate stops being part of the cache IDENTITY and becomes
+  // metadata on each chunk (chunk_provenance::filter_ranges). One entry per file
+  // then holds chunks filtered differently, and a consumer takes the chunks whose
+  // predicate its own is narrower than, instead of only an entry whose predicate
+  // text matches byte for byte.
+  if (!filter_signature.empty() && !filter_keyless_cache_enabled()) {
+    out << "filter=" << filter_signature;
+  }
   // Column set is part of the cache identity: two queries over the same
   // (file, filter) that project different columns are genuinely different
   // cache entries. Folding the column set into the key -- instead of just
@@ -976,6 +994,118 @@ std::string parquet_gpu_ingestible::fixed_page_cache_filter_signature() const
   return _duckdb_filter_expression ? _duckdb_filter_expression->ToString() : std::string{};
 }
 
+namespace {
+
+/// Fold one comparison into a value range, or fail.
+///
+/// Only the shapes a containment test can reason about: a bare column reference
+/// compared against a constant. Anything else -- a function call, a cast, two
+/// columns, LIKE, <> -- leaves the predicate unanalyzable, and the caller then
+/// falls back to matching the predicate's text exactly, which is what it did
+/// before this existed.
+bool fold_comparison(duckdb::BoundComparisonExpression const& expr,
+                     std::function<std::string(duckdb::idx_t)> const& column_of,
+                     std::vector<scan_manager::cache_filter_range>& out)
+{
+  auto const* ref   = dynamic_cast<duckdb::BoundReferenceExpression const*>(expr.left.get());
+  auto const* konst = dynamic_cast<duckdb::BoundConstantExpression const*>(expr.right.get());
+  auto type         = expr.GetExpressionType();
+  if (ref == nullptr || konst == nullptr) {
+    // Try the mirrored form (constant on the left) and flip the operator with it.
+    ref   = dynamic_cast<duckdb::BoundReferenceExpression const*>(expr.right.get());
+    konst = dynamic_cast<duckdb::BoundConstantExpression const*>(expr.left.get());
+    if (ref == nullptr || konst == nullptr) { return false; }
+    switch (type) {
+      case duckdb::ExpressionType::COMPARE_LESSTHAN:
+        type = duckdb::ExpressionType::COMPARE_GREATERTHAN; break;
+      case duckdb::ExpressionType::COMPARE_LESSTHANOREQUALTO:
+        type = duckdb::ExpressionType::COMPARE_GREATERTHANOREQUALTO; break;
+      case duckdb::ExpressionType::COMPARE_GREATERTHAN:
+        type = duckdb::ExpressionType::COMPARE_LESSTHAN; break;
+      case duckdb::ExpressionType::COMPARE_GREATERTHANOREQUALTO:
+        type = duckdb::ExpressionType::COMPARE_LESSTHANOREQUALTO; break;
+      default: break;
+    }
+  }
+  if (konst->value.IsNull()) { return false; }
+
+  scan_manager::cache_filter_range range;
+  range.column_name = column_of(ref->index);
+  if (range.column_name.empty()) { return false; }
+  switch (type) {
+    case duckdb::ExpressionType::COMPARE_EQUAL:
+      range.has_lo = range.has_hi = true;
+      range.lo = range.hi = konst->value;
+      break;
+    case duckdb::ExpressionType::COMPARE_GREATERTHAN:
+      range.has_lo = true; range.lo = konst->value; range.lo_inclusive = false; break;
+    case duckdb::ExpressionType::COMPARE_GREATERTHANOREQUALTO:
+      range.has_lo = true; range.lo = konst->value; break;
+    case duckdb::ExpressionType::COMPARE_LESSTHAN:
+      range.has_hi = true; range.hi = konst->value; range.hi_inclusive = false; break;
+    case duckdb::ExpressionType::COMPARE_LESSTHANOREQUALTO:
+      range.has_hi = true; range.hi = konst->value; break;
+    default: return false;
+  }
+  out.push_back(std::move(range));
+  return true;
+}
+
+/// Walk a conjunction of comparisons, collecting the ones that are value ranges.
+///
+/// @p strict decides what an unreadable conjunct means, and the two sides of the
+/// containment test need opposite answers:
+///
+///  - PRODUCER (strict): the cache holds {r : A and B}. Not knowing B means not
+///    knowing which rows were dropped, so a consumer cannot be cleared against it.
+///    Fail the whole predicate.
+///  - CONSUMER (lenient): the query wants {r : C and D}, which is a SUBSET of
+///    {r : C}. If C alone falls inside the producer's range then so does C and D,
+///    so an unreadable D can simply be dropped -- it only narrows the request.
+///
+/// Treating both sides strictly is what made this fire zero times on ClickBench:
+/// q37-q43 each carry one `<> ''` or `contains(...)`, enough to throw away the
+/// CounterID and EventDate ranges sitting next to it.
+bool collect_ranges(duckdb::Expression const& expr,
+                    std::function<std::string(duckdb::idx_t)> const& column_of,
+                    std::vector<scan_manager::cache_filter_range>& out,
+                    bool strict)
+{
+  if (expr.GetExpressionType() == duckdb::ExpressionType::CONJUNCTION_AND) {
+    auto const& conj = expr.Cast<duckdb::BoundConjunctionExpression>();
+    for (auto const& child : conj.children) {
+      if (!collect_ranges(*child, column_of, out, strict) && strict) { return false; }
+    }
+    return true;
+  }
+  if (auto const* cmp = dynamic_cast<duckdb::BoundComparisonExpression const*>(&expr)) {
+    return fold_comparison(*cmp, column_of, out);
+  }
+  return false;
+}
+
+}  // namespace
+
+std::vector<scan_manager::cache_filter_range> parquet_gpu_ingestible::fixed_page_cache_filter_ranges(
+  bool& analyzable, bool strict) const
+{
+  std::vector<scan_manager::cache_filter_range> ranges;
+  if (!_duckdb_filter_expression) {
+    analyzable = true;  // no predicate: selects everything, subsumes any query
+    return ranges;
+  }
+  auto column_of = [this](duckdb::idx_t ref_index) { return _plan->batch_column_name(ref_index); };
+  analyzable     = collect_ranges(*_duckdb_filter_expression, column_of, ranges, strict);
+  if (!analyzable) { ranges.clear(); }
+  SIRIUS_LOG_INFO("[fixed-page-cache] filter_ranges strict={} analyzable={} count={} root='{}' expr='{}'",
+                  strict,
+                  analyzable,
+                  ranges.size(),
+                  duckdb::ExpressionTypeToString(_duckdb_filter_expression->GetExpressionType()),
+                  _duckdb_filter_expression->ToString().substr(0, 120));
+  return ranges;
+}
+
 
 bool parquet_gpu_ingestible::fixed_page_cache_has_dynamic_filters() const
 {
@@ -1098,6 +1228,16 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
     (reader_applied_filter || !honest_filter_signature_enabled())
       ? fixed_page_cache_filter_signature()
       : std::string{};
+  // Record the same predicate as ranges so a later scan can ask whether its own
+  // predicate is narrower, instead of only whether the text matches byte for byte.
+  if (!cache_info.filter_signature.empty()) {
+    bool analyzable          = false;
+    cache_info.filter_ranges = fixed_page_cache_filter_ranges(analyzable, /*strict=*/true);
+    cache_info.filter_analyzable = analyzable;
+  } else {
+    cache_info.filter_analyzable = true;  // unfiltered: selects everything
+  }
+  cache_info.chunks_carry_filter_ranges = filter_keyless_cache_enabled();
   cache_info.column_ids.reserve(_plan->data_columns.size());
   cache_info.names.reserve(_plan->data_columns.size());
   for (auto const& dc : _plan->data_columns) {
@@ -1115,6 +1255,17 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
   // the rows a partial entry does NOT hold.
   scan_manager::chunk_provenance provenance;
   provenance.num_rows = static_cast<std::size_t>(view.num_rows());
+  // The predicate these rows came through, so a later scan can tell whether its own
+  // is narrower. Strict: an unreadable conjunct means the rows that were dropped
+  // cannot be characterised, and the chunk then serves only an identical predicate.
+  if (reader_applied_filter) {
+    bool analyzable             = false;
+    provenance.filter_ranges    = fixed_page_cache_filter_ranges(analyzable, /*strict=*/true);
+    provenance.filter_analyzable = analyzable;
+    provenance.filter_signature  = fixed_page_cache_filter_signature();
+  } else {
+    provenance.filter_analyzable = true;  // unfiltered rows subsume any request
+  }
   provenance.slices.reserve(rg_slices.size());
   for (auto const& slice : rg_slices) {
     provenance.slices.emplace_back(slice.file_path, slice.row_group_indices);
@@ -1130,6 +1281,28 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
       }
     }
   }
+  // Flat page store: one page per (file, column, row group). This is what a later
+  // scan looks the cache up in -- no entry, no projection, no predicate in the key.
+  if (_scan_manager != nullptr && rg_slices.size() == 1) {
+    _scan_manager->insert_pages_from_view(rg_slices.front().file_path,
+                                          rg_slices.front().row_group_indices,
+                                          provenance.row_group_rows,
+                                          cache_info.names,
+                                          view,
+                                          provenance.filter_signature,
+                                          provenance.filter_ranges,
+                                          provenance.filter_analyzable,
+                                          const_cast<cucascade::memory::memory_space&>(mem_space),
+                                          stream);
+    auto const [bytes, pages] = _scan_manager->page_store_size();
+    SIRIUS_LOG_INFO("[page-store] insert file='{}' row_groups={} columns={} -> pages={} bytes={}",
+                    rg_slices.front().file_path,
+                    rg_slices.front().row_group_indices.size(),
+                    cache_info.names.size(),
+                    pages,
+                    bytes);
+  }
+
   std::size_t table_total_rows = 0;
   for (auto const& slice : rg_slices) {
     if (!slice.file_metadata) {
@@ -1339,9 +1512,81 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
   auto const audit_row_groups = scan_audit_row_groups(split.rg_slices);
 
   rmm::device_async_resource_ref mr_ref(mem_space.get_default_allocator());
+
+  // Columns already on the GPU for exactly these row groups. Read only the ones
+  // that are missing and paste the cached ones back in below, instead of sending
+  // every column to parquet because one of them was absent.
+  //
+  // Sound only when this read is UNFILTERED and covers whole row groups: the
+  // cached data holds all of the row group's rows in file order, so it lines up
+  // with freshly read columns row for row. A reader-side filter would drop rows
+  // from the new columns but not from the cached ones.
+  std::vector<std::shared_ptr<cudf::column>> spliced;
+  std::vector<std::string> read_names;
+  auto const projected_names = split.plan->data_column_names();
+  bool splicing              = false;
+  // Cached columns line up with freshly read ones when both went through the SAME
+  // predicate. Two cases qualify: neither is filtered (reader_filter_root null), or
+  // the cached chunk was produced by exactly this predicate -- the reader is about
+  // to apply it again to the columns it reads, so the two halves keep the same rows
+  // in the same order. Restricting this to the unfiltered case alone left it unable
+  // to help post-filter caching, which is where the misses are.
+  if (_scan_manager != nullptr && !all_slices_pruned && split.rg_slices.size() == 1 &&
+      !projected_names.empty()) {
+    std::vector<std::string> wanted(projected_names.begin(), projected_names.end());
+    spliced = _scan_manager->cached_row_group_columns(
+      split.rg_slices.front().file_path,
+      split.rg_slices.front().row_group_indices,
+      wanted,
+      stream,
+      reader_filter_root != nullptr ? fixed_page_cache_filter_signature() : std::string{});
+    std::size_t have = 0;
+    for (std::size_t i = 0; i < spliced.size(); ++i) {
+      if (spliced[i]) { ++have; } else { read_names.push_back(wanted[i]); }
+    }
+    // Nothing to gain when the cache has none of them, and the all-cached case is
+    // left to the existing provider path rather than duplicated here.
+    if (have > 0 && !read_names.empty()) {
+      splicing = true;
+      opts.set_column_names(read_names);
+      SIRIUS_LOG_INFO("[fixed-page-cache] column_splice file='{}' row_groups={} cached={} read={}",
+                      split.rg_slices.front().file_path,
+                      split.rg_slices.front().row_group_indices.size(),
+                      have,
+                      read_names.size());
+    } else {
+      spliced.clear();
+    }
+  }
+
   auto const audit_start = std::chrono::steady_clock::now();
   auto [table, _] =
     cudf::io::read_parquet(std::move(sources), std::move(metadatas), opts, stream, mr_ref);
+
+  if (splicing && table) {
+    // Rebuild the projection order: cached column where we have one, otherwise the
+    // next column that came back from the reader.
+    auto read_cols = table->release();
+    if (read_cols.size() != read_names.size()) {
+      SIRIUS_LOG_WARN("[fixed-page-cache] column_splice abandoned: reader returned {} of {}",
+                      read_cols.size(),
+                      read_names.size());
+      // Cannot reassemble safely; fall back by re-reading everything.
+      return materialize_metadata_to_table(info, mem_space, stream);
+    }
+    std::vector<std::unique_ptr<cudf::column>> assembled;
+    assembled.reserve(spliced.size());
+    std::size_t next_read = 0;
+    for (auto const& cached : spliced) {
+      if (cached) {
+        assembled.push_back(std::make_unique<cudf::column>(
+          cached->view(), stream, cudf::get_current_device_resource_ref()));
+      } else {
+        assembled.push_back(std::move(read_cols[next_read++]));
+      }
+    }
+    table = std::make_unique<cudf::table>(std::move(assembled));
+  }
   auto const audit_end = std::chrono::steady_clock::now();
   auto const audit_duration_us =
     std::chrono::duration_cast<std::chrono::microseconds>(audit_end - audit_start).count();

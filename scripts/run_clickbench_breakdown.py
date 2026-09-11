@@ -177,6 +177,15 @@ def main() -> int:
 
     from performance_test import EXTENSION_PATH
     con = open_clickbench_connection(args.input, EXTENSION_PATH)
+    # The coalescer packs row groups into a split until this many UNCOMPRESSED
+    # bytes; a small value gives one row group per split, which is what makes a
+    # cached chunk identifiable by its row group across queries that project
+    # different columns (the byte cap otherwise lands the split boundary in a
+    # different place for each projection, and the provenance match fails).
+    batch = os.environ.get("BENCH_SCAN_TASK_BATCH_SIZE")
+    if batch:
+        con.execute(f"SET scan_task_batch_size = {int(batch)}")
+        print(f"scan_task_batch_size: {int(batch)}", flush=True)
     try:
         for execution in range(1, args.executions + 1):
             for position, qnum in enumerate(qnums, start=1):

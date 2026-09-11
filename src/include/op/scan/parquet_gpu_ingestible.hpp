@@ -49,6 +49,7 @@
 
 namespace sirius::scan_manager {
 class sirius_scan_manager;
+struct cache_filter_range;
 }  // namespace sirius::scan_manager
 
 namespace sirius::op {
@@ -248,6 +249,17 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   void set_scan_manager(scan_manager::sirius_scan_manager* manager) noexcept { _scan_manager = manager; }
 
   [[nodiscard]] std::string fixed_page_cache_filter_signature() const;
+
+  /// This scan's predicate as per-column value ranges, for the containment test
+  /// that lets a cached entry serve a narrower query. @p analyzable comes back
+  /// false when the predicate is not a conjunction of column-vs-constant
+  /// comparisons, and the caller then falls back to exact signature matching.
+  /// @p strict fails the whole predicate on any conjunct that is not a value
+  /// range (what a cache PRODUCER needs); lenient keeps the ranges it can read and
+  /// drops the rest, which is sound for a CONSUMER because extra conjuncts only
+  /// narrow what it asks for.
+  [[nodiscard]] std::vector<scan_manager::cache_filter_range> fixed_page_cache_filter_ranges(
+    bool& analyzable, bool strict) const;
   [[nodiscard]] bool fixed_page_cache_has_dynamic_filters() const;
 
   /// Row groups a cached entry will serve, so this scan reads only the rest.

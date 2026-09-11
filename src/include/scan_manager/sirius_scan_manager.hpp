@@ -91,6 +91,35 @@ namespace sirius::scan_manager {
 /// duckdb catalog/schema/table name), the cached columns (by primary/storage
 /// index), and their names (aligned with @c column_ids) for the GPU gather — and
 /// owns the match logic that @ref sirius_scan_manager::try_assign_cached_entries consults.
+/// One conjunct of a scan's filter, as a value range on a single column.
+///
+/// The point of holding the predicate this way rather than as its ToString() is
+/// reuse across DIFFERENT predicates: cached rows are {r : P(r)}, a query needs
+/// {r : Q(r)}, and the cache is safe exactly when Q implies P. For conjunctions of
+/// range comparisons that is a containment test per column, which a string compare
+/// cannot do -- it only ever matches a byte-identical predicate, so two queries
+/// asking for overlapping date windows share nothing.
+struct cache_filter_range {
+  std::string column_name;  ///< full-schema column name, as the cache keys columns
+  bool has_lo{false};
+  bool has_hi{false};
+  bool lo_inclusive{true};
+  bool hi_inclusive{true};
+  duckdb::Value lo;
+  duckdb::Value hi;
+};
+
+/// Whether every row @p consumer selects is one @p producer also selected.
+///
+/// True when each of the producer's conjuncts is matched by a consumer conjunct on
+/// the same column whose range is contained in it. An unanalyzable predicate on
+/// either side returns false, which falls back to the byte-identical signature
+/// match rather than guessing.
+[[nodiscard]] bool filter_ranges_subsume(std::vector<cache_filter_range> const& producer,
+                                         bool producer_analyzable,
+                                         std::vector<cache_filter_range> const& consumer,
+                                         bool consumer_analyzable);
+
 class cache_entry_info {
  public:
   std::vector<std::string> resolved_file_paths;    ///< parquet identity (file set)
@@ -98,6 +127,16 @@ class cache_entry_info {
   std::string schema_name;                         ///< duckdb identity: schema
   std::string table_name;                          ///< duckdb identity: table
   std::string filter_signature;                    ///< non-empty for filter-specific auto caches
+  /// The same predicate as @c filter_signature, decomposed into per-column value
+  /// ranges. Lets an entry serve a DIFFERENT query whose predicate is strictly
+  /// narrower -- see filter_ranges_subsume. Empty with @c filter_analyzable false
+  /// when the predicate is not a conjunction of simple range comparisons.
+  std::vector<cache_filter_range> filter_ranges;
+  bool filter_analyzable{false};
+  /// True when the predicate was left out of the cache key and each chunk carries
+  /// its own ranges instead (chunk_provenance::filter_ranges), so a consumer clears
+  /// chunks one at a time rather than matching one predicate for the whole entry.
+  bool chunks_carry_filter_ranges{false};
   duckdb::vector<duckdb::ColumnIndex> column_ids;  ///< cached columns, by primary index
   std::vector<std::string> names;                  ///< aligned with column_ids; gather keys
   /// Footer estimate of each column's whole-table decoded size, aligned with
@@ -359,6 +398,63 @@ struct chunk_provenance {
   /// remainder waste that a chunk-wide grid leaves -- measured 12.9% on TPC-H's
   /// 9,962,958-row groups and 31.1% on ClickBench's 10,000,000-row ones.
   std::vector<std::size_t> row_group_rows;
+  /// The predicate that produced THIS chunk's rows, as per-column value ranges.
+  /// Carried per chunk rather than per entry so one entry can hold chunks filtered
+  /// differently: the cache identity then needs no filter in it, and a consumer
+  /// picks the chunks whose predicate its own is narrower than.
+  std::vector<cache_filter_range> filter_ranges;
+  bool filter_analyzable{false};
+  /// The predicate's text, kept alongside the ranges. A predicate that is not a
+  /// conjunction of range comparisons -- `SearchPhrase <> ''`, `contains(URL,...)`,
+  /// which is most of ClickBench -- has no ranges to compare, and without this an
+  /// identical query could no longer reuse its own chunk: reuse fell 45 -> 3.
+  std::string filter_signature;
+};
+
+/// One cached column of one row group -- the unit the cache is addressed by.
+///
+/// Replaces the entry as the thing a scan looks up. An entry bundled pages under a
+/// name and made reuse all-or-nothing across everything in the bundle: one absent
+/// column, or one predicate that did not match byte for byte, and the whole bundle
+/// went unused. Measured on ClickBench: entries held a median of 6 MB -- less than
+/// one 16 MB page -- so the bundling bought nothing and cost every reuse decision.
+///
+/// Addressed by (file, column, row group). Nothing above that: no projection, no
+/// predicate. The predicate travels WITH the page instead, as the signature that
+/// produced it plus its value ranges, so a scan can ask "are these rows a superset
+/// of what I need?" per page rather than per bundle.
+struct cached_page {
+  std::shared_ptr<cudf::column> data;  ///< the whole row group's values for this column
+  std::size_t num_rows{0};
+  std::size_t num_bytes{0};
+  fixed_width_page_stats stats;  ///< min/max, for skipping a page a predicate cannot match
+  /// Predicate the rows came through. Empty means unfiltered, which satisfies any
+  /// request; otherwise a request is served only when it is narrower -- by exact
+  /// signature, or by range containment.
+  std::string filter_signature;
+  std::vector<cache_filter_range> filter_ranges;
+  bool filter_analyzable{false};
+  std::uint64_t last_access_tick{0};
+};
+
+/// Key for @ref cached_page. Kept as a struct rather than a packed string so the
+/// parts stay inspectable in logs and in eviction, which works per file.
+struct cached_page_key {
+  std::string file_path;
+  std::string column_name;
+  int row_group{0};
+
+  [[nodiscard]] bool operator==(cached_page_key const& other) const = default;
+};
+
+struct cached_page_key_hash {
+  [[nodiscard]] std::size_t operator()(cached_page_key const& key) const noexcept
+  {
+    auto h = std::hash<std::string>{}(key.file_path);
+    h ^= std::hash<std::string>{}(key.column_name) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(key.row_group) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
 };
 
 struct pinned_entry {
@@ -637,6 +733,40 @@ class sirius_scan_manager {
   [[nodiscard]] std::shared_ptr<sirius::io::sirius_datasource> create_datasource(
     std::string_view path);
 
+  /// Cached data for @p column_names covering exactly @p row_groups of @p file_path,
+  /// concatenated in that order; an entry is nullptr when the column is not cached
+  /// for every one of them. Lets a scan read only the columns it is MISSING and
+  /// splice the cached ones in, instead of the all-or-nothing rule where one absent
+  /// column sends every column back to parquet -- 539 of 602 cache misses on
+  /// ClickBench were exactly that.
+  ///
+  /// Only UNFILTERED cached data qualifies: a filtered entry holds a subset of the
+  /// row group's rows and cannot be pasted beside freshly read columns that hold
+  /// all of them.
+  /// Store one row group's worth of @p column_names from @p view into the flat page
+  /// store. @p row_group_rows says how the view's rows divide among @p row_groups,
+  /// so each page holds exactly one row group.
+  void insert_pages_from_view(std::string const& file_path,
+                              std::vector<cudf::size_type> const& row_groups,
+                              std::vector<std::size_t> const& row_group_rows,
+                              std::vector<std::string> const& column_names,
+                              cudf::table_view const& view,
+                              std::string const& filter_signature,
+                              std::vector<cache_filter_range> filter_ranges,
+                              bool filter_analyzable,
+                              cucascade::memory::memory_space& space,
+                              rmm::cuda_stream_view stream);
+
+  /// Bytes the flat page store holds, and how many pages.
+  [[nodiscard]] std::pair<std::size_t, std::size_t> page_store_size() const;
+
+  [[nodiscard]] std::vector<std::shared_ptr<cudf::column>> cached_row_group_columns(
+    std::string const& file_path,
+    std::vector<cudf::size_type> const& row_groups,
+    std::vector<std::string> const& column_names,
+    rmm::cuda_stream_view stream,
+    std::string const& required_filter_signature = {});
+
  private:
   /// \brief Run providers sequentially: start each, wait on its future, advance.
   void start_metadata_processing();
@@ -683,6 +813,14 @@ class sirius_scan_manager {
   std::vector<op::scan::sirius_gpu_scan_operator*> _scan_op_order;
   mutable std::mutex _pinned_entries_mutex;
   std::unordered_map<std::string, pinned_entry> _pinned_entries;
+  /// The flat page store: (file, column, row group) -> one cached column. This is
+  /// what the auto page cache is, now that the entry is gone from the lookup path.
+  std::unordered_map<cached_page_key, cached_page, cached_page_key_hash> _pages;
+  mutable std::mutex _pages_mutex;
+  std::uint64_t _page_tick{0};
+  /// Backoff for the device-pressure check -- see where it is applied.
+  std::size_t _page_pressure_skip{0};
+  std::size_t _page_pressure_free_before{0};
 
   /// Canonical variable-width pages, shared across cache entries.
   ///
