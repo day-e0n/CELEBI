@@ -593,6 +593,12 @@ class sirius_scan_manager {
   /// it erased by the same limit after the fact.
   [[nodiscard]] static std::size_t fixed_page_admission_limit_bytes();
 
+  /// The fixed-width page cache budget for one GPU, in bytes.
+  ///
+  /// Exposed so the scan side can weigh a table against the cache before deciding
+  /// to populate it -- see parquet_gpu_ingestible's dynamic-filter size gate.
+  [[nodiscard]] static std::size_t fixed_page_cache_budget_bytes();
+
   /// \brief Whether the variable-width (STRING) page index is enabled.
   ///
   /// Exposed so scan-side admission can tell that a batch of nothing but STRING

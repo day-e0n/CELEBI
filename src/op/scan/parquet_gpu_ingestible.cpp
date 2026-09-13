@@ -1146,6 +1146,35 @@ bool dynamic_filter_scan_cache_enabled()
 /// Off by default: the footer estimate can under-count (a writer that omits
 /// SizeStatistics leaves dictionary-encoded strings sized by their ENCODED bytes),
 /// and an over-count costs a cache hit that would have been legal.
+/// How large a table may be, as a multiple of the page-cache budget, and still be
+/// worth caching from a scan that carries a join's dynamic filter.
+///
+/// Such a scan is normally refused, because caching it means caching the rows the
+/// join would have discarded: auto-caching forces the reader's filter off, so the
+/// whole column comes back. The right fix would be to keep the reader's ROW-GROUP
+/// pruning while dropping only the row masking -- the two are already separate
+/// flags here -- but the dynamic filter is built from the join's build side and is
+/// still empty when pruning runs (measured on SSB SF50: 26 of 26 lineorder scans
+/// saw has_filters=0), so pruning has nothing to prune with.
+///
+/// What is left is to ask whether reading the table whole is affordable at all.
+/// Measured with the write gate forced on, the answer flips with the table's size
+/// against the budget: SSB SF30 (working set 1.44x the budget) gained 11.1%, SF50
+/// (2.40x) lost 10.8%. Default 1.5 sits at that boundary; 0 restores the old
+/// unconditional refusal.
+double dynamic_filter_cache_size_ratio()
+{
+  auto const* value = std::getenv("SIRIUS_FIXED_PAGE_DYNAMIC_FILTER_SIZE_RATIO");
+  if (value == nullptr) { return 1.5; }
+  try {
+    return std::max(0.0, std::stod(value));
+  } catch (std::exception const&) {
+    SIRIUS_LOG_WARN("[fixed-page-cache] invalid SIRIUS_FIXED_PAGE_DYNAMIC_FILTER_SIZE_RATIO='{}'",
+                    value);
+    return 1.5;
+  }
+}
+
 bool presize_admission_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_PRESIZE_ADMISSION");
@@ -1171,8 +1200,29 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
     return;
   }
   if (fixed_page_cache_has_dynamic_filters() && !dynamic_filter_scan_cache_enabled()) {
-    SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=dynamic_filter_scan");
-    return;
+    // Not an unconditional refusal any more: a table small enough against the
+    // budget is worth caching whole, because what lands in the cache carries no
+    // predicate and every later query can read it. A table that is not small
+    // enough is refused exactly as before -- reading it whole costs more than the
+    // hits it buys.
+    auto const projected = _projected_cache_entry_bytes.load(std::memory_order_relaxed);
+    auto const budget    = scan_manager::sirius_scan_manager::fixed_page_cache_budget_bytes();
+    auto const ratio     = dynamic_filter_cache_size_ratio();
+    auto const ceiling   = static_cast<std::size_t>(static_cast<double>(budget) * ratio);
+    bool const small_enough =
+      ratio > 0.0 && projected != 0 && budget != 0 && projected <= ceiling;
+    SIRIUS_LOG_INFO(
+      "[fixed-page-cache] dynamic_filter_size_gate projected_bytes={} budget_bytes={} "
+      "ratio={} ceiling_bytes={} cached={}",
+      projected,
+      budget,
+      ratio,
+      ceiling,
+      small_enough ? 1 : 0);
+    if (!small_enough) {
+      SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=dynamic_filter_scan");
+      return;
+    }
   }
 
   bool has_fixed_width_column = false;

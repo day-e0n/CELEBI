@@ -3265,6 +3265,11 @@ std::size_t sirius_scan_manager::fixed_page_admission_limit_bytes()
   return fixed_page_admission_max_entry_bytes();
 }
 
+std::size_t sirius_scan_manager::fixed_page_cache_budget_bytes()
+{
+  return fixed_page_cache_budget_bytes_per_gpu();
+}
+
 bool sirius_scan_manager::variable_width_page_cache_is_enabled()
 {
   return variable_width_page_cache_enabled();
