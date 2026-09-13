@@ -675,6 +675,40 @@ def _unfiltered_pair_overlap_rank(
     return ratio, weighted, float(future), -candidate_position
 
 
+def unfiltered_policy_applies(queries: Iterable[int]) -> bool:
+    """무필터 우선 재정렬이 이 워크로드에서 구분할 것이 있는가.
+
+    이 정책은 "술어 없이 읽은 페이지는 뒤에 오는 누구나 쓸 수 있다"를 근거로
+    순서를 정한다. 그런데 스캔 크기 게이트가 열리면 조인의 동적 필터를 단
+    스캔도 필터 이전 데이터를 캐싱한다 -- 그런 페이지에는 술어가 안 붙는다.
+    그러므로 지배 테이블을 **조인 없이** 읽는 쿼리가 하나도 없으면 그 테이블의
+    페이지는 전부 술어 없이 캐시에 들어가고, 정책이 가르는 기준이 그 테이블에
+    대해 아무 정보도 담지 않는다. 그때는 순서만 흔들어 손해가 난다.
+
+    측정된 값 (지배 테이블을 단독으로 읽는 쿼리의 비율):
+      ClickBench 41/41 = 100%   재정렬 -9.1%p 이득
+      TPC-H SF50  2/17 = 11.8%  재정렬 -8.5%p 이득  (q1, q6 이 단독으로 읽는다)
+      SSB SF50    0/13 =  0.0%  재정렬 +6.5%p 손해
+
+    그래서 문턱은 "하나라도 있는가"다. 비율이 아니라 존재 여부인 것은, 캐시를
+    술어 없는 페이지로 채워 줄 쿼리는 한 개만 있어도 되기 때문이다 -- TPC-H 가
+    11.8% 로 이득을 내는 이유가 그것이다. 필터 정보가 없으면 판단할 수 없으므로
+    참을 돌려 기존 동작을 유지한다.
+    """
+
+    if not QUERY_TABLE_FILTERS:
+        return True
+    per_query = {q: QUERY_TABLE_FILTERS.get(f"q{q}", {}) for q in queries}
+    counts: dict[str, int] = {}
+    for tables in per_query.values():
+        for table in tables:
+            counts[table] = counts.get(table, 0) + 1
+    if not counts:
+        return True
+    dominant = max(counts, key=lambda t: (counts[t], t))
+    return any(len(tables) == 1 and dominant in tables for tables in per_query.values())
+
+
 def unfiltered_fraction(qnum: int, scope: str = "fixed_width") -> float:
     """쿼리 컬럼 중 술어 없는 스캔에서 나오는 비율."""
 
@@ -892,6 +926,9 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
         for original_position, qnum in queries_by_position.items()
     }
 
+    if cfg.policy == "unfiltered-overlap" and not unfiltered_policy_applies(original):
+        # 이 워크로드에서는 술어의 유무가 재사용성을 가르지 못한다. 순서를 그대로 둔다.
+        return finish(original, tuple(), before)
     if cfg.policy == "unfiltered-overlap" and not cfg.keep_first:
         # 첫 쿼리가 캐시의 첫 내용물을 정한다. 술어를 건 스캔으로 열면 뒤따르는
         # 쿼리 대부분이 그 페이지를 못 읽으니, 무필터 스캔을 가진 쿼리로만
