@@ -1,0 +1,204 @@
+{
+ "q1": {},
+ "q10": {
+  "hits": []
+ },
+ "q11": {
+  "hits": [
+   "MobilePhoneModel!=''"
+  ]
+ },
+ "q12": {
+  "hits": [
+   "MobilePhoneModel!=''"
+  ]
+ },
+ "q13": {
+  "hits": [
+   "SearchPhrase!=''"
+  ]
+ },
+ "q14": {
+  "hits": [
+   "SearchPhrase!=''"
+  ]
+ },
+ "q15": {
+  "hits": [
+   "SearchPhrase!=''"
+  ]
+ },
+ "q16": {
+  "hits": []
+ },
+ "q17": {
+  "hits": []
+ },
+ "q18": {
+  "hits": []
+ },
+ "q19": {
+  "hits": []
+ },
+ "q2": {
+  "hits": [
+   "AdvEngineID!=0"
+  ]
+ },
+ "q20": {
+  "hits": [
+   "UserID=435090932899640449"
+  ]
+ },
+ "q21": {
+  "hits": [
+   "contains(URL, 'google')"
+  ]
+ },
+ "q22": {
+  "hits": [
+   "contains(URL, 'google')",
+   "SearchPhrase!=''"
+  ]
+ },
+ "q23": {
+  "hits": [
+   "contains(Title, 'Google')",
+   "(NOT contains(URL, '.google.'))",
+   "SearchPhrase!=''"
+  ]
+ },
+ "q24": {
+  "hits": [
+   "optional: Dynamic Filter (EventTime)",
+   "contains(URL, 'google')"
+  ]
+ },
+ "q25": {
+  "hits": [
+   "optional: Dynamic Filter (EventTime)",
+   "SearchPhrase!=''"
+  ]
+ },
+ "q26": {
+  "hits": [
+   "SearchPhrase!='' AND optional: Dynamic Filter (SearchPhrase)"
+  ]
+ },
+ "q27": {
+  "hits": [
+   "optional: Dynamic Filter (EventTime)",
+   "SearchPhrase!=''"
+  ]
+ },
+ "q28": {
+  "hits": [
+   "URL!=''"
+  ]
+ },
+ "q29": {
+  "hits": [
+   "Referer!=''"
+  ]
+ },
+ "q3": {
+  "hits": []
+ },
+ "q30": {
+  "hits": []
+ },
+ "q31": {
+  "hits": [
+   "SearchPhrase!=''"
+  ]
+ },
+ "q32": {
+  "hits": [
+   "SearchPhrase!=''"
+  ]
+ },
+ "q33": {
+  "hits": []
+ },
+ "q34": {
+  "hits": []
+ },
+ "q35": {
+  "hits": []
+ },
+ "q36": {
+  "hits": []
+ },
+ "q37": {
+  "hits": [
+   "CounterID=62",
+   "URL!=''",
+   "IsRefresh=0",
+   "DontCountHits=0"
+  ]
+ },
+ "q38": {
+  "hits": [
+   "Title!=''",
+   "CounterID=62",
+   "IsRefresh=0",
+   "DontCountHits=0"
+  ]
+ },
+ "q39": {
+  "hits": [
+   "CounterID=62",
+   "IsRefresh=0",
+   "IsLink!=0",
+   "IsDownload=0"
+  ]
+ },
+ "q4": {
+  "hits": []
+ },
+ "q40": {
+  "hits": [
+   "CounterID=62",
+   "IsRefresh=0"
+  ]
+ },
+ "q41": {
+  "hits": [
+   "CounterID=62",
+   "IsRefresh=0",
+   "optional: TraficSourceID IN (-1, 6)",
+   "RefererHash=3594120000172545465"
+  ]
+ },
+ "q42": {
+  "hits": [
+   "CounterID=62",
+   "IsRefresh=0",
+   "DontCountHits=0",
+   "URLHash=2868770270353813622"
+  ]
+ },
+ "q43": {
+  "hits": [
+   "EventDate>='2013-07-14'::DATE AND EventDate<='2013-07-15'::DATE",
+   "CounterID=62",
+   "IsRefresh=0",
+   "DontCountHits=0"
+  ]
+ },
+ "q5": {
+  "hits": []
+ },
+ "q6": {
+  "hits": []
+ },
+ "q7": {},
+ "q8": {
+  "hits": [
+   "AdvEngineID!=0"
+  ]
+ },
+ "q9": {
+  "hits": []
+ }
+}

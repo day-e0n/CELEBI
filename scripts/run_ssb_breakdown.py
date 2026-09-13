@@ -28,7 +28,8 @@ from queries import QUERIES  # noqa: E402
 from run_random22_breakdown import write_config  # noqa: E402
 
 import cache_aware_query_reorder as reorder_mod  # noqa: E402
-from cache_aware_query_reorder import ReorderConfig, reorder_query_sequence  # noqa: E402
+from cache_aware_query_reorder import (ReorderConfig, load_query_table_filters,  # noqa: E402
+                                       reorder_query_sequence, worst_case_sequence)
 from ssb_pin_columns import FIXED_WIDTH_COLUMNS as SSB_FIXED, QUERY_COLUMNS as SSB_COLUMNS  # noqa: E402
 
 # The reorder policy scores adjacent-query overlap over a (query -> table -> columns)
@@ -112,6 +113,19 @@ def main() -> int:
     ap.add_argument("--variable-cache-budget", default="4GB")
     ap.add_argument("--min-free-bytes-per-gpu", default="4096MB")
     ap.add_argument("--gpu-usage-limit", default="20GB")
+    ap.add_argument("--arrival", choices=("natural", "worst"), default="natural",
+                    help="'worst' replaces the built-in arrival order with the one that "
+                         "minimises adjacent-query column overlap, so a reorder has "
+                         "something to recover -- the same treatment the TPC-H and "
+                         "ClickBench runners give.")
+    ap.add_argument("--reorder-policy", choices=("fixed-overlap", "unfiltered-overlap"),
+                    default="fixed-overlap")
+    ap.add_argument("--query-table-filters",
+                    help="JSON from scripts/extract_query_filters.py --workload ssb, "
+                         "required by unfiltered-overlap.")
+    ap.add_argument("--no-reorder", action="store_true",
+                    help="Run the arrival order even for a caching condition, so a "
+                         "cache-vs-baseline comparison measures the cache alone.")
     args = ap.parse_args()
 
     case_dir = args.output.resolve() / args.condition
@@ -130,12 +144,20 @@ def main() -> int:
     # cached conditions run the CELEBI-reordered one, so the two benchmarks'
     # condition definitions line up.
     order = list(ARRIVAL_ORDER)
-    if args.condition != "baseline":
+    by_id = {int(q[1:].replace(".", "")): q for q in ARRIVAL_ORDER}
+    if args.arrival == "worst":
+        order = [by_id[i] for i in worst_case_sequence(list(by_id), "fixed_width")]
+        print(f"arrival(worst): {','.join(order)}", flush=True)
+    if args.condition != "baseline" and not args.no_reorder:
+        if args.reorder_policy == "unfiltered-overlap":
+            if not args.query_table_filters:
+                ap.error("--reorder-policy unfiltered-overlap requires --query-table-filters")
+            print(f"query filters: {load_query_table_filters(args.query_table_filters)} queries",
+                  flush=True)
         ids = [int(q[1:].replace(".", "")) for q in order]
         result = reorder_query_sequence(ids, ReorderConfig(
-            policy="fixed-overlap", scope="fixed_width", window=0,
+            policy=args.reorder_policy, scope="fixed_width", window=0,
             keep_first=False, resident_column_budget=0))
-        by_id = {int(q[1:].replace(".", "")): q for q in ARRIVAL_ORDER}
         order = [by_id[i] for i in result.reordered_queries]
         print(f"reordered: {','.join(order)}", flush=True)
 

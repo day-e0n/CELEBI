@@ -28,7 +28,7 @@ sys.path.insert(0, str(TPCH_DIR))
 from performance_test import load_query_set, open_connection  # noqa: E402
 from queries import QUERIES  # noqa: E402
 from cache_aware_query_reorder import (  # noqa: E402
-    ReorderConfig, load_column_bytes, load_query_table_columns, reorder_query_sequence,
+    ReorderConfig, load_column_bytes, load_query_table_columns, load_query_table_filters, reorder_query_sequence,
     worst_case_sequence)
 from run_random22_breakdown import ARRIVAL_ORDER, write_config  # noqa: E402
 
@@ -142,7 +142,7 @@ def main() -> int:
                              "(file, filter). Measured worse (-27.3%% vs -38.9%%); kept only to "
                              "reproduce the older configuration.")
     parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
-                                 "cost-seeded-overlap"),
+                                 "cost-seeded-overlap", "unfiltered-overlap"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
                              "COLUMNS, so a 25-row nation column scores like a 600M-row "
@@ -152,6 +152,9 @@ def main() -> int:
     parser.add_argument("--column-bytes",
                         help="JSON from scripts/probe_column_bytes.py, required by byte-lru, "
                              "byte-overlap and cost-ascending.")
+    parser.add_argument("--query-table-filters",
+                        help="JSON from scripts/extract_query_filters.py, required by "
+                             "unfiltered-overlap: which table scans carry a predicate.")
     parser.add_argument("--query-table-columns",
                         help="JSON from scripts/probe_scan_requests.py, required by "
                              "cost-ascending.")
@@ -186,6 +189,11 @@ def main() -> int:
             if not args.column_bytes:
                 parser.error(f"--reorder-policy {args.reorder_policy} requires --column-bytes")
             print(f"column bytes: {load_column_bytes(args.column_bytes)} columns", flush=True)
+        if args.reorder_policy == "unfiltered-overlap":
+            if not args.query_table_filters:
+                parser.error("--reorder-policy unfiltered-overlap requires --query-table-filters")
+            print(f"query filters: {load_query_table_filters(args.query_table_filters)} queries",
+                  flush=True)
         if args.reorder_policy in ("cost-ascending", "cost-seeded-overlap"):
             if not args.query_table_columns:
                 parser.error(f"--reorder-policy {args.reorder_policy} requires --query-table-columns")

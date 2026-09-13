@@ -59,7 +59,7 @@ FIXED_WIDTH_COLUMNS: dict[str, set[str]] = {
 
 SCOPE_CHOICES = ("fixed_width", "all_columns")
 POLICY_CHOICES = ("none", "fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
-                  "cost-seeded-overlap")
+                  "cost-seeded-overlap", "unfiltered-overlap")
 
 # {query: {table: [column, ...]}}, filled by load_query_table_columns().
 # The union of a scan's projection AND filter columns, which is what the
@@ -69,6 +69,29 @@ QUERY_TABLE_COLUMNS: dict[str, dict[str, list[str]]] = {}
 # {table: {column: bytes}}, filled by load_column_bytes(). Empty means "no size
 # information", and every byte-weighted path falls back to counting columns.
 COLUMN_BYTES: dict[str, dict[str, int]] = {}
+
+# {query: {table: [filter expression, ...]}}, filled by load_query_table_filters().
+# An empty list means that table was scanned WITHOUT a predicate in that query.
+#
+# Column overlap alone cannot tell whether a shared column is reusable. Two queries
+# that both read l_shipdate overlap fully by column, and share nothing at all when
+# one keeps 1995 and the other keeps 1998. Pages produced by an unfiltered scan are
+# the ones that serve any later reader of those columns, so they are what a reorder
+# should be clustering around. Empty here means "no filter information", and every
+# scan is then treated as unfiltered -- which reproduces the column-only behaviour.
+QUERY_TABLE_FILTERS: dict[str, dict[str, list[str]]] = {}
+
+# What a shared column is worth when the query that would leave it in the cache read
+# it through a predicate. Not zero: a later query with a narrower predicate over the
+# same range does get served (filter_ranges_subsume in the scan manager), so filtered
+# pages are worth something -- just not the full weight of a page anyone can read.
+FILTERED_OVERLAP_WEIGHT = 0.25
+
+# 어떤 쿼리를 "무필터 쿼리"로 보고 앞쪽 구간에 넣을지. 컬럼의 이 비율 이상이
+# 술어 없는 스캔에서 나오면 앞 구간이다. TPC-H SF50 에서 0.5 는 22개를 11 대 11
+# 로 가른다 (q21/q11/q9 가 100%, q1/q6 이 0%).
+UNFILTERED_PHASE_THRESHOLD = 0.5
+
 
 _QUERY_AT: dict[int, int] = {}
 
@@ -236,6 +259,27 @@ def worst_case_sequence(queries: Iterable[int], scope: str = "fixed_width") -> l
         nxt = min(remaining, key=lambda q: (len(prev & sig[q]), q))
         order.append(nxt)
         remaining.remove(nxt)
+
+    # One greedy pass is a local minimum, and not a deep one: on TPC-H it stops at
+    # 19.3% adjacent overlap while a 2-opt sweep from the same start reaches 5.7%.
+    # A reorder measured against the 19.3% order is measured against an arrival that
+    # was already half-decent, which understates what the reorder recovers.
+    def shared(seq: list[int]) -> int:
+        return sum(len(sig[a] & sig[b]) for a, b in zip(seq, seq[1:]))
+
+    best = shared(order)
+    improved = True
+    while improved:
+        improved = False
+        for i in range(len(order)):
+            for j in range(i + 1, len(order)):
+                order[i], order[j] = order[j], order[i]
+                candidate = shared(order)
+                if candidate < best:
+                    best = candidate
+                    improved = True
+                else:
+                    order[i], order[j] = order[j], order[i]
     return order
 
 
@@ -461,6 +505,38 @@ def load_query_table_columns(path: str | Path) -> int:
     return len(QUERY_TABLE_COLUMNS)
 
 
+def load_query_table_filters(path: str | Path) -> int:
+    """extract_query_filters.py가 만든 JSON을 적재한다 (unfiltered-overlap 전용)."""
+
+    import json
+
+    QUERY_TABLE_FILTERS.clear()
+    QUERY_TABLE_FILTERS.update(json.loads(Path(path).read_text()))
+    return len(QUERY_TABLE_FILTERS)
+
+
+def scan_is_unfiltered(qnum: int, table: str) -> bool:
+    """쿼리 `qnum`이 테이블 `table`을 술어 없이 읽는가.
+
+    필터 정보가 없으면 모두 무필터로 본다 -- 그래야 JSON을 주지 않았을 때 기존
+    컬럼 전용 동작과 정확히 같아진다.
+    """
+
+    if not QUERY_TABLE_FILTERS:
+        return True
+    per_table = QUERY_TABLE_FILTERS.get(f"q{qnum}")
+    if per_table is None or table not in per_table:
+        return True
+    return not per_table[table]
+
+
+def unfiltered_signature(qnum: int, scope: str = "fixed_width") -> frozenset[ColumnKey]:
+    """`query_signature` 중 무필터 스캔에서 나오는 컬럼만."""
+
+    return frozenset((table, column) for table, column in query_signature(qnum, scope)
+                     if scan_is_unfiltered(qnum, table))
+
+
 def estimated_scan_bytes(qnum: int) -> int:
     """쿼리가 읽어야 하는 디코딩 후 바이트 추정치.
 
@@ -563,6 +639,114 @@ def _build_greedy_byte_overlap_path(
         path.append(best_position)
         remaining.remove(best_position)
     return path
+
+
+def _unfiltered_pair_overlap_rank(
+    previous_position: int,
+    candidate_position: int,
+    remaining_positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+) -> tuple[float, float, float, int]:
+    """무필터 스캔이 남긴 컬럼을 우선해서 다음 쿼리를 고르는 순위.
+
+    `_pair_overlap_rank`는 공유 컬럼을 전부 1로 세는데, 캐시 입장에서 그 둘은
+    같지 않다. 앞 쿼리가 술어 없이 읽은 컬럼은 뒤에 오는 누구든 쓸 수 있고,
+    술어를 걸고 읽은 컬럼은 그보다 좁은 술어를 가진 쿼리만 쓸 수 있다. 그래서
+    공유 컬럼의 가중치를 "그 컬럼을 캐시에 남기는 쪽"(= previous)의 스캔이
+    무필터였는지로 나눈다.
+    """
+
+    previous_query = _QUERY_AT[previous_position]
+    candidate = signatures[candidate_position]
+    shared = signatures[previous_position] & candidate
+
+    def weight(column: ColumnKey) -> float:
+        # 캐시에 남기는 쪽은 previous 다. 그 스캔이 무필터면 온전한 1점.
+        return 1.0 if scan_is_unfiltered(previous_query, column[0]) else FILTERED_OVERLAP_WEIGHT
+
+    weighted = sum(weight(column) for column in shared)
+    ratio = weighted / len(candidate) if candidate else 0.0
+    # 동점 해소: 이 후보가 "앞으로" 남길 무필터 컬럼이 많을수록 좋다.
+    candidate_query = _QUERY_AT[candidate_position]
+    future = sum(
+        len(unfiltered_signature(candidate_query) & signatures[pos])
+        for pos in remaining_positions if pos != candidate_position
+    )
+    return ratio, weighted, float(future), -candidate_position
+
+
+def unfiltered_fraction(qnum: int, scope: str = "fixed_width") -> float:
+    """쿼리 컬럼 중 술어 없는 스캔에서 나오는 비율."""
+
+    signature = query_signature(qnum, scope)
+    if not signature:
+        return 0.0
+    return len(unfiltered_signature(qnum, scope)) / len(signature)
+
+
+def _greedy_within(
+    start_position: int,
+    pool: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """`start_position`에서 출발해 pool 을 무필터 가중 greedy 로 훑는다."""
+
+    path = [start_position]
+    remaining = [pos for pos in pool if pos != start_position]
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        previous_position = path[-1]
+        best_position = max(
+            remaining[:window],
+            key=lambda pos: _unfiltered_pair_overlap_rank(
+                previous_position, pos, remaining, signatures),
+        )
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
+
+
+def _build_unfiltered_first_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """술어 없이 읽는 쿼리를 앞 구간에 몰고, 술어를 건 쿼리를 뒤에 붙인다.
+
+    컬럼 겹침만 보는 greedy 는 `l_shipdate < 1995` 와 `l_shipdate >= 1998` 을 완전히
+    겹치는 쌍으로 세는데, 둘은 서로의 페이지를 한 행도 못 쓴다. 술어 없이 읽은
+    페이지만이 뒤에 오는 누구든 읽을 수 있으므로, 그런 쿼리를 먼저 돌려 캐시를
+    "아무나 쓸 수 있는" 내용물로 채운 뒤 좁은 술어를 가진 쿼리를 태운다.
+    """
+
+    front = [pos for pos in positions
+             if unfiltered_fraction(_QUERY_AT[pos], cfg.scope) >= UNFILTERED_PHASE_THRESHOLD]
+    back = [pos for pos in positions if pos not in set(front)]
+    if start_position not in front:
+        # 출발점은 재정렬 쪽에서 무필터 쿼리로 제한된다. 그래도 들어오면 그 쿼리를
+        # 앞 구간에 넣어서 "무필터 먼저"라는 정책 자체는 유지한다.
+        front = [start_position] + front
+        back = [pos for pos in back if pos != start_position]
+    path = _greedy_within(start_position, front, signatures, cfg)
+    if back:
+        bridge = max(back, key=lambda pos: _unfiltered_pair_overlap_rank(
+            path[-1], pos, back, signatures))
+        path.extend(_greedy_within(bridge, back, signatures, cfg))
+    return path
+
+
+def sequence_unfiltered_overlap(queries: Iterable[int], scope: str = "fixed_width") -> float:
+    """인접 쌍의 가중 공유 컬럼 합. unfiltered-overlap 정책의 목적함수."""
+
+    sequence = list(queries)
+    total = 0.0
+    for previous, nxt in zip(sequence, sequence[1:]):
+        shared = query_signature(previous, scope) & query_signature(nxt, scope)
+        total += sum(1.0 if scan_is_unfiltered(previous, table) else FILTERED_OVERLAP_WEIGHT
+                     for table, _ in shared)
+    return total
 
 
 def _build_greedy_overlap_path(
@@ -708,7 +892,18 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
         for original_position, qnum in queries_by_position.items()
     }
 
-    if cfg.keep_first:
+    if cfg.policy == "unfiltered-overlap" and not cfg.keep_first:
+        # 첫 쿼리가 캐시의 첫 내용물을 정한다. 술어를 건 스캔으로 열면 뒤따르는
+        # 쿼리 대부분이 그 페이지를 못 읽으니, 무필터 스캔을 가진 쿼리로만
+        # 출발점을 고르고 그 중 무필터 컬럼이 넓은 것부터 시도한다.
+        seeds = [pos for pos in positions
+                 if unfiltered_fraction(queries_by_position[pos], cfg.scope)
+                 >= UNFILTERED_PHASE_THRESHOLD]
+        start_positions = sorted(
+            seeds or positions,
+            key=lambda pos: (-unfiltered_fraction(queries_by_position[pos], cfg.scope),
+                             -len(query_signature(queries_by_position[pos], cfg.scope)), pos))
+    elif cfg.keep_first:
         start_positions = positions[:1]
     elif cfg.window > 0:
         start_positions = positions[: min(cfg.window, len(positions))]
@@ -732,14 +927,16 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
         path = _cost_ascending_path(positions[0], positions, signatures, cfg)
         reordered = tuple(queries_by_position[pos] for pos in path)
         return finish(reordered, tuple(), sequence_overlap_summary(reordered, cfg.scope))
-    if cfg.policy == "byte-lru":
-        path_builder = _build_greedy_byte_lru_path
+    if cfg.policy == "unfiltered-overlap":
+        path_builders = [_build_unfiltered_first_path]
+    elif cfg.policy == "byte-lru":
+        path_builders = [_build_greedy_byte_lru_path]
     elif cfg.policy == "byte-overlap":
-        path_builder = _build_greedy_byte_overlap_path
+        path_builders = [_build_greedy_byte_overlap_path]
     elif cfg.resident_column_budget > 0:
-        path_builder = _build_greedy_resident_aware_path
+        path_builders = [_build_greedy_resident_aware_path]
     else:
-        path_builder = _build_greedy_overlap_path
+        path_builders = [_build_greedy_overlap_path]
 
     def score(candidate_queries: tuple[int, ...], summary: SequenceOverlapSummary, start: int):
         if cfg.policy == "byte-overlap":
@@ -748,6 +945,9 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
                 for a, b in zip(candidate_queries, candidate_queries[1:])
             )
             return (shared, summary.shared_columns, -start)
+        if cfg.policy == "unfiltered-overlap":
+            return (sequence_unfiltered_overlap(candidate_queries, cfg.scope),
+                    summary.shared_columns, -start)
         if cfg.policy != "byte-lru":
             return (summary.overlap_ratio, summary.shared_columns, -start)
         served, _ = simulate_cache_hit_bytes(candidate_queries, cfg.scope, cfg.cache_budget_bytes)
@@ -755,6 +955,7 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
 
     best_rank = score(original, before, positions[0])
     for start_position in start_positions:
+      for path_builder in path_builders:
         path = path_builder(start_position, positions, signatures, cfg)
         candidate_queries = tuple(queries_by_position[pos] for pos in path)
         summary = sequence_overlap_summary(candidate_queries, cfg.scope)
@@ -769,7 +970,14 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
     # 괜히 workload를 악화시키지 않도록 사용자가 준 원래 순서를 그대로 쓴다.
     if best_queries == original:
         return finish(original, tuple(), before)
-    if cfg.policy not in ("byte-lru", "byte-overlap") and (
+    if cfg.policy == "unfiltered-overlap":
+        # 이 정책의 목적함수는 컬럼 개수가 아니라 무필터 가중 겹침이다. 원래
+        # 순서보다 그 값이 크지 않을 때만 되돌린다 -- 컬럼 개수 기준으로 재면
+        # 무필터 컬럼을 더 모은 순서를 개선 없음으로 오판해 버린다.
+        if sequence_unfiltered_overlap(best_queries, cfg.scope) <= sequence_unfiltered_overlap(
+                original, cfg.scope):
+            return finish(original, tuple(), before)
+    elif cfg.policy not in ("byte-lru", "byte-overlap") and (
         best_summary.overlap_ratio <= before.overlap_ratio
         and best_summary.shared_columns <= before.shared_columns
     ):

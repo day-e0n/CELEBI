@@ -99,13 +99,17 @@ def main() -> int:
                         help="Explicit comma-separated query order. Overrides --arrival but "
                              "NOT the reorder, which still runs on top of it; for pinning an "
                              "arrival order the built-in policies cannot express.")
-    parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending"),
+    parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
+                                 "unfiltered-overlap"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
                              "COLUMNS, so a 25-row nation column scores like a 600M-row "
                              "lineitem one and position 1 -- which always misses -- is free. "
                              "'byte-lru' instead maximises the bytes served by a simulated "
                              "byte-budget LRU over the whole sequence; needs --column-bytes.")
+    parser.add_argument("--query-table-filters",
+                        help="JSON from scripts/extract_query_filters.py, required by "
+                             "unfiltered-overlap: which table scans carry a predicate.")
     parser.add_argument("--query-table-columns",
                         help="JSON from scripts/probe_scan_requests.py, required by "
                              "cost-ascending.")
@@ -146,6 +150,12 @@ def main() -> int:
             if not args.column_bytes:
                 parser.error(f"--reorder-policy {args.reorder_policy} requires --column-bytes")
             print(f"column bytes: {reorder.load_column_bytes(args.column_bytes)} columns",
+                  flush=True)
+        if args.reorder_policy == "unfiltered-overlap":
+            if not args.query_table_filters:
+                parser.error("--reorder-policy unfiltered-overlap requires --query-table-filters")
+            print(f"query filters: "
+                  f"{reorder.load_query_table_filters(args.query_table_filters)} queries",
                   flush=True)
         if args.reorder_policy == "cost-ascending":
             if not args.query_table_columns:
