@@ -30,6 +30,24 @@ ARRIVAL_ORDER = [8, 1, 16, 3, 14, 4, 12, 19, 20, 15, 9, 17, 6, 11, 2, 22, 7, 13,
 
 
 def write_config(path: Path, telemetry_dir: Path, gpu_usage_limit: str = "20GB") -> None:
+    # BENCH_USE_ODIRECT=0 routes reads through the kernel page cache instead of
+    # O_DIRECT, so Linux keeps the compressed parquet bytes in host RAM. That is
+    # the cheapest way to ask whether the NVMe read is what a scan waits on: the
+    # decode still happens either way, only the disk trip disappears.
+    # BENCH_PREFETCH_CACHE=1 turns on the scan manager's own prefetching cache,
+    # which is off by default: with it off, sirius_datasource::fadvise returns on
+    # its first line and nothing is ever read ahead. O_DIRECT means the kernel
+    # does not read ahead either, so a scan is a pure request-wait loop.
+    odirect = os.environ.get("BENCH_USE_ODIRECT")
+    prefetch = os.environ.get("BENCH_PREFETCH_CACHE")
+    scan_keys = ""
+    if prefetch is not None:
+        scan_keys += f"      enable_prefetch_cache: {'true' if prefetch == '1' else 'false'}\n"
+    if odirect is not None:
+        scan_keys += ("      local:\n"
+                      f"        use_odirect: {'true' if odirect == '1' else 'false'}\n")
+    scan_block = ("" if not scan_keys else
+                  "  executor:\n    scan_manager:\n" + scan_keys)
     path.parent.mkdir(parents=True, exist_ok=True)
     telemetry_dir.mkdir(parents=True, exist_ok=True)
     disk_dir = Path("/mnt/nvme/sirius_scratch/random22_disk_downgrade") / path.parent.name
@@ -50,6 +68,7 @@ def write_config(path: Path, telemetry_dir: Path, gpu_usage_limit: str = "20GB")
         "      disk_id: 0\n"
         "      capacity_bytes: 100GB\n"
         f"      downgrade_root_dirs: \"{disk_dir}\"\n"
+        + scan_block +
         "  telemetry:\n"
         "    enable_quent: true\n"
         f"    output_directory: {telemetry_dir}\n"

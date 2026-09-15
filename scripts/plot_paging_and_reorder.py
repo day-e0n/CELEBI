@@ -39,14 +39,17 @@ WORKLOADS = [
     ("TPC-H SF50", 22, [("baseline", "mb_sf50", ps.NEUTRAL),
                         ("paging", "fin_th_paging", ps.DARK),
                         ("paging\n+ reorder", "fin_th_reorder", ps.ACCENT)]),
-    ("SSB SF50", 13, [("baseline", "ssb50_base", ps.NEUTRAL),
-                      ("paging", "fin_sb_paging", ps.DARK),
-                      ("paging\n+ reorder", "fin_sb_reorder", ps.ACCENT)]),
 ]
 
 
-def runs(prefix: str, n_queries: int) -> list[dict[str, float]]:
-    """Per-query warm ms for each repeat of one condition."""
+def runs(prefix: str, n_queries: int, metric: str = "total_ms") -> list[dict[str, float]]:
+    """Per-query warm ms for each repeat of one condition.
+
+    `metric` picks the bucket column: "total_ms" is every GPU operator, "scan" is
+    the read path alone. The cache only ever shortens the scan, so a per-query
+    view of total time buries its effect under join and aggregate work that no
+    cache can touch.
+    """
     out = []
     for bucket in sorted(glob.glob(str(ROOT / f"{prefix}_*" / "bucket.csv"))):
         by_query: dict[str, list[float]] = collections.defaultdict(list)
@@ -54,7 +57,7 @@ def runs(prefix: str, n_queries: int) -> list[dict[str, float]]:
         for row in csv.DictReader(open(bucket)):
             if row["execution"] == "1":
                 continue
-            by_query[row["query"]].append(float(row["total_ms"]))
+            by_query[row["query"]].append(float(row[metric]))
             executions[row["execution"]].add(row["query"])
         if len(by_query) == n_queries and executions:
             out.append({q: statistics.mean(v) for q, v in by_query.items()})
@@ -70,14 +73,14 @@ def total(prefix: str, n_queries: int) -> tuple[float, float, int]:
             len(totals))
 
 
-def per_query(prefix: str, n_queries: int) -> dict[str, float]:
-    repeats = runs(prefix, n_queries)
+def per_query(prefix: str, n_queries: int, metric: str = "scan") -> dict[str, float]:
+    repeats = runs(prefix, n_queries, metric)
     queries = set.intersection(*(set(r) for r in repeats))
     return {q: statistics.mean(r[q] for r in repeats) for q in queries}
 
 
 def plot_totals() -> None:
-    fig, axes = plt.subplots(1, len(WORKLOADS), figsize=(8.4, 2.6))
+    fig, axes = plt.subplots(1, len(WORKLOADS), figsize=(6.2, 2.6))
     for ax, (workload, n_queries, conditions) in zip(axes, WORKLOADS):
         xs = np.arange(len(conditions))
         reference = None
@@ -101,7 +104,7 @@ def plot_totals() -> None:
 
 
 def plot_per_query() -> None:
-    fig, axes = plt.subplots(len(WORKLOADS), 1, figsize=(7.0, 6.6))
+    fig, axes = plt.subplots(len(WORKLOADS), 1, figsize=(7.0, 4.6))
     for ax, (workload, n_queries, conditions) in zip(axes, WORKLOADS):
         data = [(label, per_query(prefix, n_queries), style)
                 for label, prefix, style in conditions]
@@ -115,7 +118,7 @@ def plot_per_query() -> None:
         ax.set_xticks(xs)
         ax.set_xticklabels(queries, fontsize=6, rotation=90)
         ax.set_xlim(-0.6, len(queries) - 0.4)
-        ps.finish(ax, "GPU time (s)")
+        ps.finish(ax, "scan time (s)")
         ax.set_title(workload, fontsize=8.5, pad=4)
         if ax is axes[0]:
             ax.legend(fontsize=7, frameon=False, ncol=3, loc="upper left")
