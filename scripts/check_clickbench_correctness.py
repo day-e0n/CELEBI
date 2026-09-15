@@ -28,8 +28,12 @@ sys.path.insert(0, str(REPO / "scripts"))
 
 DATA = os.environ.get("CLICKBENCH_PARQUET", "/mnt/nvme/clickbench/hits_v2.parquet")
 EXECUTIONS = int(os.environ.get("CHECK_EXECUTIONS", "3"))
-# Same exclusions the benchmark uses: unsupported on the GPU path, or fatal.
-SKIP = {1, 5, 6, 24, 29, 30}
+# Exclusions default to the benchmark's, but the two lists must not be welded
+# together: q29 was skipped by the benchmark, so the checker skipped it too, and
+# the string corruption it hits (Invalid unicode on a cached Referer) was never
+# looked for. CHECK_SKIP overrides -- "5,6,30" leaves in the three that only fail
+# with the cache ON, which is exactly where a cache bug would hide.
+SKIP = {int(x) for x in os.environ.get("CHECK_SKIP", "1,5,6,24,29,30").split(",") if x.strip()}
 
 
 def results_match(cpu, gpu) -> tuple[bool, str]:

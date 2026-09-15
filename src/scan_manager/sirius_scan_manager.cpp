@@ -4555,7 +4555,15 @@ void sirius_scan_manager::insert_pages_from_view(
     for (std::size_t c = 0; c < column_names.size(); ++c) {
       if (c >= static_cast<std::size_t>(view.num_columns())) { break; }
       auto const column_view = view.column(static_cast<cudf::size_type>(c));
-      if (!is_intrinsically_fixed_width_type(column_view)) { continue; }
+      // STRING columns page exactly like fixed-width ones here. cached_page holds a
+      // cudf::column, which is type-erased, and the serve path concatenates -- neither
+      // cares about width. Keeping strings out sent them to a second cache with its own
+      // budget, its own whole-entry eviction and a 512MiB per-column admission cap, so on
+      // ClickBench (Title 9.9GB, URL 9.5GB) every string column was refused at the door
+      // and 1GB of VRAM sat unused while the fixed-width side thrashed. One store, one
+      // budget, one LRU: whichever pages are actually being read win the space.
+      bool const fixed_width = is_intrinsically_fixed_width_type(column_view);
+      if (!fixed_width && column_view.type().id() != cudf::type_id::STRING) { continue; }
       cached_page_key key{file_path, column_names[c], static_cast<int>(row_groups[g])};
       if (_pages.contains(key)) { continue; }  // first writer wins; no duplicate copies
 
@@ -4568,7 +4576,11 @@ void sirius_scan_manager::insert_pages_from_view(
         slices.front(), stream, space.get_default_allocator());
       page.num_rows          = rows;
       page.num_bytes         = page.data->alloc_size();
-      page.stats             = compute_fixed_width_page_stats_for_range(column_view, begin, end, &space);
+      // Min/max page stats are a fixed-width notion (they drive predicate-based page
+      // skipping). A STRING page carries none and is simply never skipped on stats.
+      page.stats             = fixed_width
+                                 ? compute_fixed_width_page_stats_for_range(column_view, begin, end, &space)
+                                 : fixed_width_page_stats{};
       page.filter_signature  = filter_signature;
       page.filter_ranges     = filter_ranges;
       page.filter_analyzable = filter_analyzable;
