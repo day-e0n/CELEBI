@@ -47,6 +47,7 @@ class fixed_size_host_memory_resource;
 }  // namespace cucascade::memory
 
 #include <memory>
+#include <list>
 #include <mutex>
 #include <span>
 #include <string>
@@ -423,9 +424,31 @@ struct chunk_provenance {
 /// predicate. The predicate travels WITH the page instead, as the signature that
 /// produced it plus its value ranges, so a scan can ask "are these rows a superset
 /// of what I need?" per page rather than per bundle.
+/// Key for @ref cached_page. Kept as a struct rather than a packed string so the
+/// parts stay inspectable in logs and in eviction, which works per file.
+struct cached_page_key {
+  std::string file_path;
+  std::string column_name;
+  int row_group{0};
+  /// Which page within that row group. A row group is cut into pages of about
+  /// fixed_width_page_size_bytes() so the cache's unit of residency and eviction
+  /// is a page, not a whole row group -- a ClickBench row group of URL is 0.9GiB,
+  /// 15% of a 6GB budget, and evicting one throws all of it away.
+  int page_index{0};
+
+  [[nodiscard]] bool operator==(cached_page_key const& other) const = default;
+};
+
 struct cached_page {
-  std::shared_ptr<cudf::column> data;  ///< the whole row group's values for this column
+  std::shared_ptr<cudf::column> data;  ///< one page of this column within one row group
   std::size_t num_rows{0};
+  /// How many pages the row group was cut into. The serve path needs it to tell a
+  /// complete run from a truncated one: pages 0..2 present with page 3 evicted
+  /// would otherwise look whole and silently hand back a column missing its tail.
+  std::size_t pages_in_row_group{1};
+  /// Position in @ref _lru. Touching a page splices it to the back in O(1), and
+  /// eviction pops the front -- so neither path has to scan or sort the store.
+  std::list<cached_page_key>::iterator lru_it{};
   std::size_t num_bytes{0};
   fixed_width_page_stats stats;  ///< min/max, for skipping a page a predicate cannot match
   /// Predicate the rows came through. Empty means unfiltered, which satisfies any
@@ -437,15 +460,6 @@ struct cached_page {
   std::uint64_t last_access_tick{0};
 };
 
-/// Key for @ref cached_page. Kept as a struct rather than a packed string so the
-/// parts stay inspectable in logs and in eviction, which works per file.
-struct cached_page_key {
-  std::string file_path;
-  std::string column_name;
-  int row_group{0};
-
-  [[nodiscard]] bool operator==(cached_page_key const& other) const = default;
-};
 
 struct cached_page_key_hash {
   [[nodiscard]] std::size_t operator()(cached_page_key const& key) const noexcept
@@ -453,6 +467,7 @@ struct cached_page_key_hash {
     auto h = std::hash<std::string>{}(key.file_path);
     h ^= std::hash<std::string>{}(key.column_name) + 0x9e3779b9 + (h << 6) + (h >> 2);
     h ^= std::hash<int>{}(key.row_group) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(key.page_index) + 0x9e3779b9 + (h << 6) + (h >> 2);
     return h;
   }
 };
@@ -822,6 +837,15 @@ class sirius_scan_manager {
   /// The flat page store: (file, column, row group) -> one cached column. This is
   /// what the auto page cache is, now that the entry is gone from the lookup path.
   std::unordered_map<cached_page_key, cached_page, cached_page_key_hash> _pages;
+  /// Least-recently-used order, oldest at the front. Kept as a list so a touch is
+  /// a splice and an eviction is a pop, both O(1). The previous pass rebuilt a
+  /// vector of every page and sorted it on EVERY insert -- O(n log n) each time,
+  /// and n grew tenfold when row groups were cut into 16MiB pages, which turned
+  /// TPC-H SF50 from -3.1% into +2.3% against its own baseline.
+  std::list<cached_page_key> _lru;
+  /// Running total of resident page bytes, maintained on insert and eviction so
+  /// the budget check does not have to sum the whole store.
+  std::size_t _pages_bytes{0};
   mutable std::mutex _pages_mutex;
   std::uint64_t _page_tick{0};
   /// Backoff for the device-pressure check -- see where it is applied.

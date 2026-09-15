@@ -4564,28 +4564,66 @@ void sirius_scan_manager::insert_pages_from_view(
       // budget, one LRU: whichever pages are actually being read win the space.
       bool const fixed_width = is_intrinsically_fixed_width_type(column_view);
       if (!fixed_width && column_view.type().id() != cudf::type_id::STRING) { continue; }
-      cached_page_key key{file_path, column_names[c], static_cast<int>(row_groups[g])};
-      if (_pages.contains(key)) { continue; }  // first writer wins; no duplicate copies
 
-      auto const begin = static_cast<cudf::size_type>(row_offset);
-      auto const end   = static_cast<cudf::size_type>(row_offset + rows);
-      auto slices      = cudf::slice(column_view, {begin, end});
-      if (slices.empty()) { continue; }
-      cached_page page;
-      page.data = std::make_shared<cudf::column>(
-        slices.front(), stream, space.get_default_allocator());
-      page.num_rows          = rows;
-      page.num_bytes         = page.data->alloc_size();
-      // Min/max page stats are a fixed-width notion (they drive predicate-based page
-      // skipping). A STRING page carries none and is simply never skipped on stats.
-      page.stats             = fixed_width
-                                 ? compute_fixed_width_page_stats_for_range(column_view, begin, end, &space)
-                                 : fixed_width_page_stats{};
-      page.filter_signature  = filter_signature;
-      page.filter_ranges     = filter_ranges;
-      page.filter_analyzable = filter_analyzable;
-      page.last_access_tick  = ++_page_tick;
-      _pages.emplace(std::move(key), std::move(page));
+      auto const rg_begin = static_cast<cudf::size_type>(row_offset);
+      auto const rg_end   = static_cast<cudf::size_type>(row_offset + rows);
+
+      // Cut the row group into pages of about fixed_width_page_size_bytes(). Paging
+      // is the point of this cache: a whole row group of a wide column is far too
+      // coarse a unit to keep or evict -- ClickBench's URL is 0.9GiB per row group,
+      // 15% of a 6GB budget, so one eviction throws away 0.9GiB and residency can
+      // only ever be a multiple of that. Rows per page come from the column's own
+      // bytes per row: exact for fixed width, and for STRING from the run's chars
+      // size (one device read of the end offsets, the same O(1) trick the
+      // variable-width index uses) plus the 4-byte offset each row carries.
+      double bytes_per_row = 0.0;
+      if (fixed_width) {
+        bytes_per_row = static_cast<double>(cudf::size_of(column_view.type()));
+      } else {
+        auto rg_slices = cudf::slice(column_view, {rg_begin, rg_end});
+        if (rg_slices.empty()) { continue; }
+        cudf::strings_column_view const scv{rg_slices.front()};
+        bytes_per_row =
+          (static_cast<double>(scv.chars_size(stream)) + 4.0 * static_cast<double>(rows)) /
+          static_cast<double>(std::max<std::size_t>(1, rows));
+      }
+      if (bytes_per_row <= 0.0) { bytes_per_row = 1.0; }
+      auto const target      = static_cast<double>(fixed_width_page_size_bytes());
+      auto const rows_per_page = std::max<std::size_t>(
+        1, static_cast<std::size_t>(target / bytes_per_row));
+
+      auto const pages_in_row_group = (rows + rows_per_page - 1) / rows_per_page;
+      int page_index                = 0;
+      for (std::size_t r = 0; r < rows; r += rows_per_page, ++page_index) {
+        auto const page_rows = std::min<std::size_t>(rows_per_page, rows - r);
+        cached_page_key key{
+          file_path, column_names[c], static_cast<int>(row_groups[g]), page_index};
+        if (_pages.contains(key)) { continue; }  // first writer wins; no duplicate copies
+
+        auto const begin = static_cast<cudf::size_type>(rg_begin + r);
+        auto const end   = static_cast<cudf::size_type>(rg_begin + r + page_rows);
+        auto slices      = cudf::slice(column_view, {begin, end});
+        if (slices.empty()) { continue; }
+        cached_page page;
+        page.data = std::make_shared<cudf::column>(
+          slices.front(), stream, space.get_default_allocator());
+        page.num_rows          = page_rows;
+        page.pages_in_row_group = pages_in_row_group;
+        page.num_bytes         = page.data->alloc_size();
+        // Min/max page stats are a fixed-width notion (they drive predicate-based page
+        // skipping). A STRING page carries none and is simply never skipped on stats.
+        page.stats             = fixed_width
+                                   ? compute_fixed_width_page_stats_for_range(column_view, begin, end, &space)
+                                   : fixed_width_page_stats{};
+        page.filter_signature  = filter_signature;
+        page.filter_ranges     = filter_ranges;
+        page.filter_analyzable = filter_analyzable;
+        page.last_access_tick  = ++_page_tick;
+        _lru.push_back(key);
+        page.lru_it            = std::prev(_lru.end());
+        _pages_bytes += page.num_bytes;
+        _pages.emplace(std::move(key), std::move(page));
+      }
     }
     row_offset += rows;
   }
@@ -4599,8 +4637,7 @@ void sirius_scan_manager::insert_pages_from_view(
   // fired. Checking free device memory on every insert gives the cache a chance to
   // shrink DURING a query; the pre-existing memory-pressure sweep only ran at query
   // start, which is too late once a join has already taken the memory.
-  std::size_t resident = 0;
-  for (auto const& [_, page] : _pages) { resident += page.num_bytes; }
+  std::size_t resident = _pages_bytes;
 
   std::size_t effective_budget = budget;
   auto const min_free          = fixed_page_cache_min_free_bytes_per_gpu();
@@ -4638,19 +4675,20 @@ void sirius_scan_manager::insert_pages_from_view(
   if (effective_budget == 0 && budget == 0) { return; }
   auto const budget_to_use = effective_budget;
   if (resident <= budget_to_use) { return; }
-  std::vector<std::pair<std::uint64_t, cached_page_key>> by_age;
-  by_age.reserve(_pages.size());
-  for (auto const& [key, page] : _pages) { by_age.emplace_back(page.last_access_tick, key); }
-  std::sort(by_age.begin(), by_age.end(), [](auto const& a, auto const& b) {
-    return a.first < b.first;
-  });
+  // Oldest first, straight off the front of the LRU list. No vector, no sort:
+  // the list already holds exactly the order this needs.
   std::size_t evicted = 0;
-  for (auto const& [tick, key] : by_age) {
-    if (resident <= budget_to_use) { break; }
-    auto it = _pages.find(key);
-    if (it == _pages.end()) { continue; }
+  while (resident > budget_to_use && !_lru.empty()) {
+    auto const key = _lru.front();
+    auto it        = _pages.find(key);
+    if (it == _pages.end()) {  // shouldn't happen; keep the list and map in step
+      _lru.pop_front();
+      continue;
+    }
     resident -= it->second.num_bytes;
+    _pages_bytes -= it->second.num_bytes;
     _pages.erase(it);
+    _lru.pop_front();
     ++evicted;
   }
   if (evicted > 0) {
@@ -4675,8 +4713,7 @@ void sirius_scan_manager::insert_pages_from_view(
 std::pair<std::size_t, std::size_t> sirius_scan_manager::page_store_size() const
 {
   std::lock_guard lock{_pages_mutex};
-  std::size_t bytes = 0;
-  for (auto const& [_, page] : _pages) { bytes += page.num_bytes; }
+  std::size_t const bytes = _pages_bytes;  // maintained on insert and eviction
   return {bytes, _pages.size()};
 }
 
@@ -4697,27 +4734,41 @@ std::vector<std::shared_ptr<cudf::column>> sirius_scan_manager::cached_row_group
     bool complete = true;
 
     for (auto const row_group : row_groups) {
-      auto it = _pages.find(cached_page_key{file_path, column_names[ci], static_cast<int>(row_group)});
-      if (it == _pages.end() || !it->second.data) {
+      // A row group is stored as a run of pages, page_index 0,1,2,... Walk it until
+      // a page is missing; the run must be whole, because a gap in the middle would
+      // silently drop rows from the column this hands back.
+      std::size_t pages_found = 0;
+      std::size_t pages_expected = 0;
+      for (int page_index = 0;; ++page_index) {
+        auto it = _pages.find(cached_page_key{
+          file_path, column_names[ci], static_cast<int>(row_group), page_index});
+        if (it == _pages.end() || !it->second.data) { break; }
+        pages_expected = it->second.pages_in_row_group;
+        // The cached rows must have gone through the same predicate as the columns
+        // about to be read beside them, or the two halves hold different rows. An
+        // unfiltered page satisfies either case.
+        if (!it->second.filter_signature.empty() &&
+            it->second.filter_signature != required_filter_signature) {
+          complete = false;
+          break;
+        }
+        if (it->second.filter_signature.empty() && !required_filter_signature.empty()) {
+          // Cache holds ALL rows, the reader is about to return only matching ones.
+          complete = false;
+          break;
+        }
+        it->second.last_access_tick = ++_page_tick;
+        _lru.splice(_lru.end(), _lru, it->second.lru_it);  // most recently used
+        parts.push_back(it->second.data->view());
+        keep_alive.push_back(it->second.data);
+        ++pages_found;
+      }
+      // Whole run or nothing: a short run means a page in the middle or at the end
+      // was evicted, and serving it would drop those rows without a trace.
+      if (!complete || pages_found == 0 || pages_found != pages_expected) {
         complete = false;
         break;
       }
-      // The cached rows must have gone through the same predicate as the columns
-      // about to be read beside them, or the two halves hold different rows. An
-      // unfiltered page satisfies either case.
-      if (!it->second.filter_signature.empty() &&
-          it->second.filter_signature != required_filter_signature) {
-        complete = false;
-        break;
-      }
-      if (it->second.filter_signature.empty() && !required_filter_signature.empty()) {
-        // Cache holds ALL rows, the reader is about to return only matching ones.
-        complete = false;
-        break;
-      }
-      it->second.last_access_tick = ++_page_tick;
-      parts.push_back(it->second.data->view());
-      keep_alive.push_back(it->second.data);
     }
 
     if (!complete || parts.empty()) { continue; }
