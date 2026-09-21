@@ -69,6 +69,14 @@ sirius_physical_grouped_aggregate::sirius_physical_grouped_aggregate(
   aggregate_slots                   = std::move(cudf_defs.aggregate_slots);
   has_avg                           = cudf_defs.has_avg;
   has_count_distinct                = cudf_defs.has_count_distinct;
+
+  // Mark the SUM half of every AVG so the local aggregate can widen its accumulator.
+  cudf_aggregate_widen_sum.assign(cudf_aggregates.size(), false);
+  for (auto const& slot : aggregate_slots) {
+    if (slot.is_avg && slot.cudf_idx < cudf_aggregate_widen_sum.size()) {
+      cudf_aggregate_widen_sum[slot.cudf_idx] = true;
+    }
+  }
 }
 
 std::unique_ptr<operator_data> sirius_physical_grouped_aggregate::execute(
@@ -86,6 +94,7 @@ std::unique_ptr<operator_data> sirius_physical_grouped_aggregate::execute(
                                                               cudf_aggregates,
                                                               cudf_aggregate_idx,
                                                               cudf_aggregate_struct_col_indices,
+                                                              cudf_aggregate_widen_sum,
                                                               stream,
                                                               *space);
     results.push_back(std::move(result));

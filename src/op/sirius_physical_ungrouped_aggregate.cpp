@@ -364,6 +364,14 @@ std::unique_ptr<operator_data> sirius_physical_ungrouped_aggregate::execute(
                 col.type().id() == cudf::type_id::INT32) {
               casted_col = cudf::cast(col, cudf::data_type(cudf::type_id::INT64), stream);
               col        = casted_col->view();
+            } else if (col.type().id() == cudf::type_id::INT64 ||
+                       col.type().id() == cudf::type_id::UINT64) {
+              // A 64-bit column has nowhere left to widen into: AVG(UserID) over ClickBench's
+              // hits sums to 2.5e26, which wraps INT64 and lands a negative average. DuckDB
+              // accumulates in hugeint, so accumulate in DECIMAL128 -- a __int128 underneath --
+              // and let make_avg_column do the one rounding, at the divide.
+              casted_col = cudf::cast(col, cudf::data_type(cudf::type_id::DECIMAL128, 0), stream);
+              col        = casted_col->view();
             }
             out_type = col.type();
           }
