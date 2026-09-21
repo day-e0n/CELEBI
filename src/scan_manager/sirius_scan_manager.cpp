@@ -4527,6 +4527,7 @@ void sirius_scan_manager::insert_pages_from_view(
   std::vector<std::string> const& column_names,
   cudf::table_view const& view,
   std::string const& filter_signature,
+  std::vector<std::string> filter_conjuncts,
   std::vector<cache_filter_range> filter_ranges,
   bool filter_analyzable,
   cucascade::memory::memory_space& space,
@@ -4546,8 +4547,19 @@ void sirius_scan_manager::insert_pages_from_view(
   if (!partitioned && row_groups.size() != 1) { return; }
 
   auto const budget = fixed_page_cache_budget_bytes_per_gpu();
-  std::lock_guard lock{_pages_mutex};
+  // The page store's mutex is deliberately NOT held across this loop. Every page here is a
+  // GPU deep copy, and a STRING column's size is read back through the stream; holding the
+  // mutex across those made every concurrent probe wait behind an insert. Measured on TPC-H
+  // SF50: the scan breakdown charged 0.50s to the availability probe, of which 0.50s was
+  // waiting for this mutex -- the hash lookups themselves are ~930 per scan and cost nothing.
+  // So the lock is taken three times, each for bookkeeping only: to intern, to test whether
+  // a page is already resident, and to publish the copy.
   std::size_t row_offset = 0;
+  int file_id = 0;
+  {
+    std::lock_guard lock{_pages_mutex};
+    file_id = intern_id(file_path);
+  }
   for (std::size_t g = 0; g < row_groups.size(); ++g) {
     auto const rows = partitioned ? row_group_rows[g]
                                   : static_cast<std::size_t>(view.num_rows());
@@ -4562,6 +4574,11 @@ void sirius_scan_manager::insert_pages_from_view(
       // ClickBench (Title 9.9GB, URL 9.5GB) every string column was refused at the door
       // and 1GB of VRAM sat unused while the fixed-width side thrashed. One store, one
       // budget, one LRU: whichever pages are actually being read win the space.
+      int column_id = 0;
+      {
+        std::lock_guard lock{_pages_mutex};
+        column_id = intern_id(column_names[c]);
+      }
       bool const fixed_width = is_intrinsically_fixed_width_type(column_view);
       if (!fixed_width && column_view.type().id() != cudf::type_id::STRING) { continue; }
 
@@ -4597,8 +4614,11 @@ void sirius_scan_manager::insert_pages_from_view(
       for (std::size_t r = 0; r < rows; r += rows_per_page, ++page_index) {
         auto const page_rows = std::min<std::size_t>(rows_per_page, rows - r);
         cached_page_key key{
-          file_path, column_names[c], static_cast<int>(row_groups[g]), page_index};
-        if (_pages.contains(key)) { continue; }  // first writer wins; no duplicate copies
+          file_id, column_id, static_cast<int>(row_groups[g]), page_index};
+        {
+          std::lock_guard lock{_pages_mutex};
+          if (_pages.contains(key)) { continue; }  // first writer wins; no duplicate copies
+        }
 
         auto const begin = static_cast<cudf::size_type>(rg_begin + r);
         auto const end   = static_cast<cudf::size_type>(rg_begin + r + page_rows);
@@ -4616,8 +4636,13 @@ void sirius_scan_manager::insert_pages_from_view(
                                    ? compute_fixed_width_page_stats_for_range(column_view, begin, end, &space)
                                    : fixed_width_page_stats{};
         page.filter_signature  = filter_signature;
+        page.filter_conjuncts  = filter_conjuncts;
         page.filter_ranges     = filter_ranges;
         page.filter_analyzable = filter_analyzable;
+        std::lock_guard lock{_pages_mutex};
+        // Another thread may have published this same page while the copy above ran; it
+        // holds the same rows, so drop ours rather than pay for a second resident copy.
+        if (_pages.contains(key)) { continue; }
         page.last_access_tick  = ++_page_tick;
         _lru.push_back(key);
         page.lru_it            = std::prev(_lru.end());
@@ -4637,6 +4662,11 @@ void sirius_scan_manager::insert_pages_from_view(
   // fired. Checking free device memory on every insert gives the cache a chance to
   // shrink DURING a query; the pre-existing memory-pressure sweep only ran at query
   // start, which is too late once a join has already taken the memory.
+  //
+  // Eviction does hold the mutex: it walks `_lru` and erases from `_pages`, so it has to be
+  // atomic against a concurrent probe. It is one hold per insert call rather than one per
+  // page, and it copies nothing.
+  std::lock_guard evict_lock{_pages_mutex};
   std::size_t resident = _pages_bytes;
 
   std::size_t effective_budget = budget;
@@ -4717,18 +4747,115 @@ std::pair<std::size_t, std::size_t> sirius_scan_manager::page_store_size() const
   return {bytes, _pages.size()};
 }
 
+int sirius_scan_manager::intern_id(std::string const& str)
+{
+  auto const [it, _] = _intern.try_emplace(str, static_cast<int>(_intern.size()));
+  return it->second;
+}
+
+int sirius_scan_manager::intern_lookup(std::string const& str) const
+{
+  auto const it = _intern.find(str);
+  return it == _intern.end() ? -1 : it->second;
+}
+
+std::vector<bool> sirius_scan_manager::cached_row_group_columns_available(
+  std::string const& file_path,
+  std::vector<cudf::size_type> const& row_groups,
+  std::vector<std::string> const& column_names,
+  std::string const& required_filter_signature,
+  std::vector<std::string> const& required_filter_conjuncts)
+{
+  std::vector<bool> out(column_names.size(), false);
+  if (row_groups.empty() || column_names.empty()) { return out; }
+
+  // Conjunct subsumption was tried here and is WRONG for splicing. "The query's
+  // rows are a subset of this page's rows" is not enough: the splice puts cached
+  // columns side by side with columns the reader is about to produce, and the
+  // reader applies the FULL predicate. A page filtered by `A` beside a column
+  // filtered by `A AND B` holds more rows than its neighbour -- measured as
+  // "Column size mismatch: 548873 != 558097" on ClickBench q38. The two halves
+  // must hold exactly the SAME rows, so an identical predicate is a requirement,
+  // not conservatism. Reuse under a narrower predicate needs the cached rows
+  // re-filtered before they can be spliced, which this path does not do.
+  (void)required_filter_conjuncts;
+
+  // Split the wait for the page store from the work done inside it. The probe itself is
+  // ~30 columns x 31 row groups of hash lookups, which cannot account for the seconds the
+  // scan breakdown attributes to it; insert_pages_from_view holds this same mutex across a
+  // per-page GPU deep copy, so a probe that lands mid-insert waits behind it.
+  auto const lock_t0 = std::chrono::steady_clock::now();
+  std::lock_guard lock{_pages_mutex};
+  _page_lock_wait_us.fetch_add(
+    std::chrono::duration_cast<std::chrono::microseconds>(
+      std::chrono::steady_clock::now() - lock_t0)
+      .count(),
+    std::memory_order_relaxed);
+  auto const file_id = intern_lookup(file_path);
+  if (file_id < 0) { return out; }  // nothing from this file is cached
+  for (std::size_t ci = 0; ci < column_names.size(); ++ci) {
+    auto const column_id = intern_lookup(column_names[ci]);
+    if (column_id < 0) { continue; }
+    bool complete = true;
+    for (auto const row_group : row_groups) {
+      std::size_t pages_found = 0, pages_expected = 0;
+      for (int page_index = 0;; ++page_index) {
+        auto it = _pages.find(
+          cached_page_key{file_id, column_id, static_cast<int>(row_group), page_index});
+        if (it == _pages.end() || !it->second.data) { break; }
+        pages_expected = it->second.pages_in_row_group;
+        if (!it->second.filter_signature.empty() &&
+            it->second.filter_signature != required_filter_signature) {
+          complete = false;
+          break;
+        }
+        if (it->second.filter_signature.empty() && !required_filter_signature.empty()) {
+          complete = false;
+          break;
+        }
+        ++pages_found;
+      }
+      if (!complete || pages_found == 0 || pages_found != pages_expected) {
+        complete = false;
+        break;
+      }
+    }
+    out[ci] = complete;
+  }
+  return out;
+}
+
 std::vector<std::shared_ptr<cudf::column>> sirius_scan_manager::cached_row_group_columns(
   std::string const& file_path,
   std::vector<cudf::size_type> const& row_groups,
   std::vector<std::string> const& column_names,
   rmm::cuda_stream_view stream,
-  std::string const& required_filter_signature)
+  std::string const& required_filter_signature,
+  std::vector<std::string> const& required_filter_conjuncts)
 {
+  // A page serves this request when its predicate keeps at least the rows the
+  // request wants. Exact text match is one way; the other is that the page's
+  // AND-ed parts are all present in the request's, which means the request only
+  // narrows further. Both lists are sorted and deduplicated at build time.
+  // Conjunct subsumption was tried here and is WRONG for splicing. "The query's
+  // rows are a subset of this page's rows" is not enough: the splice puts cached
+  // columns side by side with columns the reader is about to produce, and the
+  // reader applies the FULL predicate. A page filtered by `A` beside a column
+  // filtered by `A AND B` holds more rows than its neighbour -- measured as
+  // "Column size mismatch: 548873 != 558097" on ClickBench q38. The two halves
+  // must hold exactly the SAME rows, so an identical predicate is a requirement,
+  // not conservatism. Reuse under a narrower predicate needs the cached rows
+  // re-filtered before they can be spliced, which this path does not do.
+  (void)required_filter_conjuncts;
   std::vector<std::shared_ptr<cudf::column>> out(column_names.size());
   if (row_groups.empty() || column_names.empty()) { return out; }
 
   std::lock_guard lock{_pages_mutex};
+  auto const file_id = intern_lookup(file_path);
+  if (file_id < 0) { return out; }
   for (std::size_t ci = 0; ci < column_names.size(); ++ci) {
+    auto const column_id = intern_lookup(column_names[ci]);
+    if (column_id < 0) { continue; }
     std::vector<cudf::column_view> parts;
     std::vector<std::shared_ptr<cudf::column>> keep_alive;
     bool complete = true;
@@ -4740,8 +4867,8 @@ std::vector<std::shared_ptr<cudf::column>> sirius_scan_manager::cached_row_group
       std::size_t pages_found = 0;
       std::size_t pages_expected = 0;
       for (int page_index = 0;; ++page_index) {
-        auto it = _pages.find(cached_page_key{
-          file_path, column_names[ci], static_cast<int>(row_group), page_index});
+        auto it = _pages.find(
+          cached_page_key{file_id, column_id, static_cast<int>(row_group), page_index});
         if (it == _pages.end() || !it->second.data) { break; }
         pages_expected = it->second.pages_in_row_group;
         // The cached rows must have gone through the same predicate as the columns

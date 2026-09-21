@@ -1084,7 +1084,37 @@ bool collect_ranges(duckdb::Expression const& expr,
   return false;
 }
 
+/// Flatten a predicate into its AND-ed parts, each as its own text.
+///
+/// The range test can only compare predicates it can turn into min/max bounds,
+/// and ClickBench's are mostly `<>` and LIKE, which have no bounds: 292 of 328
+/// recorded predicates came back unanalyzable, and the lookup then fell through
+/// to comparing the whole predicate string, which matches only an identical
+/// query. 88 of 110 cache lookups were refused that way.
+///
+/// Conjuncts need no bounds. A page filtered by `A` serves a query filtered by
+/// `A AND B` for any B, because B only removes rows -- so the producer's parts
+/// being a SUBSET of the consumer's is enough, whatever the parts say.
+void collect_conjuncts(duckdb::Expression const& expr, std::vector<std::string>& out)
+{
+  if (expr.GetExpressionType() == duckdb::ExpressionType::CONJUNCTION_AND) {
+    auto const& conj = expr.Cast<duckdb::BoundConjunctionExpression>();
+    for (auto const& child : conj.children) { collect_conjuncts(*child, out); }
+    return;
+  }
+  out.push_back(expr.ToString());
+}
+
 }  // namespace
+
+std::vector<std::string> parquet_gpu_ingestible::fixed_page_cache_filter_conjuncts() const
+{
+  std::vector<std::string> out;
+  if (_duckdb_filter_expression) { collect_conjuncts(*_duckdb_filter_expression, out); }
+  std::sort(out.begin(), out.end());
+  out.erase(std::unique(out.begin(), out.end()), out.end());
+  return out;
+}
 
 std::vector<scan_manager::cache_filter_range> parquet_gpu_ingestible::fixed_page_cache_filter_ranges(
   bool& analyzable, bool strict) const
@@ -1340,6 +1370,9 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
                                           cache_info.names,
                                           view,
                                           provenance.filter_signature,
+                                          reader_applied_filter
+                                            ? fixed_page_cache_filter_conjuncts()
+                                            : std::vector<std::string>{},
                                           provenance.filter_ranges,
                                           provenance.filter_analyzable,
                                           const_cast<cucascade::memory::memory_space&>(mem_space),
@@ -1571,6 +1604,9 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
   // cached data holds all of the row group's rows in file order, so it lines up
   // with freshly read columns row for row. A reader-side filter would drop rows
   // from the new columns but not from the cached ones.
+  // Where a scan's time goes, so the cache's share of it stops being a guess.
+  std::int64_t scan_probe_lookup_us = 0, scan_probe_materialize_us = 0;
+  std::int64_t scan_probe_read_us = 0, scan_probe_assemble_us = 0;
   std::vector<std::shared_ptr<cudf::column>> spliced;
   std::vector<std::string> read_names;
   auto const projected_names = split.plan->data_column_names();
@@ -1584,19 +1620,42 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
   if (_scan_manager != nullptr && !all_slices_pruned && split.rg_slices.size() == 1 &&
       !projected_names.empty()) {
     std::vector<std::string> wanted(projected_names.begin(), projected_names.end());
-    spliced = _scan_manager->cached_row_group_columns(
+    auto const sig = reader_filter_root != nullptr ? fixed_page_cache_filter_signature()
+                                                   : std::string{};
+    auto const conj = reader_filter_root != nullptr ? fixed_page_cache_filter_conjuncts()
+                                                    : std::vector<std::string>{};
+    // Ask what the cache HAS before asking it for anything. Materializing a column
+    // concatenates its pages, which copies every byte, and the decision below throws
+    // that away unless the splice is worth doing -- on TPC-H SF50 that was 1,187 of
+    // 1,407 scans paying a full copy for nothing.
+    auto const t_look0 = std::chrono::steady_clock::now();
+    auto const available = _scan_manager->cached_row_group_columns_available(
       split.rg_slices.front().file_path,
       split.rg_slices.front().row_group_indices,
       wanted,
-      stream,
-      reader_filter_root != nullptr ? fixed_page_cache_filter_signature() : std::string{});
+      sig,
+      conj);
     std::size_t have = 0;
-    for (std::size_t i = 0; i < spliced.size(); ++i) {
-      if (spliced[i]) { ++have; } else { read_names.push_back(wanted[i]); }
+    for (std::size_t i = 0; i < available.size(); ++i) {
+      if (available[i]) { ++have; } else { read_names.push_back(wanted[i]); }
     }
     // Nothing to gain when the cache has none of them, and the all-cached case is
     // left to the existing provider path rather than duplicated here.
+    scan_probe_lookup_us =
+      std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now() - t_look0).count();
     if (have > 0 && !read_names.empty()) {
+      auto const t_mat0 = std::chrono::steady_clock::now();
+      spliced = _scan_manager->cached_row_group_columns(
+        split.rg_slices.front().file_path,
+        split.rg_slices.front().row_group_indices,
+        wanted,
+        stream,
+        sig,
+        conj);
+      scan_probe_materialize_us =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+          std::chrono::steady_clock::now() - t_mat0).count();
       splicing = true;
       opts.set_column_names(read_names);
       SIRIUS_LOG_INFO("[fixed-page-cache] column_splice file='{}' row_groups={} cached={} read={}",
@@ -1604,14 +1663,15 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
                       split.rg_slices.front().row_group_indices.size(),
                       have,
                       read_names.size());
-    } else {
-      spliced.clear();
     }
   }
 
   auto const audit_start = std::chrono::steady_clock::now();
   auto [table, _] =
     cudf::io::read_parquet(std::move(sources), std::move(metadatas), opts, stream, mr_ref);
+  auto const t_read_end = std::chrono::steady_clock::now();
+  scan_probe_read_us =
+    std::chrono::duration_cast<std::chrono::microseconds>(t_read_end - audit_start).count();
 
   if (splicing && table) {
     // Rebuild the projection order: cached column where we have one, otherwise the
@@ -1638,12 +1698,15 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     table = std::make_unique<cudf::table>(std::move(assembled));
   }
   auto const audit_end = std::chrono::steady_clock::now();
+  scan_probe_assemble_us =
+    std::chrono::duration_cast<std::chrono::microseconds>(audit_end - t_read_end).count();
   auto const audit_duration_us =
     std::chrono::duration_cast<std::chrono::microseconds>(audit_end - audit_start).count();
   SIRIUS_LOG_INFO(
     "[scan-audit] parquet_materialize target_gpu={} files={} columns={} row_groups={} "
     "compressed_bytes={} uncompressed_bytes={} output_rows={} output_columns={} split_count={} "
-    "duration_us={}",
+    "duration_us={} lookup_us={} materialize_us={} read_us={} assemble_us={} "
+    "lock_wait_us={}",
     mem_space.get_device_id(),
     join_strings(audit_files, '|'),
     audit_columns,
@@ -1653,7 +1716,12 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     table ? table->num_rows() : 0,
     table ? table->num_columns() : 0,
     split.rg_slices.size(),
-    audit_duration_us);
+    audit_duration_us,
+    scan_probe_lookup_us,
+    scan_probe_materialize_us,
+    scan_probe_read_us,
+    scan_probe_assemble_us,
+    _scan_manager ? _scan_manager->page_lock_wait_us() : 0);
 
   if (auto_cache && table) {
     // reader_filter_root is non-null exactly when opts.set_filter() above ran, i.e.

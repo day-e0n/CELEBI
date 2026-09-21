@@ -250,6 +250,11 @@ class parquet_gpu_ingestible : public gpu_ingestible {
 
   [[nodiscard]] std::string fixed_page_cache_filter_signature() const;
 
+  /// The predicate's AND-ed parts, sorted and deduplicated. A page filtered by a
+  /// SUBSET of a query's parts holds every row that query wants, which is a test
+  /// that works for `<>` and LIKE -- predicates the range test cannot bound.
+  [[nodiscard]] std::vector<std::string> fixed_page_cache_filter_conjuncts() const;
+
   /// This scan's predicate as per-column value ranges, for the containment test
   /// that lets a cached entry serve a narrower query. @p analyzable comes back
   /// false when the predicate is not a conjunction of column-vs-constant

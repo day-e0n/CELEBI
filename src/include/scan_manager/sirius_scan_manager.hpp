@@ -427,8 +427,13 @@ struct chunk_provenance {
 /// Key for @ref cached_page. Kept as a struct rather than a packed string so the
 /// parts stay inspectable in logs and in eviction, which works per file.
 struct cached_page_key {
-  std::string file_path;
-  std::string column_name;
+  /// File path and column name as interned ids, not strings. The page loop below
+  /// runs once per page of every column of every row group a scan touches, and
+  /// hashing a 60-character path there cost 4.10s of TPC-H SF50's scan time once
+  /// row groups were cut into 16MiB pages. Interning moves that to one hash per
+  /// column per scan and leaves four ints in the inner loop.
+  int file_id{-1};
+  int column_id{-1};
   int row_group{0};
   /// Which page within that row group. A row group is cut into pages of about
   /// fixed_width_page_size_bytes() so the cache's unit of residency and eviction
@@ -455,6 +460,10 @@ struct cached_page {
   /// request; otherwise a request is served only when it is narrower -- by exact
   /// signature, or by range containment.
   std::string filter_signature;
+  /// The same predicate as its AND-ed parts. A request whose parts are a superset
+  /// of these selects a subset of these rows, so the page serves it -- the test
+  /// the range comparison cannot make for `<>` or LIKE.
+  std::vector<std::string> filter_conjuncts;
   std::vector<cache_filter_range> filter_ranges;
   bool filter_analyzable{false};
   std::uint64_t last_access_tick{0};
@@ -464,11 +473,13 @@ struct cached_page {
 struct cached_page_key_hash {
   [[nodiscard]] std::size_t operator()(cached_page_key const& key) const noexcept
   {
-    auto h = std::hash<std::string>{}(key.file_path);
-    h ^= std::hash<std::string>{}(key.column_name) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= std::hash<int>{}(key.row_group) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= std::hash<int>{}(key.page_index) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    return h;
+    // Four ints packed into one 64-bit word, then mixed. No string hashing on a
+    // path this hot.
+    auto const packed = (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.file_id)) << 48) ^
+                        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.column_id)) << 32) ^
+                        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.row_group)) << 16) ^
+                        static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.page_index));
+    return std::hash<std::uint64_t>{}(packed * 0x9e3779b97f4a7c15ULL);
   }
 };
 
@@ -773,6 +784,7 @@ class sirius_scan_manager {
                               std::vector<std::string> const& column_names,
                               cudf::table_view const& view,
                               std::string const& filter_signature,
+                              std::vector<std::string> filter_conjuncts,
                               std::vector<cache_filter_range> filter_ranges,
                               bool filter_analyzable,
                               cucascade::memory::memory_space& space,
@@ -781,12 +793,36 @@ class sirius_scan_manager {
   /// Bytes the flat page store holds, and how many pages.
   [[nodiscard]] std::pair<std::size_t, std::size_t> page_store_size() const;
 
+  /// Microseconds probes have spent waiting for the page store's mutex, since process start.
+  [[nodiscard]] std::int64_t page_lock_wait_us() const
+  {
+    return _page_lock_wait_us.load(std::memory_order_relaxed);
+  }
+
+  /// Which of @p column_names the cache can serve for these row groups, without
+  /// materializing any of them.
+  ///
+  /// cached_row_group_columns concatenates a column's pages into one column, which
+  /// allocates and copies every byte -- and its caller throws the result away
+  /// unless the splice is worth doing (some columns cached AND some still to
+  /// read). Cutting row groups into 16MiB pages made that concatenate real work
+  /// where a whole-row-group page had been a single move, and TPC-H SF50 pays it
+  /// on 1,187 of 1,407 scans that end up not splicing at all: +1.76s of scan time.
+  /// Ask this first, decide, then materialize only if the answer is yes.
+  [[nodiscard]] std::vector<bool> cached_row_group_columns_available(
+    std::string const& file_path,
+    std::vector<cudf::size_type> const& row_groups,
+    std::vector<std::string> const& column_names,
+    std::string const& required_filter_signature = {},
+    std::vector<std::string> const& required_filter_conjuncts = {});
+
   [[nodiscard]] std::vector<std::shared_ptr<cudf::column>> cached_row_group_columns(
     std::string const& file_path,
     std::vector<cudf::size_type> const& row_groups,
     std::vector<std::string> const& column_names,
     rmm::cuda_stream_view stream,
-    std::string const& required_filter_signature = {});
+    std::string const& required_filter_signature = {},
+    std::vector<std::string> const& required_filter_conjuncts = {});
 
  private:
   /// \brief Run providers sequentially: start each, wait on its future, advance.
@@ -843,6 +879,12 @@ class sirius_scan_manager {
   /// and n grew tenfold when row groups were cut into 16MiB pages, which turned
   /// TPC-H SF50 from -3.1% into +2.3% against its own baseline.
   std::list<cached_page_key> _lru;
+  /// Microseconds probes have spent waiting for `_pages_mutex`, summed across threads.
+  std::atomic<std::int64_t> _page_lock_wait_us{0};
+  /// String -> small int for cached_page_key. Grows only; ids stay valid.
+  std::unordered_map<std::string, int> _intern;
+  [[nodiscard]] int intern_id(std::string const& s);        ///< inserts if absent
+  [[nodiscard]] int intern_lookup(std::string const& s) const;  ///< -1 when absent
   /// Running total of resident page bytes, maintained on insert and eviction so
   /// the budget check does not have to sum the whole store.
   std::size_t _pages_bytes{0};
