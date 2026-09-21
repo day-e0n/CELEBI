@@ -1656,8 +1656,25 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
       scan_probe_materialize_us =
         std::chrono::duration_cast<std::chrono::microseconds>(
           std::chrono::steady_clock::now() - t_mat0).count();
-      splicing = true;
-      opts.set_column_names(read_names);
+      // Decide what to read from what the cache actually HANDED OVER, not from what the
+      // probe said it had. The two calls take the page store's lock separately, so an
+      // eviction in between can drop pages the probe had just counted; trusting the probe
+      // leaves those columns out of the read with nothing to supply them. This runs before
+      // set_column_names, so a column the cache lost is simply read like any other.
+      read_names.clear();
+      for (std::size_t i = 0; i < wanted.size(); ++i) {
+        if (!spliced[i]) { read_names.push_back(wanted[i]); }
+      }
+      have = wanted.size() - read_names.size();
+      if (have == 0 || read_names.empty()) {
+        // Nothing left to splice, or nothing left to read beside it. Either way the
+        // reader's options are untouched, so it produces every column as it normally
+        // would and this scan simply does not use the cache.
+        spliced.clear();
+      } else {
+        splicing = true;
+        opts.set_column_names(read_names);
+      }
       SIRIUS_LOG_INFO("[fixed-page-cache] column_splice file='{}' row_groups={} cached={} read={}",
                       split.rg_slices.front().file_path,
                       split.rg_slices.front().row_group_indices.size(),
@@ -1684,6 +1701,39 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
       // Cannot reassemble safely; fall back by re-reading everything.
       return materialize_metadata_to_table(info, mem_space, stream);
     }
+    // The availability probe and the materialization take the page store's lock
+    // separately, so the store can change in between: an eviction between the two drops
+    // pages the probe had just counted, and what comes back is a column built from what
+    // survived. `read_names` was already fixed by then, so the missing rows have nobody to
+    // supply them, and the table constructor below fails with "Column size mismatch" --
+    // seen as 13059667 != 9997497 on ClickBench q22, reachable once the memory-pressure
+    // eviction is turned on. Check the splice holds together before trusting it: every
+    // cached column must be present and must hold exactly the rows the reader produced.
+    // Anything else falls back to re-reading, which costs time and never correctness.
+    auto const read_rows = read_cols.empty() ? 0 : read_cols.front()->size();
+    std::size_t cached_seen = 0;
+    bool splice_intact      = true;
+    for (auto const& cached : spliced) {
+      if (!cached) { continue; }
+      ++cached_seen;
+      if (cached->size() != read_rows) {
+        SIRIUS_LOG_WARN("[fixed-page-cache] column_splice abandoned: cached column has {} rows, "
+                        "reader produced {}",
+                        cached->size(),
+                        read_rows);
+        splice_intact = false;
+        break;
+      }
+    }
+    if (splice_intact && cached_seen + read_names.size() != spliced.size()) {
+      SIRIUS_LOG_WARN("[fixed-page-cache] column_splice abandoned: {} cached + {} read != {}",
+                      cached_seen,
+                      read_names.size(),
+                      spliced.size());
+      splice_intact = false;
+    }
+    if (!splice_intact) { return materialize_metadata_to_table(info, mem_space, stream); }
+
     std::vector<std::unique_ptr<cudf::column>> assembled;
     assembled.reserve(spliced.size());
     std::size_t next_read = 0;

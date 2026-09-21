@@ -4610,6 +4610,20 @@ void sirius_scan_manager::insert_pages_from_view(
         1, static_cast<std::size_t>(target / bytes_per_row));
 
       auto const pages_in_row_group = (rows + rows_per_page - 1) / rows_per_page;
+      // Keep one layout per row group. Rows-per-page is derived from this batch's average
+      // row width, and for a STRING column that differs between batches, so a second pass
+      // over the same row group can want more pages than the first. Those extra page
+      // indices do not collide with what is already resident, so both layouts would end up
+      // in the store overlapping each other. The pages already there are as good as these;
+      // leave them alone rather than adding a second copy of the same rows.
+      {
+        std::lock_guard lock{_pages_mutex};
+        auto const first =
+          _pages.find(cached_page_key{file_id, column_id, static_cast<int>(row_groups[g]), 0});
+        if (first != _pages.end() && first->second.pages_in_row_group != pages_in_row_group) {
+          continue;
+        }
+      }
       int page_index                = 0;
       for (std::size_t r = 0; r < rows; r += rows_per_page, ++page_index) {
         auto const page_rows = std::min<std::size_t>(rows_per_page, rows - r);
@@ -4803,7 +4817,14 @@ std::vector<bool> sirius_scan_manager::cached_row_group_columns_available(
         auto it = _pages.find(
           cached_page_key{file_id, column_id, static_cast<int>(row_group), page_index});
         if (it == _pages.end() || !it->second.data) { break; }
-        pages_expected = it->second.pages_in_row_group;
+        // Same rule as the serve path: a run whose pages disagree on their page count is
+        // two layouts of the same row group sharing a key space, and must not be spliced.
+        if (pages_expected == 0) {
+          pages_expected = it->second.pages_in_row_group;
+        } else if (pages_expected != it->second.pages_in_row_group) {
+          complete = false;
+          break;
+        }
         if (!it->second.filter_signature.empty() &&
             it->second.filter_signature != required_filter_signature) {
           complete = false;
@@ -4870,7 +4891,18 @@ std::vector<std::shared_ptr<cudf::column>> sirius_scan_manager::cached_row_group
         auto it = _pages.find(
           cached_page_key{file_id, column_id, static_cast<int>(row_group), page_index});
         if (it == _pages.end() || !it->second.data) { break; }
-        pages_expected = it->second.pages_in_row_group;
+        // Every page of a run must agree on how many pages the run has. A row group can
+        // be paged twice under different layouts -- a STRING column's rows-per-page comes
+        // from the batch's average string length, which differs between batches -- and the
+        // keys of the longer layout's tail do not collide with the shorter one's, so both
+        // end up resident. Walking to the first miss then concatenates pages that overlap:
+        // measured as a cached column of 11,122,762 rows against a row group of 10,000,000.
+        if (pages_expected == 0) {
+          pages_expected = it->second.pages_in_row_group;
+        } else if (pages_expected != it->second.pages_in_row_group) {
+          complete = false;
+          break;
+        }
         // The cached rows must have gone through the same predicate as the columns
         // about to be read beside them, or the two halves hold different rows. An
         // unfiltered page satisfies either case.
