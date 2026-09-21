@@ -23,6 +23,7 @@
 
 // cudf
 #include <cudf/cudf_utils.hpp>
+#include <cudf/copying.hpp>
 #include <cudf/unary.hpp>
 
 // standard library
@@ -36,13 +37,17 @@ namespace {
 cudf::ast::ast_operator cast_op_to_ast(sirius::type_id id)
 {
   switch (id) {
-    case sirius::type_id::UBIGINT: return cudf::ast::ast_operator::CAST_TO_UINT64;
-    case sirius::type_id::BIGINT: return cudf::ast::ast_operator::CAST_TO_INT64;
+    // HUGEINT and UHUGEINT share their target with BIGINT and UBIGINT: get_cudf_type maps
+    // both pairs to INT64 and UINT64, since cuDF has no 128-bit integer.
+    case sirius::type_id::UBIGINT:
+    case sirius::type_id::UHUGEINT: return cudf::ast::ast_operator::CAST_TO_UINT64;
+    case sirius::type_id::BIGINT:
+    case sirius::type_id::HUGEINT: return cudf::ast::ast_operator::CAST_TO_INT64;
     case sirius::type_id::DOUBLE: return cudf::ast::ast_operator::CAST_TO_FLOAT64;
     default:
       throw invalid_input_exception(
         "[cast_op_to_ast] unsupported CAST target type id={}; cuDF AST supports "
-        "UBIGINT, BIGINT, DOUBLE.",
+        "UBIGINT, BIGINT, DOUBLE, HUGEINT, UHUGEINT.",
         static_cast<int>(id));
   }
 }
@@ -79,7 +84,24 @@ evaluate_result expression_evaluator::evaluate(sirius::ast::cast const& alt, eva
   //===----------3: MATERIALIZE Mode, evaluate node with unary/binary ops----------===//
   auto const return_type = sirius::get_cudf_type(alt.target_type);
   auto child             = evaluate(*alt.child, evaluation_mode::MATERIALIZE);
-  D_ASSERT(!child.is_scalar());  // CAST should never be called on a scalar
+  if (child.is_scalar()) {
+    // A CAST over a literal. This used to be a D_ASSERT, which is nothing in a release build,
+    // so the get_column_view below threw "column view from non-column" instead -- DuckDB
+    // rewrites SUM(x + 1) into sum(x) + count(x) * CAST(1 AS HUGEINT) and hands exactly this
+    // shape over. cuDF casts columns, not scalars, so go through a one-element column and
+    // come back, which keeps the result a scalar for whatever consumes it.
+    if (mode == evaluation_mode::AST) {
+      // cudf::ast::literal needs a concrete scalar type, which is not recoverable from the
+      // type-erased cudf::scalar here. Broadcast to a full-length column instead and let the
+      // tree reference it -- this is the rare fallback, so paying for the broadcast is fine.
+      auto broadcast =
+        cudf::make_column_from_scalar(child.get_scalar(), _input_table.num_rows(), _stream, _mr);
+      return materialize_as_ast_column(cudf::cast(broadcast->view(), return_type, _stream, _mr));
+    }
+    auto const one_row = cudf::make_column_from_scalar(child.get_scalar(), 1, _stream, _mr);
+    auto const casted  = cudf::cast(one_row->view(), return_type, _stream, _mr);
+    return evaluate_result(cudf::get_element(casted->view(), 0, _stream, _mr));
+  }
   auto result_column = cudf::cast(child.get_column_view(), return_type, _stream, _mr);
   if (mode == evaluation_mode::AST) {
     // The parent is executing in AST mode, so add the materialized result to the AST tree.
