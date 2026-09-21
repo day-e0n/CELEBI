@@ -122,6 +122,15 @@ std::shared_ptr<cucascade::data_batch> gpu_merge_impl::merge_ungrouped_aggregate
         reduce_aggregation = cudf::make_sum_aggregation<cudf::reduce_aggregation>();
         break;
       }
+      case cudf::aggregation::Kind::MERGE_SETS: {
+        // Each batch contributed one row holding its own distinct values; folding those lists
+        // together and dropping the duplicates across them leaves the distinct values of the
+        // whole input. This is the ungrouped half of COUNT(DISTINCT x) -- the caller counts
+        // the surviving elements.
+        output_type        = cudf::data_type(cudf::type_id::LIST);
+        reduce_aggregation = cudf::make_merge_sets_aggregation<cudf::reduce_aggregation>();
+        break;
+      }
       case cudf::aggregation::Kind::NTH_ELEMENT: {
         if (!merge_nth_index[c].has_value()) {
           throw std::runtime_error(
