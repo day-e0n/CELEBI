@@ -1739,7 +1739,9 @@ void SiriusExtension::InitialGPUConfigs(DBConfig& config)
   // Add in config options for special JIT implementation for regex
   config.AddExtensionOption(
     "enable_regex_jit_impl",
-    "Whether to use special JIT implementation for particular regex evaluation",
+    "Whether to use special JIT implementation for particular regex evaluation. Off by "
+    "default: the kernel it selects is about twice as fast but returns wrong results, "
+    "including invalid UTF-8, on ClickBench q29's pattern.",
     LogicalType::BOOLEAN,
     Value::BOOLEAN(Config::ENABLE_REGEX_JIT_IMPL),
     SetEnableRegexJitImpl);

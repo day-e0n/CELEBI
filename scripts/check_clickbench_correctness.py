@@ -33,7 +33,11 @@ EXECUTIONS = int(os.environ.get("CHECK_EXECUTIONS", "3"))
 # the string corruption it hits (Invalid unicode on a cached Referer) was never
 # looked for. CHECK_SKIP overrides -- "5,6,30" leaves in the three that only fail
 # with the cache ON, which is exactly where a cache bug would hide.
-SKIP = {int(x) for x in os.environ.get("CHECK_SKIP", "1,5,6,24,29,30").split(",") if x.strip()}
+# Only q5 and q6 are left: they are COUNT(DISTINCT x) with no GROUP BY, which the ungrouped
+# aggregate still refuses. q1, q24, q29 and q30 used to be here and all four now match DuckDB
+# on the full table -- q30 once the CAST to HUGEINT stopped falling off the AST path, q29 once
+# the hand-written regex kernel stopped being the default.
+SKIP = {int(x) for x in os.environ.get("CHECK_SKIP", "5,6").split(",") if x.strip()}
 
 
 def results_match(cpu, gpu) -> tuple[bool, str]:
