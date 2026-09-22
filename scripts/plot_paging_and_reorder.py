@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """What the GPU page cache and the reorder are worth, on two workloads.
 
-baseline is the same engine with the cache off; paging turns the page cache on;
-paging + reorder adds the unfiltered-first reorder, which runs the queries that
-scan without a predicate first and discounts a shared column when the query that
-would leave it in the cache read it through one. Everything else is identical --
-the same adversarial arrival order, 6 GB fixed cache, 6 GB free-memory floor.
+baseline is the same engine with the cache off; + paging turns the page cache on;
++ reorder adds the unfiltered-first reorder, which runs the queries that scan
+without a predicate first and discounts a shared column when the query that would
+leave it in the cache read it through one. Everything else is identical -- the
+same adversarial arrival order, ONE 6 GB budget shared by fixed-width and STRING
+pages, a 6 GB free-memory floor, and the scan manager's prefetch cache on.
 
 Why the reorder weighs predicates rather than column names: names alone treat
 `l_shipdate < 1995` and `l_shipdate >= 1998` as a full overlap even though neither
@@ -33,12 +34,12 @@ ROOT = Path(__file__).resolve().parents[1] / "experiment"
 
 # (workload label, queries per execution, [(condition label, run prefix, style)])
 WORKLOADS = [
-    ("ClickBench", 37, [("baseline", "mb_cb", ps.NEUTRAL),
-                        ("paging", "fin_cb_paging", ps.DARK),
-                        ("paging\n+ reorder", "fin_cb_reorder", ps.ACCENT)]),
-    ("TPC-H SF50", 22, [("baseline", "mb_sf50", ps.NEUTRAL),
-                        ("paging", "fin_th_paging", ps.DARK),
-                        ("paging\n+ reorder", "fin_th_reorder", ps.ACCENT)]),
+    ("ClickBench", 37, [("baseline", "u2_cb_base", ps.NEUTRAL),
+                        ("baseline\n+ paging", "u2_cb_paging", ps.DARK),
+                        ("baseline + paging\n+ reorder", "u2_cb_reorder", ps.ACCENT)]),
+    ("TPC-H SF50", 22, [("baseline", "u2_th_base", ps.NEUTRAL),
+                        ("baseline\n+ paging", "u2_th_paging", ps.DARK),
+                        ("baseline + paging\n+ reorder", "u2_th_reorder", ps.ACCENT)]),
 ]
 
 
