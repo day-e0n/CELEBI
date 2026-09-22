@@ -4547,6 +4547,36 @@ void sirius_scan_manager::insert_pages_from_view(
   if (!partitioned && row_groups.size() != 1) { return; }
 
   auto const budget = fixed_page_cache_budget_bytes_per_gpu();
+
+  // Admission control, before anything is copied. Every page below is a GPU deep copy of a
+  // column the query is holding right now, so an insert taken at the wrong moment hands the
+  // cache a second copy of the query's own working set. ClickBench q24 is SELECT * over 105
+  // columns, and with the cache on it died in the OOM retry loop where it succeeds with the
+  // cache off: one row group offered 389 pages and the store sat at 5.6 GB against a 5.6 GB
+  // budget while the query still needed every one of those columns. Evicting afterwards is
+  // too late -- the copy has already been allocated -- so ask the same question the eviction
+  // below asks, and if the pool is already short, cache nothing from this batch.
+  //
+  // The entry check alone is not enough, because it says nothing about how much THIS batch
+  // is about to take: q24 passed it with 2.1 GB of headroom and then copied 6.44 GB in one
+  // call, all 105 columns of a row group. So the same number also caps the copy -- admission
+  // stops mid-batch once this call has taken the headroom it was given.
+  std::size_t admission_headroom = std::numeric_limits<std::size_t>::max();
+  if (auto const min_free = fixed_page_cache_min_free_bytes_per_gpu(); min_free > 0) {
+    auto const free_bytes =
+      _reservation_manager.get_available_memory_for_tier(cucascade::memory::Tier::GPU);
+    if (free_bytes < min_free) {
+      SIRIUS_LOG_INFO("[page-store] admission declined: free={} min_free={} columns={}",
+                      free_bytes,
+                      min_free,
+                      column_names.size());
+      return;
+    }
+    admission_headroom = free_bytes - min_free;
+  }
+  std::size_t admitted_bytes = 0;
+  bool admission_full        = false;
+
   // The page store's mutex is deliberately NOT held across this loop. Every page here is a
   // GPU deep copy, and a STRING column's size is read back through the stream; holding the
   // mutex across those made every concurrent probe wait behind an insert. Measured on TPC-H
@@ -4644,6 +4674,18 @@ void sirius_scan_manager::insert_pages_from_view(
         page.num_rows          = page_rows;
         page.pages_in_row_group = pages_in_row_group;
         page.num_bytes         = page.data->alloc_size();
+        if (admitted_bytes + page.num_bytes > admission_headroom) {
+          // Taking this page would push the pool past the floor the query needs. Stop here:
+          // the pages already published stay, the rest of this batch is simply not cached,
+          // and the eviction below still runs so the store is left within its budget.
+          SIRIUS_LOG_INFO("[page-store] admission capped: took={} headroom={} at column='{}'",
+                          admitted_bytes,
+                          admission_headroom,
+                          column_names[c]);
+          admission_full = true;
+          break;
+        }
+        admitted_bytes += page.num_bytes;
         // Min/max page stats are a fixed-width notion (they drive predicate-based page
         // skipping). A STRING page carries none and is simply never skipped on stats.
         page.stats             = fixed_width
@@ -4663,7 +4705,9 @@ void sirius_scan_manager::insert_pages_from_view(
         _pages_bytes += page.num_bytes;
         _pages.emplace(std::move(key), std::move(page));
       }
+      if (admission_full) { break; }
     }
+    if (admission_full) { break; }
     row_offset += rows;
   }
 
