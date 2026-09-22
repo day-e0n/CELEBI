@@ -4562,6 +4562,8 @@ void sirius_scan_manager::insert_pages_from_view(
   // call, all 105 columns of a row group. So the same number also caps the copy -- admission
   // stops mid-batch once this call has taken the headroom it was given.
   std::size_t admission_headroom = std::numeric_limits<std::size_t>::max();
+  std::size_t admitted_bytes     = 0;
+  bool admission_full            = false;
   if (auto const min_free = fixed_page_cache_min_free_bytes_per_gpu(); min_free > 0) {
     auto const free_bytes =
       _reservation_manager.get_available_memory_for_tier(cucascade::memory::Tier::GPU);
@@ -4570,12 +4572,15 @@ void sirius_scan_manager::insert_pages_from_view(
                       free_bytes,
                       min_free,
                       column_names.size());
-      return;
+      // Decline the copying, but fall through rather than return: the eviction at the end of
+      // this function is what hands memory BACK, and a pool below its floor is exactly when
+      // that is needed. Returning here would leave the store holding everything it had while
+      // the query it is starving asks for more.
+      admission_full = true;
+    } else {
+      admission_headroom = free_bytes - min_free;
     }
-    admission_headroom = free_bytes - min_free;
   }
-  std::size_t admitted_bytes = 0;
-  bool admission_full        = false;
 
   // The page store's mutex is deliberately NOT held across this loop. Every page here is a
   // GPU deep copy, and a STRING column's size is read back through the stream; holding the
@@ -4590,7 +4595,7 @@ void sirius_scan_manager::insert_pages_from_view(
     std::lock_guard lock{_pages_mutex};
     file_id = intern_id(file_path);
   }
-  for (std::size_t g = 0; g < row_groups.size(); ++g) {
+  for (std::size_t g = 0; g < row_groups.size() && !admission_full; ++g) {
     auto const rows = partitioned ? row_group_rows[g]
                                   : static_cast<std::size_t>(view.num_rows());
     if (rows == 0) { continue; }
