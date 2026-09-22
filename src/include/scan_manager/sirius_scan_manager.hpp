@@ -793,6 +793,14 @@ class sirius_scan_manager {
   /// Bytes the flat page store holds, and how many pages.
   [[nodiscard]] std::pair<std::size_t, std::size_t> page_store_size() const;
 
+  /// Throw the whole page store away and report how many bytes that returned. Called when a
+  /// pipeline task has actually run out of device memory: at that point the cache is holding
+  /// memory a running query needs, and every page in it is by definition reconstructible from
+  /// the file. Handing back only the configured floor's shortfall is not enough there -- it
+  /// was measured returning 0.22 GB against a query that needed gigabytes, after which the
+  /// pressure sweep's own circuit breaker concluded eviction was useless and backed off.
+  std::size_t drop_all_pages();
+
   /// Microseconds probes have spent waiting for the page store's mutex, since process start.
   [[nodiscard]] std::int64_t page_lock_wait_us() const
   {
@@ -892,6 +900,12 @@ class sirius_scan_manager {
   std::uint64_t _page_tick{0};
   /// Backoff for the device-pressure check -- see where it is applied.
   std::size_t _page_pressure_skip{0};
+  /// Set when a pipeline task ran out of device memory and the store was dropped; cleared by
+  /// reset(), which runs per query. Dropping alone does not help -- the next batch of the same
+  /// query simply refills the store and it runs out again, measured as 305 drop-and-refill
+  /// cycles on ClickBench q24 before the retry budget ran out. A query that has already hit
+  /// the wall gets no more caching; the next one starts clean.
+  std::atomic<bool> _admission_suspended{false};
   std::size_t _page_pressure_free_before{0};
 
   /// Canonical variable-width pages, shared across cache entries.
@@ -943,5 +957,11 @@ class sirius_scan_manager {
   std::unique_ptr<load_balancing_scan_batch_coalescer> _metadata_processor;
   io::io_context_registry _ioctx_registry;
 };
+
+/// Throw away the page store of whichever scan manager is live, and report the bytes that
+/// returned. Declared here rather than reached through the context so the pipeline executor
+/// can call it from the OOM retry path without a dependency on SiriusContext. Returns 0 when
+/// no scan manager is registered or the store is already empty.
+std::size_t drop_page_store_on_oom();
 
 }  // namespace sirius::scan_manager

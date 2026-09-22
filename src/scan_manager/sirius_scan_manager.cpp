@@ -82,6 +82,14 @@
 namespace sirius::scan_manager {
 
 namespace {
+/// The live scan manager, so drop_page_store_on_oom() can reach its page store without the
+/// pipeline executor knowing about SiriusContext. There is one scan manager per context and
+/// one context per process here; a second one simply replaces the first.
+std::atomic<sirius_scan_manager*> g_page_store_owner{nullptr};
+}  // namespace
+
+
+namespace {
 
 struct cached_databatch_provider : public databatch_provider {
   explicit cached_databatch_provider(pinned_entry const& entry, std::span<size_t> selected_columns)
@@ -3291,6 +3299,7 @@ sirius_scan_manager::sirius_scan_manager(
       std::make_unique<exec::scoped_dispatcher>(_thread_pool, _thread_pool.num_threads())),
     _ioctx_registry(config, reservation_manager)
 {
+  g_page_store_owner.store(this, std::memory_order_release);
   if (!_topology_index) {
     throw std::invalid_argument("[sirius_scan_manager] topology_index must be non-null");
   }
@@ -3341,6 +3350,7 @@ sirius_scan_manager::sirius_scan_manager(
 
 sirius_scan_manager::~sirius_scan_manager()
 {
+  g_page_store_owner.store(nullptr, std::memory_order_release);
   if (_io_ctx && _io_ctx->cache()) {
     SIRIUS_LOG_INFO("[sirius_scan_manager] cache summary: {}", _io_ctx->cache()->summary());
   }
@@ -3544,6 +3554,7 @@ std::shared_ptr<sirius::io::sirius_ioctx> sirius_scan_manager::ioctx_for_path(st
 
 void sirius_scan_manager::reset()
 {
+  _admission_suspended.store(false, std::memory_order_release);
   _dispatcher->request_stop();
   _dispatcher->wait_for_all();
   _scan_op_order.clear();
@@ -4561,6 +4572,12 @@ void sirius_scan_manager::insert_pages_from_view(
   // is about to take: q24 passed it with 2.1 GB of headroom and then copied 6.44 GB in one
   // call, all 105 columns of a row group. So the same number also caps the copy -- admission
   // stops mid-batch once this call has taken the headroom it was given.
+  if (_admission_suspended.load(std::memory_order_acquire)) {
+    // This query already ran out of device memory once. Caching for it again would only
+    // rebuild what was just thrown away and run it out again.
+    return;
+  }
+
   std::size_t admission_headroom = std::numeric_limits<std::size_t>::max();
   std::size_t admitted_bytes     = 0;
   bool admission_full            = false;
@@ -4568,10 +4585,12 @@ void sirius_scan_manager::insert_pages_from_view(
     auto const free_bytes =
       _reservation_manager.get_available_memory_for_tier(cucascade::memory::Tier::GPU);
     if (free_bytes < min_free) {
-      SIRIUS_LOG_INFO("[page-store] admission declined: free={} min_free={} columns={}",
+      SIRIUS_LOG_INFO("[page-store] admission declined: free={} min_free={} columns={} "
+                      "resident={}",
                       free_bytes,
                       min_free,
-                      column_names.size());
+                      column_names.size(),
+                      _pages_bytes);
       // Decline the copying, but fall through rather than return: the eviction at the end of
       // this function is what hands memory BACK, and a pool below its floor is exactly when
       // that is needed. Returning here would leave the store holding everything it had while
@@ -4801,6 +4820,63 @@ void sirius_scan_manager::insert_pages_from_view(
       _page_pressure_free_before = 0;
     }
   }
+}
+
+std::size_t sirius_scan_manager::drop_all_pages()
+{
+  auto const before =
+    _reservation_manager.get_available_memory_for_tier(cucascade::memory::Tier::GPU);
+  std::size_t freed      = 0;
+  std::size_t still_held = 0;
+  {
+    std::lock_guard lock{_pages_mutex};
+    freed = _pages_bytes;
+    for (auto const& [_, page] : _pages) {
+      // use_count 1 is this map's own reference; anything above it is somebody still reading
+      // the page, and erasing the entry would not free its memory.
+      if (page.data && page.data.use_count() > 1) { still_held += page.num_bytes; }
+    }
+    _pages.clear();
+    _lru.clear();
+    _pages_bytes = 0;
+    // Let the pressure sweep try again immediately: its backoff assumes evicting does not
+    // help, and dropping everything is a different proposition.
+    _page_pressure_skip        = 0;
+    _page_pressure_free_before = 0;
+  }
+
+  // The page store is not the only GPU-resident cache. Each pinned entry carries its own
+  // whole-chunk columns and fixed- and variable-width page lists, and that is what a long run
+  // accumulates: dropping only the page store left ClickBench q24 dying even after the drop
+  // had handed back 6.4 GB, while the same drop in a two-query repro was enough.
+  {
+    std::lock_guard entries_lock{_pinned_entries_mutex};
+    for (auto& [_, entry] : _pinned_entries) {
+      entry.data_batches_by_column.clear();
+      entry.fixed_width_pages_by_column.clear();
+      entry.fixed_width_page_directory.clear();
+      entry.fixed_width_chunk_page_spans.clear();
+      entry.variable_width_pages_by_column.clear();
+    }
+  }
+
+  auto const after =
+    _reservation_manager.get_available_memory_for_tier(cucascade::memory::Tier::GPU);
+  SIRIUS_LOG_WARN("[page-store] drop accounted={} still_referenced={} pool_free {} -> {} (+{})",
+                  freed,
+                  still_held,
+                  before,
+                  after,
+                  after > before ? after - before : 0);
+  _admission_suspended.store(true, std::memory_order_release);
+  return freed;
+}
+
+std::size_t drop_page_store_on_oom()
+{
+  auto* owner = g_page_store_owner.load(std::memory_order_acquire);
+  if (owner == nullptr) { return 0; }
+  return owner->drop_all_pages();
 }
 
 std::pair<std::size_t, std::size_t> sirius_scan_manager::page_store_size() const

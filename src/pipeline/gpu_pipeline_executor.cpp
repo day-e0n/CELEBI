@@ -40,6 +40,7 @@
 #include <mutex>
 #include <string>
 #include <utility>
+#include <scan_manager/sirius_scan_manager.hpp>
 namespace sirius {
 namespace pipeline {
 
@@ -347,6 +348,18 @@ void gpu_pipeline_executor::manager_loop()
                                    std::to_string(orig_task_id))));
             }
             return;
+          }
+
+          // A task that has actually run out of device memory is the strongest signal the
+          // page cache will ever get, and everything in it is reconstructible from the file.
+          // Its own pressure sweep is too timid here: it hands back only the configured
+          // floor's shortfall -- measured at 0.22 GB against ClickBench q24, which needed
+          // gigabytes -- and then a circuit breaker concludes eviction is not helping and
+          // backs off. Drop the whole store instead, once, before retrying.
+          if (auto const freed = scan_manager::drop_page_store_on_oom(); freed > 0) {
+            SIRIUS_LOG_WARN("GPU Pipeline Executor: dropped {} bytes of page cache for task {}",
+                            freed,
+                            gpu_task->get_task_id());
           }
 
           SIRIUS_LOG_WARN(
