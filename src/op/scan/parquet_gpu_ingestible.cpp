@@ -1364,6 +1364,15 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
   // Flat page store: one page per (file, column, row group). This is what a later
   // scan looks the cache up in -- no entry, no projection, no predicate in the key.
   if (_scan_manager != nullptr && rg_slices.size() == 1) {
+    // How many row groups the file has, so the store can tell a column that could be fully
+    // resident from one that never can. Zero when the metadata is not to hand, which the
+    // store reads as "unknown" and admits as before. Row GROUPS, not rows: the store holds
+    // post-filter rows, so scaling this row group's rows up by the file's row count
+    // over-counts wildly on a selective scan -- it read a 16 MiB AdvEngineID as 12.77 GiB.
+    std::size_t file_row_groups = 0;
+    if (auto const& md = rg_slices.front().file_metadata; md) {
+      file_row_groups = md->row_groups.size();
+    }
     _scan_manager->insert_pages_from_view(rg_slices.front().file_path,
                                           rg_slices.front().row_group_indices,
                                           provenance.row_group_rows,
@@ -1376,7 +1385,8 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
                                           provenance.filter_ranges,
                                           provenance.filter_analyzable,
                                           const_cast<cucascade::memory::memory_space&>(mem_space),
-                                          stream);
+                                          stream,
+                                          file_row_groups);
     auto const [bytes, pages] = _scan_manager->page_store_size();
     SIRIUS_LOG_INFO("[page-store] insert file='{}' row_groups={} columns={} -> pages={} bytes={}",
                     rg_slices.front().file_path,
