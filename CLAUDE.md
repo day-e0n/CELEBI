@@ -15,7 +15,8 @@ Run commands through `pixi run <cmd>` (don't drop into the interactive `pixi she
 command runs in the activated environment:
 
 ```bash
-pixi run make                              # full build (uses all cores)
+CMAKE_BUILD_PARALLEL_LEVEL=6 pixi run make # full build -- CAP THE JOBS. This is a shared box
+                                           # and an unbounded `make -j` has taken it down.
 pixi run make clean                        # wipe the build dir (after a failed build, before rebuilding)
 
 pixi run make test                         # build + run the C++ unit tests (Catch2, what CI runs); make test_debug for debug
@@ -46,6 +47,27 @@ pixi run -e duckdb-python build-duckdb-python
 (DuckDB CPU vs Sirius GPU, parquet or native `.duckdb` source, pinning, nsys profiling) — see
 `test/tpch_performance/CLAUDE.md` for the full flag reference before writing a new benchmark script.
 
+**Page-cache benchmarking** uses two runners with their own conditions and defaults:
+`scripts/run_random22_breakdown_var.py` (TPC-H SF50) and `scripts/run_clickbench_breakdown.py`
+(ClickBench). Both take `--condition baseline|celebi_fixed|celebi_variable|celebi_fixed_variable`
+and `--arrival worst`; a non-baseline condition applies the reorder unless `--no-reorder`. Run one
+at a time: two benchmarks sharing the NVMe inflate each other (a TPC-H baseline measured beside a
+correctness check read 67.6s against 32.4s alone). Telemetry becomes numbers via
+`scripts/parse_quent_operator_breakdown.py`; execution 1 is warmup, average 2 onward.
+
+Several `SIRIUS_FIXED_PAGE_*` env vars the runners set are read by no code at all
+(`..._PRUNING`, `..._VIEW_ALIGNED_SPLITS`, `..._AUTO_CACHE_ROUND_ROBIN_CHUNKS`,
+`..._DEMAND_LOAD`) — grep before attributing any behaviour to one.
+
+**Correctness before performance**: `scripts/check_clickbench_correctness.py` and
+`scripts/check_tpch_correctness.py` run every query against DuckDB on the full dataset and compare
+values. TPC-H matches exactly. ClickBench has nine queries whose results differ because
+`ORDER BY ... LIMIT` leaves ties unordered — the aggregates match, the chosen rows do not; check
+the ordering keys before calling such a difference a bug.
+
+`SIRIUS_PAGE_TRACE=1` logs every page the store caches, serves, evicts or refuses (with the
+reason), and `SET page_trace_label='...'` marks which statement the lines belong to.
+
 **Worktrees**: submodules are not auto-initialized — after creating one, run
 `git submodule update --init --recursive`.
 
@@ -53,6 +75,29 @@ pixi run -e duckdb-python build-duckdb-python
 model/bridge/analyzer/server, `pixi run quent` to serve the UI) and `experimental/` (e.g. a
 StarRocks integration under its own `pixi.toml`, gated by a separate CI job) are independent
 workspaces — don't assume root `pixi run make` touches them.
+
+## Working on this repo
+
+**Do not change the settings of a running experiment without being asked.** Cache budgets,
+conditions, skip lists, reorder policies, min-free floors: these are the experiment. Changing one
+to make a run finish, or to get a nicer number, invalidates the comparison and wastes the GPU
+hours that produced it. If a configuration will not complete, say so and report that -- it is a
+result. Past incidents: a variable-width budget silently set to 1GB when the defaults are 4GB and
+2GB; a ClickBench budget cut from 6GB to 2GB because 6GB was hitting OOM; the separate variable
+cache switched off mid-comparison.
+
+**Measure before claiming a cause.** Several plausible explanations in the page-cache work were
+wrong and were only caught by instrumenting: "joins prevent caching", "column reuse differs",
+"pruning is the confound" (the env var it named is not read by any code), "URL has no complete
+row group" (it had two). State what was measured and how; if something is a guess, say it is a
+guess.
+
+**A requirement stated once stays in force.** If the ask is "cut pages on the offsets, not on an
+average", that applies to every path that cuts pages, including ones written later. Re-read the
+ask before reporting something as done.
+
+**Use the project's words.** The unit is a *page*; a *row group* is a row group. Do not coin new
+terms for things that already have names.
 
 ## Architecture
 
