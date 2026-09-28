@@ -788,7 +788,8 @@ class sirius_scan_manager {
                               std::vector<cache_filter_range> filter_ranges,
                               bool filter_analyzable,
                               cucascade::memory::memory_space& space,
-                              rmm::cuda_stream_view stream);
+                              rmm::cuda_stream_view stream,
+                              std::size_t file_row_groups = 0);
 
   /// Bytes the flat page store holds, and how many pages.
   [[nodiscard]] std::pair<std::size_t, std::size_t> page_store_size() const;
@@ -800,6 +801,10 @@ class sirius_scan_manager {
   /// was measured returning 0.22 GB against a query that needed gigabytes, after which the
   /// pressure sweep's own circuit breaker concluded eviction was useless and backed off.
   std::size_t drop_all_pages();
+
+  /// Write one line per column describing what the store is holding for it and what it has
+  /// done with it since the process started, then the totals. Called per query from reset().
+  void log_page_census(std::string_view when) const;
 
   /// Microseconds probes have spent waiting for the page store's mutex, since process start.
   [[nodiscard]] std::int64_t page_lock_wait_us() const
@@ -891,6 +896,50 @@ class sirius_scan_manager {
   std::atomic<std::int64_t> _page_lock_wait_us{0};
   /// String -> small int for cached_page_key. Grows only; ids stay valid.
   std::unordered_map<std::string, int> _intern;
+  /// Reverse of @ref _intern, so a census can name the column an id belongs to.
+  std::vector<std::string> _intern_names;
+
+  /// How one row group of one column was cut into pages. The boundaries are a property of the
+  /// row group, and the same row group is offered again on every rescan -- five times for
+  /// ClickBench's URL row group 0 in a single run -- so they are worked out once and kept.
+  /// This is also what guarantees a row group only ever has one layout.
+  struct page_layout_key {
+    int file_id{-1};
+    int column_id{-1};
+    int row_group{0};
+    /// The row count the layout was built for. The store holds POST-filter rows, so the same
+    /// row group arrives with different row counts under different predicates; reusing a
+    /// layout across them put page boundaries past the end of the column and cudf::slice
+    /// failed on it.
+    std::size_t rows{0};
+    [[nodiscard]] bool operator==(page_layout_key const& other) const = default;
+  };
+  struct page_layout_key_hash {
+    std::size_t operator()(page_layout_key const& k) const noexcept
+    {
+      auto const packed = (static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.file_id)) << 40) ^
+                          (static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.column_id)) << 20) ^
+                          static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.row_group));
+      return static_cast<std::size_t>((packed ^ (k.rows * 0xff51afd7ed558ccdULL)) *
+                                      0x9e3779b97f4a7c15ULL);
+    }
+  };
+  std::unordered_map<page_layout_key, std::vector<std::size_t>, page_layout_key_hash>
+    _page_layouts;
+
+  /// What the store did with one column's pages over the life of the process. Page counts
+  /// and byte totals alone cannot answer "is URL actually being cached and served" -- a
+  /// column can be inserted every scan and evicted before anyone reads it, which looks
+  /// identical in the totals and is worth nothing.
+  struct column_page_stats {
+    std::size_t inserted_pages{0};
+    std::size_t inserted_bytes{0};
+    std::size_t served_pages{0};   ///< pages handed to a splice
+    std::size_t served_bytes{0};
+    std::size_t evicted_pages{0};
+    std::size_t evicted_bytes{0};
+  };
+  std::unordered_map<int, column_page_stats> _column_stats;
   [[nodiscard]] int intern_id(std::string const& s);        ///< inserts if absent
   [[nodiscard]] int intern_lookup(std::string const& s) const;  ///< -1 when absent
   /// Running total of resident page bytes, maintained on insert and eviction so
