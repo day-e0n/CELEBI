@@ -142,7 +142,8 @@ def main() -> int:
                              "(file, filter). Measured worse (-27.3%% vs -38.9%%); kept only to "
                              "reproduce the older configuration.")
     parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
-                                 "cost-seeded-overlap", "unfiltered-overlap"),
+                                 "cost-seeded-overlap", "unfiltered-overlap",
+                                 "fixed-then-variable", "fixed-first", "fixed-bytes-then-variable"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
                              "COLUMNS, so a 25-row nation column scores like a 600M-row "

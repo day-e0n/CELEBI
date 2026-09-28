@@ -59,7 +59,8 @@ FIXED_WIDTH_COLUMNS: dict[str, set[str]] = {
 
 SCOPE_CHOICES = ("fixed_width", "all_columns")
 POLICY_CHOICES = ("none", "fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
-                  "cost-seeded-overlap", "unfiltered-overlap")
+                  "cost-seeded-overlap", "unfiltered-overlap", "fixed-then-variable",
+                  "fixed-first", "fixed-bytes-then-variable")
 
 # {query: {table: [column, ...]}}, filled by load_query_table_columns().
 # The union of a scan's projection AND filter columns, which is what the
@@ -641,6 +642,72 @@ def _build_greedy_byte_overlap_path(
     return path
 
 
+def _fixed_then_variable_pair_overlap_rank(
+    previous_position: int,
+    candidate_position: int,
+    remaining_positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+) -> tuple[float, int, float, int, int, int]:
+    """fixed-width 겹침을 1순위로, variable-width 겹침을 2순위로 둔다.
+
+    `fixed-overlap`은 scope 가 fixed_width 라 string 컬럼을 아예 안 본다. 그래서
+    ClickBench 처럼 URL 하나가 나머지 컬럼을 합친 것보다 큰 workload 에서는 두
+    string 쿼리를 붙일지 말지가 순서에 전혀 반영되지 않는다. `byte-overlap`은
+    반대로 string 이 모든 결정을 지배한다. 이 정책은 fixed 가 같은 점수일 때만
+    string 이 순서를 정하게 해서, fixed 재사용을 먼저 확보하고 남은 자유도로
+    string 재사용을 챙긴다.
+    """
+
+    prev_fixed = signatures[previous_position]
+    cand_fixed = signatures[candidate_position]
+    fixed_shared = len(prev_fixed & cand_fixed)
+    fixed_ratio = fixed_shared / len(cand_fixed) if cand_fixed else 0.0
+
+    prev_var = _variable_signature(previous_position)
+    cand_var = _variable_signature(candidate_position)
+    var_shared = sum(column_bytes(c) for c in prev_var & cand_var)
+    var_total = sum(column_bytes(c) for c in cand_var)
+    var_ratio = var_shared / var_total if var_total else 0.0
+
+    future = sum(
+        len(cand_fixed & signatures[pos])
+        for pos in remaining_positions
+        if pos != candidate_position
+    )
+    return fixed_ratio, fixed_shared, var_ratio, var_shared, future, -candidate_position
+
+
+def _variable_signature(position: int) -> frozenset[ColumnKey]:
+    """그 자리 쿼리가 읽는 variable-width(문자열) 컬럼 집합."""
+
+    qnum = _QUERY_AT[position] if _QUERY_AT else position
+    return query_signature(qnum, "all_columns") - query_signature(qnum, "fixed_width")
+
+
+def _build_fixed_then_variable_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """fixed 겹침이 같으면 string 겹침이 큰 쪽을 먼저 잇는다."""
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        candidate_pool = remaining[:window]
+        previous_position = path[-1]
+        best_position = max(
+            candidate_pool,
+            key=lambda pos: _fixed_then_variable_pair_overlap_rank(
+                previous_position, pos, remaining, signatures),
+        )
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
+
+
 def _unfiltered_pair_overlap_rank(
     previous_position: int,
     candidate_position: int,
@@ -734,6 +801,113 @@ def _greedy_within(
         best_position = max(
             remaining[:window],
             key=lambda pos: _unfiltered_pair_overlap_rank(
+                previous_position, pos, remaining, signatures),
+        )
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
+
+
+def _fixed_share(position: int) -> float:
+    """그 자리 쿼리가 읽는 바이트 중 fixed-width 컬럼이 차지하는 비율."""
+
+    qnum = _QUERY_AT[position] if _QUERY_AT else position
+    fixed = query_signature(qnum, "fixed_width")
+    every = query_signature(qnum, "all_columns")
+    total = sum(column_bytes(c) for c in every)
+    if total <= 0:
+        # 크기 정보가 없으면 컬럼 개수로 돌아간다.
+        return len(fixed) / len(every) if every else 0.0
+    return sum(column_bytes(c) for c in fixed) / total
+
+
+FIXED_PHASE_THRESHOLD = 0.5
+
+
+def _build_fixed_first_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """fixed-width 컬럼이 주인 쿼리를 앞 구간에 몰고, string 이 주인 쿼리를 뒤에 붙인다.
+
+    `fixed-overlap` 계열은 매 단계 순위만 fixed 기준으로 매기므로 string 쿼리가
+    중간중간 끼어든다. ClickBench 에서 이게 문제인 이유는 측정으로 나왔다: 재정렬을
+    하면 fixed 컬럼이 캐시에 들어가는 양 자체가 15.4GiB 에서 8.6GiB 로 줄고, 서빙도
+    7.52GiB 에서 6.19GiB 로 준다. 축출이 fixed 를 건드려서가 아니라 -- variable 우선
+    축출에서 fixed 는 0 바이트 버려졌다 -- string 쿼리가 먼저 자리를 채워 fixed 가
+    들어갈 공간이 없기 때문이다. 그래서 순위가 아니라 구간을 나눈다: 캐시가 빈 동안
+    fixed 쿼리들이 먼저 자리를 잡고 서로 재사용한 뒤, string 쿼리를 태운다.
+    """
+
+    front = [pos for pos in positions if _fixed_share(pos) >= FIXED_PHASE_THRESHOLD]
+    back = [pos for pos in positions if pos not in set(front)]
+    if not front or not back:
+        return _build_greedy_overlap_path(start_position, positions, signatures, cfg)
+    if start_position not in front:
+        front = [start_position] + front
+        back = [pos for pos in back if pos != start_position]
+    path = _greedy_within(start_position, front, signatures, cfg)
+    bridge = max(back, key=lambda pos: _pair_overlap_rank(path[-1], pos, back, signatures))
+    path.extend(_greedy_within(bridge, back, signatures, cfg))
+    return path
+
+
+def _fixed_bytes_then_variable_rank(
+    previous_position: int,
+    candidate_position: int,
+    remaining_positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+) -> tuple[int, float, float, float, int]:
+    """fixed 겹침 바이트가 1순위, 동점이면 variable 겹침이 가장 적은 쪽, fixed 가 0이면 variable.
+
+    `fixed-overlap` 은 겹침을 컬럼 개수로 세므로 ClickBench 처럼 한 컬럼이 나머지를
+    합친 것보다 큰 workload 에서 빗나가고, `byte-overlap` 은 반대로 string 이 모든
+    결정을 지배한다. 여기서는 실제로 재사용되는 쪽 -- 열 row group 이 예산에 다 들어가고
+    여러 쿼리가 읽는 컬럼, 측정상 거의 전부 fixed-width -- 의 겹침 바이트를 먼저 쌓고,
+    그것이 같을 때는 string 겹침이 **적은** 후보를 고른다. string 을 붙여봐야 그 페이지는
+    재사용 전에 밀려나고 (URL 은 43.8GiB 를 넣어 0.41GiB 만 서빙했다) 그 사이 fixed 를
+    쓸어내기 때문이다. fixed 겹침이 바닥난 뒤에야 string 겹침으로 정렬한다.
+    """
+
+    prev_fixed = signatures[previous_position]
+    cand_fixed = signatures[candidate_position]
+    fixed_shared = sum(column_bytes(c) for c in prev_fixed & cand_fixed)
+
+    prev_var = _variable_signature(previous_position)
+    cand_var = _variable_signature(candidate_position)
+    var_shared = sum(column_bytes(c) for c in prev_var & cand_var)
+
+    future = sum(
+        sum(column_bytes(c) for c in cand_fixed & signatures[pos])
+        for pos in remaining_positions
+        if pos != candidate_position
+    )
+    if fixed_shared > 0:
+        # 1순위 fixed 바이트, 2순위 string 겹침이 적은 쪽 (부호를 뒤집어 최대화에 태운다).
+        return 1, fixed_shared, -var_shared, future, -candidate_position
+    # fixed 로 이을 것이 없으면 string 겹침으로 잇는다.
+    return 0, 0.0, var_shared, future, -candidate_position
+
+
+def _build_fixed_bytes_then_variable_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """`_fixed_bytes_then_variable_rank` 로 한 쿼리씩 잇는다."""
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        candidate_pool = remaining[:window]
+        previous_position = path[-1]
+        best_position = max(
+            candidate_pool,
+            key=lambda pos: _fixed_bytes_then_variable_rank(
                 previous_position, pos, remaining, signatures),
         )
         path.append(best_position)
@@ -970,6 +1144,12 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
         path_builders = [_build_greedy_byte_lru_path]
     elif cfg.policy == "byte-overlap":
         path_builders = [_build_greedy_byte_overlap_path]
+    elif cfg.policy == "fixed-then-variable":
+        path_builders = [_build_fixed_then_variable_path]
+    elif cfg.policy == "fixed-first":
+        path_builders = [_build_fixed_first_path]
+    elif cfg.policy == "fixed-bytes-then-variable":
+        path_builders = [_build_fixed_bytes_then_variable_path]
     elif cfg.resident_column_budget > 0:
         path_builders = [_build_greedy_resident_aware_path]
     else:

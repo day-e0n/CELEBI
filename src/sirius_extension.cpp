@@ -1465,6 +1465,15 @@ static void SetEnableDuckdbFallback(ClientContext& /*context*/,
   // binary, to later test cases that create their own database).
 }
 
+/// Writes a marker into the engine log so a page trace can be split by query. The page
+/// trace itself has no idea which statement is running: the scan manager sees batches, not
+/// queries, and reset() does not fire once per query. A driver that sets this before each
+/// statement gives every [page-trace] line after it an owner.
+static void SetPageTraceLabel(ClientContext& context, SetScope scope, Value& parameter)
+{
+  SIRIUS_LOG_INFO("[page-trace] ==== query {} ====", StringValue::Get(parameter));
+}
+
 static void SetEnableRegexJitImpl(ClientContext& context, SetScope scope, Value& parameter)
 {
   Config::ENABLE_REGEX_JIT_IMPL = BooleanValue::Get(parameter);
@@ -1745,6 +1754,14 @@ void SiriusExtension::InitialGPUConfigs(DBConfig& config)
     LogicalType::BOOLEAN,
     Value::BOOLEAN(Config::ENABLE_REGEX_JIT_IMPL),
     SetEnableRegexJitImpl);
+
+  // Marker for splitting a page trace by query; see SetPageTraceLabel.
+  config.AddExtensionOption("page_trace_label",
+                            "Write a query marker into the engine log, so [page-trace] lines "
+                            "can be attributed to the statement that follows.",
+                            LogicalType::VARCHAR,
+                            Value(""),
+                            SetPageTraceLabel);
 
   // Add in config options for modified pipeline
   config.AddExtensionOption("modified_pipeline",
