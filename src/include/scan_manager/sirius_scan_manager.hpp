@@ -940,6 +940,14 @@ class sirius_scan_manager {
     std::size_t evicted_bytes{0};
   };
   std::unordered_map<int, column_page_stats> _column_stats;
+
+  /// Estimated bytes this column would occupy if every row group of the file were resident,
+  /// keyed by interned column id. Read at eviction time: a column that cannot all fit is
+  /// never served anyway -- by the time a later query wants row group 7 the budget has
+  /// pushed it out for row group 8 -- so its pages are the ones to give up first. This is
+  /// the number the width test is a proxy for; it comes from the row group actually being
+  /// inserted times the file's row group count, so no extra metadata read.
+  std::unordered_map<int, std::size_t> _column_full_bytes;
   [[nodiscard]] int intern_id(std::string const& s);        ///< inserts if absent
   [[nodiscard]] int intern_lookup(std::string const& s) const;  ///< -1 when absent
   /// Running total of resident page bytes, maintained on insert and eviction so

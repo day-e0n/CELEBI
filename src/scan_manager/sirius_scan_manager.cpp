@@ -4808,14 +4808,20 @@ void sirius_scan_manager::insert_pages_from_view(
       // that read them then start from the file every time -- those columns were serving a
       // little (URL 0.41 GiB of 43.8 GiB inserted), and a little beats nothing. Kept because
       // a different budget or dataset may put the line elsewhere.
-      if (skip_columns_larger_than_budget() && file_row_groups > 0 && !page_starts.empty()) {
+      if (file_row_groups > 0 && !page_starts.empty()) {
         // This row group's own size for this column, from the page boundaries just computed:
         // every page but the last is one target's worth, and the last is whatever is left.
         auto const full_pages = page_starts.size() > 0 ? page_starts.size() - 1 : 0;
         auto const rg_bytes   = full_pages * target + target / 2;  // half a page for the tail
         auto const column_bytes =
           static_cast<double>(rg_bytes) * static_cast<double>(file_row_groups);
-        if (budget > 0 && column_bytes > static_cast<double>(budget)) {
+        {
+          std::lock_guard lock{_pages_mutex};
+          auto& recorded = _column_full_bytes[column_id];
+          recorded = std::max(recorded, static_cast<std::size_t>(column_bytes));
+        }
+        if (skip_columns_larger_than_budget() && budget > 0 &&
+            column_bytes > static_cast<double>(budget)) {
           if (page_trace_enabled()) {
             SIRIUS_LOG_INFO("[page-trace] skip col='{}' reason=column_exceeds_budget "
                             "column_gib={:.2f} budget_gib={:.2f}",
@@ -4993,7 +4999,17 @@ void sirius_scan_manager::insert_pages_from_view(
   // happen to line up with column width, which is what makes a width test a good enough
   // proxy here. Excluding by size directly was tried and is worse: see
   // skip_columns_larger_than_budget.
-  auto const page_is_variable_width = [](cached_page const& page) {
+  // Give up first on the pages of a column that can never be wholly resident. The size is
+  // recorded at insert (this row group's bytes times the file's row group count), so this is
+  // the measured version of what the width test below approximates. A column with no record
+  // yet falls back to the width test, which holds on this workload because the size boundary
+  // -- roughly budget / row groups -- happens to sit between the wide variable-width columns
+  // and the rest.
+  auto const gives_up_first = [&](cached_page_key const& key, cached_page const& page) {
+    auto const it = _column_full_bytes.find(key.column_id);
+    if (it != _column_full_bytes.end() && budget_to_use > 0) {
+      return it->second > budget_to_use;
+    }
     return page.data && page.data->type().id() == cudf::type_id::STRING;
   };
   for (int pass = 0; pass < 2 && resident > budget_to_use; ++pass) {
@@ -5004,7 +5020,7 @@ void sirius_scan_manager::insert_pages_from_view(
         lru_it = _lru.erase(lru_it);
         continue;
       }
-      if (page_is_variable_width(it->second) != variable_pass) {
+      if (gives_up_first(*lru_it, it->second) != variable_pass) {
         ++lru_it;
         continue;
       }
@@ -5022,7 +5038,7 @@ void sirius_scan_manager::insert_pages_from_view(
                         key.row_group,
                         key.page_index,
                         it->second.num_bytes,
-                        variable_pass ? "variable" : "fixed");
+                        variable_pass ? "oversized" : "resident-capable");
       }
       _pages.erase(it);
       lru_it = _lru.erase(lru_it);
