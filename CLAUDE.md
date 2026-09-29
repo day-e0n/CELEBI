@@ -96,8 +96,11 @@ guess.
 average", that applies to every path that cuts pages, including ones written later. Re-read the
 ask before reporting something as done.
 
-**Use the project's words.** The unit is a *page*; a *row group* is a row group. Do not coin new
-terms for things that already have names.
+**Use the project's words, and keep them apart.** A *page* is this cache's 16 MB unit -- never
+the OS page cache, never a parquet page. Columns are *fixed-width* or *variable-width*; saying
+just "fixed" leaves the reader guessing whether a column or a page is meant, and that ambiguity
+has already caused a round of confusion in this work. Do not coin new terms for things that
+already have names.
 
 ## Architecture
 

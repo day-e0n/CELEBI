@@ -4976,15 +4976,23 @@ void sirius_scan_manager::insert_pages_from_view(
   // Oldest first, straight off the front of the LRU list. No vector, no sort:
   // the list already holds exactly the order this needs.
   std::size_t evicted = 0;
-  // Two passes, variable-width first. Straight LRU lets STRING columns sweep the store:
-  // measured on ClickBench, 84% of everything inserted is STRING (64.6 GiB against 16.0 GiB
-  // of fixed-width) and almost none of it is ever read back, while the fixed-width columns
-  // that DO get read back -- ClientIP serves every page it caches, UserID 0.58 of them --
-  // get evicted to make room for it. A reorder that groups fixed-width overlap then buys
-  // nothing, because the strings passing through evict what it just grouped: reordering cut
-  // fixed-width serving from 8.27 GiB to 4.82 GiB. So a STRING page goes before a
-  // fixed-width one of the same age, and fixed-width pages are only touched once no STRING
-  // page is left to give up.
+  // Two passes: pages of variable-width columns first, pages of fixed-width columns only
+  // after those run out.
+  //
+  // Straight LRU lets the variable-width columns sweep the store. Measured on ClickBench,
+  // 84% of every byte inserted belongs to a variable-width column (64.6 GiB against 16.0 GiB
+  // for the fixed-width ones) and 7% of it is ever read back, against 52% for the
+  // fixed-width ones -- ClientIP serves every page it caches, UserID 0.58 of them, and both
+  // were being evicted to make room for URL, which serves none of its 30 GiB.
+  //
+  // The real boundary is not the column's width, it is whether all of its row groups can be
+  // resident at once and whether more than one query reads it. URL is 3,704 MiB per row
+  // group against a 6 GB budget -- 1.7 of its ten fit -- so a later query's row group is
+  // always gone already; Referer is variable-width too, fits thirteen times over, and still
+  // serves nothing because only two queries read it. On this workload those two conditions
+  // happen to line up with column width, which is what makes a width test a good enough
+  // proxy here. Excluding by size directly was tried and is worse: see
+  // skip_columns_larger_than_budget.
   auto const page_is_variable_width = [](cached_page const& page) {
     return page.data && page.data->type().id() == cudf::type_id::STRING;
   };
