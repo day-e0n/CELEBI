@@ -143,7 +143,7 @@ def main() -> int:
                              "reproduce the older configuration.")
     parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
                                  "cost-seeded-overlap", "unfiltered-overlap",
-                                 "fixed-then-variable", "fixed-first", "fixed-bytes-then-variable"),
+                                 "fixed-then-variable", "fixed-first", "fixed-bytes-then-variable", "cacheable-first", "resident-overlap", "resident-overlap-spread", "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
                              "COLUMNS, so a 25-row nation column scores like a 600M-row "

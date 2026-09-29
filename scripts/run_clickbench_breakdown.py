@@ -100,7 +100,7 @@ def main() -> int:
                              "NOT the reorder, which still runs on top of it; for pinning an "
                              "arrival order the built-in policies cannot express.")
     parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
-                                 "unfiltered-overlap", "fixed-then-variable", "fixed-first", "fixed-bytes-then-variable"),
+                                 "unfiltered-overlap", "fixed-then-variable", "fixed-first", "fixed-bytes-then-variable", "cacheable-first", "resident-overlap", "resident-overlap-spread", "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
                              "COLUMNS, so a 25-row nation column scores like a 600M-row "
@@ -146,7 +146,9 @@ def main() -> int:
         qnums = reorder.worst_case_sequence(qnums, "fixed_width")
         print(f"arrival(worst): {','.join(f'q{q}' for q in qnums)}", flush=True)
     if args.condition != "baseline" and not args.no_reorder:
-        if args.reorder_policy in ("byte-lru", "byte-overlap", "cost-ascending"):
+        if args.reorder_policy in ("byte-lru", "byte-overlap", "cost-ascending",
+                                       "fixed-then-variable", "fixed-bytes-then-variable",
+                                       "fixed-first", "cacheable-first", "resident-overlap", "resident-overlap-spread", "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending"):
             if not args.column_bytes:
                 parser.error(f"--reorder-policy {args.reorder_policy} requires --column-bytes")
             print(f"column bytes: {reorder.load_column_bytes(args.column_bytes)} columns",

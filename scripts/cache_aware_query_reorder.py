@@ -60,7 +60,7 @@ FIXED_WIDTH_COLUMNS: dict[str, set[str]] = {
 SCOPE_CHOICES = ("fixed_width", "all_columns")
 POLICY_CHOICES = ("none", "fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
                   "cost-seeded-overlap", "unfiltered-overlap", "fixed-then-variable",
-                  "fixed-first", "fixed-bytes-then-variable")
+                  "fixed-first", "fixed-bytes-then-variable", "cacheable-first", "resident-overlap", "resident-overlap-spread", "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending")
 
 # {query: {table: [column, ...]}}, filled by load_query_table_columns().
 # The union of a scan's projection AND filter columns, which is what the
@@ -915,6 +915,408 @@ def _build_fixed_bytes_then_variable_path(
     return path
 
 
+def _column_never_resident(column: ColumnKey, cache_budget_bytes: int) -> bool:
+    """이 컬럼 하나가 예산을 넘는가. 넘으면 캐시에 통째로 올라갈 수 없다."""
+
+    return cache_budget_bytes > 0 and column_bytes(column) > cache_budget_bytes
+
+
+def _query_is_cacheable(position: int, cfg: ReorderConfig) -> bool:
+    """이 쿼리가 읽는 컬럼이 전부 예산 안에 들어가는가."""
+
+    qnum = _QUERY_AT[position] if _QUERY_AT else position
+    return not any(_column_never_resident(c, cfg.cache_budget_bytes)
+                   for c in query_signature(qnum, "all_columns"))
+
+
+def _build_cacheable_first_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """예산 안에 다 들어가는 쿼리를 앞에, 그렇지 않은 쿼리를 뒤에 둔다.
+
+    축출 우선순위와 같은 기준이다. 어떤 컬럼 하나가 예산보다 크면 그 컬럼의 row group
+    전부가 동시에 resident 일 수 없고, 그래서 뒤에 오는 쿼리가 원하는 row group 은 이미
+    밀려나 있다 -- ClickBench 의 URL 은 row group 하나가 3,704 MiB 이고 6 GB 예산에 1.7 개만
+    들어가며, 한 run 에서 30.26 GiB 를 넣고 한 page 도 서빙하지 못했다. 그런 쿼리를
+    overlap 기준으로 앞으로 끌어와도 재사용은 생기지 않고, 지나가면서 resident 가능한
+    컬럼의 page 만 쓸어낸다 (재정렬이 variable-width page 삽입을 25% 늘린 것이 이것이다).
+    그래서 뒤로 보내고, 앞 구간은 실제로 서로 재사용할 수 있는 쿼리들끼리 byte overlap 으로
+    잇는다.
+    """
+
+    front = [pos for pos in positions if _query_is_cacheable(pos, cfg)]
+    back = [pos for pos in positions if pos not in set(front)]
+    if not front or not back:
+        return _build_greedy_byte_overlap_path(start_position, positions, signatures, cfg)
+    if start_position not in front:
+        front = [start_position] + front
+        back = [pos for pos in back if pos != start_position]
+    path = _greedy_within(start_position, front, signatures, cfg)
+    bridge = max(back, key=lambda pos: _byte_pair_overlap_rank(path[-1], pos, back, signatures))
+    path.extend(_greedy_within(bridge, back, signatures, cfg))
+    return path
+
+
+def _resident_signature(position: int, cache_budget_bytes: int) -> frozenset[ColumnKey]:
+    """그 자리 쿼리가 읽는 컬럼 중 예산 안에 통째로 들어갈 수 있는 것만."""
+
+    qnum = _QUERY_AT[position] if _QUERY_AT else position
+    return frozenset(c for c in query_signature(qnum, "all_columns")
+                     if not _column_never_resident(c, cache_budget_bytes))
+
+
+def _resident_pair_overlap_rank(
+    previous_position: int,
+    candidate_position: int,
+    remaining_positions: list[int],
+    cache_budget_bytes: int,
+) -> tuple[float, int, int, int]:
+    """예산을 넘는 컬럼을 빼고 남은 컬럼들의 겹침 바이트로 순위를 매긴다.
+
+    예산보다 큰 컬럼은 캐시에서 한 번도 서빙되지 않는다 -- 측정값으로 정확히 0.00 GiB 이며,
+    row group 하나가 예산의 62% 를 차지하는 URL 은 다음 쿼리가 원하는 row group 이 이미
+    축출돼 있기 때문이다. 그런 컬럼의 겹침을 세면 재정렬이 그 쿼리들을 서로 붙이는데,
+    붙여봐야 서빙은 여전히 0 이고 대신 같은 컬럼을 반복해서 다시 넣게 된다: 모았을 때
+    35.9 GiB 였던 삽입량이 49.4 GiB 로 늘었다. 그래서 겹침 계산에서 아예 제외한다.
+    """
+
+    prev = _resident_signature(previous_position, cache_budget_bytes)
+    cand = _resident_signature(candidate_position, cache_budget_bytes)
+    shared = sum(column_bytes(c) for c in prev & cand)
+    total = sum(column_bytes(c) for c in cand)
+    ratio = shared / total if total else 0.0
+    future = sum(
+        sum(column_bytes(c) for c in cand & _resident_signature(pos, cache_budget_bytes))
+        for pos in remaining_positions
+        if pos != candidate_position
+    )
+    return ratio, shared, future, -candidate_position
+
+
+def _build_resident_overlap_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """예산에 들어갈 수 있는 컬럼들의 겹침만 보고 잇는다."""
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        candidate_pool = remaining[:window]
+        previous_position = path[-1]
+        best_position = max(
+            candidate_pool,
+            key=lambda pos: _resident_pair_overlap_rank(
+                previous_position, pos, remaining, cfg.cache_budget_bytes),
+        )
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
+
+
+def _reads_oversized_column(position: int, cache_budget_bytes: int) -> bool:
+    """이 쿼리가 예산보다 큰 컬럼을 읽는가."""
+
+    qnum = _QUERY_AT[position] if _QUERY_AT else position
+    return any(_column_never_resident(c, cache_budget_bytes)
+               for c in query_signature(qnum, "all_columns"))
+
+
+def _build_resident_overlap_spread_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """예산에 들어갈 컬럼끼리는 겹치게 잇고, 예산을 넘는 컬럼을 읽는 쿼리는 떼어놓는다.
+
+    측정에서 나온 두 가지를 같이 건다. 예산보다 큰 컬럼은 캐시에서 서빙되는 양이 정확히
+    0 이므로 그 겹침을 세면 재정렬이 엉뚱한 쌍을 붙인다 -- 그래서 겹침 계산에서 빼고
+    (`resident-overlap`), 그런 쿼리들이 연달아 오면 6 GB 예산을 두고 서로 밀어내며 같은
+    컬럼을 반복해서 다시 넣는다 -- 삽입량이 35.9 GiB 에서 49.4 GiB 로 늘었다. 그래서 그
+    쿼리들 사이에 최소 간격을 강제한다. 간격 목표는 전체 쿼리 수를 그런 쿼리 수로 나눈
+    값, 즉 고르게 펴는 것이다.
+    """
+
+    budget = cfg.cache_budget_bytes
+    oversized = {pos for pos in positions if _reads_oversized_column(pos, budget)}
+    if not oversized or len(oversized) == len(positions):
+        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+    spacing = max(1, len(positions) // len(oversized))
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    since_oversized = 0 if start_position in oversized else spacing
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        pool = remaining[:window]
+        # 간격이 아직 안 찼으면 큰 컬럼 쿼리는 후보에서 뺀다. 남는 게 없으면 어쩔 수 없이 쓴다.
+        allowed = [pos for pos in pool if pos not in oversized] if since_oversized < spacing else pool
+        if not allowed:
+            allowed = pool
+        previous_position = path[-1]
+        best_position = max(
+            allowed,
+            key=lambda pos: _resident_pair_overlap_rank(
+                previous_position, pos, remaining, budget),
+        )
+        path.append(best_position)
+        remaining.remove(best_position)
+        since_oversized = 0 if best_position in oversized else since_oversized + 1
+    return path
+
+
+def _oversized_signature(position: int, cache_budget_bytes: int) -> frozenset[ColumnKey]:
+    """그 자리 쿼리가 읽는 컬럼 중 예산을 넘는 것들."""
+
+    qnum = _QUERY_AT[position] if _QUERY_AT else position
+    return frozenset(c for c in query_signature(qnum, "all_columns")
+                     if _column_never_resident(c, cache_budget_bytes))
+
+
+def _build_big_same_adjacent_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """같은 큰 컬럼을 읽는 쿼리는 붙이고, 다른 큰 컬럼끼리는 갈라놓는다.
+
+    `resident-overlap-spread` 는 큰 컬럼을 읽는 쿼리를 전부 떼어놓았고 더 나빠졌다
+    (129.66s -> 177.89s). 떼어놓을 이유가 있는 것은 **서로 다른** 큰 컬럼을 읽는 쌍이다:
+    URL 9.3GiB 와 Title 9.2GiB 가 6GB 예산을 두고 번갈아 들어오면 서로를 통째로 밀어낸다.
+    같은 컬럼을 읽는 쌍은 밀어낼 것이 없다. 그래서 큰 컬럼이 같으면 이어 붙이고, 다르면
+    그 사이에 예산 안에 드는 쿼리들을 끼워 넣는다.
+    """
+
+    budget = cfg.cache_budget_bytes
+    big_of = {pos: _oversized_signature(pos, budget) for pos in positions}
+    if not any(big_of.values()):
+        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        pool = remaining[:window]
+        previous_position = path[-1]
+        prev_big = big_of[previous_position]
+
+        def tier(pos: int) -> int:
+            cand_big = big_of[pos]
+            if prev_big and cand_big == prev_big:
+                return 2          # 같은 큰 컬럼: 바로 잇는다
+            if not cand_big:
+                return 1          # 큰 컬럼 없음: 완충재로 좋다
+            return 0              # 다른 큰 컬럼: 마지막에
+
+        best_position = max(
+            pool,
+            key=lambda pos: (tier(pos),) + _resident_pair_overlap_rank(
+                previous_position, pos, remaining, budget),
+        )
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
+
+
+def _build_big_diff_apart_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """예산 안에 드는 컬럼으로 겹치게 잇되, 직전과 **다른** 큰 컬럼은 간격이 찰 때까지 미룬다.
+
+    `big-same-adjacent` 와 같은 관찰에서 나오지만 강제 방향이 반대다. 저쪽은 같은 큰
+    컬럼을 끌어당기고, 이쪽은 다른 큰 컬럼을 밀어낸다. 같은 컬럼이면 간격을 요구하지
+    않으므로 한 컬럼을 연달아 읽는 구간은 그대로 붙는다.
+    """
+
+    budget = cfg.cache_budget_bytes
+    big_of = {pos: _oversized_signature(pos, budget) for pos in positions}
+    n_big = sum(1 for v in big_of.values() if v)
+    if n_big == 0 or n_big == len(positions):
+        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+    spacing = max(1, len(positions) // max(1, len(set(frozenset(v) for v in big_of.values() if v))))
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    last_big = big_of[start_position]
+    since_switch = 0
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        pool = remaining[:window]
+        previous_position = path[-1]
+
+        def allowed(pos: int) -> bool:
+            cand_big = big_of[pos]
+            if not cand_big or not last_big or cand_big == last_big:
+                return True       # 큰 컬럼이 없거나 직전과 같으면 언제든
+            return since_switch >= spacing
+
+        pool_ok = [pos for pos in pool if allowed(pos)] or pool
+        best_position = max(
+            pool_ok,
+            key=lambda pos: _resident_pair_overlap_rank(
+                previous_position, pos, remaining, budget),
+        )
+        path.append(best_position)
+        remaining.remove(best_position)
+        cand_big = big_of[best_position]
+        if cand_big and cand_big != last_big:
+            last_big, since_switch = cand_big, 0
+        else:
+            since_switch += 1
+    return path
+
+
+def _build_small_first_big_last_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """큰 컬럼을 읽는 쿼리는 최대한 뒤로, 앞에서는 작은 컬럼 겹침으로만 잇는다.
+
+    등급 1: 큰 컬럼을 하나도 읽지 않는 쿼리. 직전 쿼리와 겹치는 **작은** 컬럼 바이트가
+            큰 쪽부터.
+    등급 0: 큰 컬럼을 읽는 쿼리. 직전과 **같은** 큰 컬럼을 읽는 쪽부터 -- 뒤로 밀린
+            뒤에도 서로 다른 큰 컬럼이 번갈아 오지는 않게.
+
+    `big-same-adjacent` 와의 차이는 앞 구간의 처리다. 저쪽은 직전이 URL 쿼리이면 다음도
+    URL 쿼리를 바로 이어 붙여 큰 컬럼 구간이 앞으로 끌려 나올 수 있고, 이쪽은 큰 컬럼을
+    읽는 쿼리를 무조건 뒤로 민다.
+    """
+
+    budget = cfg.cache_budget_bytes
+    big_of = {pos: _oversized_signature(pos, budget) for pos in positions}
+    if not any(big_of.values()):
+        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+
+    # Do not start on a query that reads one of the oversized columns: the caller's first
+    # query is used as the seed, and if that one reads URL the whole point -- pushing those
+    # to the back -- is lost at position 1.
+    if big_of[start_position]:
+        small = [pos for pos in positions if not big_of[pos]]
+        if small:
+            start_position = small[0]
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        pool = remaining[:window]
+        previous_position = path[-1]
+        prev_big = big_of[previous_position]
+
+        def key(pos: int):
+            cand_big = big_of[pos]
+            if not cand_big:
+                # 등급 1: 작은 컬럼 겹침 바이트로.
+                return (1,) + _resident_pair_overlap_rank(
+                    previous_position, pos, remaining, budget)
+            # 등급 0: 직전과 같은 큰 컬럼이면 먼저.
+            same = 1 if (prev_big and cand_big == prev_big) else 0
+            shared_big = sum(column_bytes(c) for c in prev_big & cand_big)
+            return (0, same, shared_big, 0.0, 0, -pos)
+
+        best_position = max(pool, key=key)
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
+
+
+def _small_first_big_tail(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+    tail_key,
+) -> list[int]:
+    """`small-first-big-last` 의 공통 뼈대. 뒤 구간의 정렬 기준만 `tail_key` 로 갈아 끼운다."""
+
+    budget = cfg.cache_budget_bytes
+    big_of = {pos: _oversized_signature(pos, budget) for pos in positions}
+    if not any(big_of.values()):
+        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+    if big_of[start_position]:
+        small = [pos for pos in positions if not big_of[pos]]
+        if small:
+            start_position = small[0]
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    while remaining:
+        window = len(remaining) if cfg.window <= 0 else min(cfg.window, len(remaining))
+        pool = remaining[:window]
+        previous_position = path[-1]
+        prev_big = big_of[previous_position]
+
+        def key(pos: int):
+            if not big_of[pos]:
+                return (1,) + _resident_pair_overlap_rank(
+                    previous_position, pos, remaining, budget)
+            return (0,) + tail_key(pos, prev_big, big_of)
+
+        best_position = max(pool, key=key)
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
+
+
+def _build_small_first_big_runs_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """뒤 구간에서 각 큰 컬럼이 한 번만 등장하도록(연속 구간이 되도록) 잇는다.
+
+    `small-first-big-last` 의 꼬리는 URL 8 개 뒤에 q23(TU) q40(RU) q29(R) q38(T) 로 끝나,
+    Title 이 q23 에서 올라왔다가 밀려나고 q38 에서 다시 올라온다. 큰 컬럼은 예산 안에
+    통째로 못 들어가므로 두 번 등장하면 그 사이에 통째로 다시 읽는다. 그래서 직전과
+    겹치는 큰 컬럼이 많은 쪽을 먼저 고르되, **새로 등장시키는** 큰 컬럼 수가 적은 쪽을
+    우선한다.
+    """
+
+    def tail_key(pos, prev_big, big_of):
+        cand = big_of[pos]
+        shared = sum(column_bytes(c) for c in prev_big & cand)
+        newly = len(cand - prev_big)
+        return (shared, -newly, -pos)
+
+    return _small_first_big_tail(start_position, positions, signatures, cfg, tail_key)
+
+
+def _build_small_first_big_ascending_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """뒤 구간을 작은 큰컬럼부터, 가장 큰 컬럼을 맨 끝에 둔다.
+
+    URL 9.3GiB 가 6GB 예산을 혼자 넘으므로 그 구간은 무엇을 하든 캐시를 비운다. 그렇다면
+    그 비움이 run 의 맨 마지막에 오는 편이 낫다 -- 뒤에 남은 쿼리가 없으니 쓸어낼 것도
+    없다. Referer 6.8GiB, Title 9.2GiB, URL 9.3GiB 순으로 올라간다.
+    """
+
+    def tail_key(pos, prev_big, big_of):
+        cand = big_of[pos]
+        biggest = max((column_bytes(c) for c in cand), default=0)
+        shared = sum(column_bytes(c) for c in prev_big & cand)
+        return (-biggest, shared, -pos)
+
+    return _small_first_big_tail(start_position, positions, signatures, cfg, tail_key)
+
+
 def _build_unfiltered_first_path(
     start_position: int,
     positions: list[int],
@@ -1150,6 +1552,22 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
         path_builders = [_build_fixed_first_path]
     elif cfg.policy == "fixed-bytes-then-variable":
         path_builders = [_build_fixed_bytes_then_variable_path]
+    elif cfg.policy == "cacheable-first":
+        path_builders = [_build_cacheable_first_path]
+    elif cfg.policy == "resident-overlap":
+        path_builders = [_build_resident_overlap_path]
+    elif cfg.policy == "resident-overlap-spread":
+        path_builders = [_build_resident_overlap_spread_path]
+    elif cfg.policy == "big-same-adjacent":
+        path_builders = [_build_big_same_adjacent_path]
+    elif cfg.policy == "big-diff-apart":
+        path_builders = [_build_big_diff_apart_path]
+    elif cfg.policy == "small-first-big-last":
+        path_builders = [_build_small_first_big_last_path]
+    elif cfg.policy == "small-first-big-runs":
+        path_builders = [_build_small_first_big_runs_path]
+    elif cfg.policy == "small-first-big-ascending":
+        path_builders = [_build_small_first_big_ascending_path]
     elif cfg.resident_column_budget > 0:
         path_builders = [_build_greedy_resident_aware_path]
     else:
@@ -1170,7 +1588,18 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
         served, _ = simulate_cache_hit_bytes(candidate_queries, cfg.scope, cfg.cache_budget_bytes)
         return (served, summary.shared_columns, -start)
 
-    best_rank = score(original, before, positions[0])
+    # A policy whose objective is not fixed-width column overlap must not be judged by it.
+    # These place the columns too big to ever be resident -- ClickBench's URL, Title and
+    # Referer, which the trace shows serving 0.00 GiB however they are ordered -- and their
+    # output scores worse on adjacency while being the thing under test. Judging them by the
+    # old metric silently returned the caller's own order: big-same-adjacent from the natural
+    # order came back unchanged, which read as "this policy is a no-op" when in fact its
+    # result had been discarded.
+    _objective_is_overlap = cfg.policy not in (
+        "cacheable-first", "resident-overlap", "resident-overlap-spread",
+        "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending")
+    best_rank = (score(original, before, positions[0]) if _objective_is_overlap
+                 else (float("-inf"), -1, -len(positions) - 1))
     for start_position in start_positions:
       for path_builder in path_builders:
         path = path_builder(start_position, positions, signatures, cfg)
@@ -1194,7 +1623,9 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
         if sequence_unfiltered_overlap(best_queries, cfg.scope) <= sequence_unfiltered_overlap(
                 original, cfg.scope):
             return finish(original, tuple(), before)
-    elif cfg.policy not in ("byte-lru", "byte-overlap") and (
+    elif cfg.policy not in ("byte-lru", "byte-overlap", "cacheable-first", "resident-overlap",
+                            "resident-overlap-spread", "big-same-adjacent",
+                            "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending") and (
         best_summary.overlap_ratio <= before.overlap_ratio
         and best_summary.shared_columns <= before.shared_columns
     ):
