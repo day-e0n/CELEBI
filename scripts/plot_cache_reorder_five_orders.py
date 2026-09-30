@@ -97,7 +97,7 @@ def main() -> None:
     rule = max(vals[1], vals[2]) + 4.0
     right.annotate("", xy=(2, rule), xytext=(1, rule),
                    arrowprops=dict(arrowstyle="<->", linewidth=0.6, color="#2f3b3a"))
-    right.text(1.5, rule + 0.6, "no-op\n(same order)", ha="center", va="bottom",
+    right.text(1.5, rule + 0.6, "order unchanged", ha="center", va="bottom",
                fontsize=7.5, color="#2f3b3a", linespacing=1.1)
 
     right.set_xticks(xt)
