@@ -346,6 +346,7 @@ set(EXTENSION_SOURCES
     src/scan_manager/sirius_scan_manager.cpp
     src/scan_manager/split_connector.cpp
     src/scan_manager/split_provider.cpp
+    src/scan_manager/variable_width_page_index.cpp
     src/sirius_config.cpp
     src/sirius_context.cpp
     src/sirius_engine.cpp
@@ -606,6 +607,8 @@ set(TEST_SOURCES
     test/cpp/io/rest/test_rest_reactor.cpp
     test/cpp/scan_manager/test_s3_routing_cutover.cpp
     test/cpp/scan_manager/test_pin_table_multi_gpu.cpp
+    test/cpp/scan_manager/test_variable_width_page_index.cpp
+    test/cpp/scan_manager/test_dictionary_feasibility.cpp
     test/cpp/operator/test_physical_grouped_aggregate_merge_mgpu.cpp
     test/cpp/operator/test_physical_hash_join_mgpu.cpp
     test/cpp/operator/test_physical_order_mgpu.cpp

@@ -69,6 +69,9 @@ class gpu_aggregate_impl {
    * @param aggregate_struct_col_indices Parallel to `aggregates`. Non-empty entries indicate
    *        a multi-column COLLECT_SET where a struct column is synthesized from those column
    *        indices. Empty entries (or an empty outer vector) use `aggregate_idx` directly.
+   * @param aggregate_widen_sum Parallel to `aggregates`. A true entry marks a SUM that backs an
+   *        AVG, whose accumulator is widened to DECIMAL128 when the input is a 64-bit integer so
+   *        the partial sum cannot wrap. May be empty, which widens nothing.
    * @param stream CUDA stream used for device memory operations and kernel launches.
    * @param memory_space The memory space used to allocate memory for the output data batch.
    *
@@ -80,6 +83,7 @@ class gpu_aggregate_impl {
     const std::vector<cudf::aggregation::Kind>& aggregates,
     const std::vector<int>& aggregate_idx,
     const std::vector<std::vector<int>>& aggregate_struct_col_indices,
+    const std::vector<bool>& aggregate_widen_sum,
     rmm::cuda_stream_view stream,
     cucascade::memory::memory_space& memory_space);
 };

@@ -80,6 +80,8 @@ class sirius_physical_grouped_aggregate : public sirius_physical_operator {
   std::vector<cudf::aggregation::Kind> cudf_aggregates;
   std::vector<int> cudf_aggregate_idx;
   std::vector<std::vector<int>> cudf_aggregate_struct_col_indices;
+  /// Parallel to `cudf_aggregates`; true where the SUM is the accumulator behind an AVG.
+  std::vector<bool> cudf_aggregate_widen_sum;
 
   // AVG decomposition metadata
   std::vector<AggregateSlot> aggregate_slots;

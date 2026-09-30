@@ -33,13 +33,28 @@
 namespace sirius {
 
 /// CAST return types that are currently safe to lower into a cuDF AST.
-inline constexpr std::array<duckdb::LogicalTypeId, 3> supported_ast_cast_types{
-  {duckdb::LogicalTypeId::UBIGINT, duckdb::LogicalTypeId::BIGINT, duckdb::LogicalTypeId::DOUBLE}};
+///
+/// HUGEINT and UHUGEINT are here because this engine already maps them to cuDF INT64 and
+/// UINT64 -- the same types BIGINT and UBIGINT map to (see get_cudf_type, which documents the
+/// 128->64 narrowing). A cast to HUGEINT is therefore a cast to INT64, and leaving it out sent
+/// it down the materializing fallback instead. DuckDB reaches that path on its own: it rewrites
+/// SUM(x + 1) into sum(x) + count(x) * CAST(1 AS HUGEINT), whose scalar operand the fallback
+/// cannot take -- ClickBench q30 is ninety of those.
+inline constexpr std::array<duckdb::LogicalTypeId, 5> supported_ast_cast_types{
+  {duckdb::LogicalTypeId::UBIGINT,
+   duckdb::LogicalTypeId::BIGINT,
+   duckdb::LogicalTypeId::DOUBLE,
+   duckdb::LogicalTypeId::HUGEINT,
+   duckdb::LogicalTypeId::UHUGEINT}};
 
 /// Sirius-typed mirror of supported_ast_cast_types — same set of CAST target
 /// types as above, expressed via sirius::type_id for native AST consumers.
-inline constexpr std::array<sirius::type_id, 3> supported_ast_cast_types_native{
-  {sirius::type_id::UBIGINT, sirius::type_id::BIGINT, sirius::type_id::DOUBLE}};
+inline constexpr std::array<sirius::type_id, 5> supported_ast_cast_types_native{
+  {sirius::type_id::UBIGINT,
+   sirius::type_id::BIGINT,
+   sirius::type_id::DOUBLE,
+   sirius::type_id::HUGEINT,
+   sirius::type_id::UHUGEINT}};
 
 /// BOUND_FUNCTION names that are currently safe to lower into a cuDF AST.
 inline constexpr std::array<function_id, 6> supported_ast_functions{function_id::add,

@@ -29,6 +29,8 @@ Example:
 
 import os
 import sys
+
+import duckdb
 import time
 import glob
 
@@ -71,6 +73,82 @@ INT32_COLUMNS = {
     "region": {"r_regionkey"},
     "supplier": {"s_suppkey", "s_nationkey"},
 }
+
+
+# Page cache page size, mirrored from fixed_width_page_size_bytes() in
+# sirius_scan_manager.cpp. A cached page holds this many BYTES of one column, so
+# its row count is PAGE_BYTES / sizeof(type) and differs per column.
+PAGE_BYTES = 16 * 1024 * 1024
+
+# cuDF's decoded width per SQL type, matching probe_column_bytes.py's TYPE_WIDTHS.
+_DECODED_WIDTH = {
+    "BOOLEAN": 1, "TINYINT": 1, "UTINYINT": 1,
+    "SMALLINT": 2, "USMALLINT": 2,
+    "INTEGER": 4, "UINTEGER": 4, "DATE": 4, "FLOAT": 4,
+    "BIGINT": 8, "UBIGINT": 8, "DOUBLE": 8,
+    "TIMESTAMP": 8, "TIMESTAMP_S": 8, "TIMESTAMP_MS": 8, "TIMESTAMP_NS": 8,
+}
+
+
+def _decoded_width(sql_type):
+    upper = sql_type.upper()
+    if upper.startswith("DECIMAL"):
+        try:
+            precision = int(upper.split("(")[1].split(",")[0])
+        except (IndexError, ValueError):
+            precision = 18
+        return 4 if precision <= 9 else (8 if precision <= 18 else 16)
+    return _DECODED_WIDTH.get(upper)
+
+
+def auto_row_group_rows(source, floor_rows=4 * 1024 * 1024):
+    """Row group size that leaves the page cache no internal fragmentation.
+
+    Pages are cut on the row-group boundary, so the last page of every row group
+    is a remainder unless the row count divides evenly by PAGE_BYTES/width for
+    EVERY fixed-width column. The narrowest column has the largest rows-per-page,
+    so making the row group a multiple of that one satisfies all the wider ones
+    too (their rows-per-page divides it).
+
+    Measured waste at the sizes these files were written with: TPC-H 9,962,958
+    rows wastes 12.9% (4-byte columns 20.8%), ClickBench 10,000,000 wastes 31.1%
+    because 48 of its 105 columns are 2-byte and fit 8,388,608 rows per page.
+    The values this returns -- 4,194,304 for TPC-H, 8,388,608 for ClickBench --
+    waste nothing.
+
+    Smaller is better for pruning (a row group is the smallest unit the reader
+    can skip), so this takes the SMALLEST multiple at or above floor_rows.
+
+    Computed PER TABLE, not per directory: only the columns of one scan have to
+    line up by row position, and a join matches by value, so two tables' row
+    grids are independent. Taking the narrowest column across a whole schema
+    would drag every table down to the widest row group any one of them needs.
+    """
+    import glob
+
+    if os.path.isfile(source):
+        files = [source]
+    else:
+        files = sorted(glob.glob(os.path.join(source, "*.parquet"))) + sorted(
+            glob.glob(os.path.join(source, "*", "*.parquet"))
+        )
+    if not files:
+        return floor_rows
+    con = duckdb.connect(":memory:")
+    narrowest = None
+    for path in files:
+        for _, sql_type, *_ in con.execute(
+            f"DESCRIBE SELECT * FROM read_parquet('{path}')"
+        ).fetchall():
+            width = _decoded_width(sql_type)
+            if width is None:      # STRING/nested: no fixed rows-per-page to align to
+                continue
+            narrowest = width if narrowest is None else min(narrowest, width)
+    if not narrowest:
+        return floor_rows
+    rows_per_page = PAGE_BYTES // narrowest
+    multiple = max(1, -(-floor_rows // rows_per_page))
+    return rows_per_page * multiple
 
 
 def cudf_write_kwargs(row_group_size_rows):
@@ -194,6 +272,9 @@ def rewrite_table(
         print(f"  WARNING: No parquet files found for {table_name}, skipping")
         return
 
+    if row_group_size_rows is None:
+        row_group_size_rows = auto_row_group_rows(source_files[0])
+
     # Get metadata and original schema
     orig_schema = pq.read_schema(source_files[0])
     target_schema = apply_int32_overrides(orig_schema, table_name)
@@ -201,7 +282,10 @@ def rewrite_table(
     for f in source_files:
         total_rows += pq.read_metadata(f).num_rows
     src_size = sum(os.path.getsize(f) for f in source_files)
-    print(f"  {table_name}: {total_rows:,} rows, {src_size / 1e9:.2f} GB on disk")
+    print(
+        f"  {table_name}: {total_rows:,} rows, {src_size / 1e9:.2f} GB on disk, "
+        f"{row_group_size_rows:,} rows/row group"
+    )
 
     t0 = time.time()
     output_files = []
@@ -257,6 +341,38 @@ def rewrite_table(
         writer = _make_writer(dest_path, target_schema)
         output_files.append(dest_path)
         total_written = 0
+        pending = []
+
+        def flush(final=False):
+            """Write whole row groups from `pending`, carrying the remainder forward.
+
+            ParquetWriter closes a row group per write_table call, so handing it a
+            batch that is not a multiple of row_group_size_rows leaves a short group
+            behind after every batch: 9,961,294-row source groups against a
+            4,194,304-row target came out 4.19M / 4.19M / 1.57M, and that 1.57M group
+            is exactly the partial page this row group size was chosen to remove.
+            Only the last group of the table is allowed to be short.
+            """
+            nonlocal pending, total_written
+            if not pending:
+                return
+            table = pending[0] if len(pending) == 1 else pa.concat_tables(pending)
+            offset = 0
+            # row_group_size has to be passed on every call: pyarrow's default is
+            # 1,048,576 rows, so an exact-size slice would still be cut into four.
+            while table.num_rows - offset >= row_group_size_rows:
+                writer.write_table(
+                    table.slice(offset, row_group_size_rows),
+                    row_group_size=row_group_size_rows,
+                )
+                offset += row_group_size_rows
+            if final and offset < table.num_rows:
+                rows = table.num_rows - offset
+                writer.write_table(table.slice(offset), row_group_size=rows)
+                offset = table.num_rows
+            total_written += offset
+            rest = table.slice(offset)
+            pending = [rest] if rest.num_rows else []
 
         for batch_start in range(0, num_rgs, rgs_per_batch):
             # Check if current file exceeds limit and roll to a new one
@@ -286,15 +402,16 @@ def rewrite_table(
             if not used_gpu:
                 use_gpu = False  # stay on pyarrow for remaining batches
 
-            writer.write_table(arrow_table, row_group_size=row_group_size_rows)
-            total_written += len(arrow_table)
+            pending.append(arrow_table)
             del arrow_table
+            flush()
 
             pct = total_written * 100 // total_rows
             print(
                 f"    Wrote row group: {total_written:,} / {total_rows:,} rows ({pct}%)"
             )
 
+        flush(final=True)
         writer.close()
 
     elapsed = time.time() - t0
@@ -310,13 +427,19 @@ def rewrite_table(
 def main():
     if len(sys.argv) < 3:
         print(
-            f"Usage: {sys.argv[0]} <source_dir> <dest_dir> [row_group_rows] [max_file_gb]"
+            f"Usage: {sys.argv[0]} <source_dir> <dest_dir> [row_group_rows|auto] "
+            f"[max_file_gb]  (default: auto)"
         )
         sys.exit(1)
 
     source_dir = sys.argv[1]
     dest_dir = sys.argv[2]
-    row_group_size_rows = int(sys.argv[3]) if len(sys.argv) > 3 else 10_000_000
+    arg = sys.argv[3] if len(sys.argv) > 3 else "auto"
+    # None means "size each table to its own narrowest column", which is what
+    # auto_row_group_rows documents: a table's row grid only has to line up with
+    # itself, so taking the narrowest column across the whole schema would drag
+    # every table down to the widest row group any one of them needs.
+    row_group_size_rows = None if arg == "auto" else int(arg)
     max_file_gb = float(sys.argv[4]) if len(sys.argv) > 4 else 20
     max_file_bytes = int(max_file_gb * 1024 * 1024 * 1024)
 
@@ -328,7 +451,12 @@ def main():
     backend = "cudf (GPU)" if HAS_CUDF else "pyarrow (CPU)"
     print(f"Rewriting TPC-H parquet: {source_dir} -> {dest_dir}")
     print(f"  Backend: {backend}")
-    print(f"  Row group size: {row_group_size_rows:,} rows")
+    size_desc = (
+        "auto (per table)"
+        if row_group_size_rows is None
+        else f"{row_group_size_rows:,} rows"
+    )
+    print(f"  Row group size: {size_desc}")
     print(f"  Max file size: {max_file_gb:.0f} GiB")
     print(f"  Max page size: {MAX_PAGE_SIZE_BYTES // (1024*1024)} MiB")
     print(f"  Compression: snappy")

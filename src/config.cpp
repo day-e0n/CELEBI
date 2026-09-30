@@ -37,7 +37,14 @@ bool Config::ENABLE_FALLBACK_CHECK = false;
 
 bool Config::ENABLE_DUCKDB_FALLBACK = true;
 
-bool Config::ENABLE_REGEX_JIT_IMPL = true;
+// Off by default: the hand-written kernel it selects answers ClickBench q29 wrongly.
+// Measured against DuckDB on the full hits table -- the regex's own grouping keys come back
+// with a third of the rows they should have (go.mail 2,554,025 against 8,227,493), and asking
+// for the rewritten strings themselves fails with "Invalid unicode (byte sequence mismatch)",
+// so it is splitting multi-byte characters. cudf::strings::replace_with_backrefs matches DuckDB
+// exactly. The kernel is roughly twice as fast (19-28s against 41s on q29), which is why it is
+// kept and still reachable with SET enable_regex_jit_impl=true -- but not by default.
+bool Config::ENABLE_REGEX_JIT_IMPL = false;
 
 bool Config::MODIFIED_PIPELINE = false;
 

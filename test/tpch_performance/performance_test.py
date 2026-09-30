@@ -291,6 +291,13 @@ def open_connection(source, gpu_execution=False, data_source="parquet"):
                 continue
             con.execute(stmt)
         log("All TPC-H views registered")
+    # Resource-matched comparison: a GPU run gets one device out of the node's
+    # several, while DuckDB otherwise takes every core. Setting this to the node's
+    # cores/GPU ratio makes the two sides draw a comparable share of the machine.
+    threads = os.environ.get("BENCH_DUCKDB_THREADS")
+    if threads:
+        con.execute(f"SET threads={int(threads)}")
+        log(f"DuckDB threads pinned to {int(threads)}")
     if gpu_execution:
         log(f"Loading Sirius extension from {EXTENSION_PATH}")
         con.execute(f"LOAD '{EXTENSION_PATH}'")
@@ -989,6 +996,16 @@ def parse_args():
         ),
     )
     p.add_argument(
+        "--query-set",
+        default=None,
+        help=(
+            "Python module or .py file supplying an alternate QUERIES dict, for "
+            "benchmarking a TPC-H-schema variant with different query constants "
+            "(e.g. jcch_queries.py from scripts/gen_jcch_queries.py). Defaults to "
+            "the stock TPC-H text in queries.py."
+        ),
+    )
+    p.add_argument(
         "--query-timeout",
         type=int,
         default=90,
@@ -1000,8 +1017,37 @@ def parse_args():
     return p.parse_args()
 
 
+def load_query_set(spec):
+    """Swap QUERIES' contents in place for an alternate query set.
+
+    Mutating the dict rather than rebinding the name keeps every existing
+    `QUERIES[...]` reader (result validation included) pointed at one object.
+    """
+    import importlib
+    import importlib.util
+
+    if spec.endswith(".py") or os.path.sep in spec:
+        path = os.path.abspath(spec)
+        loader = importlib.util.spec_from_file_location("_query_set", path)
+        module = importlib.util.module_from_spec(loader)
+        loader.loader.exec_module(module)
+    else:
+        module = importlib.import_module(spec)
+    replacement = getattr(module, "QUERIES", None)
+    if not isinstance(replacement, dict) or not replacement:
+        raise SystemExit(f"--query-set {spec!r} exposes no non-empty QUERIES dict")
+    missing = [f"q{q}" for q in range(1, 23) if f"q{q}" not in replacement]
+    if missing:
+        raise SystemExit(f"--query-set {spec!r} is missing {', '.join(missing)}")
+    QUERIES.clear()
+    QUERIES.update(replacement)
+    return getattr(module, "__file__", spec)
+
+
 def main():
     args = parse_args()
+    if args.query_set:
+        print(f"query set: {load_query_set(args.query_set)}")
     source = args.input
     if args.data_source == "duckdb":
         if not os.path.isfile(source):

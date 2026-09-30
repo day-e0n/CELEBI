@@ -45,13 +45,16 @@ load_balancing_scan_batch_coalescer::register_pipeline(op::scan::sirius_gpu_scan
 }
 
 void load_balancing_scan_batch_coalescer::use_cached_entries_for_pipeline(
-  op::scan::sirius_gpu_scan_operator* scan_op, std::unique_ptr<databatch_provider> provider)
+  op::scan::sirius_gpu_scan_operator* scan_op,
+  std::unique_ptr<databatch_provider> provider,
+  bool has_residual_scan)
 {
   if (!scan_op) return;
   auto uid = scan_op->get_operator_id();
   auto it  = _slots.find(uid);
   if (it == _slots.end()) { return; }
-  auto& state = *it->second;
+  auto& state             = *it->second;
+  state.has_residual_scan = has_residual_scan;
   state.attach_batch_provider(std::move(provider));
 }
 
@@ -73,9 +76,16 @@ void load_balancing_scan_batch_coalescer::worker_loop([[maybe_unused]] std::stop
   for (auto pipeline_id : _pipeline_order) {
     if (stop.stop_requested()) { break; }
     auto& state = *_slots.at(pipeline_id);
+    // Cached batches and disk splits are not alternatives -- they go into the same
+    // connector queue, and scan_operator_input already carries either kind. When
+    // the page cache covers only part of the scan, both run: the cached chunks are
+    // pushed first, then the ingestible reads the residual row groups (which
+    // set_cached_row_groups has already removed from its own list). Exactly one of
+    // them closes the connector, or the operator stops early and drops rows.
     if (state.batch_provider) {
-      process_cached_entries(state, stop);
-    } else {
+      process_cached_entries(state, stop, /*close_when_done=*/!state.has_residual_scan);
+    }
+    if (!state.batch_provider || state.has_residual_scan) {
       process_provider_inputs(state, stop);
     }
   }
@@ -162,7 +172,9 @@ void load_balancing_scan_batch_coalescer::process_provider_inputs(metadata_proce
 }
 
 void load_balancing_scan_batch_coalescer::process_cached_entries(
-  metadata_processing_state& state, [[maybe_unused]] std::stop_token const& stop)
+  metadata_processing_state& state,
+  [[maybe_unused]] std::stop_token const& stop,
+  bool close_when_done)
 {
   auto& batch_queue = state.queue;
   bool is_closed    = false;
@@ -174,7 +186,7 @@ void load_balancing_scan_batch_coalescer::process_cached_entries(
       state.connector->push_split(std::move(op_data));
     }
   }
-  state.connector->close();
+  if (close_when_done) { state.connector->close(); }
 }
 
 }  // namespace sirius::scan_manager

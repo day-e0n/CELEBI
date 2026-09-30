@@ -116,6 +116,7 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
   const std::vector<cudf::aggregation::Kind>& aggregates,
   const std::vector<int>& aggregate_idx,
   const std::vector<std::vector<int>>& aggregate_struct_col_indices,
+  const std::vector<bool>& aggregate_widen_sum,
   rmm::cuda_stream_view stream,
   cucascade::memory::memory_space& memory_space)
 {
@@ -127,6 +128,7 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
   }
 
   const bool has_struct_col_indices = !aggregate_struct_col_indices.empty();
+  const bool has_widen_sum          = !aggregate_widen_sum.empty();
 
   auto input_table = get_cudf_table_view(input);
   auto mr          = memory_space.get_default_allocator();
@@ -194,6 +196,7 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
   // Make aggregation requests, group aggregations on the same column in the single request.
   // For multi-column COLLECT_SET, a synthetic negative key -(i+1) is used so that each such
   // aggregate gets its own request with a freshly synthesized struct column.
+  std::unordered_map<int, int> widened_source;  // synthetic key -> source column index
   std::unordered_map<int, std::vector<std::unique_ptr<cudf::groupby_aggregation>>> input_col_to_agg;
   std::unordered_map<int, std::vector<size_t>> input_col_to_output_idx;
   std::vector<int> input_col_order;
@@ -203,6 +206,16 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
     if (has_struct_col_indices && !aggregate_struct_col_indices[i].empty()) {
       // Multi-column COLLECT_SET: use a unique synthetic negative key for this slot.
       aggregate_col_id = -(static_cast<int>(i) + 1);
+    } else if (has_widen_sum && aggregate_widen_sum[i] &&
+               (input_table.column(aggregate_idx[i]).type().id() == cudf::type_id::INT64 ||
+                input_table.column(aggregate_idx[i]).type().id() == cudf::type_id::UINT64)) {
+      // This SUM is the accumulator behind an AVG over a 64-bit integer column, which has
+      // nowhere left to widen into: AVG(UserID) over ClickBench's hits sums to 2.5e26 against
+      // an int64 ceiling of 9.2e18. Give it its own request over a DECIMAL128 copy -- a
+      // __int128 underneath -- so it never shares a request with a plain SUM on the same
+      // column, whose INT64 output the merge still expects.
+      aggregate_col_id                   = -(static_cast<int>(i) + 1);
+      widened_source[aggregate_col_id]   = aggregate_idx[i];
     } else {
       aggregate_col_id = aggregate_idx[i];
     }
@@ -220,13 +233,21 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
     input_col_to_output_idx[aggregate_col_id].push_back(i);
   }
 
-  // Temp struct columns for multi-col COLLECT_SET; must outlive the groupby call.
+  // Temp columns backing synthetic requests (multi-col COLLECT_SET structs and widened
+  // AVG accumulators); these must outlive the groupby call.
   std::vector<std::unique_ptr<cudf::column>> temp_struct_cols;
 
   std::vector<cudf::groupby::aggregation_request> requests;
   for (int aggregate_col_id : input_col_order) {
     cudf::groupby::aggregation_request request;
-    if (aggregate_col_id < 0) {
+    if (auto wit = widened_source.find(aggregate_col_id); wit != widened_source.end()) {
+      auto widened = cudf::cast(input_table.column(wit->second),
+                                cudf::data_type(cudf::type_id::DECIMAL128, 0),
+                                stream,
+                                memory_space.get_default_allocator());
+      request.values = widened->view();
+      temp_struct_cols.push_back(std::move(widened));
+    } else if (aggregate_col_id < 0) {
       // Multi-col COLLECT_SET: synthesize a struct column from the component columns.
       // The synthetic key is -(slot_index + 1), so slot_index = -aggregate_col_id - 1.
       size_t slot_idx            = static_cast<size_t>(-aggregate_col_id - 1);
