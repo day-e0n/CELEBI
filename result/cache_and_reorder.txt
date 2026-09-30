@@ -173,7 +173,21 @@
     측정이 모두 끝난 뒤에 발생하므로 위 수치에는 영향이 없으나 미해결이다.
 
 
-7. 다음에 볼 것
+7. 그림
+--------------------------------------------------------------------------------
+
+  experiment/figs/cache_reorder_five_orders.png
+      왼쪽: ClickBench 도착 순서 5종 × (재정렬 없음 / 재정렬), 캐시 없음은 점선.
+      오른쪽: TPC-H SF50 3조건. 세 번째 막대는 두 번째와 같은 순서를 다시 잰 것.
+      생성: pixi run -e duckdb-python python scripts/plot_cache_reorder_five_orders.py
+
+  experiment/figs/clickbench_two_heavy_queries.png
+      각 런을 q28+q29 와 나머지 41개로 쪼갠 스택 막대. 나머지 41개가 어느
+      순서에서도 거의 같은 높이라는 것이 3절의 근거다.
+      생성: pixi run -e duckdb-python python scripts/plot_clickbench_two_heavy_queries.py
+
+
+8. 다음에 볼 것
 --------------------------------------------------------------------------------
 
   재정렬을 더 다듬기 전에 OOM 으로 캐시를 통째로 버리는 것부터 봐야 한다. 런마다
