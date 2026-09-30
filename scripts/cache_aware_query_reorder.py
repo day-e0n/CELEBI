@@ -14,6 +14,8 @@ SQL 자체를 고치거나 쿼리 의미를 바꾸지는 않고, runner가 Siriu
 
 from __future__ import annotations
 
+import os
+
 import argparse
 import csv
 import sys
@@ -915,10 +917,21 @@ def _build_fixed_bytes_then_variable_path(
     return path
 
 
-def _column_never_resident(column: ColumnKey, cache_budget_bytes: int) -> bool:
-    """이 컬럼 하나가 예산을 넘는가. 넘으면 캐시에 통째로 올라갈 수 없다."""
+#: "통째로 상주할 수 없다"를 판정할 때 예산에 곱하는 비율. 1.0 이면 컬럼 하나가 예산
+#: 전체를 넘어야 큰 컬럼이다 -- ClickBench 의 URL 9.3GiB, Title 9.2GiB, Referer 6.8GiB 가
+#: 6GB 예산에서 그렇고, 이 셋은 페이지 추적에서 서빙 0.00GiB 로 측정된다. 1.0 보다 낮추면
+#: 예산의 일부만 차지해도 큰 컬럼으로 본다: 한 컬럼이 예산의 절반을 쓰면 나머지 전부가
+#: 남은 절반을 두고 다투므로, 그 지점을 어디로 잡느냐는 workload 마다 다를 수 있다.
+#: SIRIUS_REORDER_BIG_COLUMN_RATIO 로 바꾼다.
+BIG_COLUMN_BUDGET_RATIO = float(os.environ.get("SIRIUS_REORDER_BIG_COLUMN_RATIO", "1.0"))
 
-    return cache_budget_bytes > 0 and column_bytes(column) > cache_budget_bytes
+
+def _column_never_resident(column: ColumnKey, cache_budget_bytes: int) -> bool:
+    """이 컬럼이 예산 안에 통째로 상주할 수 없는가."""
+
+    if cache_budget_bytes <= 0:
+        return False
+    return column_bytes(column) > cache_budget_bytes * BIG_COLUMN_BUDGET_RATIO
 
 
 def _query_is_cacheable(position: int, cfg: ReorderConfig) -> bool:
@@ -1047,7 +1060,11 @@ def _build_resident_overlap_spread_path(
     budget = cfg.cache_budget_bytes
     oversized = {pos for pos in positions if _reads_oversized_column(pos, budget)}
     if not oversized or len(oversized) == len(positions):
-        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+        # Nothing is too big to be resident, so there is nothing to push back and no
+        # reason to disturb the caller's order. Falling through to another policy is
+        # what cost TPC-H 6.8%: no TPC-H query reads a column over the budget, so the
+        # measurement was of resident-overlap, which is worse than not reordering.
+        return list(positions)
     spacing = max(1, len(positions) // len(oversized))
 
     path = [start_position]
@@ -1098,7 +1115,8 @@ def _build_big_same_adjacent_path(
     budget = cfg.cache_budget_bytes
     big_of = {pos: _oversized_signature(pos, budget) for pos in positions}
     if not any(big_of.values()):
-        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+        # See _small_first_big_tail: with nothing oversized, leave the order alone.
+        return list(positions)
 
     path = [start_position]
     remaining = [pos for pos in positions if pos != start_position]
@@ -1143,7 +1161,11 @@ def _build_big_diff_apart_path(
     big_of = {pos: _oversized_signature(pos, budget) for pos in positions}
     n_big = sum(1 for v in big_of.values() if v)
     if n_big == 0 or n_big == len(positions):
-        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+        # Nothing is too big to be resident, so there is nothing to push back and no
+        # reason to disturb the caller's order. Falling through to another policy is
+        # what cost TPC-H 6.8%: no TPC-H query reads a column over the budget, so the
+        # measurement was of resident-overlap, which is worse than not reordering.
+        return list(positions)
     spacing = max(1, len(positions) // max(1, len(set(frozenset(v) for v in big_of.values() if v))))
 
     path = [start_position]
@@ -1198,7 +1220,11 @@ def _build_small_first_big_last_path(
     budget = cfg.cache_budget_bytes
     big_of = {pos: _oversized_signature(pos, budget) for pos in positions}
     if not any(big_of.values()):
-        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+        # Nothing is too big to be resident, so there is nothing to push back and no
+        # reason to disturb the caller's order. Falling through to another policy is
+        # what cost TPC-H 6.8%: no TPC-H query reads a column over the budget, so the
+        # measurement was of resident-overlap, which is worse than not reordering.
+        return list(positions)
 
     # Do not start on a query that reads one of the oversized columns: the caller's first
     # query is used as the seed, and if that one reads URL the whole point -- pushing those
@@ -1245,7 +1271,12 @@ def _small_first_big_tail(
     budget = cfg.cache_budget_bytes
     big_of = {pos: _oversized_signature(pos, budget) for pos in positions}
     if not any(big_of.values()):
-        return _build_resident_overlap_path(start_position, positions, signatures, cfg)
+        # Nothing here is too big to be resident, so there is nothing to push to the back and
+        # no reason to disturb the order the caller gave. Falling through to a different
+        # policy is what made this cost TPC-H 6.8%: no TPC-H query reads a column over the
+        # budget (the largest one any of them reads is l_shipinstruct at 4.47 GB), so the
+        # measurement was of resident-overlap, which is worse than not reordering.
+        return list(positions)
     if big_of[start_position]:
         small = [pos for pos in positions if not big_of[pos]]
         if small:
