@@ -804,6 +804,10 @@ class sirius_scan_manager {
 
   /// Write one line per column describing what the store is holding for it and what it has
   /// done with it since the process started, then the totals. Called per query from reset().
+  /// Evict until everything the cache holds -- pages, pinned chunks and variable-width
+  /// pages -- fits the one configured budget. Call after any of them grows.
+  void enforce_total_cache_budget();
+
   void log_page_census(std::string_view when) const;
 
   /// Microseconds probes have spent waiting for the page store's mutex, since process start.

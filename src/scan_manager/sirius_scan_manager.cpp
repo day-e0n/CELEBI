@@ -2516,9 +2516,18 @@ std::size_t merge_columns_into_chunk(
   std::size_t chunk_index,
   cucascade::memory::memory_space& memory_space,
   rmm::cuda_stream_view stream,
-  std::unordered_map<std::string, std::shared_ptr<cudf::column>>* dictionaries)
+  std::unordered_map<std::string, std::shared_ptr<cudf::column>>* dictionaries,
+  std::unordered_map<std::string, shared_variable_pages>* shared_pages)
 {
   auto const pages_before = fixed_width_page_count(entry);
+  // Page the variable-width columns first, exactly as the new-chunk path does. Without
+  // this a STRING column arriving here had no paging step at all and fell straight to the
+  // whole-chunk copy below -- which no budget counts and no sweep can evict. On ClickBench
+  // that path is the common one (43 queries share one entry and bring different columns),
+  // and it was holding a measured 3.03GB outside the 6GB budget.
+  auto const paged_columns = index_variable_width_columns_for_chunk(
+    entry, name, column_names, fixed_columns, view, chunk_index, memory_space, stream,
+    entry.cache_info.projected_column_bytes, shared_pages);
   for (std::size_t i = 0; i < column_names.size(); ++i) {
     auto const column = std::string{column_names[i]};
     if (entry.fixed_width_pages_by_column.contains(column) ||
@@ -2528,6 +2537,13 @@ std::size_t merge_columns_into_chunk(
     auto const column_view = view.column(static_cast<cudf::size_type>(i));
 
     if (!fixed_columns[i]) {
+      if (paged_columns.contains(i)) {
+        // The paged copy is authoritative; the whole-chunk copy would be a second,
+        // unbudgeted copy of the same bytes.
+        entry.data_batches_by_column[column].emplace_back(nullptr);
+        entry.cache_info.names.push_back(column);
+        continue;
+      }
       if (dictionary_encoding_enabled() && column_view.type().id() == cudf::type_id::STRING &&
           column_view.size() > 0) {
         if (auto codes = encode_column_as_dictionary(
@@ -3052,7 +3068,8 @@ void apply_global_page_cache_memory_pressure(
   }
 }
 
-void apply_global_variable_width_page_budget(std::unordered_map<std::string, pinned_entry>& entries);
+void apply_global_variable_width_page_budget(std::unordered_map<std::string, pinned_entry>& entries,
+                                             std::size_t already_used_bytes);
 
 /// Reports how much device memory the allocator actually holds against how much the
 /// page cache believes it holds. The gap is what the pool has reserved but cannot
@@ -3141,12 +3158,57 @@ void report_page_cache_memory_overhead(
 
 void apply_global_fixed_width_page_eviction_policies(
   std::unordered_map<std::string, pinned_entry>& entries,
-  std::string_view reason)
+  std::string_view reason,
+  std::size_t page_store_bytes)
 {
   apply_global_fixed_width_page_budget(entries);
-  apply_global_variable_width_page_budget(entries);
+  // Everything the cache holds shares one budget, so the variable-width sweep has to be
+  // told what the other two stores already took: the page store (passed in; this function
+  // cannot see _pages_bytes) and the chunk store (summed here).
+  std::size_t chunk_bytes = 0;
+  {
+    std::unordered_set<void const*> seen;
+    for (auto const& [_, entry] : entries) {
+      for (auto const& [__, chunks] : entry.data_batches_by_column) {
+        for (auto const& chunk : chunks) {
+          if (!chunk) { continue; }
+          if (!seen.insert(static_cast<void const*>(chunk.get())).second) { continue; }
+          chunk_bytes += static_cast<std::size_t>(chunk->alloc_size());
+        }
+      }
+    }
+  }
+  apply_global_variable_width_page_budget(entries, chunk_bytes + page_store_bytes);
   apply_global_page_cache_memory_pressure(entries, reason);
   report_page_cache_memory_overhead(entries);
+}
+
+/// Device bytes the cache holds outside `_pages`: the pinned entries' column chunks and
+/// their variable-width pages. Counted once per buffer -- entries that adopted the same
+/// chunk share one allocation, and a variable-width page's owned_column can be that same
+/// chunk, so summing per owner multiplies the figure the sweep then tries to evict against.
+/// Caller holds `_pages_mutex`.
+std::size_t pinned_entry_device_bytes(
+  std::unordered_map<std::string, pinned_entry> const& entries)
+{
+  std::unordered_set<void const*> seen;
+  std::size_t bytes = 0;
+  auto add = [&](std::shared_ptr<cudf::column> const& col) {
+    if (!col) { return; }
+    if (!seen.insert(static_cast<void const*>(col.get())).second) { return; }
+    bytes += static_cast<std::size_t>(col->alloc_size());
+  };
+  for (auto const& [_, entry] : entries) {
+    for (auto const& [__, chunks] : entry.data_batches_by_column) {
+      for (auto const& chunk : chunks) { add(chunk); }
+    }
+    for (auto const& [__, per_chunk] : entry.variable_width_pages_by_column) {
+      for (auto const& index : per_chunk) {
+        for (auto const& page : index.pages) { add(page.owned_column); }
+      }
+    }
+  }
+  return bytes;
 }
 
 std::size_t variable_width_page_cache_budget_bytes_per_gpu()
@@ -3191,9 +3253,17 @@ std::size_t variable_width_page_cache_budget_bytes_per_gpu()
 /// coverage, so the cache holds fewer things but every one of them can still be
 /// hit. Entries with any page currently in use (owned_column.use_count() > 1)
 /// are skipped, same as before.
-void apply_global_variable_width_page_budget(std::unordered_map<std::string, pinned_entry>& entries)
+void apply_global_variable_width_page_budget(std::unordered_map<std::string, pinned_entry>& entries,
+                                             std::size_t already_used_bytes)
 {
-  auto const budget = variable_width_page_cache_budget_bytes_per_gpu();
+  // The one budget, less what the other stores already hold. The comment on
+  // variable_width_page_cache_budget_bytes_per_gpu has always said this store gets
+  // "what is left of the one budget after the page store has taken its share", but the
+  // code returned the whole budget, so a run configured for 6GB ran two 6GB caps and was
+  // measured holding 9.52GB. Subtracting here is what that sentence meant.
+  auto const configured = variable_width_page_cache_budget_bytes_per_gpu();
+  auto const budget =
+    configured > already_used_bytes ? configured - already_used_bytes : std::size_t{0};
   // Zero used to mean "skip the sweep", which reads as "no cap" and let this store grow
   // without bound -- the opposite of what anyone setting it to zero intends. Zero means
   // the store is not to be used, so evict all of it.
@@ -3905,10 +3975,15 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
       auto const chunk_index = find_chunk_by_provenance(entry, provenance);
       auto const added       = merge_columns_into_chunk(
         entry, name, column_names, fixed_columns, view, chunk_index, memory_space, stream,
-        &_shared_dictionaries);
+        &_shared_dictionaries, &_shared_variable_pages);
       SIRIUS_LOG_INFO(
         "[fixed-page-cache] merged_columns table='{}' chunk_index={} added={} entry_columns={}",
         name, chunk_index, added, entry.cache_info.names.size());
+      // This path grew the entry -- pages and variable-width pages both -- and then
+      // returned straight out, past every other enforcement point. On ClickBench it is the
+      // common path (43 queries share one entry), which is why the cache sat at 7.86GB
+      // while the sweep's own log showed it hitting 6.00GB exactly on every call.
+      enforce_total_cache_budget();
       return added;
     } else if (chunk_already_present(entry, provenance)) {
       // Two concurrent scan tasks can both miss the cache for the same brand-new
@@ -4007,7 +4082,10 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
       auto const pages_just_added = fixed_width_page_count(entry) - pages_before;
       entry.num_rows += static_cast<std::size_t>(view.num_rows());
       entry.fixed_width_page_metrics = {};
-      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
+      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
+                                                 _pages_bytes);
+      // The variable-width store just grew on this path; the one budget covers it too.
+      enforce_total_cache_budget();
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4103,7 +4181,10 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
   entry.fixed_width_page_metrics = {};
   _pinned_entries[name] = std::move(entry);
   auto& inserted_entry = _pinned_entries.at(name);
-  apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
+  apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
+                                                 _pages_bytes);
+      // The variable-width store just grew on this path; the one budget covers it too.
+      enforce_total_cache_budget();
   auto eviction_count = inserted_entry.fixed_width_page_metrics.eviction_count;
   inserted_entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(inserted_entry);
   inserted_entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4242,7 +4323,10 @@ void sirius_scan_manager::insert_pinned_entry(
       }
       entry.num_rows += new_num_rows;
       entry.fixed_width_page_metrics = {};
-      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
+      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
+                                                 _pages_bytes);
+      // The variable-width store just grew on this path; the one budget covers it too.
+      enforce_total_cache_budget();
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4378,7 +4462,10 @@ void sirius_scan_manager::insert_pinned_entry(
         entry.cache_info.names.push_back(column_names[i]);
       }
       entry.fixed_width_page_metrics = {};
-      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
+      apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
+                                                 _pages_bytes);
+      // The variable-width store just grew on this path; the one budget covers it too.
+      enforce_total_cache_budget();
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4468,7 +4555,10 @@ void sirius_scan_manager::insert_pinned_entry(
   entry.fixed_width_page_metrics = {};
   _pinned_entries[name] = std::move(entry);
   auto& inserted_entry = _pinned_entries.at(name);
-  apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert");
+  apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
+                                                 _pages_bytes);
+      // The variable-width store just grew on this path; the one budget covers it too.
+      enforce_total_cache_budget();
   auto eviction_count = inserted_entry.fixed_width_page_metrics.eviction_count;
   inserted_entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(inserted_entry);
   inserted_entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4940,8 +5030,27 @@ void sirius_scan_manager::insert_pages_from_view(
   // Eviction does hold the mutex: it walks `_lru` and erases from `_pages`, so it has to be
   // atomic against a concurrent probe. It is one hold per insert call rather than one per
   // page, and it copies nothing.
+  enforce_total_cache_budget();
+}
+
+void sirius_scan_manager::enforce_total_cache_budget()
+{
+  // Everything the cache holds shares one budget, and this is the only place that
+  // enforces it. It has to run wherever the cache grows -- page inserts and
+  // variable-width page inserts alike -- because the stores grow on different paths:
+  // a run with this called only from the page path sat at 7.86GB against a 6GB budget,
+  // with 3.37GB of variable pages that no sweep had ever looked at.
+  auto const budget = fixed_page_cache_budget_bytes_per_gpu();
+  if (budget == 0) { return; }
   std::lock_guard evict_lock{_pages_mutex};
-  std::size_t resident = _pages_bytes;
+  // One budget for everything the cache holds. _pages is the only store the sweep can
+  // evict from, but the pinned entries' chunks and variable-width pages occupy the same
+  // device pool, and counting only _pages let a run configured for 6GB reach a measured
+  // 9.52GB: _pages stayed at 6.00GB (never once over, across 495 samples) while the
+  // unbudgeted stores added 3.52GB on top. The query needs that memory too, so the sweep
+  // has to see the whole figure even though it can only shrink part of it.
+  std::size_t const unevictable_bytes = pinned_entry_device_bytes(_pinned_entries);
+  std::size_t resident                = _pages_bytes + unevictable_bytes;
 
   std::size_t effective_budget = budget;
   auto const min_free          = fixed_page_cache_min_free_bytes_per_gpu();
@@ -5012,6 +5121,17 @@ void sirius_scan_manager::insert_pages_from_view(
     }
     return page.data && page.data->type().id() == cudf::type_id::STRING;
   };
+  // _pages alone may not be able to reach the budget when the unbudgeted stores already
+  // exceed it; the loop below stops when _pages runs out either way, but say so once so a
+  // run that cannot comply is visible rather than silently over budget.
+  if (unevictable_bytes > budget_to_use) {
+    SIRIUS_LOG_WARN("[page-store] over budget and cannot comply: pinned entries hold {} "
+                    "bytes against a budget of {}; evicting all of _pages ({} bytes) "
+                    "still leaves the cache over",
+                    unevictable_bytes,
+                    budget_to_use,
+                    _pages_bytes);
+  }
   for (int pass = 0; pass < 2 && resident > budget_to_use; ++pass) {
     bool const variable_pass = (pass == 0);
     for (auto lru_it = _lru.begin(); lru_it != _lru.end() && resident > budget_to_use;) {
@@ -5045,6 +5165,75 @@ void sirius_scan_manager::insert_pages_from_view(
       ++evicted;
     }
   }
+
+  // The page LRU above can only shrink _pages. When the variable-width store is what puts
+  // the cache over, evicting pages instead just throws away the half that is working: a
+  // measured run sat at 7.86GB with _pages already pressed down to 4.28GB and 3.37GB of
+  // variable pages untouched, because that store's own sweep runs on a different trigger
+  // and sees a different budget. Continue here, in the same place and against the same
+  // total, until the whole cache is under the one budget.
+  //
+  // Entry at a time, not page at a time. A paged column has no whole-chunk copy to fall
+  // back to, so dropping one page of an entry poisons every column in it -- measured at a
+  // 45% loss of cache hits and a 5.9s regression when this was done per page.
+  std::size_t varpages_evicted = 0;
+  if (resident > budget_to_use) {
+    // Coldest entry first: an entry's recency is its newest page's tick, since one recent
+    // hit means the entry as a whole is live.
+    std::vector<std::pair<std::uint64_t, std::string>> by_age;
+    by_age.reserve(_pinned_entries.size());
+    for (auto const& [entry_name, entry] : _pinned_entries) {
+      std::uint64_t newest = 0;
+      bool any             = false;
+      for (auto const& [__, chunk_indices] : entry.variable_width_pages_by_column) {
+        for (auto const& chunk_idx : chunk_indices) {
+          for (auto const& page : chunk_idx.pages) {
+            if (page.state != variable_width_page_state::resident || !page.owned_column) {
+              continue;
+            }
+            any    = true;
+            newest = std::max(newest, page.last_access_tick.load(std::memory_order_relaxed));
+          }
+        }
+      }
+      if (any) { by_age.emplace_back(newest, entry_name); }
+    }
+    std::sort(by_age.begin(), by_age.end());
+
+    for (auto const& [_tick, entry_name] : by_age) {
+      if (resident <= budget_to_use) { break; }
+      auto entry_it = _pinned_entries.find(entry_name);
+      if (entry_it == _pinned_entries.end()) { continue; }
+      std::unordered_set<void const*> counted;
+      std::size_t freed_here = 0;
+      for (auto& [__, chunk_indices] : entry_it->second.variable_width_pages_by_column) {
+        for (auto& chunk_idx : chunk_indices) {
+          for (auto& page : chunk_idx.pages) {
+            if (page.state != variable_width_page_state::resident || !page.owned_column) {
+              continue;
+            }
+            // In use by a reader right now; dropping it would pull the column out from
+            // under them.
+            if (page.owned_column.use_count() > 1) { continue; }
+            if (counted.insert(static_cast<void const*>(page.owned_column.get())).second) {
+              freed_here += static_cast<std::size_t>(page.owned_column->alloc_size());
+            }
+            page.owned_column.reset();
+            page.state = variable_width_page_state::evicted;
+            ++varpages_evicted;
+          }
+        }
+      }
+      resident = resident > freed_here ? resident - freed_here : std::size_t{0};
+    }
+    if (varpages_evicted > 0) {
+      SIRIUS_LOG_INFO("[page-store] evicted variable_pages={} resident_bytes={} budget={}",
+                      varpages_evicted,
+                      resident,
+                      budget_to_use);
+    }
+  }
+
   if (evicted > 0) {
     SIRIUS_LOG_INFO("[page-store] evicted pages={} resident_bytes={} budget={}",
                     evicted,
@@ -5067,6 +5256,54 @@ void sirius_scan_manager::insert_pages_from_view(
 void sirius_scan_manager::log_page_census(std::string_view when) const
 {
   std::lock_guard lock{_pages_mutex};
+
+  // The page budget is enforced against _pages_bytes alone, but the pinned entries hold
+  // device columns of their own, and nothing counts those. Report both so a run can be
+  // checked against the budget it was configured with rather than against half of it.
+  {
+    // Count every device allocation the cache holds, not just _pages. Each buffer is
+    // counted once: entries that adopted the same column chunk share one allocation, and
+    // a variable-width page's owned_column can be that same chunk.
+    std::unordered_set<void const*> seen;
+    auto add = [&seen](std::shared_ptr<cudf::column> const& col, std::size_t& into) {
+      if (!col) { return; }
+      if (!seen.insert(static_cast<void const*>(col.get())).second) { return; }
+      into += static_cast<std::size_t>(col->alloc_size());
+    };
+
+    std::size_t chunk_bytes = 0;
+    std::size_t varpage_bytes = 0;
+    std::size_t n_chunks = 0;
+    std::size_t n_varpages = 0;
+    for (auto const& [_, entry] : _pinned_entries) {
+      for (auto const& [__, chunks] : entry.data_batches_by_column) {
+        for (auto const& chunk : chunks) {
+          if (chunk) { n_chunks += 1; }
+          add(chunk, chunk_bytes);
+        }
+      }
+      for (auto const& [__, per_chunk] : entry.variable_width_pages_by_column) {
+        for (auto const& index : per_chunk) {
+          for (auto const& page : index.pages) {
+            if (page.owned_column) { n_varpages += 1; }
+            add(page.owned_column, varpage_bytes);
+          }
+        }
+      }
+    }
+    SIRIUS_LOG_INFO("[page-store] resident {} pages_bytes={} chunk_bytes={} varpage_bytes={} "
+                    "total_bytes={} pages={} chunks={} varpages={} entries={}",
+                    when,
+                    _pages_bytes,
+                    chunk_bytes,
+                    varpage_bytes,
+                    _pages_bytes + chunk_bytes + varpage_bytes,
+                    _pages.size(),
+                    n_chunks,
+                    n_varpages,
+                    _pinned_entries.size());
+  }
+
   if (_pages.empty() && _column_stats.empty()) { return; }
 
   // What is resident right now, per column.
