@@ -1,0 +1,113 @@
+================================================================================
+ 쿼리 생애 전체 브레이크다운 — 텔레메트리가 기록하는 모든 구간
+ ClickBench 43개, execution 2 (워밍업 1회차 제외)
+================================================================================
+
+계층 구조
+  [1] 쿼리   Init -> Planning -> Executing -> Exit        쿼리 하나당 1개
+  [2] 태스크 Created -> Queued -> Routing -> Reserving ->  쿼리 하나가 여러 개로
+             [Downgrading] -> Preparing -> Computing ->    쪼개져 동시 실행
+             Finalizing -> Exit
+  [3] 연산자 Computing 구간이 어느 연산자였는지
+
+숫자 두 개를 함께 적는 이유
+  합계     = 그 상태에 있던 모든 것의 시간을 더한 값
+  겹침제거 = 같은 시각에 겹친 구간을 한 번만 센 값 (실제로 흐른 시간)
+  동시     = 합계 / 겹침제거. 평균 몇 개가 동시에 그 상태였는가
+
+
+################################################################################
+================ WC_cb_base  execution 2 ================
+쿼리 43개, 태스크 501개
+
+쿼리 전체 구간 (Init 부터 Exit 까지) 합계 75.497s, 겹침제거 75.497s
+
+[1] 쿼리 계층
+  구간                           횟수         합계       겹침제거      동시
+  Init                         43     0.000s     0.000s   1.00x
+  Planning                     43     0.003s     0.003s   1.00x
+  Executing                    43    75.494s    75.494s   1.00x
+  -- 전체 --                    129    75.497s    75.497s
+  (쿼리 43개)
+
+[2] 태스크 계층
+  구간                           횟수         합계       겹침제거      동시
+  Created                     501     0.006s     0.006s   1.00x
+  Queued                     1002   175.933s    52.195s   3.37x
+  Routing                     501     0.004s     0.004s   1.00x
+  Reserving                   501    43.004s    42.998s   1.00x
+  Downgrading                   3     0.005s     0.005s   1.00x
+  Preparing                   501     0.167s     0.154s   1.09x
+  Computing                   813   217.638s    74.122s   2.94x
+  Finalizing                  501     0.001s     0.001s   1.00x
+  -- 전체 --                   4323   436.759s    74.245s
+  (태스크 501개)
+
+[3] 연산자 계층 (Computing 내부)
+  구간                           횟수         합계       겹침제거      동시
+  GPU_SCAN                    185    74.650s    45.704s   1.63x
+  PROJECTION                  121    35.377s    28.611s   1.24x
+  UNGROUPED_AGGREGATE          31     0.193s     0.106s   1.82x
+  MERGE_AGGREGATE               9     0.040s     0.040s   1.00x
+  RESULT_COLLECTOR             45     0.007s     0.007s   1.00x
+  HASH_GROUP_BY               129   101.181s    53.768s   1.88x
+  PARTITION                   129     0.773s     0.213s   3.62x
+  MERGE_GROUP_BY               52     4.194s     1.672s   2.51x
+  ORDER_BY                      1     0.000s     0.000s   1.00x
+  SORT_SAMPLE                   1     0.000s     0.000s   1.00x
+  SORT_PARTITION                1     0.000s     0.000s   1.00x
+  MERGE_SORT                    1     0.000s     0.000s   1.00x
+  TOP_N                        72     1.195s     0.920s   1.30x
+  MERGE_TOP_N                  31     0.025s     0.025s   1.00x
+  STREAMING_LIMIT               2     0.000s     0.000s   1.08x
+  FILTER                        3     0.001s     0.001s   1.00x
+  -- 전체 --                    813   217.638s    74.122s
+  (Computing 구간을 연산자로 분해)
+
+################################################################################
+================ WC_cb_cache  execution 2 ================
+쿼리 43개, 태스크 505개
+
+쿼리 전체 구간 (Init 부터 Exit 까지) 합계 76.094s, 겹침제거 76.094s
+
+[1] 쿼리 계층
+  구간                           횟수         합계       겹침제거      동시
+  Init                         43     0.000s     0.000s   1.00x
+  Planning                     43     0.003s     0.003s   1.00x
+  Executing                    43    76.090s    76.090s   1.00x
+  -- 전체 --                    129    76.094s    76.094s
+  (쿼리 43개)
+
+[2] 태스크 계층
+  구간                           횟수         합계       겹침제거      동시
+  Created                     505     0.207s     0.159s   1.30x
+  Queued                     1006   221.932s    61.112s   3.63x
+  Routing                     501     0.005s     0.005s   1.00x
+  Reserving                   505    65.022s    65.016s   1.00x
+  Downgrading                  11     0.008s     0.008s   1.00x
+  Preparing                   505     0.212s     0.192s   1.11x
+  Computing                   817   131.157s    74.649s   1.76x
+  Finalizing                  505     0.001s     0.001s   1.00x
+  -- 전체 --                   4355   418.546s    74.816s
+  (태스크 505개)
+
+[3] 연산자 계층 (Computing 내부)
+  구간                           횟수         합계       겹침제거      동시
+  GPU_SCAN                    189    51.630s    36.188s   1.43x
+  PROJECTION                  121    12.081s    10.458s   1.16x
+  UNGROUPED_AGGREGATE          31     0.171s     0.105s   1.64x
+  MERGE_AGGREGATE               9     0.043s     0.043s   1.00x
+  RESULT_COLLECTOR             45     0.008s     0.008s   1.00x
+  HASH_GROUP_BY               129    61.892s    48.238s   1.28x
+  PARTITION                   129     0.680s     0.213s   3.19x
+  MERGE_GROUP_BY               52     3.538s     1.685s   2.10x
+  ORDER_BY                      1     0.000s     0.000s   1.00x
+  SORT_SAMPLE                   1     0.000s     0.000s   1.00x
+  SORT_PARTITION                1     0.000s     0.000s   1.00x
+  MERGE_SORT                    1     0.000s     0.000s   1.00x
+  TOP_N                        72     1.082s     0.941s   1.15x
+  MERGE_TOP_N                  31     0.030s     0.030s   1.00x
+  STREAMING_LIMIT               2     0.000s     0.000s   1.11x
+  FILTER                        3     0.002s     0.002s   1.00x
+  -- 전체 --                    817   131.157s    74.649s
+  (Computing 구간을 연산자로 분해)

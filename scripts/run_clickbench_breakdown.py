@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import time
 import sys
 from pathlib import Path
 
@@ -204,9 +205,14 @@ def main() -> int:
                 label = f"{series_label}_q{qnum}_exec{execution}"
                 con.execute(f"CALL sirius_set_query_label('{label}')")
                 con.execute("SET gpu_execution = true;")
+                # Wall clock per query. The telemetry's total_ms is summed GPU operator
+                # time, which a query can lower while taking longer end to end, so the
+                # two have to be recorded side by side.
+                _t0 = time.perf_counter()
                 con.execute(QUERIES[f"q{qnum}"]).fetchall()
+                _wall = time.perf_counter() - _t0
                 print(f"[{args.condition}] exec={execution}/{args.executions} "
-                      f"pos={position}/{len(qnums)} q{qnum} done", flush=True)
+                      f"pos={position}/{len(qnums)} q{qnum} done wall={_wall:.3f}s", flush=True)
     finally:
         con.close()
     return 0
