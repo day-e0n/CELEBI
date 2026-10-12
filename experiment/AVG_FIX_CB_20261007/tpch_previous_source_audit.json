@@ -1,0 +1,16 @@
+[
+  {
+    "condition": "paging_lru",
+    "source": "/home/dy1013/sirius_multi-gpu/experiment/HIT_TH_PAGING_RETRY_20261007/hit/th_r1/paging_lru",
+    "cached_bytes": 32258924444,
+    "total_bytes": 357960368486,
+    "ratio_pct": 9.011870386780446
+  },
+  {
+    "condition": "reorder_future",
+    "source": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/hit/th_r1/reorder_future",
+    "cached_bytes": 131692204956,
+    "total_bytes": 357960368486,
+    "ratio_pct": 36.78960481379394
+  }
+]

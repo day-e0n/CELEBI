@@ -1,0 +1,37 @@
+workload,condition,table,total_gib,read_gib,served_gib,byte_hit_pct,batches,full_batches,splice_batches,partial_batches,miss_batches,batch_hit_pct
+TPC-H SF50,paging,customer,2.04,1.95,0.08,4.12,9.0,0,2.0,0,7.0,0.0
+TPC-H SF50,paging,lineitem,151.87,139.29,12.58,8.29,381.0,4.0,64.5,20.0,292.5,1.05
+TPC-H SF50,paging,nation,0.0,0.0,0.0,15.87,12.0,0,6.0,0,6.0,0.0
+TPC-H SF50,paging,orders,14.49,13.91,0.58,3.99,32.0,0,1.0,2.5,28.5,0.0
+TPC-H SF50,paging,part,2.73,2.65,0.07,2.73,8.0,0,1.0,0,7.0,0.0
+TPC-H SF50,paging,partsupp,3.87,2.68,1.19,30.77,12.0,3.0,1.0,0,8.0,25.0
+TPC-H SF50,paging,region,0.0,0.0,0.0,6.41,4.0,0,1.0,0,3.0,0.0
+TPC-H SF50,paging,supplier,0.2,0.19,0.01,6.45,11.0,2.0,2.0,0,7.0,18.18
+TPC-H SF50,paging + order-aware,customer,2.04,1.98,0.06,2.74,9.0,0,2.0,0,7.0,0.0
+TPC-H SF50,paging + order-aware,lineitem,151.87,130.02,21.85,14.39,381.0,1.0,113.0,29.5,237.5,0.26
+TPC-H SF50,paging + order-aware,nation,0.0,0.0,0.0,41.36,12.0,4.0,3.0,0,5.0,33.33
+TPC-H SF50,paging + order-aware,orders,14.49,12.73,1.75,12.11,32.0,0,3.0,7.0,22.0,0.0
+TPC-H SF50,paging + order-aware,part,2.73,2.62,0.11,4.09,8.0,0,2.0,0,6.0,0.0
+TPC-H SF50,paging + order-aware,partsupp,3.87,3.42,0.46,11.82,12.0,0,1.0,1.0,10.0,0.0
+TPC-H SF50,paging + order-aware,region,0.0,0.0,0.0,0.0,4.0,0,0,0,4.0,0.0
+TPC-H SF50,paging + order-aware,supplier,0.2,0.19,0.01,6.45,11.0,2.0,2.0,0,7.0,18.18
+TPC-H SF50,paging + reorder (LRU eviction),customer,2.04,1.57,0.47,22.99,9.0,4.0,2.0,0,3.0,44.44
+TPC-H SF50,paging + reorder (LRU eviction),lineitem,151.87,132.82,19.05,12.54,381.0,3.0,68.5,43.0,266.5,0.79
+TPC-H SF50,paging + reorder (LRU eviction),nation,0.0,0.0,0.0,22.68,12.0,0,8.0,0,4.0,0.0
+TPC-H SF50,paging + reorder (LRU eviction),orders,14.49,12.34,2.15,14.84,32.0,0,7.0,4.0,21.0,0.0
+TPC-H SF50,paging + reorder (LRU eviction),part,2.73,2.35,0.38,13.85,8.0,0,3.0,0,5.0,0.0
+TPC-H SF50,paging + reorder (LRU eviction),partsupp,3.87,1.83,2.05,52.88,12.0,6.0,0.5,0.5,5.0,50.0
+TPC-H SF50,paging + reorder (LRU eviction),region,0.0,0.0,0.0,31.41,4.0,1.0,1.0,0,2.0,25.0
+TPC-H SF50,paging + reorder (LRU eviction),supplier,0.2,0.15,0.06,28.22,11.0,6.0,2.0,0,3.0,54.55
+TPC-H SF50,paging + reorder,customer,2.04,1.44,0.6,29.5,9.0,4.0,2.0,0,3.0,44.44
+TPC-H SF50,paging + reorder,lineitem,151.87,112.0,39.88,26.26,381.0,6.0,155.5,40.5,179.0,1.57
+TPC-H SF50,paging + reorder,nation,0.0,0.0,0.0,60.91,12.0,6.0,2.0,0,4.0,50.0
+TPC-H SF50,paging + reorder,orders,14.49,10.8,3.69,25.47,32.0,2.0,10.0,1.0,19.0,6.25
+TPC-H SF50,paging + reorder,part,2.73,2.35,0.38,13.85,8.0,0,3.0,0,5.0,0.0
+TPC-H SF50,paging + reorder,partsupp,3.87,1.83,2.05,52.88,12.0,6.0,0.5,0.5,5.0,50.0
+TPC-H SF50,paging + reorder,region,0.0,0.0,0.0,50.0,4.0,2.0,0,0,2.0,50.0
+TPC-H SF50,paging + reorder,supplier,0.2,0.12,0.08,39.98,11.0,6.0,2.0,0,3.0,54.55
+ClickBench,paging,hits_v2,165.97,140.86,25.11,15.13,156.0,29.0,40.0,13.0,74.0,18.59
+ClickBench,paging + order-aware,hits_v2,165.97,143.12,22.84,13.76,156.0,33.0,32.5,9.5,81.0,21.15
+ClickBench,paging + reorder (LRU eviction),hits_v2,165.97,135.33,30.64,18.46,156.0,46.5,30.0,8.5,71.0,29.81
+ClickBench,paging + reorder,hits_v2,165.97,137.66,28.31,17.06,156.0,44.5,30.5,12.0,69.0,28.53

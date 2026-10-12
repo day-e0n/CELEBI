@@ -32,6 +32,8 @@
 #include <future>
 #include <memory>
 #include <stdexcept>
+#include <cstdlib>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -172,6 +174,18 @@ std::future<size_t> sirius_datasource::device_read_async(size_t offset,
   if (uses_prefetching_cache()) {
     auto* cache = _io_ctx->cache();
     semi = cache->device_read_async(*_io_object, offset, size, dst, stream, &_prefetch_handle);
+    // DEBUG (temporary): finish the copies before reporting the read done.
+    static bool const dbg_sync = [] {
+      auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_SYNC");
+      return v != nullptr && std::string_view(v) == "1";
+    }();
+    if (dbg_sync) {
+      auto n = bridge_semi_to_std(std::move(semi)).get();
+      stream.synchronize();
+      std::promise<size_t> done;
+      done.set_value(n);
+      return done.get_future();
+    }
   } else {
     semi = _io_ctx->device_read_async_io(*_io_object, offset, size, dst, stream);
   }

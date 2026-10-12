@@ -22,12 +22,14 @@
 
 // duckdb
 #include <duckdb/common/hive_partitioning.hpp>
+#include <duckdb/common/multi_file/multi_file_reader.hpp>
 
 // cudf
 #include <cudf/column/column_factories.hpp>
 #include <cudf/cudf_utils.hpp>
 
 // standard library
+#include <optional>
 #include <unordered_map>
 
 namespace sirius::op::scan {
@@ -65,6 +67,8 @@ std::string scan_plan::batch_column_name(duckdb::idx_t batch_position) const
 std::unordered_set<std::size_t> scan_plan::pure_filter_batch_positions() const
 {
   std::unordered_set<std::size_t> positions;
+  // The row-count column is the whole batch, not a filter input that is dropped after use.
+  if (row_count_column) { return positions; }
   for (std::size_t d = 0; d < data_columns.size(); ++d) {
     positions.insert(d);
   }
@@ -87,6 +91,7 @@ bool needs_output_assembly(scan_plan const& plan)
   // partitions are only recorded when they appear in the output, so an empty
   // output_layout also implies no partitions to inject.
   if (plan.output_layout.empty()) { return false; }
+  if (plan.has_virtual_columns()) { return true; }
 
   // Trivial identity: no partitions and output_layout covers data_columns 1:1
   // in order. The reader's natural output already matches what the pipeline
@@ -136,7 +141,9 @@ owning_table_view assemble_scan_output(scan_plan const& plan,
     std::vector<std::size_t> positions;
     positions.reserve(plan.output_layout.size());
     for (auto const& entry : plan.output_layout) {
-      positions.push_back(entry.idx);
+      positions.push_back(entry.source == scan_plan::output_entry::VIRTUAL
+                            ? plan.virtual_batch_position(entry.idx)
+                            : entry.idx);
     }
     table.select_columns(positions);
     return std::move(table);
@@ -154,6 +161,8 @@ owning_table_view assemble_scan_output(scan_plan const& plan,
   for (auto const& entry : plan.output_layout) {
     if (entry.source == scan_plan::output_entry::DATA) {
       out_cols.push_back(std::move(data_cols.at(entry.idx)));
+    } else if (entry.source == scan_plan::output_entry::VIRTUAL) {
+      out_cols.push_back(std::move(data_cols.at(plan.virtual_batch_position(entry.idx))));
     } else {
       auto const& pcol = plan.partition_columns.at(entry.idx);
       auto const& pval = partition_values.at(entry.idx);
@@ -252,7 +261,28 @@ scan_plan build_scan_plan(duckdb::vector<duckdb::ColumnIndex> const& column_ids,
 
   auto handle_position = [&](std::size_t column_ids_pos, bool is_output) {
     auto const primary_idx = column_ids.at(column_ids_pos).GetPrimaryIndex();
-    if (duckdb::IsVirtualColumn(primary_idx)) { return; }
+    if (duckdb::IsVirtualColumn(primary_idx)) {
+      // The row-identity columns LATE_MATERIALIZATION joins on. Dropping them silently -- what
+      // every other virtual column still gets -- leaves the join keyed on columns that do not
+      // exist, so refuse the scan (CPU fallback) where they cannot be produced.
+      bool const row_number = primary_idx == duckdb::MultiFileReader::COLUMN_IDENTIFIER_FILE_ROW_NUMBER;
+      bool const file_index = primary_idx == duckdb::MultiFileReader::COLUMN_IDENTIFIER_FILE_INDEX;
+      if (!row_number && !file_index) { return; }
+      if (!partition_indices.empty()) {
+        throw sirius::not_implemented_exception(
+          "[scan_plan] file_row_number / file_index with hive partitions is not supported");
+      }
+      if (!is_output) { return; }
+      auto const virtual_idx = plan.virtual_columns.size();
+      plan.virtual_columns.push_back(scan_plan::virtual_column{
+        row_number ? scan_plan::virtual_column::FILE_ROW_NUMBER
+                   : scan_plan::virtual_column::FILE_INDEX,
+        sirius::logical_type::make(row_number ? sirius::type_id::BIGINT : sirius::type_id::UBIGINT)});
+      plan.output_position_by_column_id[column_ids_pos] = plan.output_layout.size();
+      plan.output_layout.push_back(
+        scan_plan::output_entry{scan_plan::output_entry::VIRTUAL, virtual_idx});
+      return;
+    }
     if (!seen_primary_indices.insert(primary_idx).second) { return; }
 
     bool const is_partition = plan.partition_primary_indices.count(primary_idx) > 0;
@@ -307,6 +337,35 @@ scan_plan build_scan_plan(duckdb::vector<duckdb::ColumnIndex> const& column_ids,
     auto it = primary_to_batch.find(primary_idx);
     if (it == primary_to_batch.end()) { continue; }
     plan.batch_position_by_column_id[c] = it->second;
+  }
+
+  // count(*) reads no column, and an unprojected reader then decodes every column of the file:
+  // 105 of them for ClickBench's hits, 7.2 GB per row group, to produce nothing but a row
+  // count. Read the narrowest fixed-width column instead. output_layout stays empty, so the
+  // reader's batch (now that one column) still goes downstream as is and carries the count.
+  if (plan.data_columns.empty() && plan.partition_columns.empty() && !names.empty() &&
+      plan.partition_primary_indices.empty()) {
+    std::optional<std::size_t> narrowest;
+    std::size_t narrowest_width = 0;
+    for (std::size_t p = 0; p < names.size() && p < returned_types.size(); ++p) {
+      if (!returned_types[p].is_fixed_width()) { continue; }
+      std::size_t width = 0;
+      try {
+        width = returned_types[p].fixed_width_byte_size();
+      } catch (...) {
+        continue;
+      }
+      if (width > 0 && (!narrowest || width < narrowest_width)) {
+        narrowest       = p;
+        narrowest_width = width;
+      }
+    }
+    if (narrowest) {
+      plan.data_columns.push_back(
+        scan_plan::data_column{*narrowest, names.at(*narrowest), returned_types.at(*narrowest)});
+      plan.needs_reader_projection = true;
+      plan.row_count_column        = true;
+    }
   }
 
   SIRIUS_LOG_DEBUG("[scan_plan] built plan: {} data col(s), {} partition col(s), {} output entries",

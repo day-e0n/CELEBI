@@ -1,0 +1,427 @@
+{
+  "source_manifest": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/manifest.json",
+  "source_latency_log": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/log_dir/sirius_2026-10-07.log",
+  "columns_used_by_query": {
+    "l_quantity": [
+      "q1",
+      "q6",
+      "q9",
+      "q17",
+      "q18",
+      "q19",
+      "q20"
+    ],
+    "l_extendedprice": [
+      "q1",
+      "q3",
+      "q5",
+      "q6",
+      "q7",
+      "q8",
+      "q9",
+      "q10",
+      "q14",
+      "q15",
+      "q17",
+      "q19"
+    ],
+    "l_discount": [
+      "q1",
+      "q3",
+      "q5",
+      "q6",
+      "q7",
+      "q8",
+      "q9",
+      "q10",
+      "q14",
+      "q15",
+      "q19"
+    ],
+    "l_tax": [
+      "q1"
+    ],
+    "l_returnflag": [
+      "q1",
+      "q10"
+    ],
+    "l_linestatus": [
+      "q1"
+    ],
+    "l_shipdate": [
+      "q1",
+      "q3",
+      "q6",
+      "q7",
+      "q12",
+      "q14",
+      "q15",
+      "q20"
+    ]
+  },
+  "q1_pre_sql_cache_residency": {
+    "2": {
+      "l_shipmode": {
+        "live_pages": 115,
+        "live_mib": 1840.0,
+        "log_line": 30989
+      },
+      "l_shipdate": {
+        "live_pages": 85,
+        "live_mib": 1360.0,
+        "log_line": 30990
+      },
+      "l_quantity": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 30995
+      },
+      "l_extendedprice": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 30996
+      },
+      "l_discount": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 30998
+      },
+      "l_tax": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 31003
+      },
+      "l_linestatus": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 31004
+      },
+      "l_returnflag": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 31005
+      }
+    },
+    "3": {
+      "l_shipmode": {
+        "live_pages": 113,
+        "live_mib": 1808.0,
+        "log_line": 48392
+      },
+      "l_shipdate": {
+        "live_pages": 82,
+        "live_mib": 1312.0,
+        "log_line": 48393
+      },
+      "l_quantity": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 48398
+      },
+      "l_extendedprice": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 48399
+      },
+      "l_discount": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 48401
+      },
+      "l_tax": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 48406
+      },
+      "l_linestatus": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 48407
+      },
+      "l_returnflag": {
+        "live_pages": 0,
+        "live_mib": 0.0,
+        "log_line": 48408
+      }
+    }
+  },
+  "q1_q6_scan_rows": {
+    "q6_exec2": {
+      "materialized_rows": 300005811,
+      "scan_output_rows": 5713861,
+      "scan_batches": 10,
+      "filter_pass_pct": 1.9045834415520704
+    },
+    "q1_exec2": {
+      "materialized_rows": 300005811,
+      "scan_output_rows": 157843624,
+      "scan_batches": 30,
+      "filter_pass_pct": 52.61352220940814
+    },
+    "q6_exec3": {
+      "materialized_rows": 300005811,
+      "scan_output_rows": 5713861,
+      "scan_batches": 10,
+      "filter_pass_pct": 1.9045834415520704
+    },
+    "q1_exec3": {
+      "materialized_rows": 300005811,
+      "scan_output_rows": 157843624,
+      "scan_batches": 30,
+      "filter_pass_pct": 52.61352220940814
+    }
+  },
+  "comparison_rows": [
+    {
+      "query": "q1",
+      "baseline_query_s": 1.5068151503801346,
+      "celebi_query_s": 1.5433713770471513,
+      "latency_reduction_pct": -2.4260591392245123,
+      "celebi_byte_hit_pct": 10.526315789473685,
+      "requested_value_GB_per_execution": 11.400220818,
+      "full_batches": 0,
+      "payload_batches": 60
+    },
+    {
+      "query": "q2",
+      "baseline_query_s": 0.4862454535905272,
+      "celebi_query_s": 0.18236797698773444,
+      "latency_reduction_pct": 62.49466691336747,
+      "celebi_byte_hit_pct": 73.64022355566189,
+      "requested_value_GB_per_execution": 1.778239015,
+      "full_batches": 10,
+      "payload_batches": 22
+    },
+    {
+      "query": "q3",
+      "baseline_query_s": 1.5644163994584233,
+      "celebi_query_s": 1.3367052965331823,
+      "latency_reduction_pct": 14.555658135779648,
+      "celebi_byte_hit_pct": 26.32017311070998,
+      "requested_value_GB_per_execution": 9.232638698,
+      "full_batches": 0,
+      "payload_batches": 40
+    },
+    {
+      "query": "q4",
+      "baseline_query_s": 0.8610419519245625,
+      "celebi_query_s": 0.47602026048116386,
+      "latency_reduction_pct": 44.71578772472298,
+      "celebi_byte_hit_pct": 52.13247310814471,
+      "requested_value_GB_per_execution": 6.330116895,
+      "full_batches": 0,
+      "payload_batches": 28
+    },
+    {
+      "query": "q5",
+      "baseline_query_s": 1.7872781485784799,
+      "celebi_query_s": 1.519295068224892,
+      "latency_reduction_pct": 14.993921375177644,
+      "celebi_byte_hit_pct": 25.47965791860779,
+      "requested_value_GB_per_execution": 8.646237379,
+      "full_batches": 8,
+      "payload_batches": 72
+    },
+    {
+      "query": "q6",
+      "baseline_query_s": 1.030866028741002,
+      "celebi_query_s": 0.5462245098315179,
+      "latency_reduction_pct": 47.01304586604502,
+      "celebi_byte_hit_pct": 46.27138079478258,
+      "requested_value_GB_per_execution": 8.400162708,
+      "full_batches": 0,
+      "payload_batches": 20
+    },
+    {
+      "query": "q7",
+      "baseline_query_s": 2.089190013008192,
+      "celebi_query_s": 1.6941259659361094,
+      "latency_reduction_pct": 18.90991458949376,
+      "celebi_byte_hit_pct": 20.853776376901084,
+      "requested_value_GB_per_execution": 10.564186506,
+      "full_batches": 8,
+      "payload_batches": 72
+    },
+    {
+      "query": "q8",
+      "baseline_query_s": 2.4005110959988087,
+      "celebi_query_s": 1.8745743944309652,
+      "latency_reduction_pct": 21.909363486987377,
+      "celebi_byte_hit_pct": 27.461192985500897,
+      "requested_value_GB_per_execution": 10.274822159,
+      "full_batches": 0,
+      "payload_batches": 78
+    },
+    {
+      "query": "q9",
+      "baseline_query_s": 2.798784533981234,
+      "celebi_query_s": 1.93837358802557,
+      "latency_reduction_pct": 30.742307437712647,
+      "celebi_byte_hit_pct": 23.750075310069054,
+      "requested_value_GB_per_execution": 13.911718754,
+      "full_batches": 8,
+      "payload_batches": 74
+    },
+    {
+      "query": "q10",
+      "baseline_query_s": 1.761097292881459,
+      "celebi_query_s": 1.1590908530633897,
+      "latency_reduction_pct": 34.18359918281874,
+      "celebi_byte_hit_pct": 39.487791991831756,
+      "requested_value_GB_per_execution": 9.798729969,
+      "full_batches": 4,
+      "payload_batches": 38
+    },
+    {
+      "query": "q11",
+      "baseline_query_s": 0.40012066904455423,
+      "celebi_query_s": 0.3348625230137259,
+      "latency_reduction_pct": 16.309616343154154,
+      "celebi_byte_hit_pct": 22.95447461330369,
+      "requested_value_GB_per_execution": 1.444000277,
+      "full_batches": 4,
+      "payload_batches": 12
+    },
+    {
+      "query": "q12",
+      "baseline_query_s": 1.1159318347927183,
+      "celebi_query_s": 0.7181979361921549,
+      "latency_reduction_pct": 35.64141520117504,
+      "celebi_byte_hit_pct": 42.74903988634887,
+      "requested_value_GB_per_execution": 8.515869179,
+      "full_batches": 0,
+      "payload_batches": 68
+    },
+    {
+      "query": "q13",
+      "baseline_query_s": 1.2697359244339168,
+      "celebi_query_s": 1.0429604635573924,
+      "latency_reduction_pct": 17.860049204926387,
+      "celebi_byte_hit_pct": 20.361119160868625,
+      "requested_value_GB_per_execution": 4.56752889,
+      "full_batches": 2,
+      "payload_batches": 6
+    },
+    {
+      "query": "q14",
+      "baseline_query_s": 1.4317587439436466,
+      "celebi_query_s": 0.9417363274842501,
+      "latency_reduction_pct": 34.225208578763436,
+      "celebi_byte_hit_pct": 52.22298564246276,
+      "requested_value_GB_per_execution": 7.44613914,
+      "full_batches": 0,
+      "payload_batches": 32
+    },
+    {
+      "query": "q15",
+      "baseline_query_s": 1.460905646905303,
+      "celebi_query_s": 1.2305410453118384,
+      "latency_reduction_pct": 15.768616000729107,
+      "celebi_byte_hit_pct": 29.608495857343705,
+      "requested_value_GB_per_execution": 7.231138273,
+      "full_batches": 0,
+      "payload_batches": 32
+    },
+    {
+      "query": "q16",
+      "baseline_query_s": 0.351597415516153,
+      "celebi_query_s": 0.19413515157066286,
+      "latency_reduction_pct": 44.784818373687976,
+      "celebi_byte_hit_pct": 88.87714069316277,
+      "requested_value_GB_per_execution": 0.719239521,
+      "full_batches": 4,
+      "payload_batches": 6
+    },
+    {
+      "query": "q17",
+      "baseline_query_s": 1.8859951375052333,
+      "celebi_query_s": 0.864433767972514,
+      "latency_reduction_pct": 54.1656417462468,
+      "celebi_byte_hit_pct": 76.37195674675445,
+      "requested_value_GB_per_execution": 9.795936156,
+      "full_batches": 16,
+      "payload_batches": 48
+    },
+    {
+      "query": "q18",
+      "baseline_query_s": 1.4468691162765026,
+      "celebi_query_s": 1.0566855233628303,
+      "latency_reduction_pct": 26.96744221880998,
+      "celebi_byte_hit_pct": 38.15177456128117,
+      "requested_value_GB_per_execution": 11.565185952,
+      "full_batches": 0,
+      "payload_batches": 50
+    },
+    {
+      "query": "q19",
+      "baseline_query_s": 1.447629215894267,
+      "celebi_query_s": 1.188659569947049,
+      "latency_reduction_pct": 17.889224886031364,
+      "celebi_byte_hit_pct": 30.034793153091556,
+      "requested_value_GB_per_execution": 13.521670162,
+      "full_batches": 0,
+      "payload_batches": 62
+    },
+    {
+      "query": "q20",
+      "baseline_query_s": 1.563464452745393,
+      "celebi_query_s": 1.043414406478405,
+      "latency_reduction_pct": 33.262671585132416,
+      "celebi_byte_hit_pct": 52.6701055512139,
+      "requested_value_GB_per_execution": 6.873101343,
+      "full_batches": 0,
+      "payload_batches": 28
+    },
+    {
+      "query": "q21",
+      "baseline_query_s": 3.5082523089367896,
+      "celebi_query_s": 2.748241459019482,
+      "latency_reduction_pct": 21.66351741524646,
+      "celebi_byte_hit_pct": 47.09139336045982,
+      "requested_value_GB_per_execution": 16.288302449,
+      "full_batches": 0,
+      "payload_batches": 84
+    },
+    {
+      "query": "q22",
+      "baseline_query_s": 0.3944245760794729,
+      "celebi_query_s": 0.18296554335393012,
+      "latency_reduction_pct": 53.61203270531899,
+      "celebi_byte_hit_pct": 74.44444444444444,
+      "requested_value_GB_per_execution": 0.675,
+      "full_batches": 4,
+      "payload_batches": 6
+    }
+  ],
+  "reorder": [
+    8,
+    5,
+    7,
+    15,
+    14,
+    6,
+    17,
+    20,
+    11,
+    2,
+    16,
+    9,
+    18,
+    22,
+    13,
+    3,
+    10,
+    4,
+    21,
+    12,
+    1,
+    19
+  ],
+  "limitations": [
+    "Separate matching trace-on runs supply the cache-hit counters.",
+    "Column use counts are SQL references, not measured cache hits.",
+    "Requested value bytes include repeated reads and exclude offsets, masks and allocation padding.",
+    "Two measured executions in one process per condition do not establish a stable q1 regression.",
+    "No new GPU benchmark or code change was performed for this comparison."
+  ]
+}

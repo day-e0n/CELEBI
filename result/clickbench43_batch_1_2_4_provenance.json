@@ -1,0 +1,248 @@
+{
+  "all_43_queries_in_every_case": true,
+  "batch_split_seed": 1,
+  "cache_reset_between_batches": false,
+  "executions": [
+    2,
+    3
+  ],
+  "extension_sha256": "d64c9264269a0a35b92a156d5fba2ef64cf818952a84ba9a4809a46d01e9e882",
+  "future_horizon": "remaining queries in the current batch only",
+  "hit_metric": "value_bytes_v2: cache-served/requested decoded value bytes pooled over executions 2 and 3; repeated accesses counted; excludes offsets, masks, padding",
+  "independent_runs_per_condition": 1,
+  "latency_metric": "sum of all 43 execute().fetchall() elapsed times, excluding label/hint calls and reorder preparation",
+  "post_workload_exit_policy": "After ALL queries succeed, CUDA synchronization and C/Python log flushing precede isolated process exit, bypassing only the frozen engine's final destructor",
+  "queue": {
+    "ended_utc": "2026-10-07T08:50:01.891311+00:00",
+    "overlaps": [],
+    "plans": [
+      {
+        "ended_utc": "2026-10-07T08:35:25.237027+00:00",
+        "plan": "b2_latency",
+        "returncode": 0,
+        "started_utc": "2026-10-07T08:29:06.535663+00:00",
+        "status": "complete"
+      },
+      {
+        "ended_utc": "2026-10-07T08:39:35.733825+00:00",
+        "plan": "b2_hit",
+        "returncode": 0,
+        "started_utc": "2026-10-07T08:35:25.296440+00:00",
+        "status": "complete"
+      },
+      {
+        "ended_utc": "2026-10-07T08:45:54.472161+00:00",
+        "plan": "b4_latency",
+        "returncode": 0,
+        "started_utc": "2026-10-07T08:39:35.795317+00:00",
+        "status": "complete"
+      },
+      {
+        "ended_utc": "2026-10-07T08:50:01.881956+00:00",
+        "plan": "b4_hit",
+        "returncode": 0,
+        "started_utc": "2026-10-07T08:45:54.527872+00:00",
+        "status": "complete"
+      }
+    ],
+    "started_utc": "2026-10-07T08:29:06.474490+00:00",
+    "status": "complete",
+    "wait_pid": null
+  },
+  "results": [
+    {
+      "baseline_s": 43.171360740903765,
+      "batches": 1,
+      "celebi_hit_pct": 37.006103399416325,
+      "celebi_s": 37.83865608437918,
+      "page_hit_pct": 22.52856768438586,
+      "page_s": 39.344502995023504,
+      "queries": 43,
+      "queries_per_batch": "43",
+      "reduction_pct": 12.352412722242455,
+      "workload": "ClickBench"
+    },
+    {
+      "baseline_s": 42.301621050573885,
+      "batches": 2,
+      "celebi_hit_pct": 36.24099720329428,
+      "celebi_s": 36.75386210298166,
+      "page_hit_pct": 20.67141276277317,
+      "page_s": 41.29229870508425,
+      "queries": 43,
+      "queries_per_batch": "22+21",
+      "reduction_pct": 13.11476678626472,
+      "workload": "ClickBench"
+    },
+    {
+      "baseline_s": 41.94335565203801,
+      "batches": 4,
+      "celebi_hit_pct": 34.661721689862894,
+      "celebi_s": 38.88198697846383,
+      "page_hit_pct": 18.52580743344936,
+      "page_s": 39.33280052803457,
+      "queries": 43,
+      "queries_per_batch": "11+11+11+10",
+      "reduction_pct": 7.29881676366404,
+      "workload": "ClickBench"
+    }
+  ],
+  "reused_tpch_source": "/home/dy1013/sirius_multi-gpu/result/query_latency_and_cache_hit_after_avg_fix_provenance.json",
+  "sources": [
+    {
+      "batches": 1,
+      "hit": {
+        "paging_lru": {
+          "byte_hit_pct": 22.52856768438586,
+          "cached_bytes": 56220395106,
+          "excluded_metrics": {},
+          "logs": [
+            "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/hit_paging_retry_job/runs/hit/cb_r1/paging_lru/log_dir/sirius_2026-10-07.log"
+          ],
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/hit_paging_retry_job/runs/hit/cb_r1/paging_lru/metadata.json",
+          "reader_bytes": 193331178228,
+          "total_bytes": 249551573334
+        },
+        "reorder_future": {
+          "byte_hit_pct": 37.006103399416325,
+          "cached_bytes": 92349313261,
+          "excluded_metrics": {},
+          "logs": [
+            "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/hit_future_process_exit_job/runs/hit/cb_r1/reorder_future/log_dir/sirius_2026-10-07.log"
+          ],
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/hit_future_process_exit_job/runs/hit/cb_r1/reorder_future/metadata.json",
+          "reader_bytes": 157202260068,
+          "total_bytes": 249551573329
+        }
+      },
+      "latency": {
+        "baseline": {
+          "execution_2_s": 43.43104150565341,
+          "execution_3_s": 42.91167997615412,
+          "mean_s": 43.171360740903765,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/latency_runs/latency/cb_r1/baseline/metadata.json"
+        },
+        "paging_lru": {
+          "execution_2_s": 38.78336823033169,
+          "execution_3_s": 39.90563775971532,
+          "mean_s": 39.344502995023504,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/latency_runs/latency/cb_r1/paging_lru/metadata.json"
+        },
+        "reorder_future": {
+          "execution_2_s": 36.80293930089101,
+          "execution_3_s": 38.87437286786735,
+          "mean_s": 37.83865608437918,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/latency_runs/latency/cb_r1/reorder_future/metadata.json"
+        }
+      },
+      "queries_per_batch": [
+        43
+      ]
+    },
+    {
+      "batches": 2,
+      "hit": {
+        "paging_lru": {
+          "byte_hit_pct": 20.67141276277317,
+          "cached_bytes": 51585835784,
+          "excluded_metrics": {},
+          "logs": [
+            "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b2_hit/hit/cb_r1/paging_lru/log_dir/sirius_2026-10-07.log"
+          ],
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b2_hit/hit/cb_r1/paging_lru/metadata.json",
+          "reader_bytes": 197965737570,
+          "total_bytes": 249551573354
+        },
+        "reorder_future": {
+          "byte_hit_pct": 36.24099720329428,
+          "cached_bytes": 90439978720,
+          "excluded_metrics": {},
+          "logs": [
+            "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b2_hit/hit/cb_r1/reorder_future/log_dir/sirius_2026-10-07.log"
+          ],
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b2_hit/hit/cb_r1/reorder_future/metadata.json",
+          "reader_bytes": 159111594634,
+          "total_bytes": 249551573354
+        }
+      },
+      "latency": {
+        "baseline": {
+          "execution_2_s": 42.31726904632524,
+          "execution_3_s": 42.285973054822534,
+          "mean_s": 42.301621050573885,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b2_latency/latency/cb_r1/baseline/metadata.json"
+        },
+        "paging_lru": {
+          "execution_2_s": 40.41368976701051,
+          "execution_3_s": 42.17090764315799,
+          "mean_s": 41.29229870508425,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b2_latency/latency/cb_r1/paging_lru/metadata.json"
+        },
+        "reorder_future": {
+          "execution_2_s": 34.923426158726215,
+          "execution_3_s": 38.5842980472371,
+          "mean_s": 36.75386210298166,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b2_latency/latency/cb_r1/reorder_future/metadata.json"
+        }
+      },
+      "queries_per_batch": [
+        22,
+        21
+      ]
+    },
+    {
+      "batches": 4,
+      "hit": {
+        "paging_lru": {
+          "byte_hit_pct": 18.52580743344936,
+          "cached_bytes": 46231443923,
+          "excluded_metrics": {},
+          "logs": [
+            "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b4_hit/hit/cb_r1/paging_lru/log_dir/sirius_2026-10-07.log"
+          ],
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b4_hit/hit/cb_r1/paging_lru/metadata.json",
+          "reader_bytes": 203320129411,
+          "total_bytes": 249551573334
+        },
+        "reorder_future": {
+          "byte_hit_pct": 34.661721689862894,
+          "cached_bytes": 86498824801,
+          "excluded_metrics": {},
+          "logs": [
+            "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b4_hit/hit/cb_r1/reorder_future/log_dir/sirius_2026-10-07.log"
+          ],
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b4_hit/hit/cb_r1/reorder_future/metadata.json",
+          "reader_bytes": 163052612877,
+          "total_bytes": 249551437678
+        }
+      },
+      "latency": {
+        "baseline": {
+          "execution_2_s": 41.919648623559624,
+          "execution_3_s": 41.96706268051639,
+          "mean_s": 41.94335565203801,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b4_latency/latency/cb_r1/baseline/metadata.json"
+        },
+        "paging_lru": {
+          "execution_2_s": 39.5593356215395,
+          "execution_3_s": 39.10626543452963,
+          "mean_s": 39.33280052803457,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b4_latency/latency/cb_r1/paging_lru/metadata.json"
+        },
+        "reorder_future": {
+          "execution_2_s": 39.38534524803981,
+          "execution_3_s": 38.378628708887845,
+          "mean_s": 38.88198697846383,
+          "metadata": "/home/dy1013/sirius_multi-gpu/experiment/BATCH43_20261007/b4_latency/latency/cb_r1/reorder_future/metadata.json"
+        }
+      },
+      "queries_per_batch": [
+        11,
+        11,
+        11,
+        10
+      ]
+    }
+  ],
+  "warmup_execution": 1
+}

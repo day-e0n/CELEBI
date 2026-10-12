@@ -49,6 +49,9 @@
 #include <utility>
 #include <vector>
 
+#include <cstdlib>
+#include <string_view>
+
 namespace sirius::io::cache {
 
 namespace {
@@ -509,7 +512,16 @@ exec::semi_future<std::size_t> prefetching_cache::device_read_async(const sirius
       }
       cached_chunk* c = (ci < chunks.size() && chunks[ci]->offset == off) ? chunks[ci] : nullptr;
 
-      if (c != nullptr && c->state.acquire_read()) {
+      // DEBUG (temporary): bisect a wrong-result bug in this path.
+      static bool const dbg_no_hit = [] {
+        auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_NO_HIT");
+        return v != nullptr && std::string_view(v) == "1";
+      }();
+      static bool const dbg_no_load = [] {
+        auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_NO_LOAD");
+        return v != nullptr && std::string_view(v) == "1";
+      }();
+      if (!dbg_no_hit && c != nullptr && c->state.acquire_read()) {
         cached_chunks.push_back(c);  // (1) hit -- a cached chunk is always fully valid
         hits++;
       } else {
@@ -530,8 +542,13 @@ exec::semi_future<std::size_t> prefetching_cache::device_read_async(const sirius
         size_t const need_lo     = std::max(off, offset);
         size_t const need_hi     = std::min(off + chunk_bytes, offset + size);
         size_t const overread    = chunk_bytes - (need_hi - need_lo);
-        bool const worth_caching = overread * 4 < chunk_bytes;  // over-read < 25% of chunk
-        if (worth_caching && c != nullptr && c->state.mark_loading()) {
+        static bool const dbg_full_only = [] {
+          auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_FULL_ONLY");
+          return v != nullptr && std::string_view(v) == "1";
+        }();
+        bool const worth_caching =
+          dbg_full_only ? overread == 0 : overread * 4 < chunk_bytes;  // over-read < 25% of chunk
+        if (!dbg_no_load && worth_caching && c != nullptr && c->state.mark_loading()) {
           assert(c->data != nullptr);
           io_chunks.push_back(c);  // (2) host-to-device load into the cache buffer
           io_segments.emplace_back(off, chunk_bytes, c->data);
@@ -559,6 +576,37 @@ exec::semi_future<std::size_t> prefetching_cache::device_read_async(const sirius
     _counters.hits.fetch_add(hits, std::memory_order_relaxed);
     _counters.h2d.fetch_add(h2d, std::memory_order_relaxed);
     _counters.misses.fetch_add(misses, std::memory_order_relaxed);
+
+    // DEBUG (temporary): compare every hit against a fresh read of the file.
+    static bool const dbg_verify = [] {
+      auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_VERIFY");
+      return v != nullptr && std::string_view(v) == "1";
+    }();
+    if (dbg_verify) {
+      for (cached_chunk* c : cached_chunks) {
+        size_t const vs = std::max(c->offset, offset);
+        size_t const ve = std::min(c->offset + chunk_bytes, offset + size);
+        std::vector<uint8_t> fresh(ve - vs);
+        auto const n = _io_ctx->host_read_io(obj, vs, ve - vs, fresh.data());
+        auto const* cached_bytes = c->data + (vs - c->offset);
+        size_t first_bad = fresh.size();
+        size_t bad = 0;
+        for (size_t i = 0; i < std::min<size_t>(n, fresh.size()); ++i) {
+          if (fresh[i] != cached_bytes[i]) {
+            if (first_bad == fresh.size()) { first_bad = i; }
+            ++bad;
+          }
+        }
+        if (bad > 0) {
+          spdlog::error(
+            "[prefetch-verify] MISMATCH file={} chunk_off={} req_off={} req_size={} "
+            "copy=[{},{}) first_bad_in_chunk={} bad_bytes={} state={} pins={}",
+            obj.raw_file_cache_id(), c->offset, offset, size, vs - c->offset, ve - c->offset,
+            (vs - c->offset) + first_bad, bad, static_cast<int>(c->state.get_state()),
+            c->state.get_pin_count());
+        }
+      }
+    }
 
     // (1) copy the already-cached chunks straight to the device on `stream`.
     for (cached_chunk* c : cached_chunks) {

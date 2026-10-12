@@ -1,0 +1,7 @@
+workload,batches,runs,pending_cases,baseline_mean_s,baseline_std_s,paging_lru_mean_s,paging_lru_std_s,reorder_future_mean_s,reorder_future_std_s,paging_lru_reduction_pct,paging_lru_paired_reduction_mean_pct,paging_lru_paired_reduction_std_pct,reorder_future_reduction_pct,reorder_future_paired_reduction_mean_pct,reorder_future_paired_reduction_std_pct
+ClickBench,1,5,0,43.983,1.069,40.495,1.064,37.847,1.577,7.93,7.85,4.38,13.95,13.9,4.39
+ClickBench,2,5,0,43.507,0.652,41.385,1.12,38.255,1.708,4.88,4.88,2.03,12.07,12.04,4.56
+ClickBench,4,5,0,42.914,0.417,41.616,1.132,38.945,1.112,3.02,3.0,3.32,9.25,9.24,2.86
+TPC-H SF50,1,5,0,32.456,0.122,30.593,0.107,23.547,0.228,5.74,5.74,0.51,27.45,27.45,0.74
+TPC-H SF50,2,5,0,32.509,0.293,30.614,0.63,24.449,1.068,5.83,5.83,1.69,24.79,24.79,3.17
+TPC-H SF50,3,5,0,32.526,0.228,30.148,0.528,25.455,1.207,7.31,7.31,1.78,21.74,21.73,3.82

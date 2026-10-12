@@ -102,6 +102,7 @@ extern "C" int cudaProfilerStop();
 
 #include <cstdlib>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace duckdb {
 
@@ -1281,6 +1282,82 @@ static void SiriusSetQueryLabelFunction(ClientContext& context,
   data.finished = true;
 }
 
+// sirius_set_cache_hints('mode;cur=a,b;next=c:1,d:3') -- the page cache's view of the future,
+// set by a caller that knows the query order. mode is off, evict or admit; cur lists the
+// columns of the query about to run; next maps a column to how many queries ahead it is used
+// next. See sirius_scan_manager::set_future_cache_hints.
+struct SiriusSetCacheHintsData : public TableFunctionData {
+  std::string spec;
+  bool finished = false;
+};
+
+static unique_ptr<FunctionData> SiriusSetCacheHintsBind(ClientContext& context,
+                                                        TableFunctionBindInput& input,
+                                                        vector<LogicalType>& return_types,
+                                                        vector<string>& names)
+{
+  if (input.inputs.empty() || input.inputs[0].IsNull()) {
+    throw BinderException("sirius_set_cache_hints requires a non-NULL VARCHAR argument");
+  }
+  auto result  = make_uniq<SiriusSetCacheHintsData>();
+  result->spec = input.inputs[0].ToString();
+  return_types.push_back(LogicalType::BOOLEAN);
+  names.push_back("ok");
+  return std::move(result);
+}
+
+static void SiriusSetCacheHintsFunction(ClientContext& context,
+                                        TableFunctionInput& data_p,
+                                        DataChunk& output)
+{
+  auto& data = data_p.bind_data->CastNoConst<SiriusSetCacheHintsData>();
+  if (data.finished) { return; }
+  auto split = [](std::string const& text, char sep) {
+    std::vector<std::string> parts;
+    std::size_t begin = 0;
+    while (begin <= text.size()) {
+      auto const end = text.find(sep, begin);
+      auto const piece = text.substr(begin, end == std::string::npos ? std::string::npos : end - begin);
+      if (!piece.empty()) { parts.push_back(piece); }
+      if (end == std::string::npos) { break; }
+      begin = end + 1;
+    }
+    return parts;
+  };
+  int mode = 0;
+  std::unordered_set<std::string> current;
+  std::unordered_map<std::string, int> next_use;
+  for (auto const& field : split(data.spec, ';')) {
+    if (field == "off") {
+      mode = 0;
+    } else if (field == "evict") {
+      mode = 1;
+    } else if (field == "admit") {
+      mode = 2;
+    } else if (field == "bypass") {
+      mode = 3;
+    } else if (field.rfind("cur=", 0) == 0) {
+      for (auto const& c : split(field.substr(4), ',')) { current.insert(c); }
+    } else if (field.rfind("next=", 0) == 0) {
+      for (auto const& entry : split(field.substr(5), ',')) {
+        auto const colon = entry.rfind(':');
+        if (colon == std::string::npos) { continue; }
+        next_use[entry.substr(0, colon)] = std::stoi(entry.substr(colon + 1));
+      }
+    } else {
+      throw InvalidInputException("sirius_set_cache_hints: unknown field '%s'", field);
+    }
+  }
+  if (auto sirius_ctx = context.registered_state->Get<duckdb::SiriusContext>("sirius_state");
+      sirius_ctx) {
+    sirius_ctx->get_scan_manager().set_future_cache_hints(mode, std::move(current),
+                                                          std::move(next_use));
+  }
+  output.SetCardinality(1);
+  output.SetValue(0, 0, Value::BOOLEAN(true));
+  data.finished = true;
+}
+
 void SiriusExtension::RegisterGPUFunctions(DatabaseInstance& instance)
 {
   auto transaction = CatalogTransaction::GetSystemTransaction(instance);
@@ -1329,6 +1406,13 @@ void SiriusExtension::RegisterGPUFunctions(DatabaseInstance& instance)
                                 SiriusSetQueryLabelBind);
   CreateTableFunctionInfo set_query_label_info(set_query_label);
   catalog.CreateTableFunction(transaction, set_query_label_info);
+
+  TableFunction set_cache_hints("sirius_set_cache_hints",
+                                {LogicalType::VARCHAR},
+                                SiriusSetCacheHintsFunction,
+                                SiriusSetCacheHintsBind);
+  CreateTableFunctionInfo set_cache_hints_info(set_cache_hints);
+  catalog.CreateTableFunction(transaction, set_cache_hints_info);
 
   // Profiler control functions for nsys --capture-range=cudaProfilerApi
   TableFunction profiler_start(

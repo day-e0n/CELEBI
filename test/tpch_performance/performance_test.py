@@ -18,6 +18,7 @@ import glob
 import json
 import math
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -101,6 +102,8 @@ def setup_benchmark_dir(
     name=None,
     nsys_profile=False,
     data_source="parquet",
+    set_overrides=None,
+    yaml_overrides=None,
 ):
     """Create the benchmark output directory and return its paths.
 
@@ -144,6 +147,8 @@ def setup_benchmark_dir(
         "queries": [f"q{q}" for q in queries],
         "pin": pin,
         "nsys_profile": nsys_profile,
+        "set_overrides": set_overrides or {},
+        "yaml_overrides": yaml_overrides or {},
         "runtime_file": os.path.relpath(runtime_csv, benchmark_dir),
     }
     with open(os.path.join(benchmark_dir, "metadata.json"), "w") as f:
@@ -302,6 +307,9 @@ def open_connection(source, gpu_execution=False, data_source="parquet"):
         log(f"Loading Sirius extension from {EXTENSION_PATH}")
         con.execute(f"LOAD '{EXTENSION_PATH}'")
         log("Sirius extension loaded")
+        for stmt in SESSION_SET_STATEMENTS:
+            log(f"  {stmt}")
+            con.execute(stmt)
     return con
 
 
@@ -555,6 +563,7 @@ def _build_nsys_temp_sql(qnum, source, iterations, pin, qdir, data_source="parqu
         parts.append(emit_pin(qnum, source, data_source))
 
     parts.append("SET gpu_execution = true;")
+    parts.extend(SESSION_SET_STATEMENTS)
     # Open the nsys capture range BEFORE the first (cold) iteration so the cold
     # run is profiled too. The one-time GPU memory-pool init happens at process
     # startup (the statically-linked extension inits before any SQL runs), so it
@@ -885,6 +894,68 @@ def validate(benchmark_dir, queries):
     return results
 
 
+SESSION_SET_STATEMENTS = []
+
+_SET_KEY_RE = re.compile(r"^[a-z_][a-z0-9_]*$")
+_SET_NUMBER_RE = re.compile(r"^-?\d+(\.\d+)?$")
+
+
+def split_overrides(items):
+    """Split `--set KEY=VALUE` items into (DuckDB SET overrides, YAML overrides).
+
+    Keys with a `sirius.` prefix are dotted paths into the Sirius YAML config.
+    """
+    sql_overrides = {}
+    yaml_overrides = {}
+    for item in items or []:
+        key, sep, value = item.partition("=")
+        key = key.strip()
+        if not sep or not key:
+            raise SystemExit(f"--set expects KEY=VALUE, got {item!r}")
+        if key.startswith("sirius."):
+            yaml_overrides[key] = value
+        elif _SET_KEY_RE.match(key):
+            sql_overrides[key] = value
+        else:
+            raise SystemExit(f"--set key {key!r} is not a valid DuckDB setting name")
+    return sql_overrides, yaml_overrides
+
+
+def write_merged_config(base_path, yaml_overrides, out_path):
+    """Write base_path's YAML with each dotted-path override applied to out_path."""
+    import yaml
+
+    data = {}
+    if base_path and os.path.isfile(base_path):
+        with open(base_path) as f:
+            data = yaml.safe_load(f) or {}
+    for dotted, raw in yaml_overrides.items():
+        *parents, leaf = dotted.split(".")
+        node = data
+        for part in parents:
+            child = node.setdefault(part, {})
+            if not isinstance(child, dict):
+                raise SystemExit(f"--set {dotted}: {part!r} is not a mapping in the base config")
+            node = child
+        node[leaf] = yaml.safe_load(raw)
+    with open(out_path, "w") as f:
+        yaml.safe_dump(data, f, sort_keys=False)
+    return out_path
+
+
+def _sql_literal(value):
+    lowered = value.lower()
+    if lowered in ("true", "false"):
+        return lowered
+    if _SET_NUMBER_RE.match(value):
+        return value
+    return "'" + value.replace("'", "''") + "'"
+
+
+def build_set_statements(sql_overrides):
+    return [f"SET {key} = {_sql_literal(value)};" for key, value in sql_overrides.items()]
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="Run TPC-H performance tests")
     p.add_argument(
@@ -961,6 +1032,19 @@ def parse_args():
         type=str,
         default=os.environ.get("SIRIUS_CONFIG_FILE", ""),
         help="Path to Sirius config YAML (default: $SIRIUS_CONFIG_FILE)",
+    )
+    p.add_argument(
+        "--set",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help=(
+            "Override a Sirius setting for this run; repeatable. A bare name is a "
+            "DuckDB SET applied to the GPU engine (e.g. hash_partition_bytes=268435456); "
+            "a sirius.* dotted path overrides the YAML config (e.g. "
+            "sirius.memory.host.block_size=64Mi), written to <bench>/config.yml with "
+            "the original kept as config.base.yml. Recorded in metadata.json."
+        ),
     )
     p.add_argument(
         "--pin",
@@ -1063,6 +1147,8 @@ def main():
     queries = parse_query_spec(args.queries)
     engine_modes = resolve_engine_modes(args.engine)
     output_root = args.output or DEFAULT_OUTPUT_ROOT
+    set_overrides, yaml_overrides = split_overrides(args.set)
+    SESSION_SET_STATEMENTS[:] = build_set_statements(set_overrides)
 
     if args.pin != "none" and args.engine == "cpu":
         raise SystemExit("--pin is Sirius-only; cannot be combined with --engine cpu")
@@ -1106,7 +1192,17 @@ def main():
         name=args.name,
         nsys_profile=nsys_profile,
         data_source=args.data_source,
+        set_overrides=set_overrides,
+        yaml_overrides=yaml_overrides,
     )
+    if yaml_overrides:
+        base_copy = os.path.join(benchmark_dir, "config.base.yml")
+        if config_path and os.path.isfile(config_path):
+            shutil.copy2(config_path, base_copy)
+        config_path = write_merged_config(
+            config_path, yaml_overrides, os.path.join(benchmark_dir, "config.yml")
+        )
+        os.environ["SIRIUS_CONFIG_FILE"] = config_path
     os.environ["SIRIUS_LOG_DIR"] = log_dir
 
     log(f"Source:        {source}")

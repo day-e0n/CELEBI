@@ -15,8 +15,10 @@
  */
 
 #include "op/scan/owning_table_view.hpp"
+#include "op/scan/cache_hit_metrics.hpp"
 
 #include <data/data_batch_utils.hpp>
+#include <log/logging.hpp>
 #include <op/scan/gpu_ingestible.hpp>
 #include <op/scan/sirius_gpu_scan_operator_data.hpp>
 
@@ -33,6 +35,12 @@ filtered_table gpu_ingestible::materialize_table(const op::scan::scan_operator_i
     auto batch  = split.get_cached_batch();
     auto rbatch = batch->to_read_only();
     auto view   = get_cudf_table_view(rbatch);
+    if (cache_hit_metrics::cache_hit_trace_enabled()) {
+      auto const total = cache_hit_metrics::decoded_table_bytes(view, stream);
+      SIRIUS_LOG_INFO("[cache-hit] file='<cached-provider>' total_bytes={} read_bytes=0 kind=full "
+                      "path=cached_provider rows={} metric=value_bytes_v2",
+                      total, view.num_rows());
+    }
     return {.table = owning_table_view{std::move(rbatch), view}, .state = filter_state::UNFILTERED};
   }
 }

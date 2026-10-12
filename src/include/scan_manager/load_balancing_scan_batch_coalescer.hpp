@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <functional>
 #include "blockingconcurrentqueue.h"
 #include "cucascade/data/data_batch.hpp"
 #include "exec/try.hpp"
@@ -92,6 +93,11 @@ class load_balancing_scan_batch_coalescer {
     /// True when the page cache serves only some of this scan's row groups and the
     /// ingestible must read the rest. Both sources then feed the same connector.
     bool has_residual_scan{false};
+
+    /// LATE_MATERIALIZATION re-fetch scan: returns true once the join's file_row_number filter
+    /// is published, so the first split is held back until it can prune row groups. Empty for
+    /// every other scan.
+    std::function<bool()> row_id_filter_ready;
 
     void attach_batch_provider(std::unique_ptr<databatch_provider> provider)
     {

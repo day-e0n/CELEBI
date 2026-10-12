@@ -1,0 +1,6 @@
+Running latency cb r1 baseline
+{"workload": "cb", "condition": "baseline", "trace_mode": "latency", "run": 1, "status": "complete", "status_counts": {"ok": 129}, "comparison_valid": true, "steady_state_workload_wall_s": 43.171360740903765}
+Running latency cb r1 paging_lru
+{"workload": "cb", "condition": "paging_lru", "trace_mode": "latency", "run": 1, "status": "complete", "status_counts": {"ok": 129}, "comparison_valid": true, "steady_state_workload_wall_s": 39.344502995023504}
+Running latency cb r1 reorder_future
+{"workload": "cb", "condition": "reorder_future", "trace_mode": "latency", "run": 1, "status": "complete", "status_counts": {"ok": 129}, "comparison_valid": true, "steady_state_workload_wall_s": 37.83865608437918}

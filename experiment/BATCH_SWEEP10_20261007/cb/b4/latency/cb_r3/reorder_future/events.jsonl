@@ -1,0 +1,390 @@
+{"utc": "2026-10-07T14:38:49.321951+00:00", "stage": "connection_ready"}
+{"utc": "2026-10-07T14:38:49.322147+00:00", "stage": "query_start", "execution": 1, "position": 1, "query": 10, "label": "reorder_future_q10_exec1"}
+{"utc": "2026-10-07T14:38:49.332497+00:00", "stage": "batch_hint", "execution": 1, "query": 10, "batch": 1, "local_position": 1, "hint": "evict;cur=AdvEngineID,RegionID,ResolutionWidth,UserID;next=ClientIP:7,CounterID:10,EventDate:10,IsDownload:10,IsLink:10,IsRefresh:7,MobilePhoneModel:3,ResolutionWidth:7,SearchEngineID:6,SearchPhrase:4,URL:9,UserID:1,WatchID:7"}
+{"utc": "2026-10-07T14:38:49.747271+00:00", "stage": "query_end", "execution": 1, "position": 1, "query": 10, "status": "ok"}
+{"utc": "2026-10-07T14:38:49.747529+00:00", "stage": "query_start", "execution": 1, "position": 2, "query": 4, "label": "reorder_future_q4_exec1"}
+{"utc": "2026-10-07T14:38:49.767077+00:00", "stage": "batch_hint", "execution": 1, "query": 4, "batch": 1, "local_position": 2, "hint": "evict;cur=UserID;next=ClientIP:6,CounterID:9,EventDate:9,IsDownload:9,IsLink:9,IsRefresh:6,MobilePhoneModel:2,ResolutionWidth:6,SearchEngineID:5,SearchPhrase:3,URL:8,UserID:1,WatchID:6"}
+{"utc": "2026-10-07T14:38:49.879681+00:00", "stage": "query_end", "execution": 1, "position": 2, "query": 4, "status": "ok"}
+{"utc": "2026-10-07T14:38:49.879876+00:00", "stage": "query_start", "execution": 1, "position": 3, "query": 5, "label": "reorder_future_q5_exec1"}
+{"utc": "2026-10-07T14:38:49.899938+00:00", "stage": "batch_hint", "execution": 1, "query": 5, "batch": 1, "local_position": 3, "hint": "evict;cur=UserID;next=ClientIP:5,CounterID:8,EventDate:8,IsDownload:8,IsLink:8,IsRefresh:5,MobilePhoneModel:1,ResolutionWidth:5,SearchEngineID:4,SearchPhrase:2,URL:7,UserID:1,WatchID:5"}
+{"utc": "2026-10-07T14:38:50.012062+00:00", "stage": "query_end", "execution": 1, "position": 3, "query": 5, "status": "ok"}
+{"utc": "2026-10-07T14:38:50.012130+00:00", "stage": "query_start", "execution": 1, "position": 4, "query": 11, "label": "reorder_future_q11_exec1"}
+{"utc": "2026-10-07T14:38:50.022591+00:00", "stage": "batch_hint", "execution": 1, "query": 11, "batch": 1, "local_position": 4, "hint": "evict;cur=MobilePhoneModel,UserID;next=ClientIP:4,CounterID:7,EventDate:7,IsDownload:7,IsLink:7,IsRefresh:4,ResolutionWidth:4,SearchEngineID:3,SearchPhrase:1,URL:6,UserID:1,WatchID:4"}
+{"utc": "2026-10-07T14:38:50.417631+00:00", "stage": "query_end", "execution": 1, "position": 4, "query": 11, "status": "ok"}
+{"utc": "2026-10-07T14:38:50.417776+00:00", "stage": "query_start", "execution": 1, "position": 5, "query": 14, "label": "reorder_future_q14_exec1"}
+{"utc": "2026-10-07T14:38:50.427587+00:00", "stage": "batch_hint", "execution": 1, "query": 14, "batch": 1, "local_position": 5, "hint": "evict;cur=SearchPhrase,UserID;next=ClientIP:3,CounterID:6,EventDate:6,IsDownload:6,IsLink:6,IsRefresh:3,ResolutionWidth:3,SearchEngineID:2,SearchPhrase:1,URL:5,UserID:1,WatchID:3"}
+{"utc": "2026-10-07T14:38:51.844106+00:00", "stage": "query_end", "execution": 1, "position": 5, "query": 14, "status": "ok"}
+{"utc": "2026-10-07T14:38:51.844204+00:00", "stage": "query_start", "execution": 1, "position": 6, "query": 18, "label": "reorder_future_q18_exec1"}
+{"utc": "2026-10-07T14:38:51.854590+00:00", "stage": "batch_hint", "execution": 1, "query": 18, "batch": 1, "local_position": 6, "hint": "evict;cur=SearchPhrase,UserID;next=ClientIP:2,CounterID:5,EventDate:5,IsDownload:5,IsLink:5,IsRefresh:2,ResolutionWidth:2,SearchEngineID:1,SearchPhrase:1,URL:4,WatchID:2"}
+{"utc": "2026-10-07T14:38:52.128334+00:00", "stage": "query_end", "execution": 1, "position": 6, "query": 18, "status": "ok"}
+{"utc": "2026-10-07T14:38:52.128398+00:00", "stage": "query_start", "execution": 1, "position": 7, "query": 15, "label": "reorder_future_q15_exec1"}
+{"utc": "2026-10-07T14:38:52.138542+00:00", "stage": "batch_hint", "execution": 1, "query": 15, "batch": 1, "local_position": 7, "hint": "evict;cur=SearchEngineID,SearchPhrase;next=ClientIP:1,CounterID:4,EventDate:4,IsDownload:4,IsLink:4,IsRefresh:1,ResolutionWidth:1,SearchPhrase:1,URL:3,WatchID:1"}
+{"utc": "2026-10-07T14:38:52.321259+00:00", "stage": "query_end", "execution": 1, "position": 7, "query": 15, "status": "ok"}
+{"utc": "2026-10-07T14:38:52.321345+00:00", "stage": "query_start", "execution": 1, "position": 8, "query": 32, "label": "reorder_future_q32_exec1"}
+{"utc": "2026-10-07T14:38:52.331747+00:00", "stage": "batch_hint", "execution": 1, "query": 32, "batch": 1, "local_position": 8, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,SearchPhrase,WatchID;next=ClientIP:1,CounterID:3,EventDate:3,IsDownload:3,IsLink:3,IsRefresh:3,URL:2"}
+{"utc": "2026-10-07T14:38:52.899821+00:00", "stage": "query_end", "execution": 1, "position": 8, "query": 32, "status": "ok"}
+{"utc": "2026-10-07T14:38:52.900064+00:00", "stage": "query_start", "execution": 1, "position": 9, "query": 36, "label": "reorder_future_q36_exec1"}
+{"utc": "2026-10-07T14:38:52.909543+00:00", "stage": "batch_hint", "execution": 1, "query": 36, "batch": 1, "local_position": 9, "hint": "evict;cur=ClientIP;next=CounterID:2,EventDate:2,IsDownload:2,IsLink:2,IsRefresh:2,URL:1"}
+{"utc": "2026-10-07T14:38:53.041662+00:00", "stage": "query_end", "execution": 1, "position": 9, "query": 36, "status": "ok"}
+{"utc": "2026-10-07T14:38:53.041715+00:00", "stage": "query_start", "execution": 1, "position": 10, "query": 35, "label": "reorder_future_q35_exec1"}
+{"utc": "2026-10-07T14:38:53.051740+00:00", "stage": "batch_hint", "execution": 1, "query": 35, "batch": 1, "local_position": 10, "hint": "evict;cur=URL;next=CounterID:1,EventDate:1,IsDownload:1,IsLink:1,IsRefresh:1,URL:1"}
+{"utc": "2026-10-07T14:38:54.733677+00:00", "stage": "query_end", "execution": 1, "position": 10, "query": 35, "status": "ok"}
+{"utc": "2026-10-07T14:38:54.733878+00:00", "stage": "query_start", "execution": 1, "position": 11, "query": 39, "label": "reorder_future_q39_exec1"}
+{"utc": "2026-10-07T14:38:54.743660+00:00", "stage": "batch_hint", "execution": 1, "query": 39, "batch": 1, "local_position": 11, "hint": "evict;cur=CounterID,EventDate,IsDownload,IsLink,IsRefresh,URL;next="}
+{"utc": "2026-10-07T14:38:55.271083+00:00", "stage": "query_end", "execution": 1, "position": 11, "query": 39, "status": "ok"}
+{"utc": "2026-10-07T14:38:55.271285+00:00", "stage": "query_start", "execution": 1, "position": 12, "query": 43, "label": "reorder_future_q43_exec1"}
+{"utc": "2026-10-07T14:38:55.280757+00:00", "stage": "batch_hint", "execution": 1, "query": 43, "batch": 2, "local_position": 1, "hint": "evict;cur=CounterID,DontCountHits,EventDate,EventTime,IsRefresh;next=AdvEngineID:8,ClientIP:5,CounterID:9,DontCountHits:10,EventDate:10,EventTime:1,IsRefresh:5,MobilePhone:4,MobilePhoneModel:4,ResolutionWidth:5,SearchEngineID:5,SearchPhrase:1,Title:10,URL:9,UserID:3,WatchID:7"}
+{"utc": "2026-10-07T14:38:55.433429+00:00", "stage": "query_end", "execution": 1, "position": 12, "query": 43, "status": "ok"}
+{"utc": "2026-10-07T14:38:55.433618+00:00", "stage": "query_start", "execution": 1, "position": 13, "query": 25, "label": "reorder_future_q25_exec1"}
+{"utc": "2026-10-07T14:38:55.443572+00:00", "stage": "batch_hint", "execution": 1, "query": 25, "batch": 2, "local_position": 2, "hint": "evict;cur=EventTime,SearchPhrase;next=AdvEngineID:7,ClientIP:4,CounterID:8,DontCountHits:9,EventDate:9,IsRefresh:4,MobilePhone:3,MobilePhoneModel:3,ResolutionWidth:4,SearchEngineID:4,SearchPhrase:1,Title:9,URL:8,UserID:2,WatchID:6"}
+{"utc": "2026-10-07T14:38:56.486300+00:00", "stage": "query_end", "execution": 1, "position": 13, "query": 25, "status": "ok"}
+{"utc": "2026-10-07T14:38:56.486374+00:00", "stage": "query_start", "execution": 1, "position": 14, "query": 6, "label": "reorder_future_q6_exec1"}
+{"utc": "2026-10-07T14:38:56.496981+00:00", "stage": "batch_hint", "execution": 1, "query": 6, "batch": 2, "local_position": 3, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:6,ClientIP:3,CounterID:7,DontCountHits:8,EventDate:8,IsRefresh:3,MobilePhone:2,MobilePhoneModel:2,ResolutionWidth:3,SearchEngineID:3,SearchPhrase:1,Title:8,URL:7,UserID:1,WatchID:5"}
+{"utc": "2026-10-07T14:38:56.649523+00:00", "stage": "query_end", "execution": 1, "position": 14, "query": 6, "status": "ok"}
+{"utc": "2026-10-07T14:38:56.649725+00:00", "stage": "query_start", "execution": 1, "position": 15, "query": 17, "label": "reorder_future_q17_exec1"}
+{"utc": "2026-10-07T14:38:56.659201+00:00", "stage": "batch_hint", "execution": 1, "query": 17, "batch": 2, "local_position": 4, "hint": "evict;cur=SearchPhrase,UserID;next=AdvEngineID:5,ClientIP:2,CounterID:6,DontCountHits:7,EventDate:7,IsRefresh:2,MobilePhone:1,MobilePhoneModel:1,ResolutionWidth:2,SearchEngineID:2,SearchPhrase:2,Title:7,URL:6,UserID:1,WatchID:4"}
+{"utc": "2026-10-07T14:38:57.003667+00:00", "stage": "query_end", "execution": 1, "position": 15, "query": 17, "status": "ok"}
+{"utc": "2026-10-07T14:38:57.003853+00:00", "stage": "query_start", "execution": 1, "position": 16, "query": 12, "label": "reorder_future_q12_exec1"}
+{"utc": "2026-10-07T14:38:57.013256+00:00", "stage": "batch_hint", "execution": 1, "query": 12, "batch": 2, "local_position": 5, "hint": "evict;cur=MobilePhone,MobilePhoneModel,UserID;next=AdvEngineID:4,ClientIP:1,CounterID:5,DontCountHits:6,EventDate:6,IsRefresh:1,ResolutionWidth:1,SearchEngineID:1,SearchPhrase:1,Title:6,URL:5,WatchID:3"}
+{"utc": "2026-10-07T14:38:57.195791+00:00", "stage": "query_end", "execution": 1, "position": 16, "query": 12, "status": "ok"}
+{"utc": "2026-10-07T14:38:57.195852+00:00", "stage": "query_start", "execution": 1, "position": 17, "query": 31, "label": "reorder_future_q31_exec1"}
+{"utc": "2026-10-07T14:38:57.206404+00:00", "stage": "batch_hint", "execution": 1, "query": 31, "batch": 2, "local_position": 6, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,SearchEngineID,SearchPhrase;next=AdvEngineID:3,ClientIP:2,CounterID:4,DontCountHits:5,EventDate:5,IsRefresh:2,ResolutionWidth:1,Title:5,URL:4,WatchID:2"}
+{"utc": "2026-10-07T14:38:57.359035+00:00", "stage": "query_end", "execution": 1, "position": 17, "query": 31, "status": "ok"}
+{"utc": "2026-10-07T14:38:57.359224+00:00", "stage": "query_start", "execution": 1, "position": 18, "query": 30, "label": "reorder_future_q30_exec1"}
+{"utc": "2026-10-07T14:38:57.369141+00:00", "stage": "batch_hint", "execution": 1, "query": 30, "batch": 2, "local_position": 7, "hint": "evict;cur=ResolutionWidth;next=AdvEngineID:2,ClientIP:1,CounterID:3,DontCountHits:4,EventDate:4,IsRefresh:1,ResolutionWidth:1,Title:4,URL:3,WatchID:1"}
+{"utc": "2026-10-07T14:38:57.450799+00:00", "stage": "query_end", "execution": 1, "position": 18, "query": 30, "status": "ok"}
+{"utc": "2026-10-07T14:38:57.450860+00:00", "stage": "query_start", "execution": 1, "position": 19, "query": 33, "label": "reorder_future_q33_exec1"}
+{"utc": "2026-10-07T14:38:57.460822+00:00", "stage": "batch_hint", "execution": 1, "query": 33, "batch": 2, "local_position": 8, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,WatchID;next=AdvEngineID:1,CounterID:2,DontCountHits:3,EventDate:3,IsRefresh:3,Title:3,URL:2"}
+{"utc": "2026-10-07T14:38:58.250641+00:00", "stage": "query_end", "execution": 1, "position": 19, "query": 33, "status": "ok"}
+{"utc": "2026-10-07T14:38:58.250814+00:00", "stage": "query_start", "execution": 1, "position": 20, "query": 8, "label": "reorder_future_q8_exec1"}
+{"utc": "2026-10-07T14:38:58.260336+00:00", "stage": "batch_hint", "execution": 1, "query": 8, "batch": 2, "local_position": 9, "hint": "evict;cur=AdvEngineID;next=CounterID:1,DontCountHits:2,EventDate:2,IsRefresh:2,Title:2,URL:1"}
+{"utc": "2026-10-07T14:38:58.362141+00:00", "stage": "query_end", "execution": 1, "position": 20, "query": 8, "status": "ok"}
+{"utc": "2026-10-07T14:38:58.362329+00:00", "stage": "query_start", "execution": 1, "position": 21, "query": 28, "label": "reorder_future_q28_exec1"}
+{"utc": "2026-10-07T14:38:58.371774+00:00", "stage": "batch_hint", "execution": 1, "query": 28, "batch": 2, "local_position": 10, "hint": "evict;cur=CounterID,URL;next=CounterID:1,DontCountHits:1,EventDate:1,IsRefresh:1,Title:1"}
+{"utc": "2026-10-07T14:38:59.535740+00:00", "stage": "query_end", "execution": 1, "position": 21, "query": 28, "status": "ok"}
+{"utc": "2026-10-07T14:38:59.535948+00:00", "stage": "query_start", "execution": 1, "position": 22, "query": 38, "label": "reorder_future_q38_exec1"}
+{"utc": "2026-10-07T14:38:59.545563+00:00", "stage": "batch_hint", "execution": 1, "query": 38, "batch": 2, "local_position": 11, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,Title;next="}
+{"utc": "2026-10-07T14:38:59.991873+00:00", "stage": "query_end", "execution": 1, "position": 22, "query": 38, "status": "ok"}
+{"utc": "2026-10-07T14:38:59.992085+00:00", "stage": "query_start", "execution": 1, "position": 23, "query": 42, "label": "reorder_future_q42_exec1"}
+{"utc": "2026-10-07T14:39:00.001789+00:00", "stage": "batch_hint", "execution": 1, "query": 42, "batch": 3, "local_position": 1, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,URLHash,WindowClientHeight,WindowClientWidth;next=AdvEngineID:4,CounterID:8,DontCountHits:8,EventDate:8,EventTime:6,IsRefresh:8,Referer:9,SearchEngineID:9,SearchPhrase:3,Title:5,TraficSourceID:9,URL:5,UserID:1"}
+{"utc": "2026-10-07T14:39:00.173743+00:00", "stage": "query_end", "execution": 1, "position": 23, "query": 42, "status": "ok"}
+{"utc": "2026-10-07T14:39:00.173824+00:00", "stage": "query_start", "execution": 1, "position": 24, "query": 16, "label": "reorder_future_q16_exec1"}
+{"utc": "2026-10-07T14:39:00.183772+00:00", "stage": "batch_hint", "execution": 1, "query": 16, "batch": 3, "local_position": 2, "hint": "evict;cur=UserID;next=AdvEngineID:3,CounterID:7,DontCountHits:7,EventDate:7,EventTime:5,IsRefresh:7,Referer:8,SearchEngineID:8,SearchPhrase:2,Title:4,TraficSourceID:8,URL:4,UserID:1"}
+{"utc": "2026-10-07T14:39:00.437709+00:00", "stage": "query_end", "execution": 1, "position": 24, "query": 16, "status": "ok"}
+{"utc": "2026-10-07T14:39:00.437902+00:00", "stage": "query_start", "execution": 1, "position": 25, "query": 20, "label": "reorder_future_q20_exec1"}
+{"utc": "2026-10-07T14:39:00.447306+00:00", "stage": "batch_hint", "execution": 1, "query": 20, "batch": 3, "local_position": 3, "hint": "evict;cur=UserID;next=AdvEngineID:2,CounterID:6,DontCountHits:6,EventDate:6,EventTime:4,IsRefresh:6,Referer:7,SearchEngineID:7,SearchPhrase:1,Title:3,TraficSourceID:7,URL:3,UserID:3"}
+{"utc": "2026-10-07T14:39:00.518422+00:00", "stage": "query_end", "execution": 1, "position": 25, "query": 20, "status": "ok"}
+{"utc": "2026-10-07T14:39:00.518515+00:00", "stage": "query_start", "execution": 1, "position": 26, "query": 26, "label": "reorder_future_q26_exec1"}
+{"utc": "2026-10-07T14:39:00.528515+00:00", "stage": "batch_hint", "execution": 1, "query": 26, "batch": 3, "local_position": 4, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:1,CounterID:5,DontCountHits:5,EventDate:5,EventTime:3,IsRefresh:5,Referer:6,SearchEngineID:6,SearchPhrase:2,Title:2,TraficSourceID:6,URL:2,UserID:2"}
+{"utc": "2026-10-07T14:39:01.559443+00:00", "stage": "query_end", "execution": 1, "position": 26, "query": 26, "status": "ok"}
+{"utc": "2026-10-07T14:39:01.559553+00:00", "stage": "query_start", "execution": 1, "position": 27, "query": 2, "label": "reorder_future_q2_exec1"}
+{"utc": "2026-10-07T14:39:01.569915+00:00", "stage": "batch_hint", "execution": 1, "query": 2, "batch": 3, "local_position": 5, "hint": "evict;cur=AdvEngineID;next=AdvEngineID:5,CounterID:4,DontCountHits:4,EventDate:4,EventTime:2,IsRefresh:4,Referer:5,SearchEngineID:5,SearchPhrase:1,Title:1,TraficSourceID:5,URL:1,UserID:1"}
+{"utc": "2026-10-07T14:39:01.640600+00:00", "stage": "query_end", "execution": 1, "position": 27, "query": 2, "status": "ok"}
+{"utc": "2026-10-07T14:39:01.640656+00:00", "stage": "query_start", "execution": 1, "position": 28, "query": 23, "label": "reorder_future_q23_exec1"}
+{"utc": "2026-10-07T14:39:01.651351+00:00", "stage": "batch_hint", "execution": 1, "query": 23, "batch": 3, "local_position": 6, "hint": "evict;cur=SearchPhrase,Title,URL,UserID;next=AdvEngineID:4,CounterID:3,DontCountHits:3,EventDate:3,EventTime:1,IsRefresh:3,Referer:4,SearchEngineID:4,TraficSourceID:4,URL:1"}
+{"utc": "2026-10-07T14:39:04.560828+00:00", "stage": "query_end", "execution": 1, "position": 28, "query": 23, "status": "ok"}
+{"utc": "2026-10-07T14:39:04.560913+00:00", "stage": "query_start", "execution": 1, "position": 29, "query": 24, "label": "reorder_future_q24_exec1"}
+{"utc": "2026-10-07T14:39:04.570914+00:00", "stage": "batch_hint", "execution": 1, "query": 24, "batch": 3, "local_position": 7, "hint": "evict;cur=EventTime,URL;next=AdvEngineID:3,CounterID:2,DontCountHits:2,EventDate:2,IsRefresh:2,Referer:3,SearchEngineID:3,TraficSourceID:3,URL:1"}
+{"utc": "2026-10-07T14:39:11.495473+00:00", "stage": "query_end", "execution": 1, "position": 29, "query": 24, "status": "ok"}
+{"utc": "2026-10-07T14:39:11.495532+00:00", "stage": "query_start", "execution": 1, "position": 30, "query": 34, "label": "reorder_future_q34_exec1"}
+{"utc": "2026-10-07T14:39:11.515887+00:00", "stage": "batch_hint", "execution": 1, "query": 34, "batch": 3, "local_position": 8, "hint": "evict;cur=URL;next=AdvEngineID:2,CounterID:1,DontCountHits:1,EventDate:1,IsRefresh:1,Referer:2,SearchEngineID:2,TraficSourceID:2,URL:1"}
+{"utc": "2026-10-07T14:39:13.154686+00:00", "stage": "query_end", "execution": 1, "position": 30, "query": 34, "status": "ok"}
+{"utc": "2026-10-07T14:39:13.154801+00:00", "stage": "query_start", "execution": 1, "position": 31, "query": 37, "label": "reorder_future_q37_exec1"}
+{"utc": "2026-10-07T14:39:13.164616+00:00", "stage": "batch_hint", "execution": 1, "query": 37, "batch": 3, "local_position": 9, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,URL;next=AdvEngineID:1,CounterID:1,EventDate:1,IsRefresh:1,Referer:1,SearchEngineID:1,TraficSourceID:1,URL:1"}
+{"utc": "2026-10-07T14:39:13.631075+00:00", "stage": "query_end", "execution": 1, "position": 31, "query": 37, "status": "ok"}
+{"utc": "2026-10-07T14:39:13.631163+00:00", "stage": "query_start", "execution": 1, "position": 32, "query": 40, "label": "reorder_future_q40_exec1"}
+{"utc": "2026-10-07T14:39:13.641672+00:00", "stage": "batch_hint", "execution": 1, "query": 40, "batch": 3, "local_position": 10, "hint": "evict;cur=AdvEngineID,CounterID,EventDate,IsRefresh,Referer,SearchEngineID,TraficSourceID,URL;next=Referer:1"}
+{"utc": "2026-10-07T14:39:14.016474+00:00", "stage": "query_end", "execution": 1, "position": 32, "query": 40, "status": "ok"}
+{"utc": "2026-10-07T14:39:14.016544+00:00", "stage": "query_start", "execution": 1, "position": 33, "query": 29, "label": "reorder_future_q29_exec1"}
+{"utc": "2026-10-07T14:39:14.026652+00:00", "stage": "batch_hint", "execution": 1, "query": 29, "batch": 3, "local_position": 11, "hint": "evict;cur=Referer;next="}
+{"utc": "2026-10-07T14:39:25.017270+00:00", "stage": "query_end", "execution": 1, "position": 33, "query": 29, "status": "ok"}
+{"utc": "2026-10-07T14:39:25.017386+00:00", "stage": "query_start", "execution": 1, "position": 34, "query": 9, "label": "reorder_future_q9_exec1"}
+{"utc": "2026-10-07T14:39:25.027929+00:00", "stage": "batch_hint", "execution": 1, "query": 9, "batch": 4, "local_position": 1, "hint": "evict;cur=RegionID,UserID;next=AdvEngineID:7,CounterID:5,EventDate:4,EventTime:1,IsRefresh:5,RefererHash:5,ResolutionWidth:7,SearchPhrase:1,TraficSourceID:5,URL:8,URLHash:5,UserID:1"}
+{"utc": "2026-10-07T14:39:25.331478+00:00", "stage": "query_end", "execution": 1, "position": 34, "query": 9, "status": "ok"}
+{"utc": "2026-10-07T14:39:25.331552+00:00", "stage": "query_start", "execution": 1, "position": 35, "query": 19, "label": "reorder_future_q19_exec1"}
+{"utc": "2026-10-07T14:39:25.342146+00:00", "stage": "batch_hint", "execution": 1, "query": 19, "batch": 4, "local_position": 2, "hint": "evict;cur=EventTime,SearchPhrase,UserID;next=AdvEngineID:6,CounterID:4,EventDate:3,EventTime:1,IsRefresh:4,RefererHash:4,ResolutionWidth:6,SearchPhrase:1,TraficSourceID:4,URL:7,URLHash:4"}
+{"utc": "2026-10-07T14:39:26.191456+00:00", "stage": "query_end", "execution": 1, "position": 35, "query": 19, "status": "ok"}
+{"utc": "2026-10-07T14:39:26.191525+00:00", "stage": "query_start", "execution": 1, "position": 36, "query": 27, "label": "reorder_future_q27_exec1"}
+{"utc": "2026-10-07T14:39:26.202042+00:00", "stage": "batch_hint", "execution": 1, "query": 27, "batch": 4, "local_position": 3, "hint": "evict;cur=EventTime,SearchPhrase;next=AdvEngineID:5,CounterID:3,EventDate:2,IsRefresh:3,RefererHash:3,ResolutionWidth:5,SearchPhrase:1,TraficSourceID:3,URL:6,URLHash:3"}
+{"utc": "2026-10-07T14:39:26.374794+00:00", "stage": "query_end", "execution": 1, "position": 36, "query": 27, "status": "ok"}
+{"utc": "2026-10-07T14:39:26.374918+00:00", "stage": "query_start", "execution": 1, "position": 37, "query": 13, "label": "reorder_future_q13_exec1"}
+{"utc": "2026-10-07T14:39:26.385080+00:00", "stage": "batch_hint", "execution": 1, "query": 13, "batch": 4, "local_position": 4, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:4,CounterID:2,EventDate:1,IsRefresh:2,RefererHash:2,ResolutionWidth:4,SearchPhrase:6,TraficSourceID:2,URL:5,URLHash:2"}
+{"utc": "2026-10-07T14:39:26.537827+00:00", "stage": "query_end", "execution": 1, "position": 37, "query": 13, "status": "ok"}
+{"utc": "2026-10-07T14:39:26.538012+00:00", "stage": "query_start", "execution": 1, "position": 38, "query": 7, "label": "reorder_future_q7_exec1"}
+{"utc": "2026-10-07T14:39:26.547325+00:00", "stage": "batch_hint", "execution": 1, "query": 7, "batch": 4, "local_position": 5, "hint": "evict;cur=EventDate;next=AdvEngineID:3,CounterID:1,EventDate:1,IsRefresh:1,RefererHash:1,ResolutionWidth:3,SearchPhrase:5,TraficSourceID:1,URL:4,URLHash:1"}
+{"utc": "2026-10-07T14:39:26.649337+00:00", "stage": "query_end", "execution": 1, "position": 38, "query": 7, "status": "ok"}
+{"utc": "2026-10-07T14:39:26.649439+00:00", "stage": "query_start", "execution": 1, "position": 39, "query": 41, "label": "reorder_future_q41_exec1"}
+{"utc": "2026-10-07T14:39:26.659626+00:00", "stage": "batch_hint", "execution": 1, "query": 41, "batch": 4, "local_position": 6, "hint": "evict;cur=CounterID,EventDate,IsRefresh,RefererHash,TraficSourceID,URLHash;next=AdvEngineID:2,ResolutionWidth:2,SearchPhrase:4,URL:3"}
+{"utc": "2026-10-07T14:39:26.832660+00:00", "stage": "query_end", "execution": 1, "position": 39, "query": 41, "status": "ok"}
+{"utc": "2026-10-07T14:39:26.832754+00:00", "stage": "query_start", "execution": 1, "position": 40, "query": 1, "label": "reorder_future_q1_exec1"}
+{"utc": "2026-10-07T14:39:26.843006+00:00", "stage": "batch_hint", "execution": 1, "query": 1, "batch": 4, "local_position": 7, "hint": "evict;cur=;next=AdvEngineID:1,ResolutionWidth:1,SearchPhrase:3,URL:2"}
+{"utc": "2026-10-07T14:39:26.934477+00:00", "stage": "query_end", "execution": 1, "position": 40, "query": 1, "status": "ok"}
+{"utc": "2026-10-07T14:39:26.934599+00:00", "stage": "query_start", "execution": 1, "position": 41, "query": 3, "label": "reorder_future_q3_exec1"}
+{"utc": "2026-10-07T14:39:26.944343+00:00", "stage": "batch_hint", "execution": 1, "query": 3, "batch": 4, "local_position": 8, "hint": "evict;cur=AdvEngineID,ResolutionWidth;next=SearchPhrase:2,URL:1"}
+{"utc": "2026-10-07T14:39:27.067045+00:00", "stage": "query_end", "execution": 1, "position": 41, "query": 3, "status": "ok"}
+{"utc": "2026-10-07T14:39:27.067144+00:00", "stage": "query_start", "execution": 1, "position": 42, "query": 21, "label": "reorder_future_q21_exec1"}
+{"utc": "2026-10-07T14:39:27.076888+00:00", "stage": "batch_hint", "execution": 1, "query": 21, "batch": 4, "local_position": 9, "hint": "evict;cur=URL;next=SearchPhrase:1,URL:1"}
+{"utc": "2026-10-07T14:39:28.333916+00:00", "stage": "query_end", "execution": 1, "position": 42, "query": 21, "status": "ok"}
+{"utc": "2026-10-07T14:39:28.334074+00:00", "stage": "query_start", "execution": 1, "position": 43, "query": 22, "label": "reorder_future_q22_exec1"}
+{"utc": "2026-10-07T14:39:28.343658+00:00", "stage": "batch_hint", "execution": 1, "query": 22, "batch": 4, "local_position": 10, "hint": "evict;cur=SearchPhrase,URL;next="}
+{"utc": "2026-10-07T14:39:29.244896+00:00", "stage": "query_end", "execution": 1, "position": 43, "query": 22, "status": "ok"}
+{"utc": "2026-10-07T14:39:29.245099+00:00", "stage": "query_start", "execution": 2, "position": 1, "query": 10, "label": "reorder_future_q10_exec2"}
+{"utc": "2026-10-07T14:39:29.254496+00:00", "stage": "batch_hint", "execution": 2, "query": 10, "batch": 1, "local_position": 1, "hint": "evict;cur=AdvEngineID,RegionID,ResolutionWidth,UserID;next=ClientIP:7,CounterID:10,EventDate:10,IsDownload:10,IsLink:10,IsRefresh:7,MobilePhoneModel:3,ResolutionWidth:7,SearchEngineID:6,SearchPhrase:4,URL:9,UserID:1,WatchID:7"}
+{"utc": "2026-10-07T14:39:29.548167+00:00", "stage": "query_end", "execution": 2, "position": 1, "query": 10, "status": "ok"}
+{"utc": "2026-10-07T14:39:29.548283+00:00", "stage": "query_start", "execution": 2, "position": 2, "query": 4, "label": "reorder_future_q4_exec2"}
+{"utc": "2026-10-07T14:39:29.558631+00:00", "stage": "batch_hint", "execution": 2, "query": 4, "batch": 1, "local_position": 2, "hint": "evict;cur=UserID;next=ClientIP:6,CounterID:9,EventDate:9,IsDownload:9,IsLink:9,IsRefresh:6,MobilePhoneModel:2,ResolutionWidth:6,SearchEngineID:5,SearchPhrase:3,URL:8,UserID:1,WatchID:6"}
+{"utc": "2026-10-07T14:39:29.629376+00:00", "stage": "query_end", "execution": 2, "position": 2, "query": 4, "status": "ok"}
+{"utc": "2026-10-07T14:39:29.629430+00:00", "stage": "query_start", "execution": 2, "position": 3, "query": 5, "label": "reorder_future_q5_exec2"}
+{"utc": "2026-10-07T14:39:29.639727+00:00", "stage": "batch_hint", "execution": 2, "query": 5, "batch": 1, "local_position": 3, "hint": "evict;cur=UserID;next=ClientIP:5,CounterID:8,EventDate:8,IsDownload:8,IsLink:8,IsRefresh:5,MobilePhoneModel:1,ResolutionWidth:5,SearchEngineID:4,SearchPhrase:2,URL:7,UserID:1,WatchID:5"}
+{"utc": "2026-10-07T14:39:29.751594+00:00", "stage": "query_end", "execution": 2, "position": 3, "query": 5, "status": "ok"}
+{"utc": "2026-10-07T14:39:29.751669+00:00", "stage": "query_start", "execution": 2, "position": 4, "query": 11, "label": "reorder_future_q11_exec2"}
+{"utc": "2026-10-07T14:39:29.761761+00:00", "stage": "batch_hint", "execution": 2, "query": 11, "batch": 1, "local_position": 4, "hint": "evict;cur=MobilePhoneModel,UserID;next=ClientIP:4,CounterID:7,EventDate:7,IsDownload:7,IsLink:7,IsRefresh:4,ResolutionWidth:4,SearchEngineID:3,SearchPhrase:1,URL:6,UserID:1,WatchID:4"}
+{"utc": "2026-10-07T14:39:29.924891+00:00", "stage": "query_end", "execution": 2, "position": 4, "query": 11, "status": "ok"}
+{"utc": "2026-10-07T14:39:29.925030+00:00", "stage": "query_start", "execution": 2, "position": 5, "query": 14, "label": "reorder_future_q14_exec2"}
+{"utc": "2026-10-07T14:39:29.935189+00:00", "stage": "batch_hint", "execution": 2, "query": 14, "batch": 1, "local_position": 5, "hint": "evict;cur=SearchPhrase,UserID;next=ClientIP:3,CounterID:6,EventDate:6,IsDownload:6,IsLink:6,IsRefresh:3,ResolutionWidth:3,SearchEngineID:2,SearchPhrase:1,URL:5,UserID:1,WatchID:3"}
+{"utc": "2026-10-07T14:39:31.138689+00:00", "stage": "query_end", "execution": 2, "position": 5, "query": 14, "status": "ok"}
+{"utc": "2026-10-07T14:39:31.138755+00:00", "stage": "query_start", "execution": 2, "position": 6, "query": 18, "label": "reorder_future_q18_exec2"}
+{"utc": "2026-10-07T14:39:31.148919+00:00", "stage": "batch_hint", "execution": 2, "query": 18, "batch": 1, "local_position": 6, "hint": "evict;cur=SearchPhrase,UserID;next=ClientIP:2,CounterID:5,EventDate:5,IsDownload:5,IsLink:5,IsRefresh:2,ResolutionWidth:2,SearchEngineID:1,SearchPhrase:1,URL:4,WatchID:2"}
+{"utc": "2026-10-07T14:39:31.412639+00:00", "stage": "query_end", "execution": 2, "position": 6, "query": 18, "status": "ok"}
+{"utc": "2026-10-07T14:39:31.412705+00:00", "stage": "query_start", "execution": 2, "position": 7, "query": 15, "label": "reorder_future_q15_exec2"}
+{"utc": "2026-10-07T14:39:31.422808+00:00", "stage": "batch_hint", "execution": 2, "query": 15, "batch": 1, "local_position": 7, "hint": "evict;cur=SearchEngineID,SearchPhrase;next=ClientIP:1,CounterID:4,EventDate:4,IsDownload:4,IsLink:4,IsRefresh:1,ResolutionWidth:1,SearchPhrase:1,URL:3,WatchID:1"}
+{"utc": "2026-10-07T14:39:31.616001+00:00", "stage": "query_end", "execution": 2, "position": 7, "query": 15, "status": "ok"}
+{"utc": "2026-10-07T14:39:31.616192+00:00", "stage": "query_start", "execution": 2, "position": 8, "query": 32, "label": "reorder_future_q32_exec2"}
+{"utc": "2026-10-07T14:39:31.626214+00:00", "stage": "batch_hint", "execution": 2, "query": 32, "batch": 1, "local_position": 8, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,SearchPhrase,WatchID;next=ClientIP:1,CounterID:3,EventDate:3,IsDownload:3,IsLink:3,IsRefresh:3,URL:2"}
+{"utc": "2026-10-07T14:39:32.162868+00:00", "stage": "query_end", "execution": 2, "position": 8, "query": 32, "status": "ok"}
+{"utc": "2026-10-07T14:39:32.163060+00:00", "stage": "query_start", "execution": 2, "position": 9, "query": 36, "label": "reorder_future_q36_exec2"}
+{"utc": "2026-10-07T14:39:32.172613+00:00", "stage": "batch_hint", "execution": 2, "query": 36, "batch": 1, "local_position": 9, "hint": "evict;cur=ClientIP;next=CounterID:2,EventDate:2,IsDownload:2,IsLink:2,IsRefresh:2,URL:1"}
+{"utc": "2026-10-07T14:39:32.304394+00:00", "stage": "query_end", "execution": 2, "position": 9, "query": 36, "status": "ok"}
+{"utc": "2026-10-07T14:39:32.304453+00:00", "stage": "query_start", "execution": 2, "position": 10, "query": 35, "label": "reorder_future_q35_exec2"}
+{"utc": "2026-10-07T14:39:32.315047+00:00", "stage": "batch_hint", "execution": 2, "query": 35, "batch": 1, "local_position": 10, "hint": "evict;cur=URL;next=CounterID:1,EventDate:1,IsDownload:1,IsLink:1,IsRefresh:1,URL:1"}
+{"utc": "2026-10-07T14:39:33.569168+00:00", "stage": "query_end", "execution": 2, "position": 10, "query": 35, "status": "ok"}
+{"utc": "2026-10-07T14:39:33.569255+00:00", "stage": "query_start", "execution": 2, "position": 11, "query": 39, "label": "reorder_future_q39_exec2"}
+{"utc": "2026-10-07T14:39:33.589763+00:00", "stage": "batch_hint", "execution": 2, "query": 39, "batch": 1, "local_position": 11, "hint": "evict;cur=CounterID,EventDate,IsDownload,IsLink,IsRefresh,URL;next="}
+{"utc": "2026-10-07T14:39:33.802554+00:00", "stage": "query_end", "execution": 2, "position": 11, "query": 39, "status": "ok"}
+{"utc": "2026-10-07T14:39:33.802611+00:00", "stage": "query_start", "execution": 2, "position": 12, "query": 43, "label": "reorder_future_q43_exec2"}
+{"utc": "2026-10-07T14:39:33.823165+00:00", "stage": "batch_hint", "execution": 2, "query": 43, "batch": 2, "local_position": 1, "hint": "evict;cur=CounterID,DontCountHits,EventDate,EventTime,IsRefresh;next=AdvEngineID:8,ClientIP:5,CounterID:9,DontCountHits:10,EventDate:10,EventTime:1,IsRefresh:5,MobilePhone:4,MobilePhoneModel:4,ResolutionWidth:5,SearchEngineID:5,SearchPhrase:1,Title:10,URL:9,UserID:3,WatchID:7"}
+{"utc": "2026-10-07T14:39:33.996078+00:00", "stage": "query_end", "execution": 2, "position": 12, "query": 43, "status": "ok"}
+{"utc": "2026-10-07T14:39:33.996266+00:00", "stage": "query_start", "execution": 2, "position": 13, "query": 25, "label": "reorder_future_q25_exec2"}
+{"utc": "2026-10-07T14:39:34.016313+00:00", "stage": "batch_hint", "execution": 2, "query": 25, "batch": 2, "local_position": 2, "hint": "evict;cur=EventTime,SearchPhrase;next=AdvEngineID:7,ClientIP:4,CounterID:8,DontCountHits:9,EventDate:9,IsRefresh:4,MobilePhone:3,MobilePhoneModel:3,ResolutionWidth:4,SearchEngineID:4,SearchPhrase:1,Title:9,URL:8,UserID:2,WatchID:6"}
+{"utc": "2026-10-07T14:39:34.986319+00:00", "stage": "query_end", "execution": 2, "position": 13, "query": 25, "status": "ok"}
+{"utc": "2026-10-07T14:39:34.986391+00:00", "stage": "query_start", "execution": 2, "position": 14, "query": 6, "label": "reorder_future_q6_exec2"}
+{"utc": "2026-10-07T14:39:34.996601+00:00", "stage": "batch_hint", "execution": 2, "query": 6, "batch": 2, "local_position": 3, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:6,ClientIP:3,CounterID:7,DontCountHits:8,EventDate:8,IsRefresh:3,MobilePhone:2,MobilePhoneModel:2,ResolutionWidth:3,SearchEngineID:3,SearchPhrase:1,Title:8,URL:7,UserID:1,WatchID:5"}
+{"utc": "2026-10-07T14:39:35.138918+00:00", "stage": "query_end", "execution": 2, "position": 14, "query": 6, "status": "ok"}
+{"utc": "2026-10-07T14:39:35.138975+00:00", "stage": "query_start", "execution": 2, "position": 15, "query": 17, "label": "reorder_future_q17_exec2"}
+{"utc": "2026-10-07T14:39:35.149278+00:00", "stage": "batch_hint", "execution": 2, "query": 17, "batch": 2, "local_position": 4, "hint": "evict;cur=SearchPhrase,UserID;next=AdvEngineID:5,ClientIP:2,CounterID:6,DontCountHits:7,EventDate:7,IsRefresh:2,MobilePhone:1,MobilePhoneModel:1,ResolutionWidth:2,SearchEngineID:2,SearchPhrase:2,Title:7,URL:6,UserID:1,WatchID:4"}
+{"utc": "2026-10-07T14:39:35.493424+00:00", "stage": "query_end", "execution": 2, "position": 15, "query": 17, "status": "ok"}
+{"utc": "2026-10-07T14:39:35.493518+00:00", "stage": "query_start", "execution": 2, "position": 16, "query": 12, "label": "reorder_future_q12_exec2"}
+{"utc": "2026-10-07T14:39:35.503520+00:00", "stage": "batch_hint", "execution": 2, "query": 12, "batch": 2, "local_position": 5, "hint": "evict;cur=MobilePhone,MobilePhoneModel,UserID;next=AdvEngineID:4,ClientIP:1,CounterID:5,DontCountHits:6,EventDate:6,IsRefresh:1,ResolutionWidth:1,SearchEngineID:1,SearchPhrase:1,Title:6,URL:5,WatchID:3"}
+{"utc": "2026-10-07T14:39:35.675927+00:00", "stage": "query_end", "execution": 2, "position": 16, "query": 12, "status": "ok"}
+{"utc": "2026-10-07T14:39:35.675979+00:00", "stage": "query_start", "execution": 2, "position": 17, "query": 31, "label": "reorder_future_q31_exec2"}
+{"utc": "2026-10-07T14:39:35.686186+00:00", "stage": "batch_hint", "execution": 2, "query": 31, "batch": 2, "local_position": 6, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,SearchEngineID,SearchPhrase;next=AdvEngineID:3,ClientIP:2,CounterID:4,DontCountHits:5,EventDate:5,IsRefresh:2,ResolutionWidth:1,Title:5,URL:4,WatchID:2"}
+{"utc": "2026-10-07T14:39:35.940423+00:00", "stage": "query_end", "execution": 2, "position": 17, "query": 31, "status": "ok"}
+{"utc": "2026-10-07T14:39:35.940613+00:00", "stage": "query_start", "execution": 2, "position": 18, "query": 30, "label": "reorder_future_q30_exec2"}
+{"utc": "2026-10-07T14:39:35.950537+00:00", "stage": "batch_hint", "execution": 2, "query": 30, "batch": 2, "local_position": 7, "hint": "evict;cur=ResolutionWidth;next=AdvEngineID:2,ClientIP:1,CounterID:3,DontCountHits:4,EventDate:4,IsRefresh:1,ResolutionWidth:1,Title:4,URL:3,WatchID:1"}
+{"utc": "2026-10-07T14:39:36.031483+00:00", "stage": "query_end", "execution": 2, "position": 18, "query": 30, "status": "ok"}
+{"utc": "2026-10-07T14:39:36.031534+00:00", "stage": "query_start", "execution": 2, "position": 19, "query": 33, "label": "reorder_future_q33_exec2"}
+{"utc": "2026-10-07T14:39:36.041725+00:00", "stage": "batch_hint", "execution": 2, "query": 33, "batch": 2, "local_position": 8, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,WatchID;next=AdvEngineID:1,CounterID:2,DontCountHits:3,EventDate:3,IsRefresh:3,Title:3,URL:2"}
+{"utc": "2026-10-07T14:39:37.124202+00:00", "stage": "query_end", "execution": 2, "position": 19, "query": 33, "status": "ok"}
+{"utc": "2026-10-07T14:39:37.124416+00:00", "stage": "query_start", "execution": 2, "position": 20, "query": 8, "label": "reorder_future_q8_exec2"}
+{"utc": "2026-10-07T14:39:37.144354+00:00", "stage": "batch_hint", "execution": 2, "query": 8, "batch": 2, "local_position": 9, "hint": "evict;cur=AdvEngineID;next=CounterID:1,DontCountHits:2,EventDate:2,IsRefresh:2,Title:2,URL:1"}
+{"utc": "2026-10-07T14:39:37.266930+00:00", "stage": "query_end", "execution": 2, "position": 20, "query": 8, "status": "ok"}
+{"utc": "2026-10-07T14:39:37.267115+00:00", "stage": "query_start", "execution": 2, "position": 21, "query": 28, "label": "reorder_future_q28_exec2"}
+{"utc": "2026-10-07T14:39:37.287249+00:00", "stage": "batch_hint", "execution": 2, "query": 28, "batch": 2, "local_position": 10, "hint": "evict;cur=CounterID,URL;next=CounterID:1,DontCountHits:1,EventDate:1,IsRefresh:1,Title:1"}
+{"utc": "2026-10-07T14:39:38.420412+00:00", "stage": "query_end", "execution": 2, "position": 21, "query": 28, "status": "ok"}
+{"utc": "2026-10-07T14:39:38.420467+00:00", "stage": "query_start", "execution": 2, "position": 22, "query": 38, "label": "reorder_future_q38_exec2"}
+{"utc": "2026-10-07T14:39:38.431002+00:00", "stage": "batch_hint", "execution": 2, "query": 38, "batch": 2, "local_position": 11, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,Title;next="}
+{"utc": "2026-10-07T14:39:38.825939+00:00", "stage": "query_end", "execution": 2, "position": 22, "query": 38, "status": "ok"}
+{"utc": "2026-10-07T14:39:38.826020+00:00", "stage": "query_start", "execution": 2, "position": 23, "query": 42, "label": "reorder_future_q42_exec2"}
+{"utc": "2026-10-07T14:39:38.836019+00:00", "stage": "batch_hint", "execution": 2, "query": 42, "batch": 3, "local_position": 1, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,URLHash,WindowClientHeight,WindowClientWidth;next=AdvEngineID:4,CounterID:8,DontCountHits:8,EventDate:8,EventTime:6,IsRefresh:8,Referer:9,SearchEngineID:9,SearchPhrase:3,Title:5,TraficSourceID:9,URL:5,UserID:1"}
+{"utc": "2026-10-07T14:39:38.989197+00:00", "stage": "query_end", "execution": 2, "position": 23, "query": 42, "status": "ok"}
+{"utc": "2026-10-07T14:39:38.989339+00:00", "stage": "query_start", "execution": 2, "position": 24, "query": 16, "label": "reorder_future_q16_exec2"}
+{"utc": "2026-10-07T14:39:38.999534+00:00", "stage": "batch_hint", "execution": 2, "query": 16, "batch": 3, "local_position": 2, "hint": "evict;cur=UserID;next=AdvEngineID:3,CounterID:7,DontCountHits:7,EventDate:7,EventTime:5,IsRefresh:7,Referer:8,SearchEngineID:8,SearchPhrase:2,Title:4,TraficSourceID:8,URL:4,UserID:1"}
+{"utc": "2026-10-07T14:39:39.252403+00:00", "stage": "query_end", "execution": 2, "position": 24, "query": 16, "status": "ok"}
+{"utc": "2026-10-07T14:39:39.252494+00:00", "stage": "query_start", "execution": 2, "position": 25, "query": 20, "label": "reorder_future_q20_exec2"}
+{"utc": "2026-10-07T14:39:39.263053+00:00", "stage": "batch_hint", "execution": 2, "query": 20, "batch": 3, "local_position": 3, "hint": "evict;cur=UserID;next=AdvEngineID:2,CounterID:6,DontCountHits:6,EventDate:6,EventTime:4,IsRefresh:6,Referer:7,SearchEngineID:7,SearchPhrase:1,Title:3,TraficSourceID:7,URL:3,UserID:3"}
+{"utc": "2026-10-07T14:39:39.334844+00:00", "stage": "query_end", "execution": 2, "position": 25, "query": 20, "status": "ok"}
+{"utc": "2026-10-07T14:39:39.335031+00:00", "stage": "query_start", "execution": 2, "position": 26, "query": 26, "label": "reorder_future_q26_exec2"}
+{"utc": "2026-10-07T14:39:39.344920+00:00", "stage": "batch_hint", "execution": 2, "query": 26, "batch": 3, "local_position": 4, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:1,CounterID:5,DontCountHits:5,EventDate:5,EventTime:3,IsRefresh:5,Referer:6,SearchEngineID:6,SearchPhrase:2,Title:2,TraficSourceID:6,URL:2,UserID:2"}
+{"utc": "2026-10-07T14:39:40.376743+00:00", "stage": "query_end", "execution": 2, "position": 26, "query": 26, "status": "ok"}
+{"utc": "2026-10-07T14:39:40.376801+00:00", "stage": "query_start", "execution": 2, "position": 27, "query": 2, "label": "reorder_future_q2_exec2"}
+{"utc": "2026-10-07T14:39:40.386940+00:00", "stage": "batch_hint", "execution": 2, "query": 2, "batch": 3, "local_position": 5, "hint": "evict;cur=AdvEngineID;next=AdvEngineID:5,CounterID:4,DontCountHits:4,EventDate:4,EventTime:2,IsRefresh:4,Referer:5,SearchEngineID:5,SearchPhrase:1,Title:1,TraficSourceID:5,URL:1,UserID:1"}
+{"utc": "2026-10-07T14:39:40.469398+00:00", "stage": "query_end", "execution": 2, "position": 27, "query": 2, "status": "ok"}
+{"utc": "2026-10-07T14:39:40.469591+00:00", "stage": "query_start", "execution": 2, "position": 28, "query": 23, "label": "reorder_future_q23_exec2"}
+{"utc": "2026-10-07T14:39:40.479498+00:00", "stage": "batch_hint", "execution": 2, "query": 23, "batch": 3, "local_position": 6, "hint": "evict;cur=SearchPhrase,Title,URL,UserID;next=AdvEngineID:4,CounterID:3,DontCountHits:3,EventDate:3,EventTime:1,IsRefresh:3,Referer:4,SearchEngineID:4,TraficSourceID:4,URL:1"}
+{"utc": "2026-10-07T14:39:43.158272+00:00", "stage": "query_end", "execution": 2, "position": 28, "query": 23, "status": "ok"}
+{"utc": "2026-10-07T14:39:43.158353+00:00", "stage": "query_start", "execution": 2, "position": 29, "query": 24, "label": "reorder_future_q24_exec2"}
+{"utc": "2026-10-07T14:39:43.168835+00:00", "stage": "batch_hint", "execution": 2, "query": 24, "batch": 3, "local_position": 7, "hint": "evict;cur=EventTime,URL;next=AdvEngineID:3,CounterID:2,DontCountHits:2,EventDate:2,IsRefresh:2,Referer:3,SearchEngineID:3,TraficSourceID:3,URL:1"}
+{"utc": "2026-10-07T14:39:49.972223+00:00", "stage": "query_end", "execution": 2, "position": 29, "query": 24, "status": "ok"}
+{"utc": "2026-10-07T14:39:49.972289+00:00", "stage": "query_start", "execution": 2, "position": 30, "query": 34, "label": "reorder_future_q34_exec2"}
+{"utc": "2026-10-07T14:39:49.982316+00:00", "stage": "batch_hint", "execution": 2, "query": 34, "batch": 3, "local_position": 8, "hint": "evict;cur=URL;next=AdvEngineID:2,CounterID:1,DontCountHits:1,EventDate:1,IsRefresh:1,Referer:2,SearchEngineID:2,TraficSourceID:2,URL:1"}
+{"utc": "2026-10-07T14:39:51.570464+00:00", "stage": "query_end", "execution": 2, "position": 30, "query": 34, "status": "ok"}
+{"utc": "2026-10-07T14:39:51.570537+00:00", "stage": "query_start", "execution": 2, "position": 31, "query": 37, "label": "reorder_future_q37_exec2"}
+{"utc": "2026-10-07T14:39:51.581047+00:00", "stage": "batch_hint", "execution": 2, "query": 37, "batch": 3, "local_position": 9, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,URL;next=AdvEngineID:1,CounterID:1,EventDate:1,IsRefresh:1,Referer:1,SearchEngineID:1,TraficSourceID:1,URL:1"}
+{"utc": "2026-10-07T14:39:52.068111+00:00", "stage": "query_end", "execution": 2, "position": 31, "query": 37, "status": "ok"}
+{"utc": "2026-10-07T14:39:52.068313+00:00", "stage": "query_start", "execution": 2, "position": 32, "query": 40, "label": "reorder_future_q40_exec2"}
+{"utc": "2026-10-07T14:39:52.077663+00:00", "stage": "batch_hint", "execution": 2, "query": 40, "batch": 3, "local_position": 10, "hint": "evict;cur=AdvEngineID,CounterID,EventDate,IsRefresh,Referer,SearchEngineID,TraficSourceID,URL;next=Referer:1"}
+{"utc": "2026-10-07T14:39:52.463635+00:00", "stage": "query_end", "execution": 2, "position": 32, "query": 40, "status": "ok"}
+{"utc": "2026-10-07T14:39:52.463825+00:00", "stage": "query_start", "execution": 2, "position": 33, "query": 29, "label": "reorder_future_q29_exec2"}
+{"utc": "2026-10-07T14:39:52.473713+00:00", "stage": "batch_hint", "execution": 2, "query": 29, "batch": 3, "local_position": 11, "hint": "evict;cur=Referer;next="}
+{"utc": "2026-10-07T14:40:05.259051+00:00", "stage": "query_end", "execution": 2, "position": 33, "query": 29, "status": "ok"}
+{"utc": "2026-10-07T14:40:05.259185+00:00", "stage": "query_start", "execution": 2, "position": 34, "query": 9, "label": "reorder_future_q9_exec2"}
+{"utc": "2026-10-07T14:40:05.269583+00:00", "stage": "batch_hint", "execution": 2, "query": 9, "batch": 4, "local_position": 1, "hint": "evict;cur=RegionID,UserID;next=AdvEngineID:7,CounterID:5,EventDate:4,EventTime:1,IsRefresh:5,RefererHash:5,ResolutionWidth:7,SearchPhrase:1,TraficSourceID:5,URL:8,URLHash:5,UserID:1"}
+{"utc": "2026-10-07T14:40:05.573692+00:00", "stage": "query_end", "execution": 2, "position": 34, "query": 9, "status": "ok"}
+{"utc": "2026-10-07T14:40:05.573886+00:00", "stage": "query_start", "execution": 2, "position": 35, "query": 19, "label": "reorder_future_q19_exec2"}
+{"utc": "2026-10-07T14:40:05.583209+00:00", "stage": "batch_hint", "execution": 2, "query": 19, "batch": 4, "local_position": 2, "hint": "evict;cur=EventTime,SearchPhrase,UserID;next=AdvEngineID:6,CounterID:4,EventDate:3,EventTime:1,IsRefresh:4,RefererHash:4,ResolutionWidth:6,SearchPhrase:1,TraficSourceID:4,URL:7,URLHash:4"}
+{"utc": "2026-10-07T14:40:06.373177+00:00", "stage": "query_end", "execution": 2, "position": 35, "query": 19, "status": "ok"}
+{"utc": "2026-10-07T14:40:06.373254+00:00", "stage": "query_start", "execution": 2, "position": 36, "query": 27, "label": "reorder_future_q27_exec2"}
+{"utc": "2026-10-07T14:40:06.383797+00:00", "stage": "batch_hint", "execution": 2, "query": 27, "batch": 4, "local_position": 3, "hint": "evict;cur=EventTime,SearchPhrase;next=AdvEngineID:5,CounterID:3,EventDate:2,IsRefresh:3,RefererHash:3,ResolutionWidth:5,SearchPhrase:1,TraficSourceID:3,URL:6,URLHash:3"}
+{"utc": "2026-10-07T14:40:06.556646+00:00", "stage": "query_end", "execution": 2, "position": 36, "query": 27, "status": "ok"}
+{"utc": "2026-10-07T14:40:06.557016+00:00", "stage": "query_start", "execution": 2, "position": 37, "query": 13, "label": "reorder_future_q13_exec2"}
+{"utc": "2026-10-07T14:40:06.566162+00:00", "stage": "batch_hint", "execution": 2, "query": 13, "batch": 4, "local_position": 4, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:4,CounterID:2,EventDate:1,IsRefresh:2,RefererHash:2,ResolutionWidth:4,SearchPhrase:6,TraficSourceID:2,URL:5,URLHash:2"}
+{"utc": "2026-10-07T14:40:06.718321+00:00", "stage": "query_end", "execution": 2, "position": 37, "query": 13, "status": "ok"}
+{"utc": "2026-10-07T14:40:06.718428+00:00", "stage": "query_start", "execution": 2, "position": 38, "query": 7, "label": "reorder_future_q7_exec2"}
+{"utc": "2026-10-07T14:40:06.728201+00:00", "stage": "batch_hint", "execution": 2, "query": 7, "batch": 4, "local_position": 5, "hint": "evict;cur=EventDate;next=AdvEngineID:3,CounterID:1,EventDate:1,IsRefresh:1,RefererHash:1,ResolutionWidth:3,SearchPhrase:5,TraficSourceID:1,URL:4,URLHash:1"}
+{"utc": "2026-10-07T14:40:06.820111+00:00", "stage": "query_end", "execution": 2, "position": 38, "query": 7, "status": "ok"}
+{"utc": "2026-10-07T14:40:06.820307+00:00", "stage": "query_start", "execution": 2, "position": 39, "query": 41, "label": "reorder_future_q41_exec2"}
+{"utc": "2026-10-07T14:40:06.829952+00:00", "stage": "batch_hint", "execution": 2, "query": 41, "batch": 4, "local_position": 6, "hint": "evict;cur=CounterID,EventDate,IsRefresh,RefererHash,TraficSourceID,URLHash;next=AdvEngineID:2,ResolutionWidth:2,SearchPhrase:4,URL:3"}
+{"utc": "2026-10-07T14:40:07.002394+00:00", "stage": "query_end", "execution": 2, "position": 39, "query": 41, "status": "ok"}
+{"utc": "2026-10-07T14:40:07.002475+00:00", "stage": "query_start", "execution": 2, "position": 40, "query": 1, "label": "reorder_future_q1_exec2"}
+{"utc": "2026-10-07T14:40:07.012383+00:00", "stage": "batch_hint", "execution": 2, "query": 1, "batch": 4, "local_position": 7, "hint": "evict;cur=;next=AdvEngineID:1,ResolutionWidth:1,SearchPhrase:3,URL:2"}
+{"utc": "2026-10-07T14:40:07.104094+00:00", "stage": "query_end", "execution": 2, "position": 40, "query": 1, "status": "ok"}
+{"utc": "2026-10-07T14:40:07.104162+00:00", "stage": "query_start", "execution": 2, "position": 41, "query": 3, "label": "reorder_future_q3_exec2"}
+{"utc": "2026-10-07T14:40:07.114148+00:00", "stage": "batch_hint", "execution": 2, "query": 3, "batch": 4, "local_position": 8, "hint": "evict;cur=AdvEngineID,ResolutionWidth;next=SearchPhrase:2,URL:1"}
+{"utc": "2026-10-07T14:40:07.236211+00:00", "stage": "query_end", "execution": 2, "position": 41, "query": 3, "status": "ok"}
+{"utc": "2026-10-07T14:40:07.236323+00:00", "stage": "query_start", "execution": 2, "position": 42, "query": 21, "label": "reorder_future_q21_exec2"}
+{"utc": "2026-10-07T14:40:07.246896+00:00", "stage": "batch_hint", "execution": 2, "query": 21, "batch": 4, "local_position": 9, "hint": "evict;cur=URL;next=SearchPhrase:1,URL:1"}
+{"utc": "2026-10-07T14:40:08.510175+00:00", "stage": "query_end", "execution": 2, "position": 42, "query": 21, "status": "ok"}
+{"utc": "2026-10-07T14:40:08.510393+00:00", "stage": "query_start", "execution": 2, "position": 43, "query": 22, "label": "reorder_future_q22_exec2"}
+{"utc": "2026-10-07T14:40:08.520276+00:00", "stage": "batch_hint", "execution": 2, "query": 22, "batch": 4, "local_position": 10, "hint": "evict;cur=SearchPhrase,URL;next="}
+{"utc": "2026-10-07T14:40:09.837101+00:00", "stage": "query_end", "execution": 2, "position": 43, "query": 22, "status": "ok"}
+{"utc": "2026-10-07T14:40:09.837192+00:00", "stage": "query_start", "execution": 3, "position": 1, "query": 10, "label": "reorder_future_q10_exec3"}
+{"utc": "2026-10-07T14:40:09.847266+00:00", "stage": "batch_hint", "execution": 3, "query": 10, "batch": 1, "local_position": 1, "hint": "evict;cur=AdvEngineID,RegionID,ResolutionWidth,UserID;next=ClientIP:7,CounterID:10,EventDate:10,IsDownload:10,IsLink:10,IsRefresh:7,MobilePhoneModel:3,ResolutionWidth:7,SearchEngineID:6,SearchPhrase:4,URL:9,UserID:1,WatchID:7"}
+{"utc": "2026-10-07T14:40:10.161721+00:00", "stage": "query_end", "execution": 3, "position": 1, "query": 10, "status": "ok"}
+{"utc": "2026-10-07T14:40:10.161870+00:00", "stage": "query_start", "execution": 3, "position": 2, "query": 4, "label": "reorder_future_q4_exec3"}
+{"utc": "2026-10-07T14:40:10.172040+00:00", "stage": "batch_hint", "execution": 3, "query": 4, "batch": 1, "local_position": 2, "hint": "evict;cur=UserID;next=ClientIP:6,CounterID:9,EventDate:9,IsDownload:9,IsLink:9,IsRefresh:6,MobilePhoneModel:2,ResolutionWidth:6,SearchEngineID:5,SearchPhrase:3,URL:8,UserID:1,WatchID:6"}
+{"utc": "2026-10-07T14:40:10.253140+00:00", "stage": "query_end", "execution": 3, "position": 2, "query": 4, "status": "ok"}
+{"utc": "2026-10-07T14:40:10.253280+00:00", "stage": "query_start", "execution": 3, "position": 3, "query": 5, "label": "reorder_future_q5_exec3"}
+{"utc": "2026-10-07T14:40:10.263499+00:00", "stage": "batch_hint", "execution": 3, "query": 5, "batch": 1, "local_position": 3, "hint": "evict;cur=UserID;next=ClientIP:5,CounterID:8,EventDate:8,IsDownload:8,IsLink:8,IsRefresh:5,MobilePhoneModel:1,ResolutionWidth:5,SearchEngineID:4,SearchPhrase:2,URL:7,UserID:1,WatchID:5"}
+{"utc": "2026-10-07T14:40:10.375859+00:00", "stage": "query_end", "execution": 3, "position": 3, "query": 5, "status": "ok"}
+{"utc": "2026-10-07T14:40:10.376047+00:00", "stage": "query_start", "execution": 3, "position": 4, "query": 11, "label": "reorder_future_q11_exec3"}
+{"utc": "2026-10-07T14:40:10.385334+00:00", "stage": "batch_hint", "execution": 3, "query": 11, "batch": 1, "local_position": 4, "hint": "evict;cur=MobilePhoneModel,UserID;next=ClientIP:4,CounterID:7,EventDate:7,IsDownload:7,IsLink:7,IsRefresh:4,ResolutionWidth:4,SearchEngineID:3,SearchPhrase:1,URL:6,UserID:1,WatchID:4"}
+{"utc": "2026-10-07T14:40:10.558189+00:00", "stage": "query_end", "execution": 3, "position": 4, "query": 11, "status": "ok"}
+{"utc": "2026-10-07T14:40:10.558384+00:00", "stage": "query_start", "execution": 3, "position": 5, "query": 14, "label": "reorder_future_q14_exec3"}
+{"utc": "2026-10-07T14:40:10.567935+00:00", "stage": "batch_hint", "execution": 3, "query": 14, "batch": 1, "local_position": 5, "hint": "evict;cur=SearchPhrase,UserID;next=ClientIP:3,CounterID:6,EventDate:6,IsDownload:6,IsLink:6,IsRefresh:3,ResolutionWidth:3,SearchEngineID:2,SearchPhrase:1,URL:5,UserID:1,WatchID:3"}
+{"utc": "2026-10-07T14:40:11.782806+00:00", "stage": "query_end", "execution": 3, "position": 5, "query": 14, "status": "ok"}
+{"utc": "2026-10-07T14:40:11.782997+00:00", "stage": "query_start", "execution": 3, "position": 6, "query": 18, "label": "reorder_future_q18_exec3"}
+{"utc": "2026-10-07T14:40:11.792287+00:00", "stage": "batch_hint", "execution": 3, "query": 18, "batch": 1, "local_position": 6, "hint": "evict;cur=SearchPhrase,UserID;next=ClientIP:2,CounterID:5,EventDate:5,IsDownload:5,IsLink:5,IsRefresh:2,ResolutionWidth:2,SearchEngineID:1,SearchPhrase:1,URL:4,WatchID:2"}
+{"utc": "2026-10-07T14:40:12.066318+00:00", "stage": "query_end", "execution": 3, "position": 6, "query": 18, "status": "ok"}
+{"utc": "2026-10-07T14:40:12.066551+00:00", "stage": "query_start", "execution": 3, "position": 7, "query": 15, "label": "reorder_future_q15_exec3"}
+{"utc": "2026-10-07T14:40:12.076419+00:00", "stage": "batch_hint", "execution": 3, "query": 15, "batch": 1, "local_position": 7, "hint": "evict;cur=SearchEngineID,SearchPhrase;next=ClientIP:1,CounterID:4,EventDate:4,IsDownload:4,IsLink:4,IsRefresh:1,ResolutionWidth:1,SearchPhrase:1,URL:3,WatchID:1"}
+{"utc": "2026-10-07T14:40:12.270753+00:00", "stage": "query_end", "execution": 3, "position": 7, "query": 15, "status": "ok"}
+{"utc": "2026-10-07T14:40:12.271016+00:00", "stage": "query_start", "execution": 3, "position": 8, "query": 32, "label": "reorder_future_q32_exec3"}
+{"utc": "2026-10-07T14:40:12.279601+00:00", "stage": "batch_hint", "execution": 3, "query": 32, "batch": 1, "local_position": 8, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,SearchPhrase,WatchID;next=ClientIP:1,CounterID:3,EventDate:3,IsDownload:3,IsLink:3,IsRefresh:3,URL:2"}
+{"utc": "2026-10-07T14:40:12.836970+00:00", "stage": "query_end", "execution": 3, "position": 8, "query": 32, "status": "ok"}
+{"utc": "2026-10-07T14:40:12.837095+00:00", "stage": "query_start", "execution": 3, "position": 9, "query": 36, "label": "reorder_future_q36_exec3"}
+{"utc": "2026-10-07T14:40:12.847553+00:00", "stage": "batch_hint", "execution": 3, "query": 36, "batch": 1, "local_position": 9, "hint": "evict;cur=ClientIP;next=CounterID:2,EventDate:2,IsDownload:2,IsLink:2,IsRefresh:2,URL:1"}
+{"utc": "2026-10-07T14:40:12.989734+00:00", "stage": "query_end", "execution": 3, "position": 9, "query": 36, "status": "ok"}
+{"utc": "2026-10-07T14:40:12.989886+00:00", "stage": "query_start", "execution": 3, "position": 10, "query": 35, "label": "reorder_future_q35_exec3"}
+{"utc": "2026-10-07T14:40:12.999413+00:00", "stage": "batch_hint", "execution": 3, "query": 35, "batch": 1, "local_position": 10, "hint": "evict;cur=URL;next=CounterID:1,EventDate:1,IsDownload:1,IsLink:1,IsRefresh:1,URL:1"}
+{"utc": "2026-10-07T14:40:14.092416+00:00", "stage": "query_end", "execution": 3, "position": 10, "query": 35, "status": "ok"}
+{"utc": "2026-10-07T14:40:14.092615+00:00", "stage": "query_start", "execution": 3, "position": 11, "query": 39, "label": "reorder_future_q39_exec3"}
+{"utc": "2026-10-07T14:40:14.102050+00:00", "stage": "batch_hint", "execution": 3, "query": 39, "batch": 1, "local_position": 11, "hint": "evict;cur=CounterID,EventDate,IsDownload,IsLink,IsRefresh,URL;next="}
+{"utc": "2026-10-07T14:40:14.476317+00:00", "stage": "query_end", "execution": 3, "position": 11, "query": 39, "status": "ok"}
+{"utc": "2026-10-07T14:40:14.476464+00:00", "stage": "query_start", "execution": 3, "position": 12, "query": 43, "label": "reorder_future_q43_exec3"}
+{"utc": "2026-10-07T14:40:14.486195+00:00", "stage": "batch_hint", "execution": 3, "query": 43, "batch": 2, "local_position": 1, "hint": "evict;cur=CounterID,DontCountHits,EventDate,EventTime,IsRefresh;next=AdvEngineID:8,ClientIP:5,CounterID:9,DontCountHits:10,EventDate:10,EventTime:1,IsRefresh:5,MobilePhone:4,MobilePhoneModel:4,ResolutionWidth:5,SearchEngineID:5,SearchPhrase:1,Title:10,URL:9,UserID:3,WatchID:7"}
+{"utc": "2026-10-07T14:40:14.669547+00:00", "stage": "query_end", "execution": 3, "position": 12, "query": 43, "status": "ok"}
+{"utc": "2026-10-07T14:40:14.669737+00:00", "stage": "query_start", "execution": 3, "position": 13, "query": 25, "label": "reorder_future_q25_exec3"}
+{"utc": "2026-10-07T14:40:14.689725+00:00", "stage": "batch_hint", "execution": 3, "query": 25, "batch": 2, "local_position": 2, "hint": "evict;cur=EventTime,SearchPhrase;next=AdvEngineID:7,ClientIP:4,CounterID:8,DontCountHits:9,EventDate:9,IsRefresh:4,MobilePhone:3,MobilePhoneModel:3,ResolutionWidth:4,SearchEngineID:4,SearchPhrase:1,Title:9,URL:8,UserID:2,WatchID:6"}
+{"utc": "2026-10-07T14:40:15.671816+00:00", "stage": "query_end", "execution": 3, "position": 13, "query": 25, "status": "ok"}
+{"utc": "2026-10-07T14:40:15.672016+00:00", "stage": "query_start", "execution": 3, "position": 14, "query": 6, "label": "reorder_future_q6_exec3"}
+{"utc": "2026-10-07T14:40:15.691880+00:00", "stage": "batch_hint", "execution": 3, "query": 6, "batch": 2, "local_position": 3, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:6,ClientIP:3,CounterID:7,DontCountHits:8,EventDate:8,IsRefresh:3,MobilePhone:2,MobilePhoneModel:2,ResolutionWidth:3,SearchEngineID:3,SearchPhrase:1,Title:8,URL:7,UserID:1,WatchID:5"}
+{"utc": "2026-10-07T14:40:15.854118+00:00", "stage": "query_end", "execution": 3, "position": 14, "query": 6, "status": "ok"}
+{"utc": "2026-10-07T14:40:15.854212+00:00", "stage": "query_start", "execution": 3, "position": 15, "query": 17, "label": "reorder_future_q17_exec3"}
+{"utc": "2026-10-07T14:40:15.864091+00:00", "stage": "batch_hint", "execution": 3, "query": 17, "batch": 2, "local_position": 4, "hint": "evict;cur=SearchPhrase,UserID;next=AdvEngineID:5,ClientIP:2,CounterID:6,DontCountHits:7,EventDate:7,IsRefresh:2,MobilePhone:1,MobilePhoneModel:1,ResolutionWidth:2,SearchEngineID:2,SearchPhrase:2,Title:7,URL:6,UserID:1,WatchID:4"}
+{"utc": "2026-10-07T14:40:16.208624+00:00", "stage": "query_end", "execution": 3, "position": 15, "query": 17, "status": "ok"}
+{"utc": "2026-10-07T14:40:16.208715+00:00", "stage": "query_start", "execution": 3, "position": 16, "query": 12, "label": "reorder_future_q12_exec3"}
+{"utc": "2026-10-07T14:40:16.218606+00:00", "stage": "batch_hint", "execution": 3, "query": 12, "batch": 2, "local_position": 5, "hint": "evict;cur=MobilePhone,MobilePhoneModel,UserID;next=AdvEngineID:4,ClientIP:1,CounterID:5,DontCountHits:6,EventDate:6,IsRefresh:1,ResolutionWidth:1,SearchEngineID:1,SearchPhrase:1,Title:6,URL:5,WatchID:3"}
+{"utc": "2026-10-07T14:40:16.411701+00:00", "stage": "query_end", "execution": 3, "position": 16, "query": 12, "status": "ok"}
+{"utc": "2026-10-07T14:40:16.411889+00:00", "stage": "query_start", "execution": 3, "position": 17, "query": 31, "label": "reorder_future_q31_exec3"}
+{"utc": "2026-10-07T14:40:16.431767+00:00", "stage": "batch_hint", "execution": 3, "query": 31, "batch": 2, "local_position": 6, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,SearchEngineID,SearchPhrase;next=AdvEngineID:3,ClientIP:2,CounterID:4,DontCountHits:5,EventDate:5,IsRefresh:2,ResolutionWidth:1,Title:5,URL:4,WatchID:2"}
+{"utc": "2026-10-07T14:40:16.715318+00:00", "stage": "query_end", "execution": 3, "position": 17, "query": 31, "status": "ok"}
+{"utc": "2026-10-07T14:40:16.715388+00:00", "stage": "query_start", "execution": 3, "position": 18, "query": 30, "label": "reorder_future_q30_exec3"}
+{"utc": "2026-10-07T14:40:16.726064+00:00", "stage": "batch_hint", "execution": 3, "query": 30, "batch": 2, "local_position": 7, "hint": "evict;cur=ResolutionWidth;next=AdvEngineID:2,ClientIP:1,CounterID:3,DontCountHits:4,EventDate:4,IsRefresh:1,ResolutionWidth:1,Title:4,URL:3,WatchID:1"}
+{"utc": "2026-10-07T14:40:16.818049+00:00", "stage": "query_end", "execution": 3, "position": 18, "query": 30, "status": "ok"}
+{"utc": "2026-10-07T14:40:16.818153+00:00", "stage": "query_start", "execution": 3, "position": 19, "query": 33, "label": "reorder_future_q33_exec3"}
+{"utc": "2026-10-07T14:40:16.828192+00:00", "stage": "batch_hint", "execution": 3, "query": 33, "batch": 2, "local_position": 8, "hint": "evict;cur=ClientIP,IsRefresh,ResolutionWidth,WatchID;next=AdvEngineID:1,CounterID:2,DontCountHits:3,EventDate:3,IsRefresh:3,Title:3,URL:2"}
+{"utc": "2026-10-07T14:40:17.900122+00:00", "stage": "query_end", "execution": 3, "position": 19, "query": 33, "status": "ok"}
+{"utc": "2026-10-07T14:40:17.900313+00:00", "stage": "query_start", "execution": 3, "position": 20, "query": 8, "label": "reorder_future_q8_exec3"}
+{"utc": "2026-10-07T14:40:17.920485+00:00", "stage": "batch_hint", "execution": 3, "query": 8, "batch": 2, "local_position": 9, "hint": "evict;cur=AdvEngineID;next=CounterID:1,DontCountHits:2,EventDate:2,IsRefresh:2,Title:2,URL:1"}
+{"utc": "2026-10-07T14:40:18.022637+00:00", "stage": "query_end", "execution": 3, "position": 20, "query": 8, "status": "ok"}
+{"utc": "2026-10-07T14:40:18.022823+00:00", "stage": "query_start", "execution": 3, "position": 21, "query": 28, "label": "reorder_future_q28_exec3"}
+{"utc": "2026-10-07T14:40:18.043045+00:00", "stage": "batch_hint", "execution": 3, "query": 28, "batch": 2, "local_position": 10, "hint": "evict;cur=CounterID,URL;next=CounterID:1,DontCountHits:1,EventDate:1,IsRefresh:1,Title:1"}
+{"utc": "2026-10-07T14:40:19.156606+00:00", "stage": "query_end", "execution": 3, "position": 21, "query": 28, "status": "ok"}
+{"utc": "2026-10-07T14:40:19.156714+00:00", "stage": "query_start", "execution": 3, "position": 22, "query": 38, "label": "reorder_future_q38_exec3"}
+{"utc": "2026-10-07T14:40:19.167116+00:00", "stage": "batch_hint", "execution": 3, "query": 38, "batch": 2, "local_position": 11, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,Title;next="}
+{"utc": "2026-10-07T14:40:19.571674+00:00", "stage": "query_end", "execution": 3, "position": 22, "query": 38, "status": "ok"}
+{"utc": "2026-10-07T14:40:19.571761+00:00", "stage": "query_start", "execution": 3, "position": 23, "query": 42, "label": "reorder_future_q42_exec3"}
+{"utc": "2026-10-07T14:40:19.582226+00:00", "stage": "batch_hint", "execution": 3, "query": 42, "batch": 3, "local_position": 1, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,URLHash,WindowClientHeight,WindowClientWidth;next=AdvEngineID:4,CounterID:8,DontCountHits:8,EventDate:8,EventTime:6,IsRefresh:8,Referer:9,SearchEngineID:9,SearchPhrase:3,Title:5,TraficSourceID:9,URL:5,UserID:1"}
+{"utc": "2026-10-07T14:40:19.735278+00:00", "stage": "query_end", "execution": 3, "position": 23, "query": 42, "status": "ok"}
+{"utc": "2026-10-07T14:40:19.735492+00:00", "stage": "query_start", "execution": 3, "position": 24, "query": 16, "label": "reorder_future_q16_exec3"}
+{"utc": "2026-10-07T14:40:19.745552+00:00", "stage": "batch_hint", "execution": 3, "query": 16, "batch": 3, "local_position": 2, "hint": "evict;cur=UserID;next=AdvEngineID:3,CounterID:7,DontCountHits:7,EventDate:7,EventTime:5,IsRefresh:7,Referer:8,SearchEngineID:8,SearchPhrase:2,Title:4,TraficSourceID:8,URL:4,UserID:1"}
+{"utc": "2026-10-07T14:40:20.009291+00:00", "stage": "query_end", "execution": 3, "position": 24, "query": 16, "status": "ok"}
+{"utc": "2026-10-07T14:40:20.009523+00:00", "stage": "query_start", "execution": 3, "position": 25, "query": 20, "label": "reorder_future_q20_exec3"}
+{"utc": "2026-10-07T14:40:20.019723+00:00", "stage": "batch_hint", "execution": 3, "query": 20, "batch": 3, "local_position": 3, "hint": "evict;cur=UserID;next=AdvEngineID:2,CounterID:6,DontCountHits:6,EventDate:6,EventTime:4,IsRefresh:6,Referer:7,SearchEngineID:7,SearchPhrase:1,Title:3,TraficSourceID:7,URL:3,UserID:3"}
+{"utc": "2026-10-07T14:40:20.101136+00:00", "stage": "query_end", "execution": 3, "position": 25, "query": 20, "status": "ok"}
+{"utc": "2026-10-07T14:40:20.101256+00:00", "stage": "query_start", "execution": 3, "position": 26, "query": 26, "label": "reorder_future_q26_exec3"}
+{"utc": "2026-10-07T14:40:20.111021+00:00", "stage": "batch_hint", "execution": 3, "query": 26, "batch": 3, "local_position": 4, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:1,CounterID:5,DontCountHits:5,EventDate:5,EventTime:3,IsRefresh:5,Referer:6,SearchEngineID:6,SearchPhrase:2,Title:2,TraficSourceID:6,URL:2,UserID:2"}
+{"utc": "2026-10-07T14:40:21.152334+00:00", "stage": "query_end", "execution": 3, "position": 26, "query": 26, "status": "ok"}
+{"utc": "2026-10-07T14:40:21.152412+00:00", "stage": "query_start", "execution": 3, "position": 27, "query": 2, "label": "reorder_future_q2_exec3"}
+{"utc": "2026-10-07T14:40:21.162268+00:00", "stage": "batch_hint", "execution": 3, "query": 2, "batch": 3, "local_position": 5, "hint": "evict;cur=AdvEngineID;next=AdvEngineID:5,CounterID:4,DontCountHits:4,EventDate:4,EventTime:2,IsRefresh:4,Referer:5,SearchEngineID:5,SearchPhrase:1,Title:1,TraficSourceID:5,URL:1,UserID:1"}
+{"utc": "2026-10-07T14:40:21.254401+00:00", "stage": "query_end", "execution": 3, "position": 27, "query": 2, "status": "ok"}
+{"utc": "2026-10-07T14:40:21.254595+00:00", "stage": "query_start", "execution": 3, "position": 28, "query": 23, "label": "reorder_future_q23_exec3"}
+{"utc": "2026-10-07T14:40:21.264157+00:00", "stage": "batch_hint", "execution": 3, "query": 23, "batch": 3, "local_position": 6, "hint": "evict;cur=SearchPhrase,Title,URL,UserID;next=AdvEngineID:4,CounterID:3,DontCountHits:3,EventDate:3,EventTime:1,IsRefresh:3,Referer:4,SearchEngineID:4,TraficSourceID:4,URL:1"}
+{"utc": "2026-10-07T14:40:23.770451+00:00", "stage": "query_end", "execution": 3, "position": 28, "query": 23, "status": "ok"}
+{"utc": "2026-10-07T14:40:23.770633+00:00", "stage": "query_start", "execution": 3, "position": 29, "query": 24, "label": "reorder_future_q24_exec3"}
+{"utc": "2026-10-07T14:40:23.780407+00:00", "stage": "batch_hint", "execution": 3, "query": 24, "batch": 3, "local_position": 7, "hint": "evict;cur=EventTime,URL;next=AdvEngineID:3,CounterID:2,DontCountHits:2,EventDate:2,IsRefresh:2,Referer:3,SearchEngineID:3,TraficSourceID:3,URL:1"}
+{"utc": "2026-10-07T14:40:31.657964+00:00", "stage": "query_end", "execution": 3, "position": 29, "query": 24, "status": "ok"}
+{"utc": "2026-10-07T14:40:31.658167+00:00", "stage": "query_start", "execution": 3, "position": 30, "query": 34, "label": "reorder_future_q34_exec3"}
+{"utc": "2026-10-07T14:40:31.667516+00:00", "stage": "batch_hint", "execution": 3, "query": 34, "batch": 3, "local_position": 8, "hint": "evict;cur=URL;next=AdvEngineID:2,CounterID:1,DontCountHits:1,EventDate:1,IsRefresh:1,Referer:2,SearchEngineID:2,TraficSourceID:2,URL:1"}
+{"utc": "2026-10-07T14:40:33.297155+00:00", "stage": "query_end", "execution": 3, "position": 30, "query": 34, "status": "ok"}
+{"utc": "2026-10-07T14:40:33.297402+00:00", "stage": "query_start", "execution": 3, "position": 31, "query": 37, "label": "reorder_future_q37_exec3"}
+{"utc": "2026-10-07T14:40:33.306675+00:00", "stage": "batch_hint", "execution": 3, "query": 37, "batch": 3, "local_position": 9, "hint": "evict;cur=CounterID,DontCountHits,EventDate,IsRefresh,URL;next=AdvEngineID:1,CounterID:1,EventDate:1,IsRefresh:1,Referer:1,SearchEngineID:1,TraficSourceID:1,URL:1"}
+{"utc": "2026-10-07T14:40:33.803878+00:00", "stage": "query_end", "execution": 3, "position": 31, "query": 37, "status": "ok"}
+{"utc": "2026-10-07T14:40:33.804071+00:00", "stage": "query_start", "execution": 3, "position": 32, "query": 40, "label": "reorder_future_q40_exec3"}
+{"utc": "2026-10-07T14:40:33.823959+00:00", "stage": "batch_hint", "execution": 3, "query": 40, "batch": 3, "local_position": 10, "hint": "evict;cur=AdvEngineID,CounterID,EventDate,IsRefresh,Referer,SearchEngineID,TraficSourceID,URL;next=Referer:1"}
+{"utc": "2026-10-07T14:40:34.219417+00:00", "stage": "query_end", "execution": 3, "position": 32, "query": 40, "status": "ok"}
+{"utc": "2026-10-07T14:40:34.219536+00:00", "stage": "query_start", "execution": 3, "position": 33, "query": 29, "label": "reorder_future_q29_exec3"}
+{"utc": "2026-10-07T14:40:34.239995+00:00", "stage": "batch_hint", "execution": 3, "query": 29, "batch": 3, "local_position": 11, "hint": "evict;cur=Referer;next="}
+{"utc": "2026-10-07T14:40:47.314516+00:00", "stage": "query_end", "execution": 3, "position": 33, "query": 29, "status": "ok"}
+{"utc": "2026-10-07T14:40:47.314609+00:00", "stage": "query_start", "execution": 3, "position": 34, "query": 9, "label": "reorder_future_q9_exec3"}
+{"utc": "2026-10-07T14:40:47.325005+00:00", "stage": "batch_hint", "execution": 3, "query": 9, "batch": 4, "local_position": 1, "hint": "evict;cur=RegionID,UserID;next=AdvEngineID:7,CounterID:5,EventDate:4,EventTime:1,IsRefresh:5,RefererHash:5,ResolutionWidth:7,SearchPhrase:1,TraficSourceID:5,URL:8,URLHash:5,UserID:1"}
+{"utc": "2026-10-07T14:40:47.628951+00:00", "stage": "query_end", "execution": 3, "position": 34, "query": 9, "status": "ok"}
+{"utc": "2026-10-07T14:40:47.629038+00:00", "stage": "query_start", "execution": 3, "position": 35, "query": 19, "label": "reorder_future_q19_exec3"}
+{"utc": "2026-10-07T14:40:47.639253+00:00", "stage": "batch_hint", "execution": 3, "query": 19, "batch": 4, "local_position": 2, "hint": "evict;cur=EventTime,SearchPhrase,UserID;next=AdvEngineID:6,CounterID:4,EventDate:3,EventTime:1,IsRefresh:4,RefererHash:4,ResolutionWidth:6,SearchPhrase:1,TraficSourceID:4,URL:7,URLHash:4"}
+{"utc": "2026-10-07T14:40:48.499664+00:00", "stage": "query_end", "execution": 3, "position": 35, "query": 19, "status": "ok"}
+{"utc": "2026-10-07T14:40:48.499841+00:00", "stage": "query_start", "execution": 3, "position": 36, "query": 27, "label": "reorder_future_q27_exec3"}
+{"utc": "2026-10-07T14:40:48.509182+00:00", "stage": "batch_hint", "execution": 3, "query": 27, "batch": 4, "local_position": 3, "hint": "evict;cur=EventTime,SearchPhrase;next=AdvEngineID:5,CounterID:3,EventDate:2,IsRefresh:3,RefererHash:3,ResolutionWidth:5,SearchPhrase:1,TraficSourceID:3,URL:6,URLHash:3"}
+{"utc": "2026-10-07T14:40:48.672040+00:00", "stage": "query_end", "execution": 3, "position": 36, "query": 27, "status": "ok"}
+{"utc": "2026-10-07T14:40:48.672245+00:00", "stage": "query_start", "execution": 3, "position": 37, "query": 13, "label": "reorder_future_q13_exec3"}
+{"utc": "2026-10-07T14:40:48.682092+00:00", "stage": "batch_hint", "execution": 3, "query": 13, "batch": 4, "local_position": 4, "hint": "evict;cur=SearchPhrase;next=AdvEngineID:4,CounterID:2,EventDate:1,IsRefresh:2,RefererHash:2,ResolutionWidth:4,SearchPhrase:6,TraficSourceID:2,URL:5,URLHash:2"}
+{"utc": "2026-10-07T14:40:48.834085+00:00", "stage": "query_end", "execution": 3, "position": 37, "query": 13, "status": "ok"}
+{"utc": "2026-10-07T14:40:48.834177+00:00", "stage": "query_start", "execution": 3, "position": 38, "query": 7, "label": "reorder_future_q7_exec3"}
+{"utc": "2026-10-07T14:40:48.844330+00:00", "stage": "batch_hint", "execution": 3, "query": 7, "batch": 4, "local_position": 5, "hint": "evict;cur=EventDate;next=AdvEngineID:3,CounterID:1,EventDate:1,IsRefresh:1,RefererHash:1,ResolutionWidth:3,SearchPhrase:5,TraficSourceID:1,URL:4,URLHash:1"}
+{"utc": "2026-10-07T14:40:48.936335+00:00", "stage": "query_end", "execution": 3, "position": 38, "query": 7, "status": "ok"}
+{"utc": "2026-10-07T14:40:48.936551+00:00", "stage": "query_start", "execution": 3, "position": 39, "query": 41, "label": "reorder_future_q41_exec3"}
+{"utc": "2026-10-07T14:40:48.946498+00:00", "stage": "batch_hint", "execution": 3, "query": 41, "batch": 4, "local_position": 6, "hint": "evict;cur=CounterID,EventDate,IsRefresh,RefererHash,TraficSourceID,URLHash;next=AdvEngineID:2,ResolutionWidth:2,SearchPhrase:4,URL:3"}
+{"utc": "2026-10-07T14:40:49.119727+00:00", "stage": "query_end", "execution": 3, "position": 39, "query": 41, "status": "ok"}
+{"utc": "2026-10-07T14:40:49.119915+00:00", "stage": "query_start", "execution": 3, "position": 40, "query": 1, "label": "reorder_future_q1_exec3"}
+{"utc": "2026-10-07T14:40:49.129765+00:00", "stage": "batch_hint", "execution": 3, "query": 1, "batch": 4, "local_position": 7, "hint": "evict;cur=;next=AdvEngineID:1,ResolutionWidth:1,SearchPhrase:3,URL:2"}
+{"utc": "2026-10-07T14:40:49.231878+00:00", "stage": "query_end", "execution": 3, "position": 40, "query": 1, "status": "ok"}
+{"utc": "2026-10-07T14:40:49.232067+00:00", "stage": "query_start", "execution": 3, "position": 41, "query": 3, "label": "reorder_future_q3_exec3"}
+{"utc": "2026-10-07T14:40:49.241515+00:00", "stage": "batch_hint", "execution": 3, "query": 3, "batch": 4, "local_position": 8, "hint": "evict;cur=AdvEngineID,ResolutionWidth;next=SearchPhrase:2,URL:1"}
+{"utc": "2026-10-07T14:40:49.363662+00:00", "stage": "query_end", "execution": 3, "position": 41, "query": 3, "status": "ok"}
+{"utc": "2026-10-07T14:40:49.363783+00:00", "stage": "query_start", "execution": 3, "position": 42, "query": 21, "label": "reorder_future_q21_exec3"}
+{"utc": "2026-10-07T14:40:49.373679+00:00", "stage": "batch_hint", "execution": 3, "query": 21, "batch": 4, "local_position": 9, "hint": "evict;cur=URL;next=SearchPhrase:1,URL:1"}
+{"utc": "2026-10-07T14:40:50.651082+00:00", "stage": "query_end", "execution": 3, "position": 42, "query": 21, "status": "ok"}
+{"utc": "2026-10-07T14:40:50.651281+00:00", "stage": "query_start", "execution": 3, "position": 43, "query": 22, "label": "reorder_future_q22_exec3"}
+{"utc": "2026-10-07T14:40:50.660557+00:00", "stage": "batch_hint", "execution": 3, "query": 22, "batch": 4, "local_position": 10, "hint": "evict;cur=SearchPhrase,URL;next="}
+{"utc": "2026-10-07T14:40:51.429699+00:00", "stage": "query_end", "execution": 3, "position": 43, "query": 22, "status": "ok"}
+{"utc": "2026-10-07T14:40:51.440129+00:00", "stage": "worker_finished", "pin_setup_complete": true}
+{"utc": "2026-10-07T14:40:51.450575+00:00", "stage": "post_workload_process_exit", "all_queries_completed": true, "cuda_synchronized": true, "reason": "known frozen-engine destructor fault, after all measurements"}

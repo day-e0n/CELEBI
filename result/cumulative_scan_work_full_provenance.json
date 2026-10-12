@@ -1,0 +1,897 @@
+{
+  "source": "full",
+  "definition": "Sum of scan-attributed Task Computing dwell times. Includes host work and waits; overlapping tasks add. Not query wall time or GPU kernel active time.",
+  "accumulation": "Per-query means accumulated in query-number order, not actual execution order.",
+  "warmup_execution": 1,
+  "averaged_executions": [
+    2,
+    3
+  ],
+  "cases": [
+    {
+      "workload": "ClickBench",
+      "condition": "baseline",
+      "run": 1,
+      "case": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline",
+      "metadata": {
+        "workload": "cb",
+        "condition": "baseline",
+        "trace_mode": "latency",
+        "run": 1,
+        "case_directory": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline",
+        "order": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43
+        ],
+        "executions": 3,
+        "gpu_device": "1",
+        "gpu_usage_limit_bytes": 21474836480,
+        "host_capacity_bytes": 34359738368,
+        "cache_budget_bytes": 6442450944,
+        "min_free_bytes_per_gpu": 6442450944,
+        "future_mode": "off",
+        "future_horizon": "execution",
+        "late_materialization": true,
+        "prefetch": false,
+        "odirect": true,
+        "environment": {
+          "CUDA_VISIBLE_DEVICES": "1",
+          "SIRIUS_CONFIG_FILE": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/sirius.yaml",
+          "SIRIUS_LOG_DIR": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/log_dir",
+          "SIRIUS_LOG_LEVEL": "info",
+          "SIRIUS_ENABLE_LATE_MATERIALIZATION": "1",
+          "SIRIUS_FIXED_PAGE_COLUMN_KEYED_CACHE": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_VARIABLE_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_VARIABLE_PAGE_CACHE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_PAGE_TRACE": "0",
+          "SIRIUS_CACHE_HIT_TRACE": "0",
+          "BENCH_USE_ODIRECT": "1",
+          "BENCH_PREFETCH_CACHE": "0",
+          "SIRIUS_ENABLE_FIXED_PAGE_REUSE": "0",
+          "SIRIUS_FIXED_PAGE_AUTO_CACHE": "0",
+          "SIRIUS_FIXED_PAGE_OWNED_PAGES": "0",
+          "SIRIUS_FIXED_PAGE_BACKED_PROVIDER": "0",
+          "SIRIUS_FIXED_PAGE_HYBRID_PROVIDER": "0",
+          "SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED": "0",
+          "SIRIUS_VARIABLE_PAGE_CACHE_ENABLED": "0"
+        },
+        "query_csv": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/queries.csv",
+        "journal": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/events.jsonl",
+        "status": "complete",
+        "pin": null,
+        "started_utc": "2026-10-07T02:39:46.846778+00:00",
+        "returncode": 0,
+        "timed_out": false,
+        "status_counts": {
+          "ok": 129
+        },
+        "workload_wall_s_by_execution": {
+          "1": 87.56674993550405,
+          "2": 88.65649244654924,
+          "3": 86.27813609829172
+        },
+        "ended_utc": "2026-10-07T02:44:13.707897+00:00",
+        "comparison_valid": true,
+        "steady_state_workload_wall_s": 87.46731427242048
+      },
+      "future_eviction_calls": 0,
+      "telemetry_files": [
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/engine/01a1143b-360b-70f2-92f7-02882ec9d720.ndjson",
+          "sha256": "a923d355a7e03c422e1be122ea966d6f1438698a81b4b1ea8333974cb5c8efac"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/executor_thread/01a1143b-3614-7a71-9397-f59ba6c75f43.ndjson",
+          "sha256": "ddc4b7bdd5725a0df9a641b189483a177d0f64c92b8ad07fce257eb2fade4cbd"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/operator/01a1143b-360b-70f2-92f7-0255f7f601ad.ndjson",
+          "sha256": "9cc994ccc4e3830c74364de0000b811310743a16615dce65b8ad56640cd4796e"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/plan/01a1143b-360b-70f2-92f7-02723ea22f63.ndjson",
+          "sha256": "3f99ffe21ee1e7b14d2ac27ff830193147e2e6e1ef79566b9b8dab31468b9ae2"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/port/01a1143b-360b-70f2-92f7-023decd0a9d6.ndjson",
+          "sha256": "b1f4b684082d1f125b436893527bdb4973edd0583ee415a2ab4e79995daefb9d"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/query/01a1143b-360b-70f2-92f7-021d9ef28d6a.ndjson",
+          "sha256": "0a894749cb6b5bbd0c98e0b771da35cf928399342296f5bdc0926968763c91c1"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/query_group/01a1143b-3614-7a71-9397-f5a0eb604eff.ndjson",
+          "sha256": "3c7408b2289c60a8e758ee4ac6e70802535460385a1f43c87c6022d6eb837fe9"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/task/01a1143b-360b-70f2-92f7-0268368e0197.ndjson",
+          "sha256": "ac676c63f42f9df5f02b4769125218c0aa28008a10ce708adf21c3b700de4364"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/task_manager_loop_thread/01a1143b-360b-70f2-92f7-02465247529c.ndjson",
+          "sha256": "7975dfb22eb073919616b066c27b6b74742292565eaad355f60c4ef21654a9af"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/task_queue/01a1143b-360b-70f2-92f7-029bc6d561e3.ndjson",
+          "sha256": "236a27c8fdaa51f72f0f25eb4c4084169c49accf35cecaac8dc39028a723571d"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/baseline/telemetry_data/01a1143b-3607-7161-a36d-4c91e6b5aa7e/worker/01a1143b-360b-70f2-92f7-022ad2254b75.ndjson",
+          "sha256": "39208c7c21032f35382bba5498244743581aaf0b615b6a9d9e9cc4ae888dabea"
+        }
+      ]
+    },
+    {
+      "workload": "ClickBench",
+      "condition": "paging_lru",
+      "run": 1,
+      "case": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru",
+      "metadata": {
+        "workload": "cb",
+        "condition": "paging_lru",
+        "trace_mode": "latency",
+        "run": 1,
+        "case_directory": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru",
+        "order": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43
+        ],
+        "executions": 3,
+        "gpu_device": "1",
+        "gpu_usage_limit_bytes": 21474836480,
+        "host_capacity_bytes": 34359738368,
+        "cache_budget_bytes": 6442450944,
+        "min_free_bytes_per_gpu": 6442450944,
+        "future_mode": "off",
+        "future_horizon": "execution",
+        "late_materialization": true,
+        "prefetch": false,
+        "odirect": true,
+        "environment": {
+          "CUDA_VISIBLE_DEVICES": "1",
+          "SIRIUS_CONFIG_FILE": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/sirius.yaml",
+          "SIRIUS_LOG_DIR": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/log_dir",
+          "SIRIUS_LOG_LEVEL": "info",
+          "SIRIUS_ENABLE_LATE_MATERIALIZATION": "1",
+          "SIRIUS_FIXED_PAGE_COLUMN_KEYED_CACHE": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_VARIABLE_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_VARIABLE_PAGE_CACHE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_PAGE_TRACE": "0",
+          "SIRIUS_CACHE_HIT_TRACE": "0",
+          "BENCH_USE_ODIRECT": "1",
+          "BENCH_PREFETCH_CACHE": "0",
+          "SIRIUS_ENABLE_FIXED_PAGE_REUSE": "1",
+          "SIRIUS_FIXED_PAGE_AUTO_CACHE": "1",
+          "SIRIUS_FIXED_PAGE_OWNED_PAGES": "1",
+          "SIRIUS_FIXED_PAGE_BACKED_PROVIDER": "1",
+          "SIRIUS_FIXED_PAGE_HYBRID_PROVIDER": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED": "1",
+          "SIRIUS_VARIABLE_PAGE_CACHE_ENABLED": "1"
+        },
+        "query_csv": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/queries.csv",
+        "journal": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/events.jsonl",
+        "status": "complete",
+        "pin": null,
+        "started_utc": "2026-10-07T02:44:13.708527+00:00",
+        "returncode": 0,
+        "timed_out": false,
+        "status_counts": {
+          "ok": 129
+        },
+        "workload_wall_s_by_execution": {
+          "1": 83.05867386329919,
+          "2": 83.23946259403601,
+          "3": 81.7942356322892
+        },
+        "ended_utc": "2026-10-07T02:48:26.052484+00:00",
+        "comparison_valid": true,
+        "steady_state_workload_wall_s": 82.5168491131626
+      },
+      "future_eviction_calls": 0,
+      "telemetry_files": [
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/engine/01a1143f-4873-7740-91d6-8560d0352495.ndjson",
+          "sha256": "d02ca236c88fe6a89303e2dee01555a649cf5403a33e9a0e93fc16ca11031ede"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/executor_thread/01a1143f-4874-78b3-b74b-d09cab2b2c00.ndjson",
+          "sha256": "9bb8577ffbff14af71655ee27daddb2057a0de217bdfb7e7c78e354a3722dc64"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/operator/01a1143f-4873-7740-91d6-85416438998f.ndjson",
+          "sha256": "ea509fe65b56779bac5c93c9ce37f9ffee31e7756c167555aa73ead2a322991a"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/plan/01a1143f-4873-7740-91d6-853b4e4a5283.ndjson",
+          "sha256": "7e16861203231154b8e299a85a72246d0c16d5d6f1c2617eecc94a8c4c1172d4"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/port/01a1143f-4873-7740-91d6-85567759d524.ndjson",
+          "sha256": "7482442d3693b90c94929419606def851115a52f3cfd5f83e2de14e5d551d689"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/query/01a1143f-4873-7740-91d6-857b84faa0a7.ndjson",
+          "sha256": "80a67e26255928eb40d68679e3211b72a54de49e9e722c69dcd3f18376e44dd8"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/query_group/01a1143f-4873-7740-91d6-852bd8fb2484.ndjson",
+          "sha256": "8f2e72402e85ca8c998cb821ae2de3b4dda3bb3f1532d766b984acc099715754"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/task/01a1143f-4873-7740-91d6-858abb4ba1d9.ndjson",
+          "sha256": "7439d0f07006ae75f287298cdb85c19eee1f9ed1771f226522cea1e5e49142b7"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/task_manager_loop_thread/01a1143f-4874-78b3-b74b-d0865e928c95.ndjson",
+          "sha256": "dab75f6af679f4c60ee706dd3bb99f8e92ad79f3bf1001eb97fd052876ccda58"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/task_queue/01a1143f-4873-7740-91d6-859bcdb108da.ndjson",
+          "sha256": "76410e8a9ee49acdb6e5a924ff8988877f3f8ca1de8f93fb07c83d0869ba0f62"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/paging_lru/telemetry_data/01a1143f-486e-7ee3-b356-38f348f9aafb/worker/01a1143f-4873-7740-91d6-85104f4c26d2.ndjson",
+          "sha256": "6ada91f0e3d2853704a968b1fd0c28b4003a8d4dd5fe8a0e2eaa65ed57ed0777"
+        }
+      ]
+    },
+    {
+      "workload": "ClickBench",
+      "condition": "reorder_future",
+      "run": 1,
+      "case": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future",
+      "metadata": {
+        "workload": "cb",
+        "condition": "reorder_future",
+        "trace_mode": "latency",
+        "run": 1,
+        "case_directory": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future",
+        "order": [
+          2,
+          8,
+          3,
+          30,
+          10,
+          9,
+          4,
+          5,
+          16,
+          20,
+          11,
+          12,
+          14,
+          17,
+          18,
+          6,
+          13,
+          26,
+          15,
+          31,
+          36,
+          33,
+          32,
+          25,
+          27,
+          19,
+          43,
+          7,
+          42,
+          41,
+          1,
+          21,
+          22,
+          24,
+          28,
+          34,
+          35,
+          37,
+          39,
+          23,
+          40,
+          29,
+          38
+        ],
+        "executions": 3,
+        "gpu_device": "1",
+        "gpu_usage_limit_bytes": 21474836480,
+        "host_capacity_bytes": 34359738368,
+        "cache_budget_bytes": 6442450944,
+        "min_free_bytes_per_gpu": 6442450944,
+        "future_mode": "evict",
+        "future_horizon": "execution",
+        "late_materialization": true,
+        "prefetch": false,
+        "odirect": true,
+        "environment": {
+          "CUDA_VISIBLE_DEVICES": "1",
+          "SIRIUS_CONFIG_FILE": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/sirius.yaml",
+          "SIRIUS_LOG_DIR": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/log_dir",
+          "SIRIUS_LOG_LEVEL": "info",
+          "SIRIUS_ENABLE_LATE_MATERIALIZATION": "1",
+          "SIRIUS_FIXED_PAGE_COLUMN_KEYED_CACHE": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_VARIABLE_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_VARIABLE_PAGE_CACHE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_PAGE_TRACE": "0",
+          "SIRIUS_CACHE_HIT_TRACE": "0",
+          "BENCH_USE_ODIRECT": "1",
+          "BENCH_PREFETCH_CACHE": "0",
+          "SIRIUS_ENABLE_FIXED_PAGE_REUSE": "1",
+          "SIRIUS_FIXED_PAGE_AUTO_CACHE": "1",
+          "SIRIUS_FIXED_PAGE_OWNED_PAGES": "1",
+          "SIRIUS_FIXED_PAGE_BACKED_PROVIDER": "1",
+          "SIRIUS_FIXED_PAGE_HYBRID_PROVIDER": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED": "1",
+          "SIRIUS_VARIABLE_PAGE_CACHE_ENABLED": "1"
+        },
+        "query_csv": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/queries.csv",
+        "journal": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/events.jsonl",
+        "status": "complete",
+        "pin": null,
+        "started_utc": "2026-10-07T02:52:39.976074+00:00",
+        "returncode": 0,
+        "timed_out": false,
+        "status_counts": {
+          "ok": 129
+        },
+        "workload_wall_s_by_execution": {
+          "1": 83.12729725567624,
+          "2": 78.87045432673767,
+          "3": 82.21515868557617
+        },
+        "ended_utc": "2026-10-07T02:56:49.634242+00:00",
+        "comparison_valid": true,
+        "steady_state_workload_wall_s": 80.54280650615692
+      },
+      "future_eviction_calls": 129,
+      "telemetry_files": [
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/engine/01a11447-0255-70b1-87af-a2031c0e03c7.ndjson",
+          "sha256": "b6f1a4aacd3b4bc69dee8e162bf041c1190f04d282947da630833fa1190324aa"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/executor_thread/01a11447-0256-7852-bd62-a5ed32d730fd.ndjson",
+          "sha256": "d32e83c1953204227f6bfbeec304a79772a68595cda1ecb25dd04614f9373e35"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/operator/01a11447-0255-70b1-87af-a24166695ebd.ndjson",
+          "sha256": "4670cd9e980a95f6013a1eb495f171bf793864bd8cbe2af6bb0c5c98f06a5841"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/plan/01a11447-0255-70b1-87af-a232dbd942c5.ndjson",
+          "sha256": "9ff6aafe9ab415505f0fb32b31492f9a71f849dce552815df42d64376bd539db"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/port/01a11447-0255-70b1-87af-a25b7573dc0a.ndjson",
+          "sha256": "341949950125e14614776a83f39ffe59116c29584b0741423320064475b30524"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/query/01a11447-0255-70b1-87af-a2664b1044ca.ndjson",
+          "sha256": "42f7bb0a1f08c461a0f83362d88f318aa8672df3b613ab131f2479af2ece7ac2"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/query_group/01a11447-0255-70b1-87af-a21beff7c883.ndjson",
+          "sha256": "3987989a38dfc5742e19136ac099c7a3f869016558e628874900306352b35003"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/task/01a11447-0256-7852-bd62-a5b4826811ed.ndjson",
+          "sha256": "bb29746c92ec29395338ca4dab2e6dc6c12aa31cac53a485145e34b00a3eca22"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/task_manager_loop_thread/01a11447-0256-7852-bd62-a5dfa345d4f3.ndjson",
+          "sha256": "83919c9d2ea88f9ccad127b76e5282f8cfd609ff4f5d9d5fdf2f3e547f0e616c"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/task_queue/01a11447-0256-7852-bd62-a5cfcbd0a25c.ndjson",
+          "sha256": "224cf52db80b4314aedf1ffa8d83088bba13d56905eff061b7830ae3dd42d15e"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/telemetry_data/01a11447-0252-7f33-a1e4-378311ba9ebd/worker/01a11447-0255-70b1-87af-a226ee5eafbc.ndjson",
+          "sha256": "7a646ac0cde6dee330cc724ff6898c7edaf77887c27633245a5e17732c031e7a"
+        }
+      ]
+    },
+    {
+      "workload": "TPC-H SF50",
+      "condition": "baseline",
+      "run": 1,
+      "case": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline",
+      "metadata": {
+        "workload": "th",
+        "condition": "baseline",
+        "trace_mode": "latency",
+        "run": 1,
+        "case_directory": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline",
+        "order": [
+          8,
+          1,
+          4,
+          7,
+          17,
+          5,
+          6,
+          2,
+          10,
+          16,
+          12,
+          19,
+          21,
+          14,
+          18,
+          15,
+          22,
+          9,
+          13,
+          20,
+          3,
+          11
+        ],
+        "executions": 3,
+        "gpu_device": "1",
+        "gpu_usage_limit_bytes": 21474836480,
+        "host_capacity_bytes": 34359738368,
+        "cache_budget_bytes": 4294967296,
+        "min_free_bytes_per_gpu": 6442450944,
+        "future_mode": "off",
+        "future_horizon": "execution",
+        "late_materialization": true,
+        "prefetch": false,
+        "odirect": true,
+        "environment": {
+          "CUDA_VISIBLE_DEVICES": "1",
+          "SIRIUS_CONFIG_FILE": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/sirius.yaml",
+          "SIRIUS_LOG_DIR": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/log_dir",
+          "SIRIUS_LOG_LEVEL": "info",
+          "SIRIUS_ENABLE_LATE_MATERIALIZATION": "1",
+          "SIRIUS_FIXED_PAGE_COLUMN_KEYED_CACHE": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_VARIABLE_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU": "4294967296",
+          "SIRIUS_VARIABLE_PAGE_CACHE_BYTES_PER_GPU": "4294967296",
+          "SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_PAGE_TRACE": "0",
+          "SIRIUS_CACHE_HIT_TRACE": "0",
+          "BENCH_USE_ODIRECT": "1",
+          "BENCH_PREFETCH_CACHE": "0",
+          "SIRIUS_ENABLE_FIXED_PAGE_REUSE": "0",
+          "SIRIUS_FIXED_PAGE_AUTO_CACHE": "0",
+          "SIRIUS_FIXED_PAGE_OWNED_PAGES": "0",
+          "SIRIUS_FIXED_PAGE_BACKED_PROVIDER": "0",
+          "SIRIUS_FIXED_PAGE_HYBRID_PROVIDER": "0",
+          "SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED": "0",
+          "SIRIUS_VARIABLE_PAGE_CACHE_ENABLED": "0"
+        },
+        "query_csv": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/queries.csv",
+        "journal": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/events.jsonl",
+        "status": "complete",
+        "pin": null,
+        "started_utc": "2026-10-07T02:31:59.067319+00:00",
+        "returncode": 0,
+        "timed_out": false,
+        "status_counts": {
+          "ok": 66
+        },
+        "workload_wall_s_by_execution": {
+          "1": 33.2322087706998,
+          "2": 32.766803425271064,
+          "3": 32.35905879596248
+        },
+        "ended_utc": "2026-10-07T02:33:40.239267+00:00",
+        "comparison_valid": true,
+        "steady_state_workload_wall_s": 32.56293111061677
+      },
+      "future_eviction_calls": 0,
+      "telemetry_files": [
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/engine/01a11434-12d0-7fd0-b371-cb4ba3679649.ndjson",
+          "sha256": "8607165d9e267f77e6de229f2da2cecbb838a8e66f08758d5ed755d30387d8a6"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/executor_thread/01a11434-12d1-7931-b163-71ec67bf253c.ndjson",
+          "sha256": "57115db7aad922fc39770ab6f79dcb087ca1aae5e7c76fb61cd58fd8d98e2bb5"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/operator/01a11434-12d0-7fd0-b371-cb7769d77b17.ndjson",
+          "sha256": "b84cc0b268b23798e6a9d3b91e1af16cd942de8a96052eef96366d08bee4c666"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/plan/01a11434-12cf-7151-8fc7-856a3fcbf8ef.ndjson",
+          "sha256": "b15f07a85f71f0bfc6dfd6e9a4277eaf4535c56c622322903c988addd8ffb6f8"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/port/01a11434-12d0-7fd0-b371-cb9d48752587.ndjson",
+          "sha256": "b24f15395c25e417f7a20326f69bf44c522e7df3503696366906e77f7713e0ae"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/query/01a11434-12d0-7fd0-b371-cbae4730d2b3.ndjson",
+          "sha256": "7a75efc3cba9aabc21654f31e695c49114d250e1cbbdbcf48852f1160441df80"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/query_group/01a11434-12d0-7fd0-b371-cb607ac97ce6.ndjson",
+          "sha256": "13c5b60ada0c14ed142a4310d34f77572bd3d13be5a0cba045e02483d4c0045e"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/task/01a11434-12d0-7fd0-b371-cbb50ce86078.ndjson",
+          "sha256": "61e278362d68d5dc7e5e20d73bf86d553ec4b8416315be8246e5fc74717618b8"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/task_manager_loop_thread/01a11434-12d0-7fd0-b371-cbc949a6e323.ndjson",
+          "sha256": "05fb2b00d9f3aa5e809187491906acda73351b8d8907cf1cec7b9b842bc061c3"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/task_queue/01a11434-12d0-7fd0-b371-cb866f1892a2.ndjson",
+          "sha256": "36c2e399132f26710104fcfe9e34cbfe742f9e1d7300c68138397556a4faa628"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/baseline/telemetry_data/01a11434-12cc-7633-a54d-1a6028e1b89a/worker/01a11434-12d0-7fd0-b371-cb506bc06657.ndjson",
+          "sha256": "f51dcb18300aded6115d7977e4f61bdc46dbd893bd46eda21b419a7f741d3055"
+        }
+      ]
+    },
+    {
+      "workload": "TPC-H SF50",
+      "condition": "paging_lru",
+      "run": 1,
+      "case": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru",
+      "metadata": {
+        "workload": "th",
+        "condition": "paging_lru",
+        "trace_mode": "latency",
+        "run": 1,
+        "case_directory": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru",
+        "order": [
+          8,
+          1,
+          4,
+          7,
+          17,
+          5,
+          6,
+          2,
+          10,
+          16,
+          12,
+          19,
+          21,
+          14,
+          18,
+          15,
+          22,
+          9,
+          13,
+          20,
+          3,
+          11
+        ],
+        "executions": 3,
+        "gpu_device": "1",
+        "gpu_usage_limit_bytes": 21474836480,
+        "host_capacity_bytes": 34359738368,
+        "cache_budget_bytes": 4294967296,
+        "min_free_bytes_per_gpu": 6442450944,
+        "future_mode": "off",
+        "future_horizon": "execution",
+        "late_materialization": true,
+        "prefetch": false,
+        "odirect": true,
+        "environment": {
+          "CUDA_VISIBLE_DEVICES": "1",
+          "SIRIUS_CONFIG_FILE": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/sirius.yaml",
+          "SIRIUS_LOG_DIR": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/log_dir",
+          "SIRIUS_LOG_LEVEL": "info",
+          "SIRIUS_ENABLE_LATE_MATERIALIZATION": "1",
+          "SIRIUS_FIXED_PAGE_COLUMN_KEYED_CACHE": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_VARIABLE_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU": "4294967296",
+          "SIRIUS_VARIABLE_PAGE_CACHE_BYTES_PER_GPU": "4294967296",
+          "SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_PAGE_TRACE": "0",
+          "SIRIUS_CACHE_HIT_TRACE": "0",
+          "BENCH_USE_ODIRECT": "1",
+          "BENCH_PREFETCH_CACHE": "0",
+          "SIRIUS_ENABLE_FIXED_PAGE_REUSE": "1",
+          "SIRIUS_FIXED_PAGE_AUTO_CACHE": "1",
+          "SIRIUS_FIXED_PAGE_OWNED_PAGES": "1",
+          "SIRIUS_FIXED_PAGE_BACKED_PROVIDER": "1",
+          "SIRIUS_FIXED_PAGE_HYBRID_PROVIDER": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED": "1",
+          "SIRIUS_VARIABLE_PAGE_CACHE_ENABLED": "1"
+        },
+        "query_csv": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/queries.csv",
+        "journal": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/events.jsonl",
+        "status": "complete",
+        "pin": null,
+        "started_utc": "2026-10-07T02:33:40.239754+00:00",
+        "returncode": 0,
+        "timed_out": false,
+        "status_counts": {
+          "ok": 66
+        },
+        "workload_wall_s_by_execution": {
+          "1": 33.196735329926014,
+          "2": 30.523732255212963,
+          "3": 30.975218320265412
+        },
+        "ended_utc": "2026-10-07T02:35:17.466303+00:00",
+        "comparison_valid": true,
+        "steady_state_workload_wall_s": 30.749475287739187
+      },
+      "future_eviction_calls": 0,
+      "telemetry_files": [
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/engine/01a11435-9dfe-7d23-8cea-39c358161ed5.ndjson",
+          "sha256": "d1a029fedbd10ad205f6f1f2c2ae15140b8a56bb47c3aa8dc2f3a0b369017b1b"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/executor_thread/01a11435-9dff-7d93-b779-d22a9d398fd7.ndjson",
+          "sha256": "e0a0fd71163323ae110076b9091c89b0ef0753b221a561e8bd7a6b90b059dda1"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/operator/01a11435-9dff-7d93-b779-d1d744faa7de.ndjson",
+          "sha256": "2ffe6651a46c5feb8d53b87358c7cd107adcb97345d1d1d06c93c9251967ae47"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/plan/01a11435-9dfe-7d23-8cea-39d4b47969b7.ndjson",
+          "sha256": "0a286c70aeb1efc34dc6e6c931efee0f5043fed0edede3deb3227ebdd3e9db50"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/port/01a11435-9dff-7d93-b779-d1ee78e88a04.ndjson",
+          "sha256": "ef542ad7e3dd24aacd8b1bf5745fb42927cd683c17bd7d8af083df4dbc54771c"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/query/01a11435-9dff-7d93-b779-d1f385396a1f.ndjson",
+          "sha256": "19d2e31291984822e1877457bd53af713db8e3f2af98c33043ba909b99c20bf3"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/query_group/01a11435-9dfe-7d23-8cea-39a63671c308.ndjson",
+          "sha256": "9714305f2dbd3f0b989895a3998f78855c6f7b30732a1833e70b375f18401d23"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/task/01a11435-9dff-7d93-b779-d20f2e12e9f5.ndjson",
+          "sha256": "f4f2e873fca34c5d3a1d544159aad6772a5f3386ab96fabda9bdcfe880bed39b"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/task_manager_loop_thread/01a11435-9dff-7d93-b779-d235387b2903.ndjson",
+          "sha256": "020f6296f07de762d492273470a65aedfeec85e0fcfd4bb151e7813c59d75ade"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/task_queue/01a11435-9dff-7d93-b779-d216420d5c08.ndjson",
+          "sha256": "12dfddaa8177cbaf4eeb6b939c424346a974268891ad7b93ce07d12a10a7f54c"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/paging_lru/telemetry_data/01a11435-9dfb-7fd0-9544-bf88e7156734/worker/01a11435-9dfe-7d23-8cea-39b5eccdea1d.ndjson",
+          "sha256": "9315c27b2e7f441c5b91a75498ce3dbc5db0dac2dab9716cfbe82d1f05783802"
+        }
+      ]
+    },
+    {
+      "workload": "TPC-H SF50",
+      "condition": "reorder_future",
+      "run": 1,
+      "case": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future",
+      "metadata": {
+        "workload": "th",
+        "condition": "reorder_future",
+        "trace_mode": "latency",
+        "run": 1,
+        "case_directory": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future",
+        "order": [
+          8,
+          5,
+          7,
+          15,
+          14,
+          6,
+          17,
+          20,
+          11,
+          2,
+          16,
+          9,
+          18,
+          22,
+          13,
+          3,
+          10,
+          4,
+          21,
+          12,
+          1,
+          19
+        ],
+        "executions": 3,
+        "gpu_device": "1",
+        "gpu_usage_limit_bytes": 21474836480,
+        "host_capacity_bytes": 34359738368,
+        "cache_budget_bytes": 4294967296,
+        "min_free_bytes_per_gpu": 6442450944,
+        "future_mode": "evict",
+        "future_horizon": "execution",
+        "late_materialization": true,
+        "prefetch": false,
+        "odirect": true,
+        "environment": {
+          "CUDA_VISIBLE_DEVICES": "1",
+          "SIRIUS_CONFIG_FILE": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/sirius.yaml",
+          "SIRIUS_LOG_DIR": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/log_dir",
+          "SIRIUS_LOG_LEVEL": "info",
+          "SIRIUS_ENABLE_LATE_MATERIALIZATION": "1",
+          "SIRIUS_FIXED_PAGE_COLUMN_KEYED_CACHE": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_VARIABLE_WIDTH_PAGE_BYTES": "16777216",
+          "SIRIUS_FIXED_PAGE_CACHE_BYTES_PER_GPU": "4294967296",
+          "SIRIUS_VARIABLE_PAGE_CACHE_BYTES_PER_GPU": "4294967296",
+          "SIRIUS_FIXED_PAGE_CACHE_MIN_FREE_BYTES_PER_GPU": "6442450944",
+          "SIRIUS_PAGE_TRACE": "0",
+          "SIRIUS_CACHE_HIT_TRACE": "0",
+          "BENCH_USE_ODIRECT": "1",
+          "BENCH_PREFETCH_CACHE": "0",
+          "SIRIUS_ENABLE_FIXED_PAGE_REUSE": "1",
+          "SIRIUS_FIXED_PAGE_AUTO_CACHE": "1",
+          "SIRIUS_FIXED_PAGE_OWNED_PAGES": "1",
+          "SIRIUS_FIXED_PAGE_BACKED_PROVIDER": "1",
+          "SIRIUS_FIXED_PAGE_HYBRID_PROVIDER": "1",
+          "SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED": "1",
+          "SIRIUS_VARIABLE_PAGE_CACHE_ENABLED": "1"
+        },
+        "query_csv": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/queries.csv",
+        "journal": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/events.jsonl",
+        "status": "complete",
+        "pin": null,
+        "started_utc": "2026-10-07T02:36:50.914357+00:00",
+        "returncode": 0,
+        "timed_out": false,
+        "status_counts": {
+          "ok": 66
+        },
+        "workload_wall_s_by_execution": {
+          "1": 27.744037839584053,
+          "2": 23.62459019664675,
+          "3": 24.009375819005072
+        },
+        "ended_utc": "2026-10-07T02:38:09.800637+00:00",
+        "comparison_valid": true,
+        "steady_state_workload_wall_s": 23.81698300782591
+      },
+      "future_eviction_calls": 66,
+      "telemetry_files": [
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/engine/01a11438-86d5-7af3-92d0-25307c6f093e.ndjson",
+          "sha256": "6901669483395704feabf30838f1583eea9333715ddd67bf61c06cc19b39cfac"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/executor_thread/01a11438-86d5-7af3-92d0-25c32d79f78a.ndjson",
+          "sha256": "d7fffa7069a30a1213c0fbac426d5c6b58eca8bc9ffac46b40f79946f538fa8c"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/operator/01a11438-86d5-7af3-92d0-257a4928a3bd.ndjson",
+          "sha256": "bfcbc1c561808fc2ac16bfcf9d6cecfd6735893044660696cdbdc93702abdd6d"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/plan/01a11438-86d5-7af3-92d0-25698576b31c.ndjson",
+          "sha256": "cab45b4bedf6ea5fa16c9dad8e0d3c7b20c1923c6a57c56562ba1fc492e4dbfd"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/port/01a11438-86d5-7af3-92d0-258722bbbf27.ndjson",
+          "sha256": "b90039370a7a2d16df7be1da8e8d46c5bf9122d03f2e124cc62d4a8a1d61fc26"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/query/01a11438-86d6-7ad1-8006-8043f6074dec.ndjson",
+          "sha256": "6ef465878a3fdbe375847c6e1dbae4b62a4f3ef232950f0e846fa6606e2fbe4a"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/query_group/01a11438-86d5-7af3-92d0-254858b36fc0.ndjson",
+          "sha256": "3008f12fb5660f8a871e1bd01bc50a92033a372173059ada4c0897ead75b4593"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/task/01a11438-86d5-7af3-92d0-2592f86d263e.ndjson",
+          "sha256": "6abfea81dd8ea20a7cd179ce14ec9601956852ee7eb1cc6270afbd096d92fb59"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/task_manager_loop_thread/01a11438-86d5-7af3-92d0-25b39957bcf1.ndjson",
+          "sha256": "507d7b5d7bf8b5cf1d63d8c5dd14132517272bd09aa5f91cd7a0feb596eab05f"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/task_queue/01a11438-86d5-7af3-92d0-25a1e71e56ab.ndjson",
+          "sha256": "eac4fc904816ec73483d16714c54e701381966ddbdd8cf928d501fbb8472ee92"
+        },
+        {
+          "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/telemetry_data/01a11438-86d1-7331-97ac-eb29f0cbd376/worker/01a11438-86d5-7af3-92d0-25554a5582b8.ndjson",
+          "sha256": "e79717aa7220d572e8681437dc408aa02b91b4c41924de49ae8172b46bea5f34"
+        }
+      ]
+    }
+  ]
+}

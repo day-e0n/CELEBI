@@ -1,0 +1,1671 @@
+{
+  "schema_version": 1,
+  "prepared_utc": "2026-10-07T06:31:56.453680+00:00",
+  "root": "/home/dy1013/sirius_multi-gpu",
+  "output": "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/latency_runs",
+  "python_executable": "/home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python",
+  "extension": "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_FULL_20261007/binary/sirius.duckdb_extension",
+  "extension_sha256": "d64c9264269a0a35b92a156d5fba2ef64cf818952a84ba9a4809a46d01e9e882",
+  "source_sha256": {
+    "/home/dy1013/sirius_multi-gpu/scripts/run_full_cache_pin_comparison.py": "f9e7fd2fed0fd2666ba7105b6bfb9ce815da33f531e4d09a578caf76b3093b6b",
+    "/home/dy1013/sirius_multi-gpu/scripts/cache_aware_query_reorder.py": "6d38c23ed2f897c531c7c368848f1093e9596f31fa7de7c4d26749f9a56f136b",
+    "/home/dy1013/sirius_multi-gpu/scripts/future_cache_hints.py": "0aa3d6be7a37cb60013c7e822cf5d7af920b10b599c03971d085a2cb1b2aff44",
+    "/home/dy1013/sirius_multi-gpu/test/tpch_performance/queries.py": "5882b0e1056ea0c945095da6cf30cdefe837482291151d9754f2c239f42351f2",
+    "/home/dy1013/sirius_multi-gpu/test/tpch_performance/clickbench_queries.py": "dae2ef4726c678a2477beb4be2f50c8498f9731b0d2028eb83454e699b79aa9a",
+    "/home/dy1013/sirius_multi-gpu/test/tpch_performance/tpch_pin_columns.py": "09d3052850cd1010ffe30b3ddcf04979a8cfd9d6fcb33b3ac305ee9b2db85dfd",
+    "/home/dy1013/sirius_multi-gpu/test/tpch_performance/clickbench_pin_columns.py": "2f6aee6b5b6a33f41a229a12baf0ee3a40486cdda3235660a6159078d2019222",
+    "/home/dy1013/sirius_multi-gpu/src/include/op/scan/cache_hit_metrics.hpp": "945d8189d2c0a2877d0c972da57c65687dbb32675065607a494830549540ae67",
+    "/home/dy1013/sirius_multi-gpu/src/op/scan/gpu_ingestible.cpp": "a600499ee9c5c37044c95756e746a7211d135a92043c3964ec39b1ca4c9ca00b",
+    "/home/dy1013/sirius_multi-gpu/src/op/scan/parquet_gpu_ingestible.cpp": "ba60627e3463798123a1f5d47d7ec70b580ba82f7e924c74870f28ac71a706fb"
+  },
+  "executions": 3,
+  "warmup_execution": 1,
+  "report_executions": [
+    2,
+    3
+  ],
+  "runs": 1,
+  "conditions": [
+    "baseline",
+    "paging_lru",
+    "reorder_future"
+  ],
+  "trace_modes": [
+    "latency"
+  ],
+  "hit_metric": "value_bytes_v2",
+  "hit_metric_definition": "fixed-width value data + STRING character payload; excludes offsets, null masks, allocation padding, slabs and virtual columns",
+  "workloads": {
+    "cb": {
+      "workload": "cb",
+      "input": "/mnt/nvme/clickbench/hits_v2.parquet",
+      "query_count": 43,
+      "query_module": "clickbench_queries",
+      "queries": {
+        "q1": "SELECT COUNT(*) FROM hits",
+        "q2": "SELECT COUNT(*) FROM hits WHERE AdvEngineID <> 0",
+        "q3": "SELECT SUM(AdvEngineID), COUNT(*), AVG(ResolutionWidth) FROM hits",
+        "q4": "SELECT AVG(UserID) FROM hits",
+        "q5": "SELECT COUNT(DISTINCT UserID) FROM hits",
+        "q6": "SELECT COUNT(DISTINCT SearchPhrase) FROM hits",
+        "q7": "SELECT MIN(EventDate), MAX(EventDate) FROM hits",
+        "q8": "SELECT AdvEngineID, COUNT(*) FROM hits WHERE AdvEngineID <> 0 GROUP BY AdvEngineID ORDER BY COUNT(*) DESC",
+        "q9": "SELECT RegionID, COUNT(DISTINCT UserID) AS u FROM hits GROUP BY RegionID ORDER BY u DESC LIMIT 10",
+        "q10": "SELECT RegionID, SUM(AdvEngineID), COUNT(*) AS c, AVG(ResolutionWidth), COUNT(DISTINCT UserID) FROM hits GROUP BY RegionID ORDER BY c DESC LIMIT 10",
+        "q11": "SELECT MobilePhoneModel, COUNT(DISTINCT UserID) AS u FROM hits WHERE MobilePhoneModel <> '' GROUP BY MobilePhoneModel ORDER BY u DESC LIMIT 10",
+        "q12": "SELECT MobilePhone, MobilePhoneModel, COUNT(DISTINCT UserID) AS u FROM hits WHERE MobilePhoneModel <> '' GROUP BY MobilePhone, MobilePhoneModel ORDER BY u DESC LIMIT 10",
+        "q13": "SELECT SearchPhrase, COUNT(*) AS c FROM hits WHERE SearchPhrase <> '' GROUP BY SearchPhrase ORDER BY c DESC LIMIT 10",
+        "q14": "SELECT SearchPhrase, COUNT(DISTINCT UserID) AS u FROM hits WHERE SearchPhrase <> '' GROUP BY SearchPhrase ORDER BY u DESC LIMIT 10",
+        "q15": "SELECT SearchEngineID, SearchPhrase, COUNT(*) AS c FROM hits WHERE SearchPhrase <> '' GROUP BY SearchEngineID, SearchPhrase ORDER BY c DESC LIMIT 10",
+        "q16": "SELECT UserID, COUNT(*) FROM hits GROUP BY UserID ORDER BY COUNT(*) DESC LIMIT 10",
+        "q17": "SELECT UserID, SearchPhrase, COUNT(*) FROM hits GROUP BY UserID, SearchPhrase ORDER BY COUNT(*) DESC LIMIT 10",
+        "q18": "SELECT UserID, SearchPhrase, COUNT(*) FROM hits GROUP BY UserID, SearchPhrase LIMIT 10",
+        "q19": "SELECT UserID, extract(minute FROM EventTime) AS m, SearchPhrase, COUNT(*) FROM hits GROUP BY UserID, m, SearchPhrase ORDER BY COUNT(*) DESC LIMIT 10",
+        "q20": "SELECT UserID FROM hits WHERE UserID = 435090932899640449",
+        "q21": "SELECT COUNT(*) FROM hits WHERE URL LIKE '%google%'",
+        "q22": "SELECT SearchPhrase, MIN(URL), COUNT(*) AS c FROM hits WHERE URL LIKE '%google%' AND SearchPhrase <> '' GROUP BY SearchPhrase ORDER BY c DESC LIMIT 10",
+        "q23": "SELECT SearchPhrase, MIN(URL), MIN(Title), COUNT(*) AS c, COUNT(DISTINCT UserID) FROM hits WHERE Title LIKE '%Google%' AND URL NOT LIKE '%.google.%' AND SearchPhrase <> '' GROUP BY SearchPhrase ORDER BY c DESC LIMIT 10",
+        "q24": "SELECT * FROM hits WHERE URL LIKE '%google%' ORDER BY EventTime LIMIT 10",
+        "q25": "SELECT SearchPhrase FROM hits WHERE SearchPhrase <> '' ORDER BY EventTime LIMIT 10",
+        "q26": "SELECT SearchPhrase FROM hits WHERE SearchPhrase <> '' ORDER BY SearchPhrase LIMIT 10",
+        "q27": "SELECT SearchPhrase FROM hits WHERE SearchPhrase <> '' ORDER BY EventTime, SearchPhrase LIMIT 10",
+        "q28": "SELECT CounterID, AVG(STRLEN(URL)) AS l, COUNT(*) AS c FROM hits WHERE URL <> '' GROUP BY CounterID HAVING COUNT(*) > 100000 ORDER BY l DESC LIMIT 25",
+        "q29": "SELECT REGEXP_REPLACE(Referer, '^https?://(?:www\\.)?([^/]+)/.*$', '\\1') AS k, AVG(STRLEN(Referer)) AS l, COUNT(*) AS c, MIN(Referer) FROM hits WHERE Referer <> '' GROUP BY k HAVING COUNT(*) > 100000 ORDER BY l DESC LIMIT 25",
+        "q30": "SELECT SUM(ResolutionWidth), SUM(ResolutionWidth + 1), SUM(ResolutionWidth + 2), SUM(ResolutionWidth + 3), SUM(ResolutionWidth + 4), SUM(ResolutionWidth + 5), SUM(ResolutionWidth + 6), SUM(ResolutionWidth + 7), SUM(ResolutionWidth + 8), SUM(ResolutionWidth + 9), SUM(ResolutionWidth + 10), SUM(ResolutionWidth + 11), SUM(ResolutionWidth + 12), SUM(ResolutionWidth + 13), SUM(ResolutionWidth + 14), SUM(ResolutionWidth + 15), SUM(ResolutionWidth + 16), SUM(ResolutionWidth + 17), SUM(ResolutionWidth + 18), SUM(ResolutionWidth + 19), SUM(ResolutionWidth + 20), SUM(ResolutionWidth + 21), SUM(ResolutionWidth + 22), SUM(ResolutionWidth + 23), SUM(ResolutionWidth + 24), SUM(ResolutionWidth + 25), SUM(ResolutionWidth + 26), SUM(ResolutionWidth + 27), SUM(ResolutionWidth + 28), SUM(ResolutionWidth + 29), SUM(ResolutionWidth + 30), SUM(ResolutionWidth + 31), SUM(ResolutionWidth + 32), SUM(ResolutionWidth + 33), SUM(ResolutionWidth + 34), SUM(ResolutionWidth + 35), SUM(ResolutionWidth + 36), SUM(ResolutionWidth + 37), SUM(ResolutionWidth + 38), SUM(ResolutionWidth + 39), SUM(ResolutionWidth + 40), SUM(ResolutionWidth + 41), SUM(ResolutionWidth + 42), SUM(ResolutionWidth + 43), SUM(ResolutionWidth + 44), SUM(ResolutionWidth + 45), SUM(ResolutionWidth + 46), SUM(ResolutionWidth + 47), SUM(ResolutionWidth + 48), SUM(ResolutionWidth + 49), SUM(ResolutionWidth + 50), SUM(ResolutionWidth + 51), SUM(ResolutionWidth + 52), SUM(ResolutionWidth + 53), SUM(ResolutionWidth + 54), SUM(ResolutionWidth + 55), SUM(ResolutionWidth + 56), SUM(ResolutionWidth + 57), SUM(ResolutionWidth + 58), SUM(ResolutionWidth + 59), SUM(ResolutionWidth + 60), SUM(ResolutionWidth + 61), SUM(ResolutionWidth + 62), SUM(ResolutionWidth + 63), SUM(ResolutionWidth + 64), SUM(ResolutionWidth + 65), SUM(ResolutionWidth + 66), SUM(ResolutionWidth + 67), SUM(ResolutionWidth + 68), SUM(ResolutionWidth + 69), SUM(ResolutionWidth + 70), SUM(ResolutionWidth + 71), SUM(ResolutionWidth + 72), SUM(ResolutionWidth + 73), SUM(ResolutionWidth + 74), SUM(ResolutionWidth + 75), SUM(ResolutionWidth + 76), SUM(ResolutionWidth + 77), SUM(ResolutionWidth + 78), SUM(ResolutionWidth + 79), SUM(ResolutionWidth + 80), SUM(ResolutionWidth + 81), SUM(ResolutionWidth + 82), SUM(ResolutionWidth + 83), SUM(ResolutionWidth + 84), SUM(ResolutionWidth + 85), SUM(ResolutionWidth + 86), SUM(ResolutionWidth + 87), SUM(ResolutionWidth + 88), SUM(ResolutionWidth + 89) FROM hits",
+        "q31": "SELECT SearchEngineID, ClientIP, COUNT(*) AS c, SUM(IsRefresh), AVG(ResolutionWidth) FROM hits WHERE SearchPhrase <> '' GROUP BY SearchEngineID, ClientIP ORDER BY c DESC LIMIT 10",
+        "q32": "SELECT WatchID, ClientIP, COUNT(*) AS c, SUM(IsRefresh), AVG(ResolutionWidth) FROM hits WHERE SearchPhrase <> '' GROUP BY WatchID, ClientIP ORDER BY c DESC LIMIT 10",
+        "q33": "SELECT WatchID, ClientIP, COUNT(*) AS c, SUM(IsRefresh), AVG(ResolutionWidth) FROM hits GROUP BY WatchID, ClientIP ORDER BY c DESC LIMIT 10",
+        "q34": "SELECT URL, COUNT(*) AS c FROM hits GROUP BY URL ORDER BY c DESC LIMIT 10",
+        "q35": "SELECT 1, URL, COUNT(*) AS c FROM hits GROUP BY 1, URL ORDER BY c DESC LIMIT 10",
+        "q36": "SELECT ClientIP, ClientIP - 1, ClientIP - 2, ClientIP - 3, COUNT(*) AS c FROM hits GROUP BY ClientIP, ClientIP - 1, ClientIP - 2, ClientIP - 3 ORDER BY c DESC LIMIT 10",
+        "q37": "SELECT URL, COUNT(*) AS PageViews FROM hits WHERE CounterID = 62 AND EventDate >= '2013-07-01' AND EventDate <= '2013-07-31' AND DontCountHits = 0 AND IsRefresh = 0 AND URL <> '' GROUP BY URL ORDER BY PageViews DESC LIMIT 10",
+        "q38": "SELECT Title, COUNT(*) AS PageViews FROM hits WHERE CounterID = 62 AND EventDate >= '2013-07-01' AND EventDate <= '2013-07-31' AND DontCountHits = 0 AND IsRefresh = 0 AND Title <> '' GROUP BY Title ORDER BY PageViews DESC LIMIT 10",
+        "q39": "SELECT URL, COUNT(*) AS PageViews FROM hits WHERE CounterID = 62 AND EventDate >= '2013-07-01' AND EventDate <= '2013-07-31' AND IsRefresh = 0 AND IsLink <> 0 AND IsDownload = 0 GROUP BY URL ORDER BY PageViews DESC LIMIT 10 OFFSET 1000",
+        "q40": "SELECT TraficSourceID, SearchEngineID, AdvEngineID, CASE WHEN (SearchEngineID = 0 AND AdvEngineID = 0) THEN Referer ELSE '' END AS Src, URL AS Dst, COUNT(*) AS PageViews FROM hits WHERE CounterID = 62 AND EventDate >= '2013-07-01' AND EventDate <= '2013-07-31' AND IsRefresh = 0 GROUP BY TraficSourceID, SearchEngineID, AdvEngineID, Src, Dst ORDER BY PageViews DESC LIMIT 10 OFFSET 1000",
+        "q41": "SELECT URLHash, EventDate, COUNT(*) AS PageViews FROM hits WHERE CounterID = 62 AND EventDate >= '2013-07-01' AND EventDate <= '2013-07-31' AND IsRefresh = 0 AND TraficSourceID IN (-1, 6) AND RefererHash = 3594120000172545465 GROUP BY URLHash, EventDate ORDER BY PageViews DESC LIMIT 10 OFFSET 100",
+        "q42": "SELECT WindowClientWidth, WindowClientHeight, COUNT(*) AS PageViews FROM hits WHERE CounterID = 62 AND EventDate >= '2013-07-01' AND EventDate <= '2013-07-31' AND IsRefresh = 0 AND DontCountHits = 0 AND URLHash = 2868770270353813622 GROUP BY WindowClientWidth, WindowClientHeight ORDER BY PageViews DESC LIMIT 10 OFFSET 10000",
+        "q43": "SELECT DATE_TRUNC('minute', EventTime) AS M, COUNT(*) AS PageViews FROM hits WHERE CounterID = 62 AND EventDate >= '2013-07-14' AND EventDate <= '2013-07-15' AND IsRefresh = 0 AND DontCountHits = 0 GROUP BY DATE_TRUNC('minute', EventTime) ORDER BY DATE_TRUNC('minute', EventTime) LIMIT 10 OFFSET 1000"
+      },
+      "arrival_order": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "reordered_order": [
+        2,
+        8,
+        3,
+        30,
+        10,
+        9,
+        4,
+        5,
+        16,
+        20,
+        11,
+        12,
+        14,
+        17,
+        18,
+        6,
+        13,
+        26,
+        15,
+        31,
+        36,
+        33,
+        32,
+        25,
+        27,
+        19,
+        43,
+        7,
+        42,
+        41,
+        1,
+        21,
+        22,
+        24,
+        28,
+        34,
+        35,
+        37,
+        39,
+        23,
+        40,
+        29,
+        38
+      ],
+      "reorder_policy": "small-first-big-last",
+      "cache_budget_bytes": 6442450944,
+      "column_bytes_file": "/home/dy1013/sirius_multi-gpu/experiment/column_bytes/clickbench.json",
+      "column_bytes_sha256": "b608d4ffdb746820e32ddbf0e8853f890d56aac6fd3d38751d19aea5fb05c176",
+      "reorder_column_bytes_file": "/home/dy1013/sirius_multi-gpu/experiment/frag_replay/clickbench_column_bytes.json",
+      "reorder_column_bytes_sha256": "b608d4ffdb746820e32ddbf0e8853f890d56aac6fd3d38751d19aea5fb05c176",
+      "pin": {
+        "strategy": "query_use_count_per_estimated_decoded_byte_greedy",
+        "budget_bytes": 6442450944,
+        "selection_limit_bytes": 5798205849,
+        "estimated_decoded_bytes": 5781972453,
+        "columns": {
+          "hits": [
+            "AdvEngineID",
+            "ClientIP",
+            "CounterID",
+            "DontCountHits",
+            "EventDate",
+            "IsDownload",
+            "IsLink",
+            "IsRefresh",
+            "MobilePhone",
+            "RegionID",
+            "ResolutionWidth",
+            "SearchEngineID",
+            "SearchPhrase",
+            "TraficSourceID",
+            "UserID",
+            "WindowClientHeight",
+            "WindowClientWidth"
+          ]
+        },
+        "candidates": [
+          {
+            "table": "hits",
+            "column": "IsRefresh",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 11,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "ResolutionWidth",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 7,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "AdvEngineID",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 6,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "DontCountHits",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 5,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "CounterID",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 9,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "EventDate",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 9,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "SearchEngineID",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 4,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "UserID",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 14,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "TraficSourceID",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 3,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "SearchPhrase",
+            "estimated_decoded_bytes": 1182087591,
+            "query_use_count": 15,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "ClientIP",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 5,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "IsDownload",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 2,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "IsLink",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 2,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "MobilePhone",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 2,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "WindowClientHeight",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 2,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "WindowClientWidth",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 2,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "RegionID",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 3,
+            "selected": true
+          },
+          {
+            "table": "hits",
+            "column": "MobilePhoneModel",
+            "estimated_decoded_bytes": 422409926,
+            "query_use_count": 3,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "EventTime",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 5,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "Age",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ClientTimeZone",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "CookieEnable",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "CounterClass",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "FlashMajor",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "FlashMinor",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "GoodEvent",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "HTTPError",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "HasGCLID",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "HistoryLength",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "Income",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "Interests",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "IsArtifical",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "IsEvent",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "IsMobile",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "IsNotBounce",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "IsOldCounter",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "IsParameter",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "JavaEnable",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "JavascriptEnable",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "NetMajor",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "NetMinor",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "OS",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ParamCurrencyID",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "RefererCategoryID",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ResolutionDepth",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ResolutionHeight",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "Robotness",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "Sex",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SilverlightVersion1",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SilverlightVersion2",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SilverlightVersion4",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SocialSourceNetworkID",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "URLCategoryID",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "UserAgent",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "UserAgentMajor",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "WithHash",
+            "estimated_decoded_bytes": 199994994,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "URLHash",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 3,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "WatchID",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 3,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "RefererHash",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 2,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "CLID",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "CodeVersion",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ConnectTiming",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "DNSTiming",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "FetchTiming",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "HID",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "IPNetworkID",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "OpenerName",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "RefererRegionID",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "RemoteIP",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ResponseEndTiming",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ResponseStartTiming",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SendTiming",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SilverlightVersion3",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SocialAction",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SocialNetwork",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "URLRegionID",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "WindowName",
+            "estimated_decoded_bytes": 399989988,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ParamOrderID",
+            "estimated_decoded_bytes": 399997569,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "UTMContent",
+            "estimated_decoded_bytes": 401733704,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "UTMTerm",
+            "estimated_decoded_bytes": 402246336,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "SocialSourcePage",
+            "estimated_decoded_bytes": 403200837,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "OpenstatCampaignID",
+            "estimated_decoded_bytes": 403587408,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "FromTag",
+            "estimated_decoded_bytes": 404374805,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "OpenstatAdID",
+            "estimated_decoded_bytes": 405372067,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "OpenstatServiceName",
+            "estimated_decoded_bytes": 406689686,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "OpenstatSourceID",
+            "estimated_decoded_bytes": 407175023,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "UTMMedium",
+            "estimated_decoded_bytes": 408828263,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "UTMSource",
+            "estimated_decoded_bytes": 416308181,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "UTMCampaign",
+            "estimated_decoded_bytes": 422548219,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "Params",
+            "estimated_decoded_bytes": 428575966,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "HitColor",
+            "estimated_decoded_bytes": 499987485,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "BrowserLanguage",
+            "estimated_decoded_bytes": 602690477,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ParamCurrency",
+            "estimated_decoded_bytes": 699982782,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "FlashMinor2",
+            "estimated_decoded_bytes": 711496125,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "BrowserCountry",
+            "estimated_decoded_bytes": 737947771,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "UserAgentMinor",
+            "estimated_decoded_bytes": 760946557,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ClientEventTime",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "FUniqID",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "LocalEventTime",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "ParamPrice",
+            "estimated_decoded_bytes": 799979976,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "URL",
+            "estimated_decoded_bytes": 9956144344,
+            "query_use_count": 10,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "PageCharset",
+            "estimated_decoded_bytes": 1571226785,
+            "query_use_count": 1,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "Referer",
+            "estimated_decoded_bytes": 7290587277,
+            "query_use_count": 3,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "Title",
+            "estimated_decoded_bytes": 9835963847,
+            "query_use_count": 3,
+            "selected": false
+          },
+          {
+            "table": "hits",
+            "column": "OriginalURL",
+            "estimated_decoded_bytes": 6339422429,
+            "query_use_count": 1,
+            "selected": false
+          }
+        ],
+        "static_scan_coverage": {
+          "1": {},
+          "2": {
+            "hits": {
+              "required_columns": [
+                "AdvEngineID"
+              ],
+              "selected_columns": [
+                "AdvEngineID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "3": {
+            "hits": {
+              "required_columns": [
+                "AdvEngineID",
+                "ResolutionWidth"
+              ],
+              "selected_columns": [
+                "AdvEngineID",
+                "ResolutionWidth"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "4": {
+            "hits": {
+              "required_columns": [
+                "UserID"
+              ],
+              "selected_columns": [
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "5": {
+            "hits": {
+              "required_columns": [
+                "UserID"
+              ],
+              "selected_columns": [
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "6": {
+            "hits": {
+              "required_columns": [
+                "SearchPhrase"
+              ],
+              "selected_columns": [
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "7": {
+            "hits": {
+              "required_columns": [
+                "EventDate"
+              ],
+              "selected_columns": [
+                "EventDate"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "8": {
+            "hits": {
+              "required_columns": [
+                "AdvEngineID"
+              ],
+              "selected_columns": [
+                "AdvEngineID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "9": {
+            "hits": {
+              "required_columns": [
+                "RegionID",
+                "UserID"
+              ],
+              "selected_columns": [
+                "RegionID",
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "10": {
+            "hits": {
+              "required_columns": [
+                "AdvEngineID",
+                "RegionID",
+                "ResolutionWidth",
+                "UserID"
+              ],
+              "selected_columns": [
+                "AdvEngineID",
+                "RegionID",
+                "ResolutionWidth",
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "11": {
+            "hits": {
+              "required_columns": [
+                "MobilePhoneModel",
+                "UserID"
+              ],
+              "selected_columns": [
+                "UserID"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "12": {
+            "hits": {
+              "required_columns": [
+                "MobilePhone",
+                "MobilePhoneModel",
+                "UserID"
+              ],
+              "selected_columns": [
+                "MobilePhone",
+                "UserID"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "13": {
+            "hits": {
+              "required_columns": [
+                "SearchPhrase"
+              ],
+              "selected_columns": [
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "14": {
+            "hits": {
+              "required_columns": [
+                "SearchPhrase",
+                "UserID"
+              ],
+              "selected_columns": [
+                "SearchPhrase",
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "15": {
+            "hits": {
+              "required_columns": [
+                "SearchEngineID",
+                "SearchPhrase"
+              ],
+              "selected_columns": [
+                "SearchEngineID",
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "16": {
+            "hits": {
+              "required_columns": [
+                "UserID"
+              ],
+              "selected_columns": [
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "17": {
+            "hits": {
+              "required_columns": [
+                "SearchPhrase",
+                "UserID"
+              ],
+              "selected_columns": [
+                "SearchPhrase",
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "18": {
+            "hits": {
+              "required_columns": [
+                "SearchPhrase",
+                "UserID"
+              ],
+              "selected_columns": [
+                "SearchPhrase",
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "19": {
+            "hits": {
+              "required_columns": [
+                "EventTime",
+                "SearchPhrase",
+                "UserID"
+              ],
+              "selected_columns": [
+                "SearchPhrase",
+                "UserID"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "20": {
+            "hits": {
+              "required_columns": [
+                "UserID"
+              ],
+              "selected_columns": [
+                "UserID"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "21": {
+            "hits": {
+              "required_columns": [
+                "URL"
+              ],
+              "selected_columns": [],
+              "static_all_columns_selected": false
+            }
+          },
+          "22": {
+            "hits": {
+              "required_columns": [
+                "SearchPhrase",
+                "URL"
+              ],
+              "selected_columns": [
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "23": {
+            "hits": {
+              "required_columns": [
+                "SearchPhrase",
+                "Title",
+                "URL",
+                "UserID"
+              ],
+              "selected_columns": [
+                "SearchPhrase",
+                "UserID"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "24": {
+            "hits": {
+              "required_columns": [
+                "AdvEngineID",
+                "Age",
+                "BrowserCountry",
+                "BrowserLanguage",
+                "CLID",
+                "ClientEventTime",
+                "ClientIP",
+                "ClientTimeZone",
+                "CodeVersion",
+                "ConnectTiming",
+                "CookieEnable",
+                "CounterClass",
+                "CounterID",
+                "DNSTiming",
+                "DontCountHits",
+                "EventDate",
+                "EventTime",
+                "FUniqID",
+                "FetchTiming",
+                "FlashMajor",
+                "FlashMinor",
+                "FlashMinor2",
+                "FromTag",
+                "GoodEvent",
+                "HID",
+                "HTTPError",
+                "HasGCLID",
+                "HistoryLength",
+                "HitColor",
+                "IPNetworkID",
+                "Income",
+                "Interests",
+                "IsArtifical",
+                "IsDownload",
+                "IsEvent",
+                "IsLink",
+                "IsMobile",
+                "IsNotBounce",
+                "IsOldCounter",
+                "IsParameter",
+                "IsRefresh",
+                "JavaEnable",
+                "JavascriptEnable",
+                "LocalEventTime",
+                "MobilePhone",
+                "MobilePhoneModel",
+                "NetMajor",
+                "NetMinor",
+                "OS",
+                "OpenerName",
+                "OpenstatAdID",
+                "OpenstatCampaignID",
+                "OpenstatServiceName",
+                "OpenstatSourceID",
+                "OriginalURL",
+                "PageCharset",
+                "ParamCurrency",
+                "ParamCurrencyID",
+                "ParamOrderID",
+                "ParamPrice",
+                "Params",
+                "Referer",
+                "RefererCategoryID",
+                "RefererHash",
+                "RefererRegionID",
+                "RegionID",
+                "RemoteIP",
+                "ResolutionDepth",
+                "ResolutionHeight",
+                "ResolutionWidth",
+                "ResponseEndTiming",
+                "ResponseStartTiming",
+                "Robotness",
+                "SearchEngineID",
+                "SearchPhrase",
+                "SendTiming",
+                "Sex",
+                "SilverlightVersion1",
+                "SilverlightVersion2",
+                "SilverlightVersion3",
+                "SilverlightVersion4",
+                "SocialAction",
+                "SocialNetwork",
+                "SocialSourceNetworkID",
+                "SocialSourcePage",
+                "Title",
+                "TraficSourceID",
+                "URL",
+                "URLCategoryID",
+                "URLHash",
+                "URLRegionID",
+                "UTMCampaign",
+                "UTMContent",
+                "UTMMedium",
+                "UTMSource",
+                "UTMTerm",
+                "UserAgent",
+                "UserAgentMajor",
+                "UserAgentMinor",
+                "UserID",
+                "WatchID",
+                "WindowClientHeight",
+                "WindowClientWidth",
+                "WindowName",
+                "WithHash"
+              ],
+              "selected_columns": [
+                "AdvEngineID",
+                "ClientIP",
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "IsDownload",
+                "IsLink",
+                "IsRefresh",
+                "MobilePhone",
+                "RegionID",
+                "ResolutionWidth",
+                "SearchEngineID",
+                "SearchPhrase",
+                "TraficSourceID",
+                "UserID",
+                "WindowClientHeight",
+                "WindowClientWidth"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "25": {
+            "hits": {
+              "required_columns": [
+                "EventTime",
+                "SearchPhrase"
+              ],
+              "selected_columns": [
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "26": {
+            "hits": {
+              "required_columns": [
+                "SearchPhrase"
+              ],
+              "selected_columns": [
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "27": {
+            "hits": {
+              "required_columns": [
+                "EventTime",
+                "SearchPhrase"
+              ],
+              "selected_columns": [
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "28": {
+            "hits": {
+              "required_columns": [
+                "CounterID",
+                "URL"
+              ],
+              "selected_columns": [
+                "CounterID"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "29": {
+            "hits": {
+              "required_columns": [
+                "Referer"
+              ],
+              "selected_columns": [],
+              "static_all_columns_selected": false
+            }
+          },
+          "30": {
+            "hits": {
+              "required_columns": [
+                "ResolutionWidth"
+              ],
+              "selected_columns": [
+                "ResolutionWidth"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "31": {
+            "hits": {
+              "required_columns": [
+                "ClientIP",
+                "IsRefresh",
+                "ResolutionWidth",
+                "SearchEngineID",
+                "SearchPhrase"
+              ],
+              "selected_columns": [
+                "ClientIP",
+                "IsRefresh",
+                "ResolutionWidth",
+                "SearchEngineID",
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "32": {
+            "hits": {
+              "required_columns": [
+                "ClientIP",
+                "IsRefresh",
+                "ResolutionWidth",
+                "SearchPhrase",
+                "WatchID"
+              ],
+              "selected_columns": [
+                "ClientIP",
+                "IsRefresh",
+                "ResolutionWidth",
+                "SearchPhrase"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "33": {
+            "hits": {
+              "required_columns": [
+                "ClientIP",
+                "IsRefresh",
+                "ResolutionWidth",
+                "WatchID"
+              ],
+              "selected_columns": [
+                "ClientIP",
+                "IsRefresh",
+                "ResolutionWidth"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "34": {
+            "hits": {
+              "required_columns": [
+                "URL"
+              ],
+              "selected_columns": [],
+              "static_all_columns_selected": false
+            }
+          },
+          "35": {
+            "hits": {
+              "required_columns": [
+                "URL"
+              ],
+              "selected_columns": [],
+              "static_all_columns_selected": false
+            }
+          },
+          "36": {
+            "hits": {
+              "required_columns": [
+                "ClientIP"
+              ],
+              "selected_columns": [
+                "ClientIP"
+              ],
+              "static_all_columns_selected": true
+            }
+          },
+          "37": {
+            "hits": {
+              "required_columns": [
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "IsRefresh",
+                "URL"
+              ],
+              "selected_columns": [
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "IsRefresh"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "38": {
+            "hits": {
+              "required_columns": [
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "IsRefresh",
+                "Title"
+              ],
+              "selected_columns": [
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "IsRefresh"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "39": {
+            "hits": {
+              "required_columns": [
+                "CounterID",
+                "EventDate",
+                "IsDownload",
+                "IsLink",
+                "IsRefresh",
+                "URL"
+              ],
+              "selected_columns": [
+                "CounterID",
+                "EventDate",
+                "IsDownload",
+                "IsLink",
+                "IsRefresh"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "40": {
+            "hits": {
+              "required_columns": [
+                "AdvEngineID",
+                "CounterID",
+                "EventDate",
+                "IsRefresh",
+                "Referer",
+                "SearchEngineID",
+                "TraficSourceID",
+                "URL"
+              ],
+              "selected_columns": [
+                "AdvEngineID",
+                "CounterID",
+                "EventDate",
+                "IsRefresh",
+                "SearchEngineID",
+                "TraficSourceID"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "41": {
+            "hits": {
+              "required_columns": [
+                "CounterID",
+                "EventDate",
+                "IsRefresh",
+                "RefererHash",
+                "TraficSourceID",
+                "URLHash"
+              ],
+              "selected_columns": [
+                "CounterID",
+                "EventDate",
+                "IsRefresh",
+                "TraficSourceID"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "42": {
+            "hits": {
+              "required_columns": [
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "IsRefresh",
+                "URLHash",
+                "WindowClientHeight",
+                "WindowClientWidth"
+              ],
+              "selected_columns": [
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "IsRefresh",
+                "WindowClientHeight",
+                "WindowClientWidth"
+              ],
+              "static_all_columns_selected": false
+            }
+          },
+          "43": {
+            "hits": {
+              "required_columns": [
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "EventTime",
+                "IsRefresh"
+              ],
+              "selected_columns": [
+                "CounterID",
+                "DontCountHits",
+                "EventDate",
+                "IsRefresh"
+              ],
+              "static_all_columns_selected": false
+            }
+          }
+        },
+        "coverage_is_static_prediction_not_measured_reuse": true
+      },
+      "pin_paths": {
+        "hits": "/mnt/nvme/clickbench/hits_v2.parquet"
+      },
+      "view_files": {
+        "hits": [
+          "/mnt/nvme/clickbench/hits_v2.parquet"
+        ]
+      },
+      "input_file_metadata": [
+        {
+          "path": "/mnt/nvme/clickbench/hits_v2.parquet",
+          "bytes": 15611871658,
+          "mtime_ns": 1788335144445397345
+        }
+      ],
+      "notes": [
+        "All queries run, including CB q24, q28 and q29.",
+        "CB q24 pin coverage includes all SELECT * columns; COUNT(*) coverage unknown.",
+        "Future hints follow the existing scan-stage column map."
+      ]
+    }
+  },
+  "condition_timeout_s": 0,
+  "prepared_only": false,
+  "cases": [
+    "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/latency_runs/latency/cb_r1/baseline/metadata.json",
+    "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/latency_runs/latency/cb_r1/paging_lru/metadata.json",
+    "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/latency_runs/latency/cb_r1/reorder_future/metadata.json"
+  ],
+  "executed_utc": "2026-10-07T06:39:15.126160+00:00"
+}

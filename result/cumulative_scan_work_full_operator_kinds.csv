@@ -1,0 +1,391 @@
+workload,condition,query,run,execution,operator_kind,scan_work_s
+ClickBench,baseline,q1,1,2,GPU_SCAN,0.020432247
+ClickBench,baseline,q1,1,3,GPU_SCAN,0.01889049
+ClickBench,baseline,q2,1,2,GPU_SCAN,0.01692728
+ClickBench,baseline,q2,1,3,GPU_SCAN,0.017562677000000002
+ClickBench,baseline,q3,1,2,GPU_SCAN,0.039642082
+ClickBench,baseline,q3,1,3,GPU_SCAN,0.039985608
+ClickBench,baseline,q4,1,2,GPU_SCAN,0.219025838
+ClickBench,baseline,q4,1,3,GPU_SCAN,0.21866964100000003
+ClickBench,baseline,q5,1,2,GPU_SCAN,0.21784408100000002
+ClickBench,baseline,q5,1,3,GPU_SCAN,0.212933569
+ClickBench,baseline,q6,1,2,GPU_SCAN,0.6941337190000001
+ClickBench,baseline,q6,1,3,GPU_SCAN,0.714591869
+ClickBench,baseline,q7,1,2,GPU_SCAN,0.013052395999999999
+ClickBench,baseline,q7,1,3,GPU_SCAN,0.01258254
+ClickBench,baseline,q8,1,2,GPU_SCAN,0.01820511
+ClickBench,baseline,q8,1,3,GPU_SCAN,0.017527823999999997
+ClickBench,baseline,q9,1,2,GPU_SCAN,0.430346267
+ClickBench,baseline,q9,1,3,GPU_SCAN,0.41599719799999996
+ClickBench,baseline,q10,1,2,GPU_SCAN,0.564388357
+ClickBench,baseline,q10,1,3,GPU_SCAN,0.584258078
+ClickBench,baseline,q11,1,2,GPU_SCAN,0.480440064
+ClickBench,baseline,q11,1,3,GPU_SCAN,0.482803944
+ClickBench,baseline,q12,1,2,GPU_SCAN,0.6626802119999999
+ClickBench,baseline,q12,1,3,GPU_SCAN,0.517916547
+ClickBench,baseline,q13,1,2,GPU_SCAN,0.7338421009999999
+ClickBench,baseline,q13,1,3,GPU_SCAN,0.7062284980000001
+ClickBench,baseline,q14,1,2,GPU_SCAN,2.22367806
+ClickBench,baseline,q14,1,3,GPU_SCAN,2.082542917
+ClickBench,baseline,q15,1,2,GPU_SCAN,0.762963563
+ClickBench,baseline,q15,1,3,GPU_SCAN,0.762962295
+ClickBench,baseline,q16,1,2,GPU_SCAN,0.22037327099999998
+ClickBench,baseline,q16,1,3,GPU_SCAN,0.219733355
+ClickBench,baseline,q17,1,2,GPU_SCAN,1.157246234
+ClickBench,baseline,q17,1,3,GPU_SCAN,1.095098632
+ClickBench,baseline,q18,1,2,GPU_SCAN,1.1253592389999998
+ClickBench,baseline,q18,1,3,GPU_SCAN,1.1384874170000003
+ClickBench,baseline,q19,1,2,GPU_SCAN,2.15956074
+ClickBench,baseline,q19,1,3,GPU_SCAN,2.081961658
+ClickBench,baseline,q20,1,2,GPU_SCAN,0.222347125
+ClickBench,baseline,q20,1,3,GPU_SCAN,0.223809902
+ClickBench,baseline,q21,1,2,GPU_SCAN,4.541756657
+ClickBench,baseline,q21,1,3,GPU_SCAN,4.3364379159999995
+ClickBench,baseline,q22,1,2,GPU_SCAN,5.229053772
+ClickBench,baseline,q22,1,3,GPU_SCAN,4.995920825
+ClickBench,baseline,q23,1,2,GPU_SCAN,7.820439175
+ClickBench,baseline,q23,1,3,GPU_SCAN,7.800727683000001
+ClickBench,baseline,q24,1,2,GPU_SCAN,18.495297837000003
+ClickBench,baseline,q24,1,3,GPU_SCAN,18.659722154000004
+ClickBench,baseline,q25,1,2,GPU_SCAN,2.1714398569999998
+ClickBench,baseline,q25,1,3,GPU_SCAN,2.1512283670000003
+ClickBench,baseline,q26,1,2,GPU_SCAN,1.351194758
+ClickBench,baseline,q26,1,3,GPU_SCAN,1.5850000450000001
+ClickBench,baseline,q27,1,2,GPU_SCAN,1.555102673
+ClickBench,baseline,q27,1,3,GPU_SCAN,1.905585965
+ClickBench,baseline,q28,1,2,GPU_SCAN,36.534269516
+ClickBench,baseline,q28,1,3,GPU_SCAN,27.430534295999998
+ClickBench,baseline,q29,1,2,GPU_SCAN,49.60404410299999
+ClickBench,baseline,q29,1,3,GPU_SCAN,53.140692656
+ClickBench,baseline,q30,1,2,GPU_SCAN,0.033904962
+ClickBench,baseline,q30,1,3,GPU_SCAN,0.033854389
+ClickBench,baseline,q31,1,2,GPU_SCAN,0.699282523
+ClickBench,baseline,q31,1,3,GPU_SCAN,0.697929853
+ClickBench,baseline,q32,1,2,GPU_SCAN,2.269610644
+ClickBench,baseline,q32,1,3,GPU_SCAN,2.335593164
+ClickBench,baseline,q33,1,2,GPU_SCAN,1.4775308529999998
+ClickBench,baseline,q33,1,3,GPU_SCAN,1.498123441
+ClickBench,baseline,q34,1,2,GPU_SCAN,4.439940079
+ClickBench,baseline,q34,1,3,GPU_SCAN,4.193796569
+ClickBench,baseline,q35,1,2,GPU_SCAN,4.146375476
+ClickBench,baseline,q35,1,3,GPU_SCAN,4.402681685
+ClickBench,baseline,q36,1,2,GPU_SCAN,0.075626608
+ClickBench,baseline,q36,1,3,GPU_SCAN,0.073725366
+ClickBench,baseline,q37,1,2,GPU_SCAN,0.7267823390000001
+ClickBench,baseline,q37,1,3,GPU_SCAN,0.729574507
+ClickBench,baseline,q38,1,2,GPU_SCAN,0.5867457380000001
+ClickBench,baseline,q38,1,3,GPU_SCAN,0.589622262
+ClickBench,baseline,q39,1,2,GPU_SCAN,0.7312353399999999
+ClickBench,baseline,q39,1,3,GPU_SCAN,0.7218306760000001
+ClickBench,baseline,q40,1,2,GPU_SCAN,1.2069413850000001
+ClickBench,baseline,q40,1,3,GPU_SCAN,1.202468519
+ClickBench,baseline,q41,1,2,GPU_SCAN,0.093430853
+ClickBench,baseline,q41,1,3,GPU_SCAN,0.092823386
+ClickBench,baseline,q42,1,2,GPU_SCAN,0.072269322
+ClickBench,baseline,q42,1,3,GPU_SCAN,0.073254078
+ClickBench,baseline,q43,1,2,GPU_SCAN,0.069204723
+ClickBench,baseline,q43,1,3,GPU_SCAN,0.06899048999999999
+ClickBench,paging_lru,q1,1,2,GPU_SCAN,0.022924776
+ClickBench,paging_lru,q1,1,3,GPU_SCAN,0.024294011
+ClickBench,paging_lru,q2,1,2,GPU_SCAN,0.021315901
+ClickBench,paging_lru,q2,1,3,GPU_SCAN,0.022303609000000002
+ClickBench,paging_lru,q3,1,2,GPU_SCAN,0.007467358
+ClickBench,paging_lru,q3,1,3,GPU_SCAN,0.039538224
+ClickBench,paging_lru,q4,1,2,GPU_SCAN,0.237560307
+ClickBench,paging_lru,q4,1,3,GPU_SCAN,0.232735388
+ClickBench,paging_lru,q5,1,2,GPU_SCAN,0.007922582000000001
+ClickBench,paging_lru,q5,1,3,GPU_SCAN,0.016147568
+ClickBench,paging_lru,q6,1,2,GPU_SCAN,0.781091881
+ClickBench,paging_lru,q6,1,3,GPU_SCAN,0.770680995
+ClickBench,paging_lru,q7,1,2,GPU_SCAN,0.029054026
+ClickBench,paging_lru,q7,1,3,GPU_SCAN,0.025597894
+ClickBench,paging_lru,q8,1,2,GPU_SCAN,0.007773456999999999
+ClickBench,paging_lru,q8,1,3,GPU_SCAN,0.007763718
+ClickBench,paging_lru,q9,1,2,GPU_SCAN,0.14051270500000002
+ClickBench,paging_lru,q9,1,3,GPU_SCAN,0.136557285
+ClickBench,paging_lru,q10,1,2,GPU_SCAN,0.03408897899999999
+ClickBench,paging_lru,q10,1,3,GPU_SCAN,0.032547258999999995
+ClickBench,paging_lru,q11,1,2,GPU_SCAN,0.201129193
+ClickBench,paging_lru,q11,1,3,GPU_SCAN,0.21239613499999999
+ClickBench,paging_lru,q12,1,2,GPU_SCAN,0.11884309299999998
+ClickBench,paging_lru,q12,1,3,GPU_SCAN,0.121928067
+ClickBench,paging_lru,q13,1,2,GPU_SCAN,0.700645533
+ClickBench,paging_lru,q13,1,3,GPU_SCAN,0.18624975000000002
+ClickBench,paging_lru,q14,1,2,GPU_SCAN,0.9991568620000001
+ClickBench,paging_lru,q14,1,3,GPU_SCAN,0.304936129
+ClickBench,paging_lru,q15,1,2,GPU_SCAN,0.344369071
+ClickBench,paging_lru,q15,1,3,GPU_SCAN,0.140208255
+ClickBench,paging_lru,q16,1,2,GPU_SCAN,0.009662935
+ClickBench,paging_lru,q16,1,3,GPU_SCAN,0.01028111
+ClickBench,paging_lru,q17,1,2,GPU_SCAN,0.6596529050000001
+ClickBench,paging_lru,q17,1,3,GPU_SCAN,0.077001692
+ClickBench,paging_lru,q18,1,2,GPU_SCAN,0.841541428
+ClickBench,paging_lru,q18,1,3,GPU_SCAN,0.086847427
+ClickBench,paging_lru,q19,1,2,GPU_SCAN,1.482849196
+ClickBench,paging_lru,q19,1,3,GPU_SCAN,0.946271931
+ClickBench,paging_lru,q20,1,2,GPU_SCAN,0.013384396
+ClickBench,paging_lru,q20,1,3,GPU_SCAN,0.012157336000000001
+ClickBench,paging_lru,q21,1,2,GPU_SCAN,4.636656964
+ClickBench,paging_lru,q21,1,3,GPU_SCAN,5.113594513
+ClickBench,paging_lru,q22,1,2,GPU_SCAN,5.527915662000001
+ClickBench,paging_lru,q22,1,3,GPU_SCAN,4.971763538
+ClickBench,paging_lru,q23,1,2,GPU_SCAN,7.395554197
+ClickBench,paging_lru,q23,1,3,GPU_SCAN,5.406184684000001
+ClickBench,paging_lru,q24,1,2,GPU_SCAN,18.715674046
+ClickBench,paging_lru,q24,1,3,GPU_SCAN,18.246113373
+ClickBench,paging_lru,q25,1,2,GPU_SCAN,2.2182999719999996
+ClickBench,paging_lru,q25,1,3,GPU_SCAN,2.2891133989999997
+ClickBench,paging_lru,q26,1,2,GPU_SCAN,0.245414486
+ClickBench,paging_lru,q26,1,3,GPU_SCAN,0.257875133
+ClickBench,paging_lru,q27,1,2,GPU_SCAN,0.10361393199999999
+ClickBench,paging_lru,q27,1,3,GPU_SCAN,0.11083480899999999
+ClickBench,paging_lru,q28,1,2,GPU_SCAN,18.458739016
+ClickBench,paging_lru,q28,1,3,GPU_SCAN,12.007968605000002
+ClickBench,paging_lru,q29,1,2,GPU_SCAN,54.76615009799999
+ClickBench,paging_lru,q29,1,3,GPU_SCAN,46.003472812000005
+ClickBench,paging_lru,q30,1,2,GPU_SCAN,0.037208154
+ClickBench,paging_lru,q30,1,3,GPU_SCAN,0.037459658
+ClickBench,paging_lru,q31,1,2,GPU_SCAN,0.703552772
+ClickBench,paging_lru,q31,1,3,GPU_SCAN,0.716176225
+ClickBench,paging_lru,q32,1,2,GPU_SCAN,1.201573277
+ClickBench,paging_lru,q32,1,3,GPU_SCAN,1.234429303
+ClickBench,paging_lru,q33,1,2,GPU_SCAN,0.19464653199999998
+ClickBench,paging_lru,q33,1,3,GPU_SCAN,0.146572906
+ClickBench,paging_lru,q34,1,2,GPU_SCAN,4.473510193
+ClickBench,paging_lru,q34,1,3,GPU_SCAN,4.403666863999999
+ClickBench,paging_lru,q35,1,2,GPU_SCAN,4.411871542000001
+ClickBench,paging_lru,q35,1,3,GPU_SCAN,4.771717786000001
+ClickBench,paging_lru,q36,1,2,GPU_SCAN,0.078257164
+ClickBench,paging_lru,q36,1,3,GPU_SCAN,0.033989877
+ClickBench,paging_lru,q37,1,2,GPU_SCAN,0.766562752
+ClickBench,paging_lru,q37,1,3,GPU_SCAN,0.256942591
+ClickBench,paging_lru,q38,1,2,GPU_SCAN,0.625042014
+ClickBench,paging_lru,q38,1,3,GPU_SCAN,0.6450238939999999
+ClickBench,paging_lru,q39,1,2,GPU_SCAN,0.150438469
+ClickBench,paging_lru,q39,1,3,GPU_SCAN,0.15094833
+ClickBench,paging_lru,q40,1,2,GPU_SCAN,0.35770739
+ClickBench,paging_lru,q40,1,3,GPU_SCAN,0.360412144
+ClickBench,paging_lru,q41,1,2,GPU_SCAN,0.11484079300000001
+ClickBench,paging_lru,q41,1,3,GPU_SCAN,0.113911959
+ClickBench,paging_lru,q42,1,2,GPU_SCAN,0.032270743000000005
+ClickBench,paging_lru,q42,1,3,GPU_SCAN,0.032391207
+ClickBench,paging_lru,q43,1,2,GPU_SCAN,0.069324527
+ClickBench,paging_lru,q43,1,3,GPU_SCAN,0.06917817100000001
+ClickBench,reorder_future,q1,1,2,GPU_SCAN,0.022012068
+ClickBench,reorder_future,q1,1,3,GPU_SCAN,0.023459225
+ClickBench,reorder_future,q2,1,2,GPU_SCAN,0.02105018
+ClickBench,reorder_future,q2,1,3,GPU_SCAN,0.020097094
+ClickBench,reorder_future,q3,1,2,GPU_SCAN,0.038735981
+ClickBench,reorder_future,q3,1,3,GPU_SCAN,0.038613072000000005
+ClickBench,reorder_future,q4,1,2,GPU_SCAN,0.010130293
+ClickBench,reorder_future,q4,1,3,GPU_SCAN,0.008994885999999999
+ClickBench,reorder_future,q5,1,2,GPU_SCAN,0.008924477
+ClickBench,reorder_future,q5,1,3,GPU_SCAN,0.009674158
+ClickBench,reorder_future,q6,1,2,GPU_SCAN,0.056461118
+ClickBench,reorder_future,q6,1,3,GPU_SCAN,0.05887069500000001
+ClickBench,reorder_future,q7,1,2,GPU_SCAN,0.028589477
+ClickBench,reorder_future,q7,1,3,GPU_SCAN,0.026699334
+ClickBench,reorder_future,q8,1,2,GPU_SCAN,0.0068809430000000005
+ClickBench,reorder_future,q8,1,3,GPU_SCAN,0.007033096
+ClickBench,reorder_future,q9,1,2,GPU_SCAN,0.014746521000000002
+ClickBench,reorder_future,q9,1,3,GPU_SCAN,0.017217204000000003
+ClickBench,reorder_future,q10,1,2,GPU_SCAN,0.5586971970000001
+ClickBench,reorder_future,q10,1,3,GPU_SCAN,0.545518934
+ClickBench,reorder_future,q11,1,2,GPU_SCAN,0.195505383
+ClickBench,reorder_future,q11,1,3,GPU_SCAN,0.198803384
+ClickBench,reorder_future,q12,1,2,GPU_SCAN,0.11719404499999998
+ClickBench,reorder_future,q12,1,3,GPU_SCAN,0.116700159
+ClickBench,reorder_future,q13,1,2,GPU_SCAN,0.066419702
+ClickBench,reorder_future,q13,1,3,GPU_SCAN,0.07910468799999999
+ClickBench,reorder_future,q14,1,2,GPU_SCAN,1.809818892
+ClickBench,reorder_future,q14,1,3,GPU_SCAN,1.576280911
+ClickBench,reorder_future,q15,1,2,GPU_SCAN,0.16396511099999997
+ClickBench,reorder_future,q15,1,3,GPU_SCAN,0.15689984799999998
+ClickBench,reorder_future,q16,1,2,GPU_SCAN,0.011304416
+ClickBench,reorder_future,q16,1,3,GPU_SCAN,0.021226834
+ClickBench,reorder_future,q17,1,2,GPU_SCAN,0.091468515
+ClickBench,reorder_future,q17,1,3,GPU_SCAN,0.073074326
+ClickBench,reorder_future,q18,1,2,GPU_SCAN,0.08628677900000001
+ClickBench,reorder_future,q18,1,3,GPU_SCAN,0.117829535
+ClickBench,reorder_future,q19,1,2,GPU_SCAN,0.157301238
+ClickBench,reorder_future,q19,1,3,GPU_SCAN,0.151784202
+ClickBench,reorder_future,q20,1,2,GPU_SCAN,0.01203161
+ClickBench,reorder_future,q20,1,3,GPU_SCAN,0.015518031999999998
+ClickBench,reorder_future,q21,1,2,GPU_SCAN,4.502468487
+ClickBench,reorder_future,q21,1,3,GPU_SCAN,5.1505543209999995
+ClickBench,reorder_future,q22,1,2,GPU_SCAN,2.554845865
+ClickBench,reorder_future,q22,1,3,GPU_SCAN,3.414129914
+ClickBench,reorder_future,q23,1,2,GPU_SCAN,6.269298012999999
+ClickBench,reorder_future,q23,1,3,GPU_SCAN,6.722235748999999
+ClickBench,reorder_future,q24,1,2,GPU_SCAN,15.924336141
+ClickBench,reorder_future,q24,1,3,GPU_SCAN,15.851027187000001
+ClickBench,reorder_future,q25,1,2,GPU_SCAN,1.850158606
+ClickBench,reorder_future,q25,1,3,GPU_SCAN,2.002121093
+ClickBench,reorder_future,q26,1,2,GPU_SCAN,0.240185083
+ClickBench,reorder_future,q26,1,3,GPU_SCAN,0.239962533
+ClickBench,reorder_future,q27,1,2,GPU_SCAN,0.10989827099999999
+ClickBench,reorder_future,q27,1,3,GPU_SCAN,0.115025121
+ClickBench,reorder_future,q28,1,2,GPU_SCAN,18.724490582999998
+ClickBench,reorder_future,q28,1,3,GPU_SCAN,35.51876673500001
+ClickBench,reorder_future,q29,1,2,GPU_SCAN,52.973799154
+ClickBench,reorder_future,q29,1,3,GPU_SCAN,49.092673993000005
+ClickBench,reorder_future,q30,1,2,GPU_SCAN,0.005373894
+ClickBench,reorder_future,q30,1,3,GPU_SCAN,0.006495399
+ClickBench,reorder_future,q31,1,2,GPU_SCAN,0.256689816
+ClickBench,reorder_future,q31,1,3,GPU_SCAN,0.254546357
+ClickBench,reorder_future,q32,1,2,GPU_SCAN,0.106166157
+ClickBench,reorder_future,q32,1,3,GPU_SCAN,0.12823453399999998
+ClickBench,reorder_future,q33,1,2,GPU_SCAN,1.2526129739999998
+ClickBench,reorder_future,q33,1,3,GPU_SCAN,1.329576073
+ClickBench,reorder_future,q34,1,2,GPU_SCAN,4.394651142
+ClickBench,reorder_future,q34,1,3,GPU_SCAN,3.279077046
+ClickBench,reorder_future,q35,1,2,GPU_SCAN,4.481506884000001
+ClickBench,reorder_future,q35,1,3,GPU_SCAN,2.101801243
+ClickBench,reorder_future,q36,1,2,GPU_SCAN,0.0060522679999999995
+ClickBench,reorder_future,q36,1,3,GPU_SCAN,0.006262983000000001
+ClickBench,reorder_future,q37,1,2,GPU_SCAN,0.645064705
+ClickBench,reorder_future,q37,1,3,GPU_SCAN,0.252950519
+ClickBench,reorder_future,q38,1,2,GPU_SCAN,0.6221427429999999
+ClickBench,reorder_future,q38,1,3,GPU_SCAN,0.627626337
+ClickBench,reorder_future,q39,1,2,GPU_SCAN,0.149760623
+ClickBench,reorder_future,q39,1,3,GPU_SCAN,0.5728628590000001
+ClickBench,reorder_future,q40,1,2,GPU_SCAN,0.650174194
+ClickBench,reorder_future,q40,1,3,GPU_SCAN,0.648669752
+ClickBench,reorder_future,q41,1,2,GPU_SCAN,0.057212518000000004
+ClickBench,reorder_future,q41,1,3,GPU_SCAN,0.055355873
+ClickBench,reorder_future,q42,1,2,GPU_SCAN,0.074185036
+ClickBench,reorder_future,q42,1,3,GPU_SCAN,0.077961587
+ClickBench,reorder_future,q43,1,2,GPU_SCAN,0.010471958
+ClickBench,reorder_future,q43,1,3,GPU_SCAN,0.008358828
+TPC-H SF50,baseline,q1,1,2,GPU_SCAN,4.758721213000002
+TPC-H SF50,baseline,q1,1,3,GPU_SCAN,4.7113818389999995
+TPC-H SF50,baseline,q2,1,2,GPU_SCAN,0.7068265340000001
+TPC-H SF50,baseline,q2,1,3,GPU_SCAN,0.6961829390000001
+TPC-H SF50,baseline,q3,1,2,GPU_SCAN,5.883112519
+TPC-H SF50,baseline,q3,1,3,GPU_SCAN,5.440916799000001
+TPC-H SF50,baseline,q4,1,2,GPU_SCAN,3.0391083109999997
+TPC-H SF50,baseline,q4,1,3,GPU_SCAN,2.9787993189999993
+TPC-H SF50,baseline,q5,1,2,GPU_SCAN,5.866367632
+TPC-H SF50,baseline,q5,1,3,GPU_SCAN,5.879498775
+TPC-H SF50,baseline,q6,1,2,GPU_SCAN,3.8820158159999996
+TPC-H SF50,baseline,q6,1,3,GPU_SCAN,3.8738803880000003
+TPC-H SF50,baseline,q7,1,2,GPU_SCAN,7.284817971000001
+TPC-H SF50,baseline,q7,1,3,GPU_SCAN,7.0640260569999995
+TPC-H SF50,baseline,q8,1,2,GPU_SCAN,8.487200652
+TPC-H SF50,baseline,q8,1,3,GPU_SCAN,8.687446356999999
+TPC-H SF50,baseline,q9,1,2,GPU_SCAN,8.954530362000002
+TPC-H SF50,baseline,q9,1,3,GPU_SCAN,8.875599549
+TPC-H SF50,baseline,q10,1,2,GPU_SCAN,5.2214979029999995
+TPC-H SF50,baseline,q10,1,3,GPU_SCAN,4.6842276179999995
+TPC-H SF50,baseline,q11,1,2,GPU_SCAN,1.164462567
+TPC-H SF50,baseline,q11,1,3,GPU_SCAN,1.175890412
+TPC-H SF50,baseline,q12,1,2,GPU_SCAN,4.039914636000001
+TPC-H SF50,baseline,q12,1,3,GPU_SCAN,4.140582487
+TPC-H SF50,baseline,q13,1,2,GPU_SCAN,2.040521859
+TPC-H SF50,baseline,q13,1,3,GPU_SCAN,2.086779188
+TPC-H SF50,baseline,q14,1,2,GPU_SCAN,5.326742074999999
+TPC-H SF50,baseline,q14,1,3,GPU_SCAN,5.32403458
+TPC-H SF50,baseline,q15,1,2,GPU_SCAN,5.31713666
+TPC-H SF50,baseline,q15,1,3,GPU_SCAN,5.490621515
+TPC-H SF50,baseline,q16,1,2,GPU_SCAN,0.188526906
+TPC-H SF50,baseline,q16,1,3,GPU_SCAN,0.187145762
+TPC-H SF50,baseline,q17,1,2,GPU_SCAN,6.842955908
+TPC-H SF50,baseline,q17,1,3,GPU_SCAN,6.856572636000001
+TPC-H SF50,baseline,q18,1,2,GPU_SCAN,4.256715854000001
+TPC-H SF50,baseline,q18,1,3,GPU_SCAN,4.239146958999999
+TPC-H SF50,baseline,q19,1,2,GPU_SCAN,5.213324934000001
+TPC-H SF50,baseline,q19,1,3,GPU_SCAN,5.123254509
+TPC-H SF50,baseline,q20,1,2,GPU_SCAN,5.062270409
+TPC-H SF50,baseline,q20,1,3,GPU_SCAN,4.937854657
+TPC-H SF50,baseline,q21,1,2,GPU_SCAN,11.302336070999997
+TPC-H SF50,baseline,q21,1,3,GPU_SCAN,10.973446398
+TPC-H SF50,baseline,q22,1,2,GPU_SCAN,0.306745186
+TPC-H SF50,baseline,q22,1,3,GPU_SCAN,0.304594102
+TPC-H SF50,paging_lru,q1,1,2,GPU_SCAN,5.0121926120000015
+TPC-H SF50,paging_lru,q1,1,3,GPU_SCAN,5.052916712
+TPC-H SF50,paging_lru,q2,1,2,GPU_SCAN,0.43277568099999997
+TPC-H SF50,paging_lru,q2,1,3,GPU_SCAN,0.4309455550000001
+TPC-H SF50,paging_lru,q3,1,2,GPU_SCAN,5.4454439919999995
+TPC-H SF50,paging_lru,q3,1,3,GPU_SCAN,5.037627336999999
+TPC-H SF50,paging_lru,q4,1,2,GPU_SCAN,3.1594761970000005
+TPC-H SF50,paging_lru,q4,1,3,GPU_SCAN,3.27566757
+TPC-H SF50,paging_lru,q5,1,2,GPU_SCAN,5.882267404000002
+TPC-H SF50,paging_lru,q5,1,3,GPU_SCAN,5.915473941999998
+TPC-H SF50,paging_lru,q6,1,2,GPU_SCAN,4.124706017
+TPC-H SF50,paging_lru,q6,1,3,GPU_SCAN,4.216966662000001
+TPC-H SF50,paging_lru,q7,1,2,GPU_SCAN,6.394704903
+TPC-H SF50,paging_lru,q7,1,3,GPU_SCAN,6.388664812999999
+TPC-H SF50,paging_lru,q8,1,2,GPU_SCAN,7.169502204000003
+TPC-H SF50,paging_lru,q8,1,3,GPU_SCAN,7.507516381999998
+TPC-H SF50,paging_lru,q9,1,2,GPU_SCAN,7.011458453000003
+TPC-H SF50,paging_lru,q9,1,3,GPU_SCAN,6.727171816
+TPC-H SF50,paging_lru,q10,1,2,GPU_SCAN,4.442012761
+TPC-H SF50,paging_lru,q10,1,3,GPU_SCAN,4.234738953
+TPC-H SF50,paging_lru,q11,1,2,GPU_SCAN,1.1886887860000002
+TPC-H SF50,paging_lru,q11,1,3,GPU_SCAN,1.182269759
+TPC-H SF50,paging_lru,q12,1,2,GPU_SCAN,4.472989261
+TPC-H SF50,paging_lru,q12,1,3,GPU_SCAN,4.54426854
+TPC-H SF50,paging_lru,q13,1,2,GPU_SCAN,1.835643998
+TPC-H SF50,paging_lru,q13,1,3,GPU_SCAN,1.84238195
+TPC-H SF50,paging_lru,q14,1,2,GPU_SCAN,5.394682335999999
+TPC-H SF50,paging_lru,q14,1,3,GPU_SCAN,5.641676005
+TPC-H SF50,paging_lru,q15,1,2,GPU_SCAN,5.373360648
+TPC-H SF50,paging_lru,q15,1,3,GPU_SCAN,5.984969779999999
+TPC-H SF50,paging_lru,q16,1,2,GPU_SCAN,0.059189814
+TPC-H SF50,paging_lru,q16,1,3,GPU_SCAN,0.060372318
+TPC-H SF50,paging_lru,q17,1,2,GPU_SCAN,5.399836315999998
+TPC-H SF50,paging_lru,q17,1,3,GPU_SCAN,5.479905205
+TPC-H SF50,paging_lru,q18,1,2,GPU_SCAN,4.620300798000001
+TPC-H SF50,paging_lru,q18,1,3,GPU_SCAN,4.704662976000001
+TPC-H SF50,paging_lru,q19,1,2,GPU_SCAN,5.668388387000001
+TPC-H SF50,paging_lru,q19,1,3,GPU_SCAN,5.591812433
+TPC-H SF50,paging_lru,q20,1,2,GPU_SCAN,5.014477436000001
+TPC-H SF50,paging_lru,q20,1,3,GPU_SCAN,4.979227932
+TPC-H SF50,paging_lru,q21,1,2,GPU_SCAN,9.180970671999999
+TPC-H SF50,paging_lru,q21,1,3,GPU_SCAN,9.554471077000002
+TPC-H SF50,paging_lru,q22,1,2,GPU_SCAN,0.296313435
+TPC-H SF50,paging_lru,q22,1,3,GPU_SCAN,0.301370072
+TPC-H SF50,reorder_future,q1,1,2,GPU_SCAN,4.71689641
+TPC-H SF50,reorder_future,q1,1,3,GPU_SCAN,5.047689113999998
+TPC-H SF50,reorder_future,q2,1,2,GPU_SCAN,0.10965566500000001
+TPC-H SF50,reorder_future,q2,1,3,GPU_SCAN,0.10717474299999999
+TPC-H SF50,reorder_future,q3,1,2,GPU_SCAN,4.588903547
+TPC-H SF50,reorder_future,q3,1,3,GPU_SCAN,5.107989819999999
+TPC-H SF50,reorder_future,q4,1,2,GPU_SCAN,1.512375629
+TPC-H SF50,reorder_future,q4,1,3,GPU_SCAN,1.5344083659999999
+TPC-H SF50,reorder_future,q5,1,2,GPU_SCAN,5.114481645999998
+TPC-H SF50,reorder_future,q5,1,3,GPU_SCAN,5.072786308
+TPC-H SF50,reorder_future,q6,1,2,GPU_SCAN,1.877065055
+TPC-H SF50,reorder_future,q6,1,3,GPU_SCAN,1.967218165
+TPC-H SF50,reorder_future,q7,1,2,GPU_SCAN,5.481039936999999
+TPC-H SF50,reorder_future,q7,1,3,GPU_SCAN,5.94196319
+TPC-H SF50,reorder_future,q8,1,2,GPU_SCAN,6.641041803
+TPC-H SF50,reorder_future,q8,1,3,GPU_SCAN,6.535943454
+TPC-H SF50,reorder_future,q9,1,2,GPU_SCAN,5.842236669999999
+TPC-H SF50,reorder_future,q9,1,3,GPU_SCAN,6.1659561709999995
+TPC-H SF50,reorder_future,q10,1,2,GPU_SCAN,3.1763264809999994
+TPC-H SF50,reorder_future,q10,1,3,GPU_SCAN,3.1503203760000003
+TPC-H SF50,reorder_future,q11,1,2,GPU_SCAN,0.877271212
+TPC-H SF50,reorder_future,q11,1,3,GPU_SCAN,0.7328760710000001
+TPC-H SF50,reorder_future,q12,1,2,GPU_SCAN,2.4670438440000004
+TPC-H SF50,reorder_future,q12,1,3,GPU_SCAN,2.500841287
+TPC-H SF50,reorder_future,q13,1,2,GPU_SCAN,1.599042364
+TPC-H SF50,reorder_future,q13,1,3,GPU_SCAN,1.604864817
+TPC-H SF50,reorder_future,q14,1,2,GPU_SCAN,3.315781533000001
+TPC-H SF50,reorder_future,q14,1,3,GPU_SCAN,3.2978663019999996
+TPC-H SF50,reorder_future,q15,1,2,GPU_SCAN,4.4887282410000005
+TPC-H SF50,reorder_future,q15,1,3,GPU_SCAN,4.250501612000001
+TPC-H SF50,reorder_future,q16,1,2,GPU_SCAN,0.029994024
+TPC-H SF50,reorder_future,q16,1,3,GPU_SCAN,0.029572473
+TPC-H SF50,reorder_future,q17,1,2,GPU_SCAN,2.566991863
+TPC-H SF50,reorder_future,q17,1,3,GPU_SCAN,2.8195195159999993
+TPC-H SF50,reorder_future,q18,1,2,GPU_SCAN,2.864336122
+TPC-H SF50,reorder_future,q18,1,3,GPU_SCAN,2.8916766669999996
+TPC-H SF50,reorder_future,q19,1,2,GPU_SCAN,3.930188197000001
+TPC-H SF50,reorder_future,q19,1,3,GPU_SCAN,4.379053115000001
+TPC-H SF50,reorder_future,q20,1,2,GPU_SCAN,2.987775924
+TPC-H SF50,reorder_future,q20,1,3,GPU_SCAN,2.960564024
+TPC-H SF50,reorder_future,q21,1,2,GPU_SCAN,8.010733524
+TPC-H SF50,reorder_future,q21,1,3,GPU_SCAN,8.182593233
+TPC-H SF50,reorder_future,q22,1,2,GPU_SCAN,0.09945397399999999
+TPC-H SF50,reorder_future,q22,1,3,GPU_SCAN,0.09758512400000001

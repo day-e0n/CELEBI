@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
+#include <string_view>
 #include "transparent/sirius_optimizer_extension.hpp"
 
 #include "sirius_context.hpp"
@@ -131,7 +133,17 @@ void sirius_pre_optimizer_hook(duckdb::OptimizerExtensionInput& input,
   // columns through (or sirius_plan_get falls back on them), disable this
   // pass so the small-sort / ORDER-BY-LIMIT plans stay on the standard
   // sort path. See PR #732 comment 3242605041.
-  disabled.insert(duckdb::OptimizerType::LATE_MATERIALIZATION);
+  //
+  // The pass is kept by default: the parquet scan now emits file_index / file_row_number
+  // (scan_plan virtual columns) and the re-fetch scan reads only the rows the join's IN-list
+  // names. ClickBench q24 (SELECT * ... ORDER BY ... LIMIT 10) otherwise decodes all 105
+  // columns of all 100M rows to return ten (measured: ClickBench -5.1% with the page cache).
+  // SIRIUS_ENABLE_LATE_MATERIALIZATION=0 disables it again.
+  static bool const late_materialization = [] {
+    auto const* v = std::getenv("SIRIUS_ENABLE_LATE_MATERIALIZATION");
+    return v == nullptr || std::string_view(v) != "0";
+  }();
+  if (!late_materialization) { disabled.insert(duckdb::OptimizerType::LATE_MATERIALIZATION); }
 
   duckdb::DBConfig::GetConfig(context).options.disabled_optimizers = std::move(disabled);
 }

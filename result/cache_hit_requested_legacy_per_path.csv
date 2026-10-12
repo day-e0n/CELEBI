@@ -1,0 +1,5 @@
+workload,condition,path,total_bytes,reader_bytes,cached_bytes,byte_hit_pct,full_batch_hit_pct,trace_batches,payload_batches,full_batches,metric
+th,paging_lru,parquet,376244651350,345049779766,31194871584,8.291113633660961,1.9189765458422174,938,938,18,legacy_parquet_bytes
+th,reorder_future,parquet,376244651350,276007282342,100237369008,26.64153992577415,6.823027718550106,938,938,64,legacy_parquet_bytes
+cb,paging_lru,parquet,356412178936,302492902420,53919276516,15.12834849722746,18.58974358974359,312,312,58,legacy_parquet_bytes
+cb,reorder_future,parquet,356412178936,295623997233,60788181703,17.05558488053675,28.525641025641026,312,312,89,legacy_parquet_bytes

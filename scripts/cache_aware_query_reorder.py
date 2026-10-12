@@ -62,7 +62,7 @@ FIXED_WIDTH_COLUMNS: dict[str, set[str]] = {
 SCOPE_CHOICES = ("fixed_width", "all_columns")
 POLICY_CHOICES = ("none", "fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
                   "cost-seeded-overlap", "unfiltered-overlap", "fixed-then-variable",
-                  "fixed-first", "fixed-bytes-then-variable", "cacheable-first", "resident-overlap", "resident-overlap-spread", "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending")
+                  "fixed-first", "fixed-bytes-then-variable", "cacheable-first", "resident-overlap", "resident-overlap-spread", "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending", "overlap-fit")
 
 # {query: {table: [column, ...]}}, filled by load_query_table_columns().
 # The union of a scan's projection AND filter columns, which is what the
@@ -1199,6 +1199,48 @@ def _build_big_diff_apart_path(
     return path
 
 
+def _build_overlap_fit_path(
+    start_position: int,
+    positions: list[int],
+    signatures: dict[int, frozenset[ColumnKey]],
+    cfg: ReorderConfig,
+) -> list[int]:
+    """겹침을 먼저, 겹친 컬럼 전체가 예산에 들어가는지를 그다음으로 본다.
+
+    다음 쿼리의 순위 (사전식): 직전 쿼리와 겹치는 컬럼이 있는가 > 겹친 컬럼들의 바이트 합이
+    캐시 예산 안에 드는가 > 겹침 바이트 비율 > 겹친 바이트 > 남은 쿼리들과의 겹침 바이트.
+    `small-first-big-last` 와 달리 예산보다 큰 컬럼을 읽는 쿼리를 따로 뒤로 보내지 않는다 --
+    그런 쿼리는 겹친 컬럼의 합이 예산을 넘어 둘째 기준에서 밀리는 것으로 뒤에 가게 된다.
+    """
+
+    budget = cfg.cache_budget_bytes
+
+    def all_columns(pos: int) -> frozenset[ColumnKey]:
+        qnum = _QUERY_AT[pos] if _QUERY_AT else pos
+        return query_signature(qnum, "all_columns")
+
+    path = [start_position]
+    remaining = [pos for pos in positions if pos != start_position]
+    while remaining:
+        previous = all_columns(path[-1])
+
+        def key(pos: int):
+            cand = all_columns(pos)
+            shared = previous & cand
+            shared_bytes = sum(column_bytes(c) for c in shared)
+            total = sum(column_bytes(c) for c in cand)
+            fits = budget <= 0 or shared_bytes <= budget
+            future = sum(sum(column_bytes(c) for c in cand & all_columns(other))
+                         for other in remaining if other != pos)
+            return (1 if shared else 0, 1 if fits else 0,
+                    shared_bytes / total if total else 0.0, shared_bytes, future, -pos)
+
+        best_position = max(remaining, key=key)
+        path.append(best_position)
+        remaining.remove(best_position)
+    return path
+
+
 def _build_small_first_big_last_path(
     start_position: int,
     positions: list[int],
@@ -1595,6 +1637,8 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
         path_builders = [_build_big_diff_apart_path]
     elif cfg.policy == "small-first-big-last":
         path_builders = [_build_small_first_big_last_path]
+    elif cfg.policy == "overlap-fit":
+        path_builders = [_build_overlap_fit_path]
     elif cfg.policy == "small-first-big-runs":
         path_builders = [_build_small_first_big_runs_path]
     elif cfg.policy == "small-first-big-ascending":
@@ -1628,7 +1672,8 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
     # result had been discarded.
     _objective_is_overlap = cfg.policy not in (
         "cacheable-first", "resident-overlap", "resident-overlap-spread",
-        "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending")
+        "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending",
+        "overlap-fit")
     best_rank = (score(original, before, positions[0]) if _objective_is_overlap
                  else (float("-inf"), -1, -len(positions) - 1))
     for start_position in start_positions:
@@ -1656,7 +1701,8 @@ def reorder_query_sequence(queries: Iterable[int], config: ReorderConfig | None 
             return finish(original, tuple(), before)
     elif cfg.policy not in ("byte-lru", "byte-overlap", "cacheable-first", "resident-overlap",
                             "resident-overlap-spread", "big-same-adjacent",
-                            "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending") and (
+                            "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending",
+                            "overlap-fit") and (
         best_summary.overlap_ratio <= before.overlap_ratio
         and best_summary.shared_columns <= before.shared_columns
     ):

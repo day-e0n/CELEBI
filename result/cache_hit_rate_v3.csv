@@ -1,0 +1,5 @@
+workload,condition,total_gib,read_gib,served_gib,byte_hit_pct,batches,full_batches,splice_batches,partial_batches,miss_batches,batch_hit_pct
+TPC-H SF50,paging,175.2,160.11,15.1,8.62,469.0,14.0,83.5,15.5,356.0,2.99
+TPC-H SF50,paging + reorder,166.69,105.4,61.28,36.77,469.0,33.5,277.0,28.5,130.0,7.14
+ClickBench,paging,101.21,75.57,25.64,25.33,160.0,24.5,55.0,15.0,65.5,15.31
+ClickBench,paging + reorder,101.21,62.67,38.54,38.08,160.0,51.0,38.0,16.5,54.5,31.88

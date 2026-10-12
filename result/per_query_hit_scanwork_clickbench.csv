@@ -1,0 +1,124 @@
+condition,query,hit_pct,scan_work_s
+Baseline,q1,0.0,0.021
+Baseline,q2,0.0,0.018
+Baseline,q3,0.0,0.04
+Baseline,q4,0.0,0.221
+Baseline,q5,0.0,0.219
+Baseline,q6,0.0,0.702
+Baseline,q7,0.0,0.014
+Baseline,q8,0.0,0.018
+Baseline,q9,0.0,0.418
+Baseline,q10,0.0,0.634
+Baseline,q11,0.0,0.483
+Baseline,q12,0.0,0.581
+Baseline,q13,0.0,0.727
+Baseline,q14,0.0,2.024
+Baseline,q15,0.0,0.765
+Baseline,q16,0.0,0.218
+Baseline,q17,0.0,1.15
+Baseline,q18,0.0,1.112
+Baseline,q19,0.0,2.159
+Baseline,q20,0.0,0.222
+Baseline,q21,0.0,4.515
+Baseline,q22,0.0,5.132
+Baseline,q23,0.0,7.771
+Baseline,q24,0.0,18.907
+Baseline,q25,0.0,2.352
+Baseline,q26,0.0,1.494
+Baseline,q27,0.0,1.756
+Baseline,q30,0.0,0.035
+Baseline,q31,0.0,0.701
+Baseline,q32,0.0,2.238
+Baseline,q33,0.0,1.537
+Baseline,q34,0.0,4.438
+Baseline,q35,0.0,4.251
+Baseline,q36,0.0,0.075
+Baseline,q37,0.0,0.73
+Baseline,q38,0.0,0.596
+Baseline,q39,0.0,0.73
+Baseline,q40,0.0,1.212
+Baseline,q41,0.0,0.094
+Baseline,q42,0.0,0.075
+Baseline,q43,0.0,0.069
+Paging,q1,0.0,0.022
+Paging,q2,10.0,0.023
+Paging,q3,100.0,0.019
+Paging,q4,0.0,0.236
+Paging,q5,100.0,0.015
+Paging,q6,0.0,0.781
+Paging,q7,20.0,0.026
+Paging,q8,100.0,0.007
+Paging,q9,66.7,0.134
+Paging,q10,100.0,0.031
+Paging,q11,97.2,0.202
+Paging,q12,80.1,0.124
+Paging,q13,0.0,0.524
+Paging,q14,52.6,0.756
+Paging,q15,25.6,0.308
+Paging,q16,100.0,0.016
+Paging,q17,53.2,0.456
+Paging,q18,52.0,0.632
+Paging,q19,42.6,1.476
+Paging,q20,100.0,0.013
+Paging,q21,0.0,4.523
+Paging,q22,15.0,5.359
+Paging,q23,5.6,5.355
+Paging,q24,4.7,18.11
+Paging,q25,0.0,2.263
+Paging,q26,100.0,0.24
+Paging,q27,100.0,0.101
+Paging,q30,0.0,0.037
+Paging,q31,54.0,0.177
+Paging,q32,65.8,1.232
+Paging,q33,100.0,0.144
+Paging,q34,0.0,4.152
+Paging,q35,5.8,4.735
+Paging,q36,55.9,0.014
+Paging,q37,29.7,0.667
+Paging,q38,11.0,0.636
+Paging,q39,79.6,0.542
+Paging,q40,60.8,0.421
+Paging,q41,39.3,0.113
+Paging,q42,83.3,0.032
+Paging,q43,60.0,0.07
+Paging + reorder,q1,0.0,0.022
+Paging + reorder,q2,100.0,0.007
+Paging + reorder,q3,100.0,0.007
+Paging + reorder,q4,100.0,0.01
+Paging + reorder,q5,100.0,0.009
+Paging + reorder,q6,100.0,0.057
+Paging + reorder,q7,20.0,0.027
+Paging + reorder,q8,100.0,0.007
+Paging + reorder,q9,66.7,0.168
+Paging + reorder,q10,88.8,0.121
+Paging + reorder,q11,97.2,0.206
+Paging + reorder,q12,80.5,0.126
+Paging + reorder,q13,100.0,0.074
+Paging + reorder,q14,58.4,1.03
+Paging + reorder,q15,100.0,0.076
+Paging + reorder,q16,100.0,0.012
+Paging + reorder,q17,100.0,0.081
+Paging + reorder,q18,100.0,0.085
+Paging + reorder,q19,65.8,1.055
+Paging + reorder,q20,100.0,0.012
+Paging + reorder,q21,9.5,4.665
+Paging + reorder,q22,35.0,3.066
+Paging + reorder,q23,9.8,7.539
+Paging + reorder,q24,58.3,16.85
+Paging + reorder,q25,100.0,1.184
+Paging + reorder,q26,100.0,0.237
+Paging + reorder,q27,100.0,0.104
+Paging + reorder,q30,100.0,0.005
+Paging + reorder,q31,89.7,0.091
+Paging + reorder,q32,2.7,2.199
+Paging + reorder,q33,100.0,0.129
+Paging + reorder,q34,0.0,4.631
+Paging + reorder,q35,14.6,4.464
+Paging + reorder,q36,100.0,0.006
+Paging + reorder,q37,33.2,0.85
+Paging + reorder,q38,4.6,0.63
+Paging + reorder,q39,97.0,0.147
+Paging + reorder,q40,0.0,0.82
+Paging + reorder,q41,67.9,0.06
+Paging + reorder,q42,50.0,0.075
+Paging + reorder,q43,100.0,0.01

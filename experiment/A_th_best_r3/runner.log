@@ -1,0 +1,74 @@
+explicit order: q8,q1,q4,q7,q17,q5,q6,q2,q10,q16,q12,q19,q21,q14,q18,q15,q22,q9,q13,q20,q3,q11
+column bytes: 61 columns
+reordered: q8,q5,q7,q15,q14,q6,q17,q20,q11,q2,q16,q9,q18,q22,q13,q3,q10,q4,q21,q12,q1,q19
+[01:28:16.276] Opening DuckDB connection over parquet dir /mnt/nvme/sirius_tpch/tpch_parquet_sf50_optimized
+[01:28:16.284] Registering TPC-H parquet views
+[01:28:16.289] All TPC-H views registered
+[01:28:16.289] Loading Sirius extension from /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension
+[01:28:16.766] Sirius extension loaded
+[celebi_fixed_variable] exec=1/3 pos=1/22 q8 done wall=2.629s
+[celebi_fixed_variable] exec=1/3 pos=2/22 q5 done wall=1.769s
+[celebi_fixed_variable] exec=1/3 pos=3/22 q7 done wall=1.883s
+[celebi_fixed_variable] exec=1/3 pos=4/22 q15 done wall=1.570s
+[celebi_fixed_variable] exec=1/3 pos=5/22 q14 done wall=0.941s
+[celebi_fixed_variable] exec=1/3 pos=6/22 q6 done wall=0.527s
+[celebi_fixed_variable] exec=1/3 pos=7/22 q17 done wall=0.910s
+[celebi_fixed_variable] exec=1/3 pos=8/22 q20 done wall=1.104s
+[celebi_fixed_variable] exec=1/3 pos=9/22 q11 done wall=0.334s
+[celebi_fixed_variable] exec=1/3 pos=10/22 q2 done wall=0.244s
+[celebi_fixed_variable] exec=1/3 pos=11/22 q16 done wall=0.224s
+[celebi_fixed_variable] exec=1/3 pos=12/22 q9 done wall=1.952s
+[celebi_fixed_variable] exec=1/3 pos=13/22 q18 done wall=1.094s
+[celebi_fixed_variable] exec=1/3 pos=14/22 q22 done wall=0.223s
+[celebi_fixed_variable] exec=1/3 pos=15/22 q13 done wall=1.236s
+[celebi_fixed_variable] exec=1/3 pos=16/22 q3 done wall=1.417s
+[celebi_fixed_variable] exec=1/3 pos=17/22 q10 done wall=1.203s
+[celebi_fixed_variable] exec=1/3 pos=18/22 q4 done wall=0.597s
+[celebi_fixed_variable] exec=1/3 pos=19/22 q21 done wall=3.024s
+[celebi_fixed_variable] exec=1/3 pos=20/22 q12 done wall=1.031s
+[celebi_fixed_variable] exec=1/3 pos=21/22 q1 done wall=2.115s
+[celebi_fixed_variable] exec=1/3 pos=22/22 q19 done wall=1.457s
+[celebi_fixed_variable] exec=2/3 pos=1/22 q8 done wall=1.811s
+[celebi_fixed_variable] exec=2/3 pos=2/22 q5 done wall=1.496s
+[celebi_fixed_variable] exec=2/3 pos=3/22 q7 done wall=1.711s
+[celebi_fixed_variable] exec=2/3 pos=4/22 q15 done wall=1.124s
+[celebi_fixed_variable] exec=2/3 pos=5/22 q14 done wall=0.911s
+[celebi_fixed_variable] exec=2/3 pos=6/22 q6 done wall=0.597s
+[celebi_fixed_variable] exec=2/3 pos=7/22 q17 done wall=0.800s
+[celebi_fixed_variable] exec=2/3 pos=8/22 q20 done wall=1.003s
+[celebi_fixed_variable] exec=2/3 pos=9/22 q11 done wall=0.314s
+[celebi_fixed_variable] exec=2/3 pos=10/22 q2 done wall=0.182s
+[celebi_fixed_variable] exec=2/3 pos=11/22 q16 done wall=0.185s
+[celebi_fixed_variable] exec=2/3 pos=12/22 q9 done wall=1.943s
+[celebi_fixed_variable] exec=2/3 pos=13/22 q18 done wall=1.062s
+[celebi_fixed_variable] exec=2/3 pos=14/22 q22 done wall=0.182s
+[celebi_fixed_variable] exec=2/3 pos=15/22 q13 done wall=1.041s
+[celebi_fixed_variable] exec=2/3 pos=16/22 q3 done wall=1.304s
+[celebi_fixed_variable] exec=2/3 pos=17/22 q10 done wall=1.205s
+[celebi_fixed_variable] exec=2/3 pos=18/22 q4 done wall=0.465s
+[celebi_fixed_variable] exec=2/3 pos=19/22 q21 done wall=2.735s
+[celebi_fixed_variable] exec=2/3 pos=20/22 q12 done wall=0.676s
+[celebi_fixed_variable] exec=2/3 pos=21/22 q1 done wall=1.478s
+[celebi_fixed_variable] exec=2/3 pos=22/22 q19 done wall=1.195s
+[celebi_fixed_variable] exec=3/3 pos=1/22 q8 done wall=1.831s
+[celebi_fixed_variable] exec=3/3 pos=2/22 q5 done wall=1.456s
+[celebi_fixed_variable] exec=3/3 pos=3/22 q7 done wall=1.599s
+[celebi_fixed_variable] exec=3/3 pos=4/22 q15 done wall=1.113s
+[celebi_fixed_variable] exec=3/3 pos=5/22 q14 done wall=0.909s
+[celebi_fixed_variable] exec=3/3 pos=6/22 q6 done wall=0.567s
+[celebi_fixed_variable] exec=3/3 pos=7/22 q17 done wall=0.821s
+[celebi_fixed_variable] exec=3/3 pos=8/22 q20 done wall=1.011s
+[celebi_fixed_variable] exec=3/3 pos=9/22 q11 done wall=0.334s
+[celebi_fixed_variable] exec=3/3 pos=10/22 q2 done wall=0.193s
+[celebi_fixed_variable] exec=3/3 pos=11/22 q16 done wall=0.194s
+[celebi_fixed_variable] exec=3/3 pos=12/22 q9 done wall=2.021s
+[celebi_fixed_variable] exec=3/3 pos=13/22 q18 done wall=1.022s
+[celebi_fixed_variable] exec=3/3 pos=14/22 q22 done wall=0.183s
+[celebi_fixed_variable] exec=3/3 pos=15/22 q13 done wall=1.033s
+[celebi_fixed_variable] exec=3/3 pos=16/22 q3 done wall=1.379s
+[celebi_fixed_variable] exec=3/3 pos=17/22 q10 done wall=1.144s
+[celebi_fixed_variable] exec=3/3 pos=18/22 q4 done wall=0.496s
+[celebi_fixed_variable] exec=3/3 pos=19/22 q21 done wall=2.711s
+[celebi_fixed_variable] exec=3/3 pos=20/22 q12 done wall=0.657s
+[celebi_fixed_variable] exec=3/3 pos=21/22 q1 done wall=1.579s
+[celebi_fixed_variable] exec=3/3 pos=22/22 q19 done wall=1.223s

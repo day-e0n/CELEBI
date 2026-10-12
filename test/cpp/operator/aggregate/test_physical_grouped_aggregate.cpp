@@ -18,6 +18,7 @@
 #include "../operator_type_traits.hpp"
 #include "aggregate_test_utils.hpp"
 #include "data/data_batch_utils.hpp"
+#include "op/aggregate/gpu_aggregate_impl.hpp"
 #include "utils/test_validation_utility.hpp"
 
 #include <cudf/table/table.hpp>
@@ -26,6 +27,7 @@
 #include <op/sirius_physical_grouped_aggregate.hpp>
 
 #include <algorithm>
+#include <limits>
 
 using namespace duckdb;
 using namespace sirius::op;
@@ -37,6 +39,87 @@ namespace {
 using namespace sirius::test::operator_utils;
 
 }  // namespace
+
+TEMPLATE_TEST_CASE("grouped AVG keeps DECIMAL128 partial sums for safe and overflowing inputs",
+                   "[physical_grouped_aggregate][avg_accumulator]",
+                   int64_t,
+                   uint64_t)
+{
+  auto manager = sirius::test::operator_utils::initialize_memory_manager();
+  auto* space  = manager->get_memory_space(cucascade::memory::Tier::GPU, 0);
+  auto stream  = sirius::test::operator_utils::default_stream();
+  auto mr      = sirius::test::operator_utils::get_resource_ref(*space);
+  using T      = TestType;
+  auto const dtype =
+    cudf::data_type{std::is_signed_v<T> ? cudf::type_id::INT64 : cudf::type_id::UINT64};
+  std::vector<std::vector<T>> cases{{T{100}, T{200}},
+                                    {std::numeric_limits<T>::max(), std::numeric_limits<T>::max()}};
+  if constexpr (std::is_signed_v<T>) {
+    cases.push_back({std::numeric_limits<T>::min(), std::numeric_limits<T>::min()});
+    cases.push_back({std::numeric_limits<T>::max(), std::numeric_limits<T>::min()});
+    cases.push_back({T{-100}, T{200}});
+  }
+  for (auto const& values : cases) {
+    for (bool all_null : {false, true}) {
+      std::vector<std::unique_ptr<cudf::column>> columns;
+      columns.push_back(cudf::make_column_from_scalar(
+        cudf::numeric_scalar<int32_t>{0, true, stream, mr}, values.size(), stream, mr));
+      auto value_column = cudf::make_fixed_width_column(
+        dtype,
+        values.size(),
+        all_null ? cudf::mask_state::ALL_NULL : cudf::mask_state::UNALLOCATED,
+        stream,
+        mr);
+      REQUIRE(cudaMemcpyAsync(value_column->mutable_view().template data<T>(),
+                              values.data(),
+                              values.size() * sizeof(T),
+                              cudaMemcpyHostToDevice,
+                              stream.value()) == cudaSuccess);
+      columns.push_back(std::move(value_column));
+      auto input =
+        sirius::make_data_batch(std::make_unique<cudf::table>(std::move(columns)), *space, stream);
+      auto output = gpu_aggregate_impl::local_grouped_aggregate(
+        input->to_read_only(),
+        {0},
+        {cudf::aggregation::Kind::SUM, cudf::aggregation::Kind::COUNT_VALID},
+        {1, 1},
+        {},
+        {true, false},
+        stream,
+        *space);
+      auto read_only = output->to_read_only();
+      auto view      = sirius::get_cudf_table_view(read_only);
+      REQUIRE(view.num_rows() == 1);
+      REQUIRE(view.column(1).type().id() == cudf::type_id::DECIMAL128);
+      REQUIRE(view.column(2).type().id() == cudf::type_id::INT64);
+      int64_t count = -1;
+      REQUIRE(cudaMemcpyAsync(&count,
+                              view.column(2).template data<int64_t>(),
+                              sizeof(count),
+                              cudaMemcpyDeviceToHost,
+                              stream.value()) == cudaSuccess);
+      __int128 sum = 0;
+      if (!all_null) {
+        REQUIRE(cudaMemcpyAsync(&sum,
+                                view.column(1).template data<__int128>(),
+                                sizeof(sum),
+                                cudaMemcpyDeviceToHost,
+                                stream.value()) == cudaSuccess);
+      }
+      stream.synchronize();
+      REQUIRE(count == (all_null ? 0 : static_cast<int64_t>(values.size())));
+      if (all_null) {
+        REQUIRE(view.column(1).null_count() == 1);
+      } else {
+        __int128 expected = 0;
+        for (T value : values) {
+          expected += static_cast<__int128>(value);
+        }
+        REQUIRE(sum == expected);
+      }
+    }
+  }
+}
 
 TEMPLATE_TEST_CASE(
   "sirius_physical_grouped_aggregate grouped aggregates data_batch with single partition key, "

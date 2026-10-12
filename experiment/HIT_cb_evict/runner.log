@@ -1,0 +1,172 @@
+query set: /home/dy1013/sirius_multi-gpu/test/tpch_performance/clickbench_queries.py
+column set: clickbench_pin_columns: 43 queries, 20 fixed-width columns
+explicit order: q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,q11,q12,q13,q14,q15,q16,q17,q18,q19,q20,q21,q22,q23,q24,q25,q26,q27,q30,q31,q32,q33,q34,q35,q36,q37,q38,q39,q40,q41,q42,q43
+[celebi_fixed_variable] exec=1/3 pos=1/41 q1 done wall=0.102s
+[celebi_fixed_variable] exec=1/3 pos=2/41 q2 done wall=0.081s
+[celebi_fixed_variable] exec=1/3 pos=3/41 q3 done wall=0.111s
+[celebi_fixed_variable] exec=1/3 pos=4/41 q4 done wall=0.172s
+[celebi_fixed_variable] exec=1/3 pos=5/41 q5 done wall=0.111s
+[celebi_fixed_variable] exec=1/3 pos=6/41 q6 done wall=0.608s
+[celebi_fixed_variable] exec=1/3 pos=7/41 q7 done wall=0.081s
+[celebi_fixed_variable] exec=1/3 pos=8/41 q8 done wall=0.071s
+[celebi_fixed_variable] exec=1/3 pos=9/41 q9 done wall=0.172s
+[celebi_fixed_variable] exec=1/3 pos=10/41 q10 done wall=0.162s
+[celebi_fixed_variable] exec=1/3 pos=11/41 q11 done wall=0.354s
+[celebi_fixed_variable] exec=1/3 pos=12/41 q12 done wall=0.101s
+[celebi_fixed_variable] exec=1/3 pos=13/41 q13 done wall=0.233s
+[celebi_fixed_variable] exec=1/3 pos=14/41 q14 done wall=1.113s
+[celebi_fixed_variable] exec=1/3 pos=15/41 q15 done wall=0.162s
+[celebi_fixed_variable] exec=1/3 pos=16/41 q16 done wall=0.112s
+[celebi_fixed_variable] exec=1/3 pos=17/41 q17 done wall=0.242s
+[celebi_fixed_variable] exec=1/3 pos=18/41 q18 done wall=0.253s
+[celebi_fixed_variable] exec=1/3 pos=19/41 q19 done wall=0.576s
+[celebi_fixed_variable] exec=1/3 pos=20/41 q20 done wall=0.051s
+[celebi_fixed_variable] exec=1/3 pos=21/41 q21 done wall=1.335s
+[celebi_fixed_variable] exec=1/3 pos=22/41 q22 done wall=1.334s
+[celebi_fixed_variable] exec=1/3 pos=23/41 q23 done wall=3.237s
+[celebi_fixed_variable] exec=1/3 pos=24/41 q24 done wall=8.379s
+[celebi_fixed_variable] exec=1/3 pos=25/41 q25 done wall=0.485s
+[celebi_fixed_variable] exec=1/3 pos=26/41 q26 done wall=0.809s
+[celebi_fixed_variable] exec=1/3 pos=27/41 q27 done wall=0.152s
+[celebi_fixed_variable] exec=1/3 pos=28/41 q30 done wall=0.102s
+[celebi_fixed_variable] exec=1/3 pos=29/41 q31 done wall=0.234s
+[celebi_fixed_variable] exec=1/3 pos=30/41 q32 done wall=0.496s
+[celebi_fixed_variable] exec=1/3 pos=31/41 q33 done wall=0.838s
+[celebi_fixed_variable] exec=1/3 pos=32/41 q34 done wall=1.780s
+[celebi_fixed_variable] exec=1/3 pos=33/41 q35 done wall=1.784s
+[celebi_fixed_variable] exec=1/3 pos=34/41 q36 done wall=0.193s
+[celebi_fixed_variable] exec=1/3 pos=35/41 q37 done wall=0.466s
+[celebi_fixed_variable] exec=1/3 pos=36/41 q38 done wall=0.558s
+[celebi_fixed_variable] exec=1/3 pos=37/41 q39 done wall=0.477s
+[celebi_fixed_variable] exec=1/3 pos=38/41 q40 done wall=0.730s
+[celebi_fixed_variable] exec=1/3 pos=39/41 q41 done wall=0.162s
+[celebi_fixed_variable] exec=1/3 pos=40/41 q42 done wall=0.102s
+[celebi_fixed_variable] exec=1/3 pos=41/41 q43 done wall=0.132s
+[celebi_fixed_variable] exec=2/3 pos=1/41 q1 done wall=0.081s
+[celebi_fixed_variable] exec=2/3 pos=2/41 q2 done wall=0.081s
+[celebi_fixed_variable] exec=2/3 pos=3/41 q3 done wall=0.102s
+[celebi_fixed_variable] exec=2/3 pos=4/41 q4 done wall=0.183s
+[celebi_fixed_variable] exec=2/3 pos=5/41 q5 done wall=0.101s
+[celebi_fixed_variable] exec=2/3 pos=6/41 q6 done wall=0.364s
+[celebi_fixed_variable] exec=2/3 pos=7/41 q7 done wall=0.081s
+[celebi_fixed_variable] exec=2/3 pos=8/41 q8 done wall=0.061s
+[celebi_fixed_variable] exec=2/3 pos=9/41 q9 done wall=0.172s
+[celebi_fixed_variable] exec=2/3 pos=10/41 q10 done wall=0.162s
+[celebi_fixed_variable] exec=2/3 pos=11/41 q11 done wall=0.142s
+[celebi_fixed_variable] exec=2/3 pos=12/41 q12 done wall=0.162s
+[celebi_fixed_variable] exec=2/3 pos=13/41 q13 done wall=0.375s
+[celebi_fixed_variable] exec=2/3 pos=14/41 q14 done wall=1.103s
+[celebi_fixed_variable] exec=2/3 pos=15/41 q15 done wall=0.152s
+[celebi_fixed_variable] exec=2/3 pos=16/41 q16 done wall=0.111s
+[celebi_fixed_variable] exec=2/3 pos=17/41 q17 done wall=0.243s
+[celebi_fixed_variable] exec=2/3 pos=18/41 q18 done wall=0.253s
+[celebi_fixed_variable] exec=2/3 pos=19/41 q19 done wall=0.545s
+[celebi_fixed_variable] exec=2/3 pos=20/41 q20 done wall=0.051s
+[celebi_fixed_variable] exec=2/3 pos=21/41 q21 done wall=1.234s
+[celebi_fixed_variable] exec=2/3 pos=22/41 q22 done wall=1.598s
+[celebi_fixed_variable] exec=2/3 pos=23/41 q23 done wall=3.164s
+[celebi_fixed_variable] exec=2/3 pos=24/41 q24 done wall=8.320s
+[celebi_fixed_variable] exec=2/3 pos=25/41 q25 done wall=0.486s
+[celebi_fixed_variable] exec=2/3 pos=26/41 q26 done wall=0.820s
+[celebi_fixed_variable] exec=2/3 pos=27/41 q27 done wall=0.162s
+[celebi_fixed_variable] exec=2/3 pos=28/41 q30 done wall=0.102s
+[celebi_fixed_variable] exec=2/3 pos=29/41 q31 done wall=0.202s
+[celebi_fixed_variable] exec=2/3 pos=30/41 q32 done wall=0.486s
+[celebi_fixed_variable] exec=2/3 pos=31/41 q33 done wall=1.011s
+[celebi_fixed_variable] exec=2/3 pos=32/41 q34 done wall=1.776s
+[celebi_fixed_variable] exec=2/3 pos=33/41 q35 done wall=1.782s
+[celebi_fixed_variable] exec=2/3 pos=34/41 q36 done wall=0.193s
+[celebi_fixed_variable] exec=2/3 pos=35/41 q37 done wall=0.476s
+[celebi_fixed_variable] exec=2/3 pos=36/41 q38 done wall=0.395s
+[celebi_fixed_variable] exec=2/3 pos=37/41 q39 done wall=0.455s
+[celebi_fixed_variable] exec=2/3 pos=38/41 q40 done wall=0.719s
+[celebi_fixed_variable] exec=2/3 pos=39/41 q41 done wall=0.162s
+[celebi_fixed_variable] exec=2/3 pos=40/41 q42 done wall=0.102s
+[celebi_fixed_variable] exec=2/3 pos=41/41 q43 done wall=0.131s
+[celebi_fixed_variable] exec=3/3 pos=1/41 q1 done wall=0.081s
+[celebi_fixed_variable] exec=3/3 pos=2/41 q2 done wall=0.082s
+[celebi_fixed_variable] exec=3/3 pos=3/41 q3 done wall=0.101s
+[celebi_fixed_variable] exec=3/3 pos=4/41 q4 done wall=0.182s
+[celebi_fixed_variable] exec=3/3 pos=5/41 q5 done wall=0.112s
+[celebi_fixed_variable] exec=3/3 pos=6/41 q6 done wall=0.365s
+[celebi_fixed_variable] exec=3/3 pos=7/41 q7 done wall=0.091s
+[celebi_fixed_variable] exec=3/3 pos=8/41 q8 done wall=0.061s
+[celebi_fixed_variable] exec=3/3 pos=9/41 q9 done wall=0.172s
+[celebi_fixed_variable] exec=3/3 pos=10/41 q10 done wall=0.162s
+[celebi_fixed_variable] exec=3/3 pos=11/41 q11 done wall=0.152s
+[celebi_fixed_variable] exec=3/3 pos=12/41 q12 done wall=0.162s
+[celebi_fixed_variable] exec=3/3 pos=13/41 q13 done wall=0.375s
+[celebi_fixed_variable] exec=3/3 pos=14/41 q14 done wall=1.114s
+[celebi_fixed_variable] exec=3/3 pos=15/41 q15 done wall=0.162s
+[celebi_fixed_variable] exec=3/3 pos=16/41 q16 done wall=0.111s
+[celebi_fixed_variable] exec=3/3 pos=17/41 q17 done wall=0.243s
+[celebi_fixed_variable] exec=3/3 pos=18/41 q18 done wall=0.233s
+[celebi_fixed_variable] exec=3/3 pos=19/41 q19 done wall=0.547s
+[celebi_fixed_variable] exec=3/3 pos=20/41 q20 done wall=0.051s
+[celebi_fixed_variable] exec=3/3 pos=21/41 q21 done wall=1.235s
+[celebi_fixed_variable] exec=3/3 pos=22/41 q22 done wall=1.529s
+[celebi_fixed_variable] exec=3/3 pos=23/41 q23 done wall=3.168s
+[celebi_fixed_variable] exec=3/3 pos=24/41 q24 done wall=8.385s
+[celebi_fixed_variable] exec=3/3 pos=25/41 q25 done wall=0.537s
+[celebi_fixed_variable] exec=3/3 pos=26/41 q26 done wall=0.809s
+[celebi_fixed_variable] exec=3/3 pos=27/41 q27 done wall=0.152s
+[celebi_fixed_variable] exec=3/3 pos=28/41 q30 done wall=0.091s
+[celebi_fixed_variable] exec=3/3 pos=29/41 q31 done wall=0.193s
+[celebi_fixed_variable] exec=3/3 pos=30/41 q32 done wall=0.467s
+[celebi_fixed_variable] exec=3/3 pos=31/41 q33 done wall=1.012s
+[celebi_fixed_variable] exec=3/3 pos=32/41 q34 done wall=1.702s
+[celebi_fixed_variable] exec=3/3 pos=33/41 q35 done wall=1.843s
+[celebi_fixed_variable] exec=3/3 pos=34/41 q36 done wall=0.193s
+[celebi_fixed_variable] exec=3/3 pos=35/41 q37 done wall=0.467s
+[celebi_fixed_variable] exec=3/3 pos=36/41 q38 done wall=0.416s
+[celebi_fixed_variable] exec=3/3 pos=37/41 q39 done wall=0.477s
+[celebi_fixed_variable] exec=3/3 pos=38/41 q40 done wall=0.720s
+[celebi_fixed_variable] exec=3/3 pos=39/41 q41 done wall=0.162s
+[celebi_fixed_variable] exec=3/3 pos=40/41 q42 done wall=0.091s
+[celebi_fixed_variable] exec=3/3 pos=41/41 q43 done wall=0.122s
+
+*** SIGSEGV — backtrace from faulting thread ***
+Faulting thread id:189269
+  #0   /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x8a7916) [0x7000e0ca7916]
+  #1   /lib/x86_64-linux-gnu/libc.so.6(+0x45330) [0x700116a45330]
+  #2   /lib/x86_64-linux-gnu/libcuda.so.1(+0x2e0c4b) [0x7000c18e0c4b]
+  #3   /lib/x86_64-linux-gnu/libcuda.so.1(+0x1d599d) [0x7000c17d599d]
+  #4   /lib/x86_64-linux-gnu/libcuda.so.1(+0x3dba8f) [0x7000c19dba8f]
+  #5   /lib/x86_64-linux-gnu/libcuda.so.1(+0x38ba83) [0x7000c198ba83]
+  #6   /lib/x86_64-linux-gnu/libcuda.so.1(cuMemFreeAsync+0x1a) [0x7000c196a11a]
+  #7   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(+0x5a9f0) [0x7000e9d499f0]
+  #8   /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(+0xc96ab) [0x7000e9db86ab]
+  #9   rmm::mr::detail::cuda_async_memory_resource_impl::deallocate(cuda::__4::stream_ref, void*, unsigned long, unsigned long) at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(_ZN3rmm2mr6detail31cuda_async_memory_resource_impl10deallocateEN4cuda3__410stream_refEPvmm+0x12) [0x7000e9d313f2]
+  #10  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x1fb171b) [0x7000e23b171b]
+  #11  rmm::device_buffer::deallocate_async() at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(_ZN3rmm13device_buffer16deallocate_asyncEv+0xd2) [0x7000e9d161b2]
+  #12  rmm::device_buffer::~device_buffer() at /home/dy1013/sirius_multi-gpu/.pixi/envs/default/lib/librmm.so(_ZN3rmm13device_bufferD2Ev+0x34) [0x7000e9d162d4]
+  #13  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x5d5f27) [0x7000e09d5f27]
+  #14  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x811f28) [0x7000e0c11f28]
+  #15  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x83a285) [0x7000e0c3a285]
+  #16  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x86db53) [0x7000e0c6db53]
+  #17  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x86e1a5) [0x7000e0c6e1a5]
+  #18  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x5d5f27) [0x7000e09d5f27]
+  #19  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x86cdd6) [0x7000e0c6cdd6]
+  #20  /home/dy1013/sirius_multi-gpu/build/release/extension/sirius/sirius.duckdb_extension(+0x1739813) [0x7000e1b39813]
+  #21  duckdb::ExtensionCallbackManager::~ExtensionCallbackManager() at /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb24ExtensionCallbackManagerD1Ev+0x51) [0x700114a5f8c1]
+  #22  duckdb::DBConfig::~DBConfig() at /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb8DBConfigD1Ev+0xce) [0x700114a7832e]
+  #23  duckdb::DatabaseInstance::~DatabaseInstance() at /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb16DatabaseInstanceD1Ev+0x8cd) [0x700114a7915d]
+  #24  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xb9f18a) [0x700112f9f18a]
+  #25  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbb8377) [0x700112fb8377]
+  #26  duckdb::DuckDBPyConnection::Close() at /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(_ZN6duckdb18DuckDBPyConnection5CloseEv+0xe1) [0x700113028581]
+  #27  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xc41a34) [0x700113041a34]
+  #28  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/lib/python3.14/site-packages/_duckdb.cpython-314-x86_64-linux-gnu.so(+0xbafc74) [0x700112fafc74]
+  #29  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(PyObject_Vectorcall+0x2e) [0x61bdda11ba5e]
+  #30  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(_PyEval_EvalFrameDefault+0xced) [0x61bdda12c88d]
+  #31  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x1d57c8) [0x61bdda1297c8]
+  #32  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(PyEval_EvalCode+0xb5) [0x61bdda205e05]
+  #33  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x2f3f4d) [0x61bdda247f4d]
+  #34  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x2f31c8) [0x61bdda2471c8]
+  #35  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x2f2d2f) [0x61bdda246d2f]
+  #36  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x2f297d) [0x61bdda24697d]
+  #37  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(Py_RunMain+0x2b9) [0x61bdda1f5119]
+  #38  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(Py_BytesMain+0x37) [0x61bdda1ef367]
+  #39  /lib/x86_64-linux-gnu/libc.so.6(+0x2a1ca) [0x700116a2a1ca]
+  #40  /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x8b) [0x700116a2a28b]
+  #41  /home/dy1013/sirius_multi-gpu/.pixi/envs/duckdb-python/bin/python(+0x29a72a) [0x61bdda1ee72a]
+*** end backtrace ***

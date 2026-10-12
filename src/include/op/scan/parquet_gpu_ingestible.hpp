@@ -241,6 +241,12 @@ class parquet_file_scan_info : public scan_info {
  */
 class parquet_gpu_ingestible : public gpu_ingestible {
  public:
+  /// LATE_MATERIALIZATION re-fetch scan: emits file_row_number and a join publishes into its
+  /// dynamic-filter channel. Its splits should wait for that filter (see the scan coalescer).
+  [[nodiscard]] bool waits_for_row_id_filter() const;
+  /// The file_row_number filter the re-fetch scan prunes with has been published.
+  [[nodiscard]] bool row_id_filter_published() const;
+
   /// Built by @c parquet_ingestible_table_info::make_ingestible. The base
   /// @c _table_info owns the parquet bind data; this constructor casts it
   /// back to @c parquet_ingestible_table_info for typed access.
@@ -317,7 +323,8 @@ class parquet_gpu_ingestible : public gpu_ingestible {
                                      const cucascade::memory::memory_space& mem_space,
                                      rmm::cuda_stream_view stream,
                                      bool reader_applied_filter,
-                                    std::vector<row_group_slice> const& rg_slices);
+                                     bool reader_applied_dynamic_filter,
+                                     std::vector<row_group_slice> const& rg_slices);
 
   std::unique_ptr<parquet_ingestible_table_info> _info;
 
@@ -364,6 +371,12 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   // AST-capable filters are ANDed into the parquet reader filter; membership filtering happens in
   // the downstream dynamic-filter operator.
   std::shared_ptr<sirius::op::sirius_dynamic_filter_set> _sirius_dynamic_filters;
+
+  /// LATE_MATERIALIZATION re-fetch: read only @p rows (sorted file row numbers) of @p split.
+  filtered_table read_row_numbers(parquet_split_info const& split,
+                                  std::vector<std::int64_t> const& rows,
+                                  cucascade::memory::memory_space const& mem_space,
+                                  rmm::cuda_stream_view stream);
   scan_manager::sirius_scan_manager* _scan_manager{nullptr};
 };
 

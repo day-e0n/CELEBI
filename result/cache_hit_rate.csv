@@ -1,0 +1,9 @@
+workload,condition,total_gib,read_gib,served_gib,byte_hit_pct,batches,full_batches,splice_batches,partial_batches,miss_batches,batch_hit_pct
+TPC-H SF50,paging,175.2,160.68,14.53,8.29,469.0,9.0,78.5,22.5,359.0,1.92
+TPC-H SF50,paging + order-aware,175.2,150.96,24.25,13.84,469.0,7.0,126.0,37.5,298.5,1.49
+TPC-H SF50,paging + reorder (LRU eviction),175.2,151.05,24.15,13.79,469.0,20.0,92.0,47.5,309.5,4.26
+TPC-H SF50,paging + reorder,175.2,128.53,46.68,26.64,469.0,32.0,175.0,42.0,220.0,6.82
+ClickBench,paging,165.97,140.86,25.11,15.13,156.0,29.0,40.0,13.0,74.0,18.59
+ClickBench,paging + order-aware,165.97,143.12,22.84,13.76,156.0,33.0,32.5,9.5,81.0,21.15
+ClickBench,paging + reorder (LRU eviction),165.97,135.33,30.64,18.46,156.0,46.5,30.0,8.5,71.0,29.81
+ClickBench,paging + reorder,165.97,137.66,28.31,17.06,156.0,44.5,30.5,12.0,69.0,28.53

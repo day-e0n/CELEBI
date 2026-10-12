@@ -1,0 +1,4 @@
+Running hit cb r1 paging_lru
+{"workload": "cb", "condition": "paging_lru", "trace_mode": "hit", "run": 1, "status": "incomplete", "status_counts": {"ok": 129}, "comparison_valid": false, "steady_state_workload_wall_s": null}
+Running hit cb r1 reorder_future
+{"workload": "cb", "condition": "reorder_future", "trace_mode": "hit", "run": 1, "status": "incomplete", "status_counts": {"ok": 129}, "comparison_valid": false, "steady_state_workload_wall_s": null}

@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <cstdint>
+#include <utility>
+#include <optional>
 #include "op/dynamic_filter_replica_space.hpp"
 
 // cudf
@@ -308,6 +311,22 @@ class sirius_dynamic_in_list_filter final : public sirius_dynamic_filter,
   /// True when the persistent probe structure was built — exposed for tests.
   [[nodiscard]] bool has_persistent_set() const noexcept;
 
+  /// [min, max] of the build keys, recorded at construction. A consumer that can prune by range
+  /// before decoding (a LATE_MATERIALIZATION re-fetch scan pruning row groups by file_row_number)
+  /// reads it on the host instead of probing the set.
+  [[nodiscard]] std::optional<std::pair<std::int64_t, std::int64_t>> key_bounds() const noexcept
+  {
+    return _bounds;
+  }
+
+  /// The build keys on the host, sorted, when there are few of them (kHostKeyLimit). A
+  /// LATE_MATERIALIZATION re-fetch scan reads exactly these rows instead of their row groups.
+  [[nodiscard]] std::vector<std::int64_t> const* host_keys() const noexcept
+  {
+    return _host_keys ? &*_host_keys : nullptr;
+  }
+  static constexpr std::size_t kHostKeyLimit = 4096;
+
   /// Whether @p keys can back the persistent exact membership set.
   [[nodiscard]] static bool supports(cudf::column_view const& keys) noexcept;
 
@@ -321,6 +340,8 @@ class sirius_dynamic_in_list_filter final : public sirius_dynamic_filter,
  private:
   cudf::data_type _key_type{cudf::type_id::EMPTY};
   std::size_t _num_keys = 0;
+  std::optional<std::pair<std::int64_t, std::int64_t>> _bounds;
+  std::optional<std::vector<std::int64_t>> _host_keys;
 
   /// Persistent cuco::static_set over INT32 or INT64 keys; PIMPL'd so cuCollections device code
   /// stays in the .cu translation unit.

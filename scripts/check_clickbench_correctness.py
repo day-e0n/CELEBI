@@ -127,9 +127,21 @@ def main() -> int:
     else:
         order = sorted(expected)
 
+    # CHECK_FUTURE_CACHE=evict|admit: drive the page cache with the same future hints the
+    # benchmark runners send (scripts/future_cache_hints.py, horizon = this execution).
+    future_cache = os.environ.get("CHECK_FUTURE_CACHE", "")
+    if future_cache:
+        import cache_aware_query_reorder as reorder
+        reorder.load_column_set("clickbench_pin_columns")
+        from future_cache_hints import hint_spec
+        print(f"future cache: {future_cache}", flush=True)
+
     mismatches = []
     for execution in range(1, EXECUTIONS + 1):
-        for q in order:
+        for position, q in enumerate(order, start=1):
+            if future_cache:
+                spec = hint_spec(future_cache, order, EXECUTIONS, execution, position, "execution")
+                con.execute(f"CALL sirius_set_cache_hints('{spec}')")
             got = con.execute(QUERIES[f"q{q}"]).fetchall()
             same, why = results_match(expected[q], got)
             if not same:
@@ -137,12 +149,14 @@ def main() -> int:
                 print(f"  MISMATCH exec={execution} q{q}: {why}", flush=True)
         print(f"execution {execution}/{EXECUTIONS} done "
               f"({len(mismatches)} mismatches so far)", flush=True)
-    con.close()
 
+    # Verdict before close(): a crash while the engine shuts down must not hide it.
     if mismatches:
-        print(f"\nFAIL: {len(mismatches)} mismatching (execution, query) pairs")
+        print(f"\nFAIL: {len(mismatches)} mismatching (execution, query) pairs", flush=True)
+        con.close()
         return 1
-    print(f"\nOK: {len(expected)} queries x {EXECUTIONS} executions all match CPU")
+    print(f"\nOK: {len(expected)} queries x {EXECUTIONS} executions all match CPU", flush=True)
+    con.close()
     return 0
 
 

@@ -16,6 +16,7 @@
 
 // sirius
 #include "op/scan/gpu_ingestible_types.hpp"
+#include "op/scan/cache_hit_metrics.hpp"
 #include "op/scan/owning_table_view.hpp"
 
 #include <expression/ast/from_duckdb.hpp>
@@ -35,10 +36,17 @@
 #include <op/scan/scan_utils.hpp>
 #include <op/scan/sirius_gpu_scan_operator_data.hpp>
 #include <op/sirius_dynamic_filter.hpp>
+
+#include <cudf/column/column_factories.hpp>
+#include <cudf/filling.hpp>
+#include <cudf/scalar/scalar.hpp>
+#include <cudf/strings/strings_column_view.hpp>
+#include <cudf/utilities/traits.hpp>
 #include <scan_manager/sirius_scan_manager.hpp>
 
 // cudf
 #include <cudf/io/datasource.hpp>
+#include <cudf/concatenate.hpp>
 #include <cudf/io/parquet.hpp>
 #include <cudf/io/parquet_io_utils.hpp>
 #include <cudf/io/parquet_schema.hpp>
@@ -63,7 +71,9 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <map>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -137,6 +147,54 @@ bool fixed_page_direct_auto_populate_enabled()
   return value == nullptr || std::string_view(value) != "0";
 }
 
+/// Also populate the pinned-entry store for a batch the flat page store has already taken.
+/// Off by default: every batch was being deep-copied into both stores, and the pinned one
+/// served 0 of 123 reuse attempts on ClickBench and 3 of 252 on TPC-H SF50 while holding
+/// 1.47GiB on average outside the eviction the page store gets. Set to 1 to A/B the old
+/// behaviour. Batches the page store cannot take (multi-slice) still go to the pinned store.
+bool pinned_entry_cache_for_paged_batches_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_PINNED_ENTRY_CACHE");
+  return value != nullptr && std::string_view(value) == "1";
+}
+
+/// Let string-only batches into the page store (see auto_cache_materialized_table). On by
+/// default; set to 0 to refuse them as before.
+bool page_store_string_only_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_PAGE_STORE_STRING_ONLY");
+  return value == nullptr || std::string_view(value) != "0";
+}
+
+/// Serve the pages a column has and read only the rows it lacks (HANDOFF B4). On by default;
+/// SIRIUS_PAGE_PARTIAL_SERVE=0 falls back to reading such a column whole.
+bool page_partial_serve_enabled()
+{
+  auto const* value = std::getenv("SIRIUS_PAGE_PARTIAL_SERVE");
+  return value == nullptr || std::string_view(value) != "0";
+}
+
+using cache_hit_metrics::cache_hit_trace_enabled;
+using cache_hit_metrics::decoded_table_bytes;
+
+bool scan_prep_sync_enabled()
+{
+  static bool const on = [] {
+    auto const* value = std::getenv("SIRIUS_SCAN_PREP_SYNC");
+    return value != nullptr && std::string_view(value) == "1";
+  }();
+  return on;
+}
+
+bool scan_cache_trace_enabled()
+{
+  static bool const on = [] {
+    auto const* v = std::getenv("SIRIUS_SCAN_CACHE_TRACE");
+    return v != nullptr && v[0] == '1';
+  }();
+  return on;
+}
+
 bool fixed_page_hybrid_provider_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_HYBRID_PROVIDER");
@@ -155,10 +213,14 @@ bool fixed_page_hybrid_provider_enabled()
 ///
 /// The trade is I/O and memory: the reader stops skipping rows, so every scan
 /// reads its columns whole and the cached entry is the full column, not a subset.
+/// Cache the rows of a cacheable scan before the predicate and filter after, so the cached
+/// pages serve every later query over those row groups, filtered or not. On by default:
+/// measured on ClickBench it took the bytes served from cache from 5.5% to 14.5% and the run
+/// from -2.1% to -8.0% against baseline. SIRIUS_FIXED_PAGE_CACHE_BEFORE_FILTER=0 turns it off.
 bool cache_before_filter_enabled()
 {
   auto const* value = std::getenv("SIRIUS_FIXED_PAGE_CACHE_BEFORE_FILTER");
-  return value != nullptr && std::string_view(value) == "1";
+  return value == nullptr || std::string_view(value) != "0";
 }
 
 /// Whether a scan whose rows the READER already filtered may populate the cache.
@@ -550,6 +612,120 @@ parquet_gpu_ingestible::parquet_gpu_ingestible(std::unique_ptr<parquet_ingestibl
 
 parquet_gpu_ingestible::~parquet_gpu_ingestible() = default;
 
+bool parquet_gpu_ingestible::waits_for_row_id_filter() const
+{
+  return _plan->file_row_number_output_position().has_value() && _sirius_dynamic_filters &&
+         _sirius_dynamic_filters->has_producers();
+}
+
+filtered_table parquet_gpu_ingestible::read_row_numbers(parquet_split_info const& split,
+                                                        std::vector<std::int64_t> const& rows,
+                                                        cucascade::memory::memory_space const& mem_space,
+                                                        rmm::cuda_stream_view stream)
+{
+  rmm::device_async_resource_ref mr_ref(mem_space.get_default_allocator());
+  // Rows closer than this are read together: one read call per run, not per row.
+  constexpr std::int64_t kMergeGap = 4096;
+  auto finish = [&](std::unique_ptr<cudf::table> table) {
+    if (cache_hit_trace_enabled()) {
+      // The appended row/file identities are generated, not supplied by either cache or reader.
+      auto const data_count = table->num_columns() -
+                              static_cast<cudf::size_type>(_plan->virtual_columns.size());
+      std::vector<cudf::size_type> data_indices(static_cast<std::size_t>(data_count));
+      std::iota(data_indices.begin(), data_indices.end(), 0);
+      auto const total = decoded_table_bytes(table->view().select(data_indices), stream);
+      SIRIUS_LOG_INFO("[cache-hit] file='{}' total_bytes={} read_bytes={} kind=miss "
+                      "path=late_refetch rows={} metric=value_bytes_v2",
+                      split.rg_slices.front().file_path, total, total, table->num_rows());
+    }
+    return filtered_table{owning_table_view{std::move(table)}, filter_state::UNFILTERED};
+  };
+  std::vector<std::unique_ptr<cudf::table>> parts;
+  std::size_t ranges = 0, read_rows = 0;
+  for (auto const& slice : split.rg_slices) {
+    if (!slice.file_metadata) { continue; }
+    auto const& rgs = slice.file_metadata->row_groups;
+    std::vector<std::int64_t> start(rgs.size() + 1, 0);
+    for (std::size_t i = 0; i < rgs.size(); ++i) {
+      start[i + 1] = start[i] + static_cast<std::int64_t>(rgs[i].num_rows);
+    }
+    auto const it = std::find(_file_paths.begin(), _file_paths.end(), slice.file_path);
+    auto const file_index =
+      static_cast<std::uint64_t>(it == _file_paths.end() ? 0 : it - _file_paths.begin());
+    // Runs of wanted rows inside this split's row groups.
+    std::vector<std::pair<std::int64_t, std::int64_t>> runs;  // [begin, end)
+    for (auto const rg : slice.row_group_indices) {
+      auto const b = start[static_cast<std::size_t>(rg)];
+      auto const e = start[static_cast<std::size_t>(rg) + 1];
+      for (auto k = std::lower_bound(rows.begin(), rows.end(), b); k != rows.end() && *k < e; ++k) {
+        if (!runs.empty() && *k - runs.back().second <= kMergeGap && *k >= runs.back().first &&
+            runs.back().second <= e && runs.back().first >= b) {
+          runs.back().second = *k + 1;
+        } else {
+          runs.emplace_back(*k, *k + 1);
+        }
+      }
+    }
+    for (auto const& [rb, re] : runs) {
+      auto o = *split.reader_options;
+      o.set_skip_rows(rb);
+      o.set_num_rows(re - rb);
+      std::vector<std::unique_ptr<cudf::io::datasource>> src;
+      src.push_back(slice.datasource ? cudf::io::datasource::create(slice.datasource.get())
+                                     : cudf::io::datasource::create(slice.file_path));
+      std::vector<cudf::io::parquet::FileMetaData> md{*slice.file_metadata};
+      auto tbl  = cudf::io::read_parquet(std::move(src), std::move(md), o, stream, mr_ref).tbl;
+      auto cols = tbl->release();
+      for (auto const& vc : _plan->virtual_columns) {
+        if (vc.kind == scan_plan::virtual_column::FILE_ROW_NUMBER) {
+          cudf::numeric_scalar<std::int64_t> init(rb, true, stream);
+          cudf::numeric_scalar<std::int64_t> step(1, true, stream);
+          cols.push_back(cudf::sequence(static_cast<cudf::size_type>(re - rb), init, step, stream, mr_ref));
+        } else {
+          cudf::numeric_scalar<std::uint64_t> fi(file_index, true, stream);
+          cols.push_back(cudf::make_column_from_scalar(fi, static_cast<cudf::size_type>(re - rb), stream, mr_ref));
+        }
+      }
+      parts.push_back(std::make_unique<cudf::table>(std::move(cols)));
+      ++ranges;
+      read_rows += static_cast<std::size_t>(re - rb);
+    }
+  }
+  SIRIUS_LOG_INFO("[late-materialization] read {} rows in {} runs for {} wanted row numbers",
+                  read_rows, ranges, rows.size());
+  if (parts.empty()) {
+    // Nothing of this split is wanted: an empty batch with the right schema (zero-row read plus
+    // empty virtual columns).
+    auto o = *split.reader_options;
+    o.set_num_rows(0);
+    std::vector<std::unique_ptr<cudf::io::datasource>> src;
+    auto const& slice = split.rg_slices.front();
+    src.push_back(slice.datasource ? cudf::io::datasource::create(slice.datasource.get())
+                                   : cudf::io::datasource::create(slice.file_path));
+    std::vector<cudf::io::parquet::FileMetaData> md{*slice.file_metadata};
+    auto cols = cudf::io::read_parquet(std::move(src), std::move(md), o, stream, mr_ref).tbl->release();
+    for (auto const& vc : _plan->virtual_columns) {
+      cols.push_back(cudf::make_empty_column(vc.kind == scan_plan::virtual_column::FILE_ROW_NUMBER
+                                               ? cudf::data_type{cudf::type_id::INT64}
+                                               : cudf::data_type{cudf::type_id::UINT64}));
+    }
+    return finish(std::make_unique<cudf::table>(std::move(cols)));
+  }
+  if (parts.size() == 1) {
+    return finish(std::move(parts.front()));
+  }
+  std::vector<cudf::table_view> views;
+  for (auto const& p : parts) { views.push_back(p->view()); }
+  return finish(cudf::concatenate(views, stream, mr_ref));
+}
+
+bool parquet_gpu_ingestible::row_id_filter_published() const
+{
+  auto const pos = _plan->file_row_number_output_position();
+  return pos && _sirius_dynamic_filters &&
+         !_sirius_dynamic_filters->filters_for_column(*pos).empty();
+}
+
 //===----------------------------------------------------------------------===//
 // coalescer / post-filter factories
 //===----------------------------------------------------------------------===//
@@ -679,7 +855,10 @@ std::unique_ptr<scan_info> parquet_gpu_ingestible::build_file_scan_info(
     }
   }
   bool const prune_row_groups = !decimal_blocks_pushdown;
-  bool const apply_row_filter = !decimal_blocks_pushdown && !cache_before_filter;
+  // Row-identity virtual columns are numbered from the rows of each row group as read, so the
+  // reader must not drop any: the filter runs post-decode instead.
+  bool const apply_row_filter =
+    !decimal_blocks_pushdown && !cache_before_filter && !_plan->has_virtual_columns();
 
   // Translate the filter for reader-side row-group pruning unless disabled. The
   // translated cuDF AST must outlive filter_row_groups_with_stats below.
@@ -1223,6 +1402,7 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
   const cucascade::memory::memory_space& mem_space,
   rmm::cuda_stream_view stream,
   bool reader_applied_filter,
+  bool reader_applied_dynamic_filter,
   std::vector<row_group_slice> const& rg_slices)
 {
   if (!_scan_manager || !fixed_page_auto_cache_enabled() || view.num_columns() == 0 ||
@@ -1281,7 +1461,14 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
   // holding only 1.6 GB. The gate can only be opened together with a per-column
   // decision that refuses a column too large to ever be resident -- at which
   // point a URL-only batch is refused again anyway, just more cheaply.
-  if (!has_fixed_width_column) {
+  //
+  // That reasoning is about the pinned-entry store. The page store pages STRING columns
+  // in the same store, budget and LRU as everything else, so the gate now keeps string-only
+  // batches out of the pinned store only; they still reach the page store below. Measured on
+  // ClickBench before this: 147 scans (URL, URL|SearchPhrase, SearchPhrase) were never
+  // cached at all. SIRIUS_PAGE_STORE_STRING_ONLY=0 restores the old refusal.
+  bool const string_only_batch = !has_fixed_width_column;
+  if (string_only_batch && !page_store_string_only_enabled()) {
     SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=no_fixed_width_column");
     return;
   }
@@ -1363,7 +1550,21 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
   }
   // Flat page store: one page per (file, column, row group). This is what a later
   // scan looks the cache up in -- no entry, no projection, no predicate in the key.
-  if (_scan_manager != nullptr && rg_slices.size() == 1) {
+  //
+  // Not when the reader applied a dynamic filter. Those rows passed the join's runtime
+  // filter as well as the static predicate, but a page's filter identity is the static
+  // predicate's text alone -- and with no static predicate it is empty, which reads as
+  // "every row of the row group". The splice path survives such a page only because its
+  // row-count check rejects the mismatch; a full-hit read has no reader output to check
+  // against and would silently drop the rows the runtime filter removed. Measured on TPC-H
+  // SF50: 525 scans carrying dynamic filters were cached through the size gate.
+  bool const page_store_takes_batch = _scan_manager != nullptr && rg_slices.size() == 1;
+  if (page_store_takes_batch && reader_applied_dynamic_filter) {
+    SIRIUS_LOG_INFO("[page-store] insert_skip reason=reader_applied_dynamic_filter file='{}'",
+                    rg_slices.front().file_path);
+  }
+  if (page_store_takes_batch && !reader_applied_dynamic_filter) {
+    auto const t_pages0 = std::chrono::steady_clock::now();
     // How many row groups the file has, so the store can tell a column that could be fully
     // resident from one that never can. Zero when the metadata is not to hand, which the
     // store reads as "unknown" and admits as before. Row GROUPS, not rows: the store holds
@@ -1394,7 +1595,27 @@ void parquet_gpu_ingestible::auto_cache_materialized_table(
                     cache_info.names.size(),
                     pages,
                     bytes);
+    SIRIUS_LOG_INFO("[scan-populate] store=pages us={}",
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                      std::chrono::steady_clock::now() - t_pages0)
+                      .count());
   }
+  if (page_store_takes_batch && !pinned_entry_cache_for_paged_batches_enabled()) { return; }
+  if (string_only_batch) {
+    SIRIUS_LOG_INFO("[fixed-page-cache] auto_cache_skip reason=no_fixed_width_column store=pinned");
+    return;
+  }
+  auto const t_pinned0 = std::chrono::steady_clock::now();
+  struct pinned_timer {
+    std::chrono::steady_clock::time_point t0;
+    ~pinned_timer()
+    {
+      SIRIUS_LOG_INFO("[scan-populate] store=pinned us={}",
+                      std::chrono::duration_cast<std::chrono::microseconds>(
+                        std::chrono::steady_clock::now() - t0)
+                        .count());
+    }
+  } const pinned_timer_guard{t_pinned0};
 
   std::size_t table_total_rows = 0;
   for (auto const& slice : rg_slices) {
@@ -1509,6 +1730,72 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
 {
   auto const& split = static_cast<parquet_split_info const&>(info);
 
+  // LATE_MATERIALIZATION's re-fetch scan: the join that consumes it publishes the build side's
+  // file_row_number range. Drop the row groups outside it before reading anything -- that range
+  // is what turns "decode every column of every row" into "decode the few row groups the TOP_N
+  // picked". A pruned copy goes back through this function; a second pass prunes nothing.
+  if (auto const rn_pos = _plan->file_row_number_output_position();
+      rn_pos && _sirius_dynamic_filters && _sirius_dynamic_filters->has_filters()) {
+    // Exact path: the join's IN-list holds the few row numbers wanted (TOP_N's N). Read just
+    // those rows -- a skip_rows/num_rows read per run of nearby rows -- not their row groups,
+    // which for q24 are spread over the whole file.
+    std::vector<std::int64_t> const* exact = nullptr;
+    for (auto const& f : _sirius_dynamic_filters->filters_for_column(*rn_pos)) {
+      if (auto const* in_list = dynamic_cast<sirius::op::sirius_dynamic_in_list_filter const*>(f.get())) {
+        if (auto const* keys = in_list->host_keys()) { exact = keys; }
+      }
+    }
+    if (exact && !_plan->has_partitions()) {
+      return read_row_numbers(split, *exact, mem_space, stream);
+    }
+    std::optional<std::int64_t> lo, hi;
+    for (auto const& f : _sirius_dynamic_filters->filters_for_column(*rn_pos)) {
+      // Joins publish the exact IN-list by default (zone maps are off); its recorded key range
+      // is all the pruning needs.
+      if (auto const* in_list = dynamic_cast<sirius::op::sirius_dynamic_in_list_filter const*>(f.get())) {
+        if (auto const b = in_list->key_bounds()) {
+          lo = lo ? std::min(*lo, b->first) : b->first;
+          hi = hi ? std::max(*hi, b->second) : b->second;
+        }
+        continue;
+      }
+      auto const* zm = dynamic_cast<sirius::op::sirius_dynamic_zone_map_filter const*>(f.get());
+      if (!zm) { continue; }
+      for (auto const& z : zm->zones()) {
+        if (!z.min || !z.max || z.min->type().id() != cudf::type_id::INT64) { continue; }
+        auto const zmin = static_cast<cudf::numeric_scalar<std::int64_t> const&>(*z.min).value(stream);
+        auto const zmax = static_cast<cudf::numeric_scalar<std::int64_t> const&>(*z.max).value(stream);
+        lo = lo ? std::min(*lo, zmin) : zmin;
+        hi = hi ? std::max(*hi, zmax) : zmax;
+      }
+    }
+    if (lo && hi) {
+      parquet_split_info pruned = split;
+      std::size_t before = 0, after = 0;
+      for (auto& slice : pruned.rg_slices) {
+        if (!slice.file_metadata) { continue; }
+        auto const& rgs = slice.file_metadata->row_groups;
+        std::vector<std::int64_t> start(rgs.size() + 1, 0);
+        for (std::size_t i = 0; i < rgs.size(); ++i) {
+          start[i + 1] = start[i] + static_cast<std::int64_t>(rgs[i].num_rows);
+        }
+        std::vector<cudf::size_type> kept;
+        for (auto const rg : slice.row_group_indices) {
+          auto const r = static_cast<std::size_t>(rg);
+          if (start[r + 1] - 1 >= *lo && start[r] <= *hi) { kept.push_back(rg); }
+        }
+        before += slice.row_group_indices.size();
+        after += kept.size();
+        slice.row_group_indices = std::move(kept);
+      }
+      if (after < before) {
+        SIRIUS_LOG_INFO("[late-materialization] file_row_number in [{}, {}]: {} of {} row groups",
+                        *lo, *hi, after, before);
+        return materialize_metadata_to_table(pruned, mem_space, stream);
+      }
+    }
+  }
+
   std::vector<std::unique_ptr<cudf::io::datasource>> sources;
   std::vector<cudf::io::parquet::FileMetaData> metadatas;
   std::vector<std::vector<cudf::size_type>> rg_per_src;
@@ -1557,6 +1844,10 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
   std::optional<gpu_expression_translator::translated_expression> ast_expression = std::nullopt;
   std::optional<gpu_expression_translator::translated_expression> dynamic_ast_expression =
     std::nullopt;
+  // The audit line opens at read_parquet, so filter translation and split preparation
+  // before it were never measured.
+  auto const t_stage_begin = std::chrono::steady_clock::now();
+  std::int64_t stage_prep_us = 0;
   cudf::ast::expression const* reader_filter_root = nullptr;
 
   bool const auto_cache = fixed_page_auto_cache_enabled() && _scan_manager != nullptr;
@@ -1571,8 +1862,12 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     if (ast_expression) { reader_filter_root = &ast_expression->back(); }
   }
 
+  // Whether the reader's filter includes a dynamic (join runtime) filter. Those rows are
+  // not described by the static predicate text the cache keys pages on.
+  bool reader_applied_dynamic_filter = false;
   if (!split.disable_filter_pushdown && _sirius_dynamic_filters &&
       _sirius_dynamic_filters->has_filters()) {
+    auto const* const root_before_dynamic = reader_filter_root;
     if (ast_expression) {
       reader_filter_root = merge_dynamic_filters_into_ast(ast_expression->tree,
                                                           reader_filter_root,
@@ -1588,9 +1883,13 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
                                                           mem_space.get_device_id());
       if (!reader_filter_root) { dynamic_ast_expression.reset(); }
     }
+    reader_applied_dynamic_filter =
+      reader_filter_root != nullptr && reader_filter_root != root_before_dynamic;
   }
 
   if (reader_filter_root) { opts.set_filter(*reader_filter_root); }
+  auto const filter_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                           std::chrono::steady_clock::now() - t_stage_begin).count();
 
   std::vector<std::string> audit_files;
   audit_files.reserve(split.rg_slices.size());
@@ -1617,10 +1916,190 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
   // Where a scan's time goes, so the cache's share of it stops being a guess.
   std::int64_t scan_probe_lookup_us = 0, scan_probe_materialize_us = 0;
   std::int64_t scan_probe_read_us = 0, scan_probe_assemble_us = 0;
+  // Partial serving's share of stage_prep_us: page lookup, disk reads of the missing ranges,
+  // and concatenating cached and read pieces.
+  std::int64_t ps_peek_us = 0, ps_read_us = 0, ps_assemble_us = 0;
+  auto elapsed_us = [](auto since) {
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+             std::chrono::steady_clock::now() - since).count();
+  };
   std::vector<std::shared_ptr<cudf::column>> spliced;
   std::vector<std::string> read_names;
   auto const projected_names = split.plan->data_column_names();
   bool splicing              = false;
+  bool full_hit              = false;
+  std::size_t trace_available = 0;  // columns the probe found usable, for the scan-cache trace
+
+  // Partial serving (HANDOFF B4). The splice below needs a column cached for every row of
+  // every row group in the split; one page missing anywhere sends the whole column to the
+  // reader. Here a column takes the pages it has and reads only the row ranges it lacks.
+  // Limited to an unfiltered read of one file, where cached rows and read rows line up by
+  // position; everything else keeps the paths below.
+  bool partial_hit = false;
+  std::size_t hit_read_bytes = 0;  // SIRIUS_CACHE_HIT_TRACE: decoded bytes the reader produced
+  std::unique_ptr<cudf::table> partial_table;
+  if (_scan_manager != nullptr && !all_slices_pruned && split.rg_slices.size() == 1 &&
+      !projected_names.empty() && reader_filter_root == nullptr && !_plan->has_partitions() &&
+      page_partial_serve_enabled() && split.rg_slices.front().file_metadata) {
+    auto const& slice = split.rg_slices.front();
+    std::vector<std::string> const wanted(projected_names.begin(), projected_names.end());
+    auto const& rgs      = slice.row_group_indices;
+    auto const& file_rgs = slice.file_metadata->row_groups;
+    // File-global first row and row count of each requested row group.
+    std::vector<std::int64_t> prefix(file_rgs.size() + 1, 0);
+    for (std::size_t i = 0; i < file_rgs.size(); ++i) {
+      prefix[i + 1] = prefix[i] + static_cast<std::int64_t>(file_rgs[i].num_rows);
+    }
+    std::vector<std::int64_t> rg_start(rgs.size()), rg_len(rgs.size());
+    for (std::size_t g = 0; g < rgs.size(); ++g) {
+      rg_start[g] = prefix[static_cast<std::size_t>(rgs[g])];
+      rg_len[g]   = static_cast<std::int64_t>(file_rgs[static_cast<std::size_t>(rgs[g])].num_rows);
+    }
+    auto const total_rows = std::accumulate(rg_len.begin(), rg_len.end(), std::int64_t{0});
+    auto covered = [](std::vector<std::vector<scan_manager::cached_piece>> const& per_rg) {
+      std::int64_t c = 0;
+      for (auto const& v : per_rg) {
+        for (auto const& p : v) { c += static_cast<std::int64_t>(p.num_rows); }
+      }
+      return c;
+    };
+    // Peek first: the path is only worth taking when some column is part-cached. Fully cached
+    // and fully missing columns are what the full-hit and splice paths below already handle.
+    auto const t_peek0 = std::chrono::steady_clock::now();
+    auto const peek =
+      _scan_manager->cached_row_group_pieces(slice.file_path, rgs, wanted, std::string{}, false);
+    bool any_partial = false;
+    for (auto const& per_rg : peek) {
+      auto const c = covered(per_rg);
+      if (c > 0 && c < total_rows) {
+        any_partial = true;
+        break;
+      }
+    }
+    ps_peek_us = elapsed_us(t_peek0);
+    if (any_partial) {
+      auto const t_ps0 = std::chrono::steady_clock::now();
+      auto pieces =
+        _scan_manager->cached_row_group_pieces(slice.file_path, rgs, wanted, std::string{}, true);
+      struct segment {
+        std::int64_t start{0};
+        std::int64_t len{0};
+        bool cached{false};
+        cudf::column_view view{};
+      };
+      std::vector<std::vector<segment>> segs(wanted.size());
+      std::map<std::pair<std::int64_t, std::int64_t>, std::vector<std::size_t>> missing;
+      bool layout_ok = true;
+      for (std::size_t ci = 0; ci < wanted.size() && layout_ok; ++ci) {
+        std::vector<segment> col_segs;
+        for (std::size_t g = 0; g < rgs.size() && layout_ok; ++g) {
+          auto ps = pieces[ci][g];
+          std::sort(ps.begin(), ps.end(),
+                    [](auto const& a, auto const& b) { return a.row_offset < b.row_offset; });
+          std::int64_t cursor = 0;
+          for (auto const& p : ps) {
+            auto const off = static_cast<std::int64_t>(p.row_offset);
+            if (off < cursor) { layout_ok = false; break; }  // overlapping pages: not one grid
+            if (off > cursor) { col_segs.push_back({rg_start[g] + cursor, off - cursor, false, {}}); }
+            col_segs.push_back({rg_start[g] + off, static_cast<std::int64_t>(p.num_rows), true,
+                                p.slab->view});
+            cursor = off + static_cast<std::int64_t>(p.num_rows);
+          }
+          if (cursor > rg_len[g]) { layout_ok = false; }
+          if (layout_ok && cursor < rg_len[g]) {
+            col_segs.push_back({rg_start[g] + cursor, rg_len[g] - cursor, false, {}});
+          }
+        }
+        // Neighbouring missing ranges become one read.
+        std::vector<segment> merged;
+        for (auto const& x : col_segs) {
+          if (!x.cached && !merged.empty() && !merged.back().cached &&
+              merged.back().start + merged.back().len == x.start) {
+            merged.back().len += x.len;
+          } else {
+            merged.push_back(x);
+          }
+        }
+        for (auto const& x : merged) {
+          if (!x.cached) { missing[{x.start, x.len}].push_back(ci); }
+        }
+        segs[ci] = std::move(merged);
+      }
+      // One read per distinct missing range, for every column that lacks exactly that range.
+      // skip_rows/num_rows address rows across the whole file, which is why row groups are
+      // not set here: cuDF does not combine the two.
+      std::vector<std::unique_ptr<cudf::table>> reads;
+      std::map<std::pair<std::size_t, std::int64_t>, cudf::column_view> read_view;
+      std::size_t read_rows = 0;
+      ps_peek_us += elapsed_us(t_ps0);
+      auto const t_psread0 = std::chrono::steady_clock::now();
+      if (layout_ok) {
+        for (auto const& [range, cols] : missing) {
+          auto o = *split.reader_options;
+          std::vector<std::string> names;
+          names.reserve(cols.size());
+          for (auto const ci : cols) { names.push_back(wanted[ci]); }
+          o.set_column_names(names);
+          o.set_skip_rows(range.first);
+          o.set_num_rows(range.second);
+          std::vector<std::unique_ptr<cudf::io::datasource>> src;
+          src.push_back(slice.datasource ? cudf::io::datasource::create(slice.datasource.get())
+                                         : cudf::io::datasource::create(slice.file_path));
+          std::vector<cudf::io::parquet::FileMetaData> md{*slice.file_metadata};
+          auto res = cudf::io::read_parquet(std::move(src), std::move(md), o, stream, mr_ref);
+          for (std::size_t k = 0; k < res.metadata.schema_info.size(); ++k) {
+            for (auto const ci : cols) {
+              if (wanted[ci] == res.metadata.schema_info[k].name) {
+                read_view[{ci, range.first}] = res.tbl->get_column(static_cast<cudf::size_type>(k)).view();
+              }
+            }
+          }
+          read_rows += static_cast<std::size_t>(range.second) * cols.size();
+          if (cache_hit_trace_enabled()) { hit_read_bytes += decoded_table_bytes(res.tbl->view(), stream); }
+          reads.push_back(std::move(res.tbl));
+        }
+      }
+      if (scan_prep_sync_enabled()) { stream.synchronize(); }
+      ps_read_us = elapsed_us(t_psread0);
+      auto const t_psasm0 = std::chrono::steady_clock::now();
+      std::vector<std::unique_ptr<cudf::column>> assembled;
+      bool ok = layout_ok;
+      for (std::size_t ci = 0; ci < wanted.size() && ok; ++ci) {
+        std::vector<cudf::column_view> parts;
+        for (auto const& x : segs[ci]) {
+          if (x.cached) {
+            parts.push_back(x.view);
+            continue;
+          }
+          auto const it = read_view.find({ci, x.start});
+          if (it == read_view.end() || it->second.size() != x.len) {
+            ok = false;
+            break;
+          }
+          parts.push_back(it->second);
+        }
+        if (!ok) { break; }
+        assembled.push_back(parts.size() == 1
+                              ? std::make_unique<cudf::column>(parts.front(), stream, mr_ref)
+                              : cudf::concatenate(parts, stream, mr_ref));
+      }
+      if (ok) {
+        partial_table = std::make_unique<cudf::table>(std::move(assembled));
+        partial_hit   = true;
+      }
+      if (scan_prep_sync_enabled()) { stream.synchronize(); }
+      ps_assemble_us = elapsed_us(t_psasm0);
+      SIRIUS_LOG_INFO("[fixed-page-cache] partial_serve file='{}' row_groups={} columns={} "
+                      "read_ranges={} read_cells={} total_cells={} used={}",
+                      slice.file_path,
+                      rgs.size(),
+                      wanted.size(),
+                      missing.size(),
+                      read_rows,
+                      static_cast<std::size_t>(total_rows) * wanted.size(),
+                      ok ? 1 : 0);
+    }
+  }
   // Cached columns line up with freshly read ones when both went through the SAME
   // predicate. Two cases qualify: neither is filtered (reader_filter_root null), or
   // the cached chunk was produced by exactly this predicate -- the reader is about
@@ -1628,7 +2107,7 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
   // in the same order. Restricting this to the unfiltered case alone left it unable
   // to help post-filter caching, which is where the misses are.
   if (_scan_manager != nullptr && !all_slices_pruned && split.rg_slices.size() == 1 &&
-      !projected_names.empty()) {
+      !projected_names.empty() && !partial_hit) {
     std::vector<std::string> wanted(projected_names.begin(), projected_names.end());
     auto const sig = reader_filter_root != nullptr ? fixed_page_cache_filter_signature()
                                                    : std::string{};
@@ -1649,12 +2128,17 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     for (std::size_t i = 0; i < available.size(); ++i) {
       if (available[i]) { ++have; } else { read_names.push_back(wanted[i]); }
     }
+    trace_available = have;
     // Nothing to gain when the cache has none of them, and the all-cached case is
     // left to the existing provider path rather than duplicated here.
     scan_probe_lookup_us =
       std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::steady_clock::now() - t_look0).count();
-    if (have > 0 && !read_names.empty()) {
+    // Every column cached is a full hit: build the batch from the cache and skip the read.
+    // This used to be excluded here and "left to the existing provider path", but that path
+    // only consults the pinned-entry store, so a scan whose every column sat in this store
+    // read them all from the file again.
+    if (have > 0) {
       auto const t_mat0 = std::chrono::steady_clock::now();
       spliced = _scan_manager->cached_row_group_columns(
         split.rg_slices.front().file_path,
@@ -1663,6 +2147,7 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
         stream,
         sig,
         conj);
+      if (scan_prep_sync_enabled()) { stream.synchronize(); }
       scan_probe_materialize_us =
         std::chrono::duration_cast<std::chrono::microseconds>(
           std::chrono::steady_clock::now() - t_mat0).count();
@@ -1676,7 +2161,15 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
         if (!spliced[i]) { read_names.push_back(wanted[i]); }
       }
       have = wanted.size() - read_names.size();
-      if (have == 0 || read_names.empty()) {
+      if (read_names.empty() && !_plan->has_partitions()) {
+        // Sound without a reader to line up against: a cached page's rows are exactly the
+        // rows its filter identity names -- every row of the row group, or the rows that
+        // passed this same static predicate (pages from reads that also applied a dynamic
+        // filter are never inserted). A dynamic filter on THIS scan only prunes, and
+        // post_filter_and_project re-applies the static predicate whenever the state
+        // below says it has not run.
+        full_hit = true;
+      } else if (have == 0 || read_names.empty()) {
         // Nothing left to splice, or nothing left to read beside it. Either way the
         // reader's options are untouched, so it produces every column as it normally
         // would and this scan simply does not use the cache.
@@ -1693,9 +2186,52 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     }
   }
 
+  stage_prep_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::steady_clock::now() - t_stage_begin).count();
+  if (scan_cache_trace_enabled() && split.rg_slices.size() == 1) {
+    auto const n_cols = projected_names.size();
+    auto const served = full_hit ? n_cols : (splicing ? n_cols - read_names.size() : 0);
+    SIRIUS_LOG_INFO("[scan-cache-decision] file='{}' row_groups={} columns={} filtered={} "
+                    "available={} served={} full_hit={} partial={}",
+                    split.rg_slices.front().file_path,
+                    split.rg_slices.front().row_group_indices.size(),
+                    n_cols,
+                    reader_filter_root != nullptr ? 1 : 0,
+                    trace_available,
+                    partial_hit ? n_cols : served,
+                    full_hit ? 1 : 0,
+                    partial_hit ? 1 : 0);
+  }
   auto const audit_start = std::chrono::steady_clock::now();
-  auto [table, _] =
-    cudf::io::read_parquet(std::move(sources), std::move(metadatas), opts, stream, mr_ref);
+  std::unique_ptr<cudf::table> table;
+  if (full_hit) {
+    std::vector<std::unique_ptr<cudf::column>> columns;
+    columns.reserve(spliced.size());
+    for (auto& cached : spliced) {
+      // A column concatenated from several pages belongs to this call alone; move it out.
+      // A single-page column is the store's own page and has to be copied.
+      if (cached.use_count() == 1) {
+        columns.push_back(std::make_unique<cudf::column>(std::move(*cached)));
+      } else {
+        columns.push_back(std::make_unique<cudf::column>(cached->view(), stream, mr_ref));
+      }
+    }
+    spliced.clear();
+    table = std::make_unique<cudf::table>(std::move(columns));
+    SIRIUS_LOG_INFO("[fixed-page-cache] full_hit file='{}' row_groups={} columns={} rows={}",
+                    split.rg_slices.front().file_path,
+                    split.rg_slices.front().row_group_indices.size(),
+                    table->num_columns(),
+                    table->num_rows());
+  } else if (partial_hit) {
+    table = std::move(partial_table);
+  } else {
+    table =
+      cudf::io::read_parquet(std::move(sources), std::move(metadatas), opts, stream, mr_ref).tbl;
+    if (cache_hit_trace_enabled() && table) {
+      hit_read_bytes += decoded_table_bytes(table->view(), stream);
+    }
+  }
   auto const t_read_end = std::chrono::steady_clock::now();
   scan_probe_read_us =
     std::chrono::duration_cast<std::chrono::microseconds>(t_read_end - audit_start).count();
@@ -1748,14 +2284,24 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     assembled.reserve(spliced.size());
     std::size_t next_read = 0;
     for (auto const& cached : spliced) {
-      if (cached) {
-        assembled.push_back(std::make_unique<cudf::column>(
-          cached->view(), stream, cudf::get_current_device_resource_ref()));
+      if (cached && cached.use_count() == 1) {
+        // Concatenated for this call alone: take it instead of copying it a second time.
+        assembled.push_back(std::make_unique<cudf::column>(std::move(*cached)));
+      } else if (cached) {
+        assembled.push_back(std::make_unique<cudf::column>(cached->view(), stream, mr_ref));
       } else {
         assembled.push_back(std::move(read_cols[next_read++]));
       }
     }
     table = std::make_unique<cudf::table>(std::move(assembled));
+  }
+  if (cache_hit_trace_enabled() && table && split.rg_slices.size() >= 1) {
+    auto const total = decoded_table_bytes(table->view(), stream);
+    SIRIUS_LOG_INFO("[cache-hit] file='{}' total_bytes={} read_bytes={} kind={} "
+                    "path=parquet rows={} metric=value_bytes_v2",
+                    split.rg_slices.front().file_path, total, std::min(hit_read_bytes, total),
+                    full_hit ? "full" : partial_hit ? "partial" : splicing ? "splice" : "miss",
+                    table->num_rows());
   }
   auto const audit_end = std::chrono::steady_clock::now();
   scan_probe_assemble_us =
@@ -1766,7 +2312,8 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     "[scan-audit] parquet_materialize target_gpu={} files={} columns={} row_groups={} "
     "compressed_bytes={} uncompressed_bytes={} output_rows={} output_columns={} split_count={} "
     "duration_us={} lookup_us={} materialize_us={} read_us={} assemble_us={} "
-    "lock_wait_us={}",
+    "lock_wait_us={} stage_prep_us={} full_hit={} filter_us={} ps_peek_us={} ps_read_us={} "
+    "ps_assemble_us={}",
     mem_space.get_device_id(),
     join_strings(audit_files, '|'),
     audit_columns,
@@ -1781,16 +2328,95 @@ filtered_table parquet_gpu_ingestible::materialize_metadata_to_table(
     scan_probe_materialize_us,
     scan_probe_read_us,
     scan_probe_assemble_us,
-    _scan_manager ? _scan_manager->page_lock_wait_us() : 0);
+    _scan_manager ? _scan_manager->page_lock_wait_us() : 0,
+    stage_prep_us,
+    full_hit ? 1 : 0,
+    filter_us,
+    ps_peek_us,
+    ps_read_us,
+    ps_assemble_us);
 
-  if (auto_cache && table) {
+  // Populating the cache runs after the audit line is emitted, so its cost has never
+  // appeared in any scan accounting -- and the gap it leaves is the whole story: with a
+  // cache resident GPU_SCAN occupies 2.85s more while its read falls 5.04s.
+  // With SIRIUS_SCAN_PREP_SYNC=1, finish the read's GPU work first so populate_us is the copy
+  // into pages alone rather than also the wait for the decode to complete.
+  if (scan_prep_sync_enabled() && auto_cache && table && !full_hit) {
+    auto const t_wait0 = std::chrono::steady_clock::now();
+    stream.synchronize();
+    SIRIUS_LOG_INFO("[scan-populate] decode_wait_us={}", elapsed_us(t_wait0));
+  }
+  auto const t_populate0 = std::chrono::steady_clock::now();
+  if (auto_cache && table && !full_hit) {
     // reader_filter_root is non-null exactly when opts.set_filter() above ran, i.e.
     // when the rows in `table` are already filtered.
     auto_cache_materialized_table(table->view(),
                                   mem_space,
                                   stream,
                                   /*reader_applied_filter=*/reader_filter_root != nullptr,
+                                  reader_applied_dynamic_filter,
                                   split.rg_slices);
+  }
+  SIRIUS_LOG_INFO("[scan-populate] populate_us={}",
+                  std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::steady_clock::now() - t_populate0)
+                    .count());
+
+  // Row-identity virtual columns (LATE_MATERIALIZATION): appended after the data columns, so
+  // assemble_scan_output finds them at plan.virtual_batch_position(i). The batch holds every row
+  // of every row group read, in order -- the reader filter is off for such scans -- so each
+  // row group contributes the run [start, start + rows) of its file's row numbers.
+  if (_plan->has_virtual_columns() && table) {
+    std::vector<std::unique_ptr<cudf::column>> rn_parts, fi_parts;
+    std::int64_t expected = 0;
+    for (auto const& slice : split.rg_slices) {
+      std::int64_t slice_rows = 0;
+      if (slice.file_metadata) {
+        auto const& rgs = slice.file_metadata->row_groups;
+        std::vector<std::int64_t> start(rgs.size() + 1, 0);
+        for (std::size_t i = 0; i < rgs.size(); ++i) {
+          start[i + 1] = start[i] + static_cast<std::int64_t>(rgs[i].num_rows);
+        }
+        for (auto const rg : slice.row_group_indices) {
+          auto const r   = static_cast<std::size_t>(rg);
+          auto const len = start[r + 1] - start[r];
+          cudf::numeric_scalar<std::int64_t> init(start[r], true, stream);
+          cudf::numeric_scalar<std::int64_t> step(1, true, stream);
+          rn_parts.push_back(
+            cudf::sequence(static_cast<cudf::size_type>(len), init, step, stream, mr_ref));
+          slice_rows += len;
+        }
+      }
+      auto const it = std::find(_file_paths.begin(), _file_paths.end(), slice.file_path);
+      auto const file_index =
+        static_cast<std::uint64_t>(it == _file_paths.end() ? 0 : it - _file_paths.begin());
+      cudf::numeric_scalar<std::uint64_t> fi(file_index, true, stream);
+      fi_parts.push_back(cudf::make_column_from_scalar(
+        fi, static_cast<cudf::size_type>(slice_rows), stream, mr_ref));
+      expected += slice_rows;
+    }
+    if (all_slices_pruned) { expected = 0; }
+    if (expected != static_cast<std::int64_t>(table->num_rows())) {
+      throw sirius::internal_exception(
+        "[parquet_gpu_ingestible] file_row_number: batch has " +
+        std::to_string(table->num_rows()) + " rows but its row groups hold " +
+        std::to_string(expected));
+    }
+    auto concat_or_empty = [&](std::vector<std::unique_ptr<cudf::column>>& parts,
+                               cudf::data_type type) -> std::unique_ptr<cudf::column> {
+      if (expected == 0 || parts.empty()) { return cudf::make_empty_column(type); }
+      if (parts.size() == 1) { return std::move(parts.front()); }
+      std::vector<cudf::column_view> views;
+      for (auto const& p : parts) { views.push_back(p->view()); }
+      return cudf::concatenate(views, stream, mr_ref);
+    };
+    auto columns = table->release();
+    for (auto const& vc : _plan->virtual_columns) {
+      columns.push_back(vc.kind == scan_plan::virtual_column::FILE_ROW_NUMBER
+                          ? concat_or_empty(rn_parts, cudf::data_type{cudf::type_id::INT64})
+                          : concat_or_empty(fi_parts, cudf::data_type{cudf::type_id::UINT64}));
+    }
+    table = std::make_unique<cudf::table>(std::move(columns));
   }
 
   // Hive-partition scans assemble inline here: partition_values are per-split
@@ -1841,9 +2467,13 @@ std::unique_ptr<cudf::table> parquet_gpu_ingestible::post_filter_and_project(
       input.state != filter_state::ROW_FILTERED_AND_PROJECTED && _duckdb_filter_expression) {
     auto sirius_filter_ast = sirius::ast::from_duckdb(*_duckdb_filter_expression);
     sirius::expression_evaluator exec(sirius_filter_ast.get(), mr_ref, stream);
+    // With virtual columns, keep every column through the filter: they sit after the data
+    // columns and output_data_positions only lists data ones, so a projecting select would cut
+    // them off before assemble_scan_output can place them.
     auto const data_positions = output_data_positions(*_plan);
-    auto filtered             = data_positions.empty() ? exec.select(input.table.view())
-                                                       : exec.select(input.table.view(), data_positions);
+    auto filtered = (data_positions.empty() || _plan->has_virtual_columns())
+                      ? exec.select(input.table.view())
+                      : exec.select(input.table.view(), data_positions);
     input = filtered_table{owning_table_view{std::move(filtered)}, filter_state::ROW_FILTERED};
     SIRIUS_LOG_DEBUG(
       "[parquet_gpu_ingestible::post_filter_and_project] Applied duckdb filter expression "

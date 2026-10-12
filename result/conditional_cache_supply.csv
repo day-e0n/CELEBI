@@ -1,0 +1,5 @@
+workload,condition,query_count,executions,selected_full_cache_batches,supplied_full_cache_batches,audited_full_cache_batches,conditional_supply_pct,normal_parquet_materializations
+th,paging_lru,22,"2,3",24,24,24,100.0,938
+th,reorder_future,22,"2,3",67,67,67,100.0,938
+cb,paging_lru,43,"2,3",67,67,67,100.0,330
+cb,reorder_future,43,"2,3",120,120,120,100.0,330

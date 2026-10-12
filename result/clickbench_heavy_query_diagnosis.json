@@ -1,0 +1,127 @@
+{
+  "rows": [
+    {
+      "condition": "baseline",
+      "query": "q28",
+      "query_wall_s": 16.731426113285124,
+      "scan_work_s": 31.982401906,
+      "scan_interval_union_s": 16.6406422835,
+      "total_traced_value_bytes": null,
+      "cache_served_value_bytes": null,
+      "byte_hit_pct": null,
+      "oom_count": 0,
+      "oom_records": [
+        [],
+        []
+      ]
+    },
+    {
+      "condition": "baseline",
+      "query": "q29",
+      "query_wall_s": 40.37065667612478,
+      "scan_work_s": 51.3723683795,
+      "scan_interval_union_s": 33.4268552395,
+      "total_traced_value_bytes": null,
+      "cache_served_value_bytes": null,
+      "byte_hit_pct": null,
+      "oom_count": 0,
+      "oom_records": [
+        [],
+        []
+      ]
+    },
+    {
+      "condition": "paging_lru",
+      "query": "q28",
+      "query_wall_s": 15.901956046465784,
+      "scan_work_s": 15.233353810499999,
+      "scan_interval_union_s": 8.439832227,
+      "total_traced_value_bytes": 18877655990,
+      "cache_served_value_bytes": 0,
+      "byte_hit_pct": 0.0,
+      "oom_count": 0,
+      "oom_records": [
+        [],
+        []
+      ]
+    },
+    {
+      "condition": "paging_lru",
+      "query": "q29",
+      "query_wall_s": 39.823778034886345,
+      "scan_work_s": 50.384811455,
+      "scan_interval_union_s": 37.588397807,
+      "total_traced_value_bytes": 13324916852,
+      "cache_served_value_bytes": 0,
+      "byte_hit_pct": 0.0,
+      "oom_count": 0,
+      "oom_records": [
+        [],
+        []
+      ]
+    },
+    {
+      "condition": "reorder_future",
+      "query": "q28",
+      "query_wall_s": 16.67733499663882,
+      "scan_work_s": 27.121628659000002,
+      "scan_interval_union_s": 12.7192338265,
+      "total_traced_value_bytes": 18877655990,
+      "cache_served_value_bytes": 0,
+      "byte_hit_pct": 0.0,
+      "oom_count": 0,
+      "oom_records": [
+        [],
+        []
+      ]
+    },
+    {
+      "condition": "reorder_future",
+      "query": "q29",
+      "query_wall_s": 40.50185458105989,
+      "scan_work_s": 51.0332365735,
+      "scan_interval_union_s": 34.3228623085,
+      "total_traced_value_bytes": 13324916852,
+      "cache_served_value_bytes": 1671342732,
+      "byte_hit_pct": 12.542988076875993,
+      "oom_count": 2,
+      "oom_records": [
+        [
+          {
+            "file": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/log_dir/sirius_2026-10-07.log",
+            "line": 20279,
+            "message": "[2026-10-07 02:54:49.069] [warning] [gpu_pipeline_task.cpp:296] Pipeline 0: OOM at operator PROJECTION (id=7, index 1/3), requested 4043665824 bytes (3856.34 MB), global usage 19049482896 bytes (18167.00 MB), peak allocated 4721251584 bytes (4502.54 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 1953694959 bytes (1863.19 MB), rescheduling task 1020"
+          }
+        ],
+        [
+          {
+            "file": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/cb_r1/reorder_future/log_dir/sirius_2026-10-07.log",
+            "line": 32079,
+            "message": "[2026-10-07 02:56:10.885] [warning] [gpu_pipeline_task.cpp:296] Pipeline 0: OOM at operator PROJECTION (id=7, index 1/3), requested 3452802560 bytes (3292.85 MB), global usage 19664711427 bytes (18753.73 MB), peak allocated 4028120832 bytes (3841.52 MB), bytes to materialize input 0 bytes (0.00 MB), reservation 1676525505 bytes (1598.86 MB), rescheduling task 1544"
+          }
+        ]
+      ]
+    }
+  ],
+  "dataset_rows": 99997497,
+  "decoded_column_bytes": {
+    "CounterID": 399989988,
+    "URL": 9956144344,
+    "Referer": 7290587277
+  },
+  "cache_budget_bytes": 6442450944,
+  "environment": "Physical GPU 1, RTX A5000; 20GB GPU usage limit; 32GB host; 16MiB cache pages; prefetch off; O_DIRECT on; late materialization on.",
+  "warmup_excluded": 1,
+  "measured_executions": [
+    2,
+    3
+  ],
+  "independent_runs": 1,
+  "scope_notes": [
+    "Wall/scan figures use latency cases; byte hits use separate matching trace-on cases.",
+    "Scan work is summed host task Computing intervals. It includes read/decode/filter/cache/wait costs and overlapping GPU operations; it is not pure disk time or GPU kernel active time.",
+    "Scan union merges overlapping scan intervals; still not the causal time saved by eliminating scan.",
+    "Compressed/uncompressed scan-audit bytes are planned Parquet column-chunk volumes, not measured physical I/O traffic.",
+    "The two measured CELEBI q29 executions both report projection OOM rescheduling; no attribution of its wall-time penalty is made."
+  ]
+}

@@ -76,12 +76,21 @@ struct scan_plan {
     sirius::logical_type type;  ///< DuckDB type for the cudf scalar factory
   };
 
+  /// A row-identity virtual column DuckDB's LATE_MATERIALIZATION asks the scan for. Not in the
+  /// file: materialize_table computes it from the row groups it read and appends it after the
+  /// data columns, so its batch position is data_columns.size() + its index here.
+  struct virtual_column {
+    enum kind_t : std::uint8_t { FILE_INDEX, FILE_ROW_NUMBER };
+    kind_t kind;
+    sirius::logical_type type;
+  };
+
   /// One entry per final output column, in the order DuckDB expects.
   struct output_entry {
-    enum source_t : std::uint8_t { DATA, PARTITION };
+    enum source_t : std::uint8_t { DATA, PARTITION, VIRTUAL };
     source_t source;
-    std::size_t
-      idx;  ///< index into @c data_columns (if DATA) or @c partition_columns (if PARTITION)
+    std::size_t idx;  ///< index into @c data_columns (DATA), @c partition_columns (PARTITION)
+                      ///< or @c virtual_columns (VIRTUAL)
   };
 
   /// Columns read from parquet, in D order.
@@ -89,6 +98,9 @@ struct scan_plan {
 
   /// Partition columns injected post-read.
   std::vector<partition_column> partition_columns;
+
+  /// Virtual row-identity columns, appended to the batch after the data columns.
+  std::vector<virtual_column> virtual_columns;
 
   /// Final output layout. Length equals the scan operator's @c types.size().
   std::vector<output_entry> output_layout;
@@ -128,11 +140,33 @@ struct scan_plan {
   /// leaf resolution.
   bool needs_reader_projection = false;
 
+  /// True when the scan reads no column of its own (count(*)) and @c data_columns holds one
+  /// narrow column added only so the reader returns a batch that carries the row count.
+  /// Reading nothing makes the reader decode every column of the file instead.
+  bool row_count_column = false;
+
   //===--------------------------------------------------------------------===//
   // Convenience views
   //===--------------------------------------------------------------------===//
 
   [[nodiscard]] bool has_partitions() const { return !partition_columns.empty(); }
+  [[nodiscard]] bool has_virtual_columns() const { return !virtual_columns.empty(); }
+  /// Batch position of virtual column @p idx (appended after the data columns).
+  [[nodiscard]] std::size_t virtual_batch_position(std::size_t idx) const
+  {
+    return data_columns.size() + idx;
+  }
+  /// Output position of the FILE_ROW_NUMBER virtual column, if the scan emits one.
+  [[nodiscard]] std::optional<std::size_t> file_row_number_output_position() const
+  {
+    for (std::size_t i = 0; i < output_layout.size(); ++i) {
+      if (output_layout[i].source == output_entry::VIRTUAL &&
+          virtual_columns[output_layout[i].idx].kind == virtual_column::FILE_ROW_NUMBER) {
+        return i;
+      }
+    }
+    return std::nullopt;
+  }
 
   /// True iff the scan is producing a strict subset / reordering of the file's
   /// columns — i.e. the reader must be told which columns to read.

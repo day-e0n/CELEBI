@@ -15,6 +15,9 @@
  */
 
 #include "scan_manager/load_balancing_scan_batch_coalescer.hpp"
+#include "op/scan/parquet_gpu_ingestible.hpp"
+#include <thread>
+#include <chrono>
 
 #include "exec/try.hpp"
 #include "log/logging.hpp"
@@ -38,6 +41,10 @@ load_balancing_scan_batch_coalescer::register_pipeline(op::scan::sirius_gpu_scan
   auto pipeline_id = scan_op->get_pipeline()->get_pipeline_id();
   auto state       = std::make_unique<metadata_processing_state>(
     uid, pipeline_id, std::move(coalescer), std::move(connector), std::move(balancer));
+  if (auto* parquet = dynamic_cast<op::scan::parquet_gpu_ingestible*>(ingestible.get());
+      parquet && parquet->waits_for_row_id_filter()) {
+    state->row_id_filter_ready = [parquet] { return parquet->row_id_filter_published(); };
+  }
   _pipeline_order.push_back(uid);
   auto state_ptr = state.get();
   _slots[uid]    = std::move(state);
@@ -101,6 +108,25 @@ void load_balancing_scan_batch_coalescer::process_provider_inputs(metadata_proce
 
   // Balance one coalesced batch onto a GPU and hand it to the connector.
   auto emit = [&state](std::unique_ptr<op::scan::scan_info> batch) {
+    // Hold a LATE_MATERIALIZATION re-fetch scan until the join publishes its file_row_number
+    // range: splits that leave before it decode every column of every row group. This thread is
+    // not a GPU worker, and the scan feeding that join's build was registered (and drained)
+    // first, so the wait cannot starve the build; the timeout covers a build that never
+    // publishes (e.g. no rows).
+    if (state.row_id_filter_ready) {
+      auto const t0 = std::chrono::steady_clock::now();
+      while (!state.row_id_filter_ready() &&
+             std::chrono::steady_clock::now() - t0 < std::chrono::seconds(30)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+      }
+      SIRIUS_LOG_INFO("[late-materialization] pipeline={} waited {} ms for the row-id filter ({})",
+                      state.pipeline_id,
+                      std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - t0)
+                        .count(),
+                      state.row_id_filter_ready() ? "published" : "timed out");
+      state.row_id_filter_ready = nullptr;  // once per scan
+    }
     auto op_data = std::make_unique<op::scan::scan_operator_input>(std::move(batch));
     auto dev_id  = state.balancer->get_next_gpu(state.pipeline_id, op_data.get());
     SIRIUS_LOG_INFO("[coalesce-debug] load_balancer emit pipeline={} -> preferred GPU {}",

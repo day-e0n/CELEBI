@@ -1,0 +1,196 @@
+workload,condition,query,position,query_wall_s,cumulative_query_wall_s,value_type
+ClickBench,baseline,q1,1,0.0735,0.0735,measured_reference
+ClickBench,baseline,q2,2,0.0735,0.147,measured_reference
+ClickBench,baseline,q3,3,0.099,0.246,measured_reference
+ClickBench,baseline,q4,4,0.16974999999999998,0.41574999999999995,measured_reference
+ClickBench,baseline,q5,5,0.19775,0.6134999999999999,measured_reference
+ClickBench,baseline,q6,6,0.352,0.9654999999999999,measured_reference
+ClickBench,baseline,q7,7,0.066,1.0314999999999999,measured_reference
+ClickBench,baseline,q8,8,0.071,1.1024999999999998,measured_reference
+ClickBench,baseline,q9,9,0.2735,1.376,measured_reference
+ClickBench,baseline,q10,10,0.29874999999999996,1.67475,measured_reference
+ClickBench,baseline,q11,11,0.2405,1.91525,measured_reference
+ClickBench,baseline,q12,12,0.238,2.15325,measured_reference
+ClickBench,baseline,q13,13,0.35424999999999995,2.5075,measured_reference
+ClickBench,baseline,q14,14,1.408,3.9154999999999998,measured_reference
+ClickBench,baseline,q15,15,0.37424999999999997,4.28975,measured_reference
+ClickBench,baseline,q16,16,0.21775,4.507499999999999,measured_reference
+ClickBench,baseline,q17,17,0.5337500000000001,5.04125,measured_reference
+ClickBench,baseline,q18,18,0.511,5.55225,measured_reference
+ClickBench,baseline,q19,19,0.8955,6.44775,measured_reference
+ClickBench,baseline,q20,20,0.1545,6.60225,measured_reference
+ClickBench,baseline,q21,21,1.2075,7.809749999999999,measured_reference
+ClickBench,baseline,q22,22,1.3845,9.19425,measured_reference
+ClickBench,baseline,q23,23,3.09925,12.2935,measured_reference
+ClickBench,baseline,q24,24,7.648,19.941499999999998,measured_reference
+ClickBench,baseline,q25,25,1.002,20.943499999999997,measured_reference
+ClickBench,baseline,q26,26,1.04925,21.992749999999997,measured_reference
+ClickBench,baseline,q27,27,0.552,22.544749999999997,measured_reference
+ClickBench,baseline,q28,28,0.1,22.64475,assumed_example
+ClickBench,baseline,q29,29,0.1,22.74475,assumed_example
+ClickBench,baseline,q30,30,0.091,22.83575,measured_reference
+ClickBench,baseline,q31,31,0.4505,23.286250000000003,measured_reference
+ClickBench,baseline,q32,32,0.7395,24.025750000000002,measured_reference
+ClickBench,baseline,q33,33,1.0905,25.11625,measured_reference
+ClickBench,baseline,q34,34,1.60375,26.720000000000002,measured_reference
+ClickBench,baseline,q35,35,1.58125,28.301250000000003,measured_reference
+ClickBench,baseline,q36,36,0.18225,28.483500000000003,measured_reference
+ClickBench,baseline,q37,37,0.426,28.9095,measured_reference
+ClickBench,baseline,q38,38,0.3595,29.269000000000002,measured_reference
+ClickBench,baseline,q39,39,0.42574999999999996,29.694750000000003,measured_reference
+ClickBench,baseline,q40,40,0.6785000000000001,30.373250000000002,measured_reference
+ClickBench,baseline,q41,41,0.1495,30.522750000000002,measured_reference
+ClickBench,baseline,q42,42,0.132,30.654750000000003,measured_reference
+ClickBench,baseline,q43,43,0.127,30.781750000000002,measured_reference
+ClickBench,paging_lru,q1,1,0.071,0.071,measured_reference
+ClickBench,paging_lru,q2,2,0.071,0.142,measured_reference
+ClickBench,paging_lru,q3,3,0.0735,0.21549999999999997,measured_reference
+ClickBench,paging_lru,q4,4,0.172,0.38749999999999996,measured_reference
+ClickBench,paging_lru,q5,5,0.09125,0.47874999999999995,measured_reference
+ClickBench,paging_lru,q6,6,0.36675,0.8454999999999999,measured_reference
+ClickBench,paging_lru,q7,7,0.0785,0.9239999999999999,measured_reference
+ClickBench,paging_lru,q8,8,0.058499999999999996,0.9824999999999999,measured_reference
+ClickBench,paging_lru,q9,9,0.162,1.1444999999999999,measured_reference
+ClickBench,paging_lru,q10,10,0.152,1.2964999999999998,measured_reference
+ClickBench,paging_lru,q11,11,0.147,1.4434999999999998,measured_reference
+ClickBench,paging_lru,q12,12,0.11425,1.5577499999999997,measured_reference
+ClickBench,paging_lru,q13,13,0.30125,1.8589999999999998,measured_reference
+ClickBench,paging_lru,q14,14,1.16525,3.0242499999999994,measured_reference
+ClickBench,paging_lru,q15,15,0.23275,3.2569999999999997,measured_reference
+ClickBench,paging_lru,q16,16,0.114,3.3709999999999996,measured_reference
+ClickBench,paging_lru,q17,17,0.34375,3.7147499999999996,measured_reference
+ClickBench,paging_lru,q18,18,0.37925,4.093999999999999,measured_reference
+ClickBench,paging_lru,q19,19,0.713,4.8069999999999995,measured_reference
+ClickBench,paging_lru,q20,20,0.050749999999999997,4.857749999999999,measured_reference
+ClickBench,paging_lru,q21,21,1.2305,6.0882499999999995,measured_reference
+ClickBench,paging_lru,q22,22,1.59975,7.688,measured_reference
+ClickBench,paging_lru,q23,23,3.09025,10.77825,measured_reference
+ClickBench,paging_lru,q24,24,6.56375,17.342,measured_reference
+ClickBench,paging_lru,q25,25,1.00175,18.34375,measured_reference
+ClickBench,paging_lru,q26,26,0.7715000000000001,19.11525,measured_reference
+ClickBench,paging_lru,q27,27,0.1445,19.25975,measured_reference
+ClickBench,paging_lru,q28,28,0.1,19.359750000000002,assumed_example
+ClickBench,paging_lru,q29,29,0.1,19.459750000000003,assumed_example
+ClickBench,paging_lru,q30,30,0.09625,19.556000000000004,measured_reference
+ClickBench,paging_lru,q31,31,0.19,19.746000000000006,measured_reference
+ClickBench,paging_lru,q32,32,0.45025000000000004,20.196250000000006,measured_reference
+ClickBench,paging_lru,q33,33,0.76325,20.959500000000006,measured_reference
+ClickBench,paging_lru,q34,34,1.5967500000000001,22.556250000000006,measured_reference
+ClickBench,paging_lru,q35,35,1.7405,24.296750000000007,measured_reference
+ClickBench,paging_lru,q36,36,0.1215,24.418250000000008,measured_reference
+ClickBench,paging_lru,q37,37,0.3975,24.81575000000001,measured_reference
+ClickBench,paging_lru,q38,38,0.377,25.192750000000007,measured_reference
+ClickBench,paging_lru,q39,39,0.36975,25.562500000000007,measured_reference
+ClickBench,paging_lru,q40,40,0.488,26.050500000000007,measured_reference
+ClickBench,paging_lru,q41,41,0.1645,26.215000000000007,measured_reference
+ClickBench,paging_lru,q42,42,0.08375,26.298750000000005,measured_reference
+ClickBench,paging_lru,q43,43,0.1215,26.420250000000006,measured_reference
+ClickBench,reorder_future,q1,1,0.071,0.071,measured_reference
+ClickBench,reorder_future,q2,2,0.058499999999999996,0.1295,measured_reference
+ClickBench,reorder_future,q3,3,0.058499999999999996,0.188,measured_reference
+ClickBench,reorder_future,q4,4,0.061,0.249,measured_reference
+ClickBench,reorder_future,q5,5,0.091,0.33999999999999997,measured_reference
+ClickBench,reorder_future,q6,6,0.132,0.472,measured_reference
+ClickBench,reorder_future,q7,7,0.0785,0.5505,measured_reference
+ClickBench,reorder_future,q8,8,0.058499999999999996,0.609,measured_reference
+ClickBench,reorder_future,q9,9,0.16699999999999998,0.776,measured_reference
+ClickBench,reorder_future,q10,10,0.1645,0.9405,measured_reference
+ClickBench,reorder_future,q11,11,0.1465,1.087,measured_reference
+ClickBench,reorder_future,q12,12,0.111,1.198,measured_reference
+ClickBench,reorder_future,q13,13,0.1365,1.3345,measured_reference
+ClickBench,reorder_future,q14,14,1.1917499999999999,2.52625,measured_reference
+ClickBench,reorder_future,q15,15,0.13974999999999999,2.666,measured_reference
+ClickBench,reorder_future,q16,16,0.11649999999999999,2.7824999999999998,measured_reference
+ClickBench,reorder_future,q17,17,0.2425,3.025,measured_reference
+ClickBench,reorder_future,q18,18,0.24275,3.26775,measured_reference
+ClickBench,reorder_future,q19,19,0.6094999999999999,3.87725,measured_reference
+ClickBench,reorder_future,q20,20,0.04825,3.9255,measured_reference
+ClickBench,reorder_future,q21,21,1.2625,5.188,measured_reference
+ClickBench,reorder_future,q22,22,0.99175,6.179749999999999,measured_reference
+ClickBench,reorder_future,q23,23,3.0140000000000002,9.19375,measured_reference
+ClickBench,reorder_future,q24,24,6.19525,15.389,measured_reference
+ClickBench,reorder_future,q25,25,0.5845,15.9735,measured_reference
+ClickBench,reorder_future,q26,26,0.779,16.7525,measured_reference
+ClickBench,reorder_future,q27,27,0.142,16.8945,measured_reference
+ClickBench,reorder_future,q28,28,0.1,16.994500000000002,assumed_example
+ClickBench,reorder_future,q29,29,0.1,17.094500000000004,assumed_example
+ClickBench,reorder_future,q30,30,0.061,17.155500000000004,measured_reference
+ClickBench,reorder_future,q31,31,0.13949999999999999,17.295000000000005,measured_reference
+ClickBench,reorder_future,q32,32,0.747,18.042000000000005,measured_reference
+ClickBench,reorder_future,q33,33,0.76575,18.807750000000006,measured_reference
+ClickBench,reorder_future,q34,34,1.62175,20.429500000000004,measured_reference
+ClickBench,reorder_future,q35,35,1.61625,22.045750000000005,measured_reference
+ClickBench,reorder_future,q36,36,0.11674999999999999,22.162500000000005,measured_reference
+ClickBench,reorder_future,q37,37,0.5035000000000001,22.666000000000004,measured_reference
+ClickBench,reorder_future,q38,38,0.37975000000000003,23.045750000000005,measured_reference
+ClickBench,reorder_future,q39,39,0.137,23.182750000000006,measured_reference
+ClickBench,reorder_future,q40,40,0.744,23.926750000000006,measured_reference
+ClickBench,reorder_future,q41,41,0.11649999999999999,24.043250000000004,measured_reference
+ClickBench,reorder_future,q42,42,0.12925,24.172500000000003,measured_reference
+ClickBench,reorder_future,q43,43,0.066,24.238500000000002,measured_reference
+TPC-H SF50,baseline,q1,1,1.4955,1.4955,measured_reference
+TPC-H SF50,baseline,q2,2,0.49666666666666665,1.9921666666666666,measured_reference
+TPC-H SF50,baseline,q3,3,1.5841666666666667,3.5763333333333334,measured_reference
+TPC-H SF50,baseline,q4,4,0.8618333333333333,4.438166666666667,measured_reference
+TPC-H SF50,baseline,q5,5,1.7866666666666666,6.224833333333333,measured_reference
+TPC-H SF50,baseline,q6,6,1.0486666666666666,7.273499999999999,measured_reference
+TPC-H SF50,baseline,q7,7,1.971,9.244499999999999,measured_reference
+TPC-H SF50,baseline,q8,8,2.4215,11.665999999999999,measured_reference
+TPC-H SF50,baseline,q9,9,2.7785,14.444499999999998,measured_reference
+TPC-H SF50,baseline,q10,10,1.7966666666666666,16.241166666666665,measured_reference
+TPC-H SF50,baseline,q11,11,0.4025,16.643666666666665,measured_reference
+TPC-H SF50,baseline,q12,12,1.1176666666666666,17.761333333333333,measured_reference
+TPC-H SF50,baseline,q13,13,1.2688333333333333,19.030166666666666,measured_reference
+TPC-H SF50,baseline,q14,14,1.4445,20.474666666666668,measured_reference
+TPC-H SF50,baseline,q15,15,1.4505,21.92516666666667,measured_reference
+TPC-H SF50,baseline,q16,16,0.3545,22.27966666666667,measured_reference
+TPC-H SF50,baseline,q17,17,1.904,24.18366666666667,measured_reference
+TPC-H SF50,baseline,q18,18,1.4849999999999999,25.66866666666667,measured_reference
+TPC-H SF50,baseline,q19,19,1.4671666666666667,27.135833333333338,measured_reference
+TPC-H SF50,baseline,q20,20,1.5585,28.694333333333336,measured_reference
+TPC-H SF50,baseline,q21,21,3.5338333333333334,32.22816666666667,measured_reference
+TPC-H SF50,baseline,q22,22,0.4041666666666667,32.632333333333335,measured_reference
+TPC-H SF50,paging_lru,q1,1,1.6473333333333333,1.6473333333333333,measured_reference
+TPC-H SF50,paging_lru,q2,2,0.35983333333333334,2.0071666666666665,measured_reference
+TPC-H SF50,paging_lru,q3,3,1.398,3.4051666666666662,measured_reference
+TPC-H SF50,paging_lru,q4,4,0.8911666666666667,4.296333333333333,measured_reference
+TPC-H SF50,paging_lru,q5,5,1.8025,6.098833333333333,measured_reference
+TPC-H SF50,paging_lru,q6,6,1.1176666666666666,7.2165,measured_reference
+TPC-H SF50,paging_lru,q7,7,1.8656666666666668,9.082166666666666,measured_reference
+TPC-H SF50,paging_lru,q8,8,2.015,11.097166666666666,measured_reference
+TPC-H SF50,paging_lru,q9,9,2.254,13.351166666666666,measured_reference
+TPC-H SF50,paging_lru,q10,10,1.6988333333333334,15.049999999999999,measured_reference
+TPC-H SF50,paging_lru,q11,11,0.402,15.451999999999998,measured_reference
+TPC-H SF50,paging_lru,q12,12,1.2215,16.673499999999997,measured_reference
+TPC-H SF50,paging_lru,q13,13,1.178,17.851499999999998,measured_reference
+TPC-H SF50,paging_lru,q14,14,1.5065,19.357999999999997,measured_reference
+TPC-H SF50,paging_lru,q15,15,1.5073333333333334,20.865333333333332,measured_reference
+TPC-H SF50,paging_lru,q16,16,0.22383333333333333,21.089166666666664,measured_reference
+TPC-H SF50,paging_lru,q17,17,1.5848333333333333,22.673999999999996,measured_reference
+TPC-H SF50,paging_lru,q18,18,1.5833333333333333,24.257333333333328,measured_reference
+TPC-H SF50,paging_lru,q19,19,1.542,25.79933333333333,measured_reference
+TPC-H SF50,paging_lru,q20,20,1.5046666666666666,27.303999999999995,measured_reference
+TPC-H SF50,paging_lru,q21,21,2.9835000000000003,30.287499999999994,measured_reference
+TPC-H SF50,paging_lru,q22,22,0.39216666666666666,30.679666666666662,measured_reference
+TPC-H SF50,reorder_future,q1,1,1.5135,1.5135,measured_reference
+TPC-H SF50,reorder_future,q2,2,0.18583333333333332,1.6993333333333334,measured_reference
+TPC-H SF50,reorder_future,q3,3,1.3341666666666667,3.0335,measured_reference
+TPC-H SF50,reorder_future,q4,4,0.4891666666666667,3.522666666666667,measured_reference
+TPC-H SF50,reorder_future,q5,5,1.4823333333333333,5.005,measured_reference
+TPC-H SF50,reorder_future,q6,6,0.562,5.567,measured_reference
+TPC-H SF50,reorder_future,q7,7,1.6551666666666667,7.222166666666666,measured_reference
+TPC-H SF50,reorder_future,q8,8,1.8266666666666667,9.048833333333333,measured_reference
+TPC-H SF50,reorder_future,q9,9,1.9683333333333333,11.017166666666666,measured_reference
+TPC-H SF50,reorder_future,q10,10,1.1751666666666667,12.192333333333334,measured_reference
+TPC-H SF50,reorder_future,q11,11,0.3308333333333333,12.523166666666667,measured_reference
+TPC-H SF50,reorder_future,q12,12,0.6915,13.214666666666666,measured_reference
+TPC-H SF50,reorder_future,q13,13,1.0391666666666666,14.253833333333333,measured_reference
+TPC-H SF50,reorder_future,q14,14,0.9215,15.175333333333333,measured_reference
+TPC-H SF50,reorder_future,q15,15,1.142,16.317333333333334,measured_reference
+TPC-H SF50,reorder_future,q16,16,0.19483333333333333,16.512166666666666,measured_reference
+TPC-H SF50,reorder_future,q17,17,0.8321666666666666,17.34433333333333,measured_reference
+TPC-H SF50,reorder_future,q18,18,1.0523333333333333,18.396666666666665,measured_reference
+TPC-H SF50,reorder_future,q19,19,1.2118333333333333,19.6085,measured_reference
+TPC-H SF50,reorder_future,q20,20,1.0211666666666666,20.629666666666665,measured_reference
+TPC-H SF50,reorder_future,q21,21,2.7371666666666665,23.366833333333332,measured_reference
+TPC-H SF50,reorder_future,q22,22,0.184,23.550833333333333,measured_reference

@@ -1,0 +1,889 @@
+workload,condition,query,run,execution,scan_work_s
+ClickBench,baseline,q1,1,2,0.018635053
+ClickBench,baseline,q1,1,3,0.021325413999999997
+ClickBench,baseline,q2,1,2,0.017779751
+ClickBench,baseline,q2,1,3,0.016480017
+ClickBench,baseline,q3,1,2,0.038874883
+ClickBench,baseline,q3,1,3,0.038393861
+ClickBench,baseline,q4,1,2,0.21611913200000002
+ClickBench,baseline,q4,1,3,0.21973199399999999
+ClickBench,baseline,q5,1,2,0.214212219
+ClickBench,baseline,q5,1,3,0.22133367799999998
+ClickBench,baseline,q6,1,2,0.711763962
+ClickBench,baseline,q6,1,3,0.687254913
+ClickBench,baseline,q7,1,2,0.014269907
+ClickBench,baseline,q7,1,3,0.014490938
+ClickBench,baseline,q8,1,2,0.017188975
+ClickBench,baseline,q8,1,3,0.018274733
+ClickBench,baseline,q9,1,2,0.41802138099999997
+ClickBench,baseline,q9,1,3,0.416003428
+ClickBench,baseline,q10,1,2,0.634471487
+ClickBench,baseline,q10,1,3,0.594619042
+ClickBench,baseline,q11,1,2,0.483378437
+ClickBench,baseline,q11,1,3,0.48467550100000006
+ClickBench,baseline,q12,1,2,0.565471721
+ClickBench,baseline,q12,1,3,0.6374740879999999
+ClickBench,baseline,q13,1,2,0.720573734
+ClickBench,baseline,q13,1,3,0.7263018509999999
+ClickBench,baseline,q14,1,2,1.9253751519999998
+ClickBench,baseline,q14,1,3,1.7959691549999999
+ClickBench,baseline,q15,1,2,0.7550044760000001
+ClickBench,baseline,q15,1,3,0.7614256680000001
+ClickBench,baseline,q16,1,2,0.21584597500000002
+ClickBench,baseline,q16,1,3,0.21901533599999998
+ClickBench,baseline,q17,1,2,1.1435294010000001
+ClickBench,baseline,q17,1,3,1.1306806919999999
+ClickBench,baseline,q18,1,2,1.082321497
+ClickBench,baseline,q18,1,3,1.090919699
+ClickBench,baseline,q19,1,2,2.1619697330000003
+ClickBench,baseline,q19,1,3,2.1153536170000002
+ClickBench,baseline,q20,1,2,0.224413509
+ClickBench,baseline,q20,1,3,0.22202171099999998
+ClickBench,baseline,q21,1,2,4.4776237519999995
+ClickBench,baseline,q21,1,3,4.2145649050000005
+ClickBench,baseline,q22,1,2,5.140018586
+ClickBench,baseline,q22,1,3,5.121094814999999
+ClickBench,baseline,q23,1,2,7.774420942
+ClickBench,baseline,q23,1,3,7.754429759999999
+ClickBench,baseline,q24,1,2,19.075825274
+ClickBench,baseline,q24,1,3,19.238668121
+ClickBench,baseline,q25,1,2,2.4153921649999996
+ClickBench,baseline,q25,1,3,2.1301313390000005
+ClickBench,baseline,q26,1,2,1.604345559
+ClickBench,baseline,q26,1,3,1.209367546
+ClickBench,baseline,q27,1,2,1.891778065
+ClickBench,baseline,q27,1,3,1.6199105209999998
+ClickBench,baseline,q30,1,2,0.034775205
+ClickBench,baseline,q30,1,3,0.034645381999999995
+ClickBench,baseline,q31,1,2,0.700710871
+ClickBench,baseline,q31,1,3,0.706467506
+ClickBench,baseline,q32,1,2,2.1777094790000002
+ClickBench,baseline,q32,1,3,2.249822101
+ClickBench,baseline,q33,1,2,1.427245526
+ClickBench,baseline,q33,1,3,1.533073876
+ClickBench,baseline,q34,1,2,4.1930831060000004
+ClickBench,baseline,q34,1,3,4.406319654
+ClickBench,baseline,q35,1,2,4.083312123
+ClickBench,baseline,q35,1,3,4.354963328999999
+ClickBench,baseline,q36,1,2,0.07534104700000001
+ClickBench,baseline,q36,1,3,0.075717125
+ClickBench,baseline,q37,1,2,0.728480697
+ClickBench,baseline,q37,1,3,0.7295111870000001
+ClickBench,baseline,q38,1,2,0.593689235
+ClickBench,baseline,q38,1,3,0.594164669
+ClickBench,baseline,q39,1,2,0.733808688
+ClickBench,baseline,q39,1,3,0.733022108
+ClickBench,baseline,q40,1,2,1.211062985
+ClickBench,baseline,q40,1,3,1.21021947
+ClickBench,baseline,q41,1,2,0.094024265
+ClickBench,baseline,q41,1,3,0.095679369
+ClickBench,baseline,q42,1,2,0.074078568
+ClickBench,baseline,q42,1,3,0.077220164
+ClickBench,baseline,q43,1,2,0.068774851
+ClickBench,baseline,q43,1,3,0.069375389
+ClickBench,baseline,q1,2,2,0.022756692000000002
+ClickBench,baseline,q1,2,3,0.021246362999999997
+ClickBench,baseline,q2,2,2,0.019171762999999998
+ClickBench,baseline,q2,2,3,0.019801919
+ClickBench,baseline,q3,2,2,0.041086938
+ClickBench,baseline,q3,2,3,0.040104544
+ClickBench,baseline,q4,2,2,0.228033177
+ClickBench,baseline,q4,2,3,0.220730987
+ClickBench,baseline,q5,2,2,0.221841295
+ClickBench,baseline,q5,2,3,0.220305392
+ClickBench,baseline,q6,2,2,0.712313203
+ClickBench,baseline,q6,2,3,0.698212905
+ClickBench,baseline,q7,2,2,0.013835715
+ClickBench,baseline,q7,2,3,0.015108402
+ClickBench,baseline,q8,2,2,0.016940648
+ClickBench,baseline,q8,2,3,0.019235963000000002
+ClickBench,baseline,q9,2,2,0.42489048300000004
+ClickBench,baseline,q9,2,3,0.41506977400000006
+ClickBench,baseline,q10,2,2,0.661351461
+ClickBench,baseline,q10,2,3,0.6472032329999999
+ClickBench,baseline,q11,2,2,0.48208361499999997
+ClickBench,baseline,q11,2,3,0.4822612429999999
+ClickBench,baseline,q12,2,2,0.54817627
+ClickBench,baseline,q12,2,3,0.573820058
+ClickBench,baseline,q13,2,2,0.732216033
+ClickBench,baseline,q13,2,3,0.7297522310000001
+ClickBench,baseline,q14,2,2,2.074437444
+ClickBench,baseline,q14,2,3,2.300691404
+ClickBench,baseline,q15,2,2,0.772071195
+ClickBench,baseline,q15,2,3,0.7721047839999999
+ClickBench,baseline,q16,2,2,0.215606045
+ClickBench,baseline,q16,2,3,0.221073514
+ClickBench,baseline,q17,2,2,1.168099054
+ClickBench,baseline,q17,2,3,1.158350292
+ClickBench,baseline,q18,2,2,1.120283981
+ClickBench,baseline,q18,2,3,1.155589706
+ClickBench,baseline,q19,2,2,2.1379107019999997
+ClickBench,baseline,q19,2,3,2.2191190959999996
+ClickBench,baseline,q20,2,2,0.220868489
+ClickBench,baseline,q20,2,3,0.221827664
+ClickBench,baseline,q21,2,2,4.509364176
+ClickBench,baseline,q21,2,3,4.860392322
+ClickBench,baseline,q22,2,2,5.1227361469999995
+ClickBench,baseline,q22,2,3,5.144469475999999
+ClickBench,baseline,q23,2,2,7.8002613510000005
+ClickBench,baseline,q23,2,3,7.755003486000001
+ClickBench,baseline,q24,2,2,18.505436468
+ClickBench,baseline,q24,2,3,18.807978003999995
+ClickBench,baseline,q25,2,2,2.4360822760000005
+ClickBench,baseline,q25,2,3,2.4252119789999997
+ClickBench,baseline,q26,2,2,1.585344031
+ClickBench,baseline,q26,2,3,1.576698314
+ClickBench,baseline,q27,2,2,1.61481425
+ClickBench,baseline,q27,2,3,1.895519397
+ClickBench,baseline,q30,2,2,0.035010151
+ClickBench,baseline,q30,2,3,0.03508302
+ClickBench,baseline,q31,2,2,0.693388568
+ClickBench,baseline,q31,2,3,0.703109555
+ClickBench,baseline,q32,2,2,2.270178875
+ClickBench,baseline,q32,2,3,2.25254287
+ClickBench,baseline,q33,2,2,1.686407683
+ClickBench,baseline,q33,2,3,1.49952967
+ClickBench,baseline,q34,2,2,4.713491459
+ClickBench,baseline,q34,2,3,4.437286510999999
+ClickBench,baseline,q35,2,2,4.4421483870000005
+ClickBench,baseline,q35,2,3,4.125089839999999
+ClickBench,baseline,q36,2,2,0.073814562
+ClickBench,baseline,q36,2,3,0.07367518099999999
+ClickBench,baseline,q37,2,2,0.7296727920000001
+ClickBench,baseline,q37,2,3,0.733541774
+ClickBench,baseline,q38,2,2,0.602100623
+ClickBench,baseline,q38,2,3,0.594131495
+ClickBench,baseline,q39,2,2,0.7281491929999999
+ClickBench,baseline,q39,2,3,0.723932994
+ClickBench,baseline,q40,2,2,1.2203207750000002
+ClickBench,baseline,q40,2,3,1.206785194
+ClickBench,baseline,q41,2,2,0.094526467
+ClickBench,baseline,q41,2,3,0.092005781
+ClickBench,baseline,q42,2,2,0.074705756
+ClickBench,baseline,q42,2,3,0.073789635
+ClickBench,baseline,q43,2,2,0.070244241
+ClickBench,baseline,q43,2,3,0.06900174099999999
+ClickBench,paging_lru,q1,1,2,0.023936012000000003
+ClickBench,paging_lru,q1,1,3,0.022027892
+ClickBench,paging_lru,q2,1,2,0.023341679
+ClickBench,paging_lru,q2,1,3,0.021599056000000002
+ClickBench,paging_lru,q3,1,2,0.03975223
+ClickBench,paging_lru,q3,1,3,0.006743641
+ClickBench,paging_lru,q4,1,2,0.237092176
+ClickBench,paging_lru,q4,1,3,0.234630292
+ClickBench,paging_lru,q5,1,2,0.015996669
+ClickBench,paging_lru,q5,1,3,0.014489763999999999
+ClickBench,paging_lru,q6,1,2,0.767075143
+ClickBench,paging_lru,q6,1,3,0.7830497359999999
+ClickBench,paging_lru,q7,1,2,0.025843307
+ClickBench,paging_lru,q7,1,3,0.029243382000000002
+ClickBench,paging_lru,q8,1,2,0.005684447
+ClickBench,paging_lru,q8,1,3,0.007900948999999999
+ClickBench,paging_lru,q9,1,2,0.13212459599999998
+ClickBench,paging_lru,q9,1,3,0.136321045
+ClickBench,paging_lru,q10,1,2,0.029171757999999996
+ClickBench,paging_lru,q10,1,3,0.029386410999999998
+ClickBench,paging_lru,q11,1,2,0.206660359
+ClickBench,paging_lru,q11,1,3,0.19848280499999998
+ClickBench,paging_lru,q12,1,2,0.12532799
+ClickBench,paging_lru,q12,1,3,0.12025314899999999
+ClickBench,paging_lru,q13,1,2,0.16674350899999998
+ClickBench,paging_lru,q13,1,3,0.732854899
+ClickBench,paging_lru,q14,1,2,0.27227269
+ClickBench,paging_lru,q14,1,3,0.803140183
+ClickBench,paging_lru,q15,1,2,0.150123527
+ClickBench,paging_lru,q15,1,3,0.412971809
+ClickBench,paging_lru,q16,1,2,0.019548832000000002
+ClickBench,paging_lru,q16,1,3,0.00866483
+ClickBench,paging_lru,q17,1,2,0.077611472
+ClickBench,paging_lru,q17,1,3,0.814197062
+ClickBench,paging_lru,q18,1,2,0.078275887
+ClickBench,paging_lru,q18,1,3,0.9009187359999999
+ClickBench,paging_lru,q19,1,2,1.0752567049999997
+ClickBench,paging_lru,q19,1,3,1.5323680060000002
+ClickBench,paging_lru,q20,1,2,0.010098971
+ClickBench,paging_lru,q20,1,3,0.013128006
+ClickBench,paging_lru,q21,1,2,4.513463655
+ClickBench,paging_lru,q21,1,3,4.4936562769999995
+ClickBench,paging_lru,q22,1,2,5.52473306
+ClickBench,paging_lru,q22,1,3,5.026187839
+ClickBench,paging_lru,q23,1,2,5.347629597
+ClickBench,paging_lru,q23,1,3,5.357677186
+ClickBench,paging_lru,q24,1,2,18.459071377
+ClickBench,paging_lru,q24,1,3,16.683344063
+ClickBench,paging_lru,q25,1,2,2.3056944159999997
+ClickBench,paging_lru,q25,1,3,2.1968671570000002
+ClickBench,paging_lru,q26,1,2,0.23956713999999998
+ClickBench,paging_lru,q26,1,3,0.235501463
+ClickBench,paging_lru,q27,1,2,0.104728359
+ClickBench,paging_lru,q27,1,3,0.096582247
+ClickBench,paging_lru,q30,1,2,0.035933546999999996
+ClickBench,paging_lru,q30,1,3,0.037140238
+ClickBench,paging_lru,q31,1,2,0.176381605
+ClickBench,paging_lru,q31,1,3,0.17558339899999997
+ClickBench,paging_lru,q32,1,2,1.210989844
+ClickBench,paging_lru,q32,1,3,1.24539588
+ClickBench,paging_lru,q33,1,2,0.15014108099999998
+ClickBench,paging_lru,q33,1,3,0.153656827
+ClickBench,paging_lru,q34,1,2,3.9104868929999994
+ClickBench,paging_lru,q34,1,3,3.9189497810000002
+ClickBench,paging_lru,q35,1,2,4.184613674
+ClickBench,paging_lru,q35,1,3,4.316970495
+ClickBench,paging_lru,q36,1,2,0.006543735
+ClickBench,paging_lru,q36,1,3,0.006386309
+ClickBench,paging_lru,q37,1,2,0.764773243
+ClickBench,paging_lru,q37,1,3,0.787846751
+ClickBench,paging_lru,q38,1,2,0.625455204
+ClickBench,paging_lru,q38,1,3,0.627246123
+ClickBench,paging_lru,q39,1,2,0.369948985
+ClickBench,paging_lru,q39,1,3,0.83452419
+ClickBench,paging_lru,q40,1,2,0.357473033
+ClickBench,paging_lru,q40,1,3,0.484043698
+ClickBench,paging_lru,q41,1,2,0.11420776499999999
+ClickBench,paging_lru,q41,1,3,0.114188917
+ClickBench,paging_lru,q42,1,2,0.032436608
+ClickBench,paging_lru,q42,1,3,0.033637268
+ClickBench,paging_lru,q43,1,2,0.06868043
+ClickBench,paging_lru,q43,1,3,0.06886727100000001
+ClickBench,paging_lru,q1,2,2,0.022981011
+ClickBench,paging_lru,q1,2,3,0.020260793
+ClickBench,paging_lru,q2,2,2,0.023958647
+ClickBench,paging_lru,q2,2,3,0.022916266
+ClickBench,paging_lru,q3,2,2,0.00634605
+ClickBench,paging_lru,q3,2,3,0.022936497
+ClickBench,paging_lru,q4,2,2,0.23637378
+ClickBench,paging_lru,q4,2,3,0.23423011300000002
+ClickBench,paging_lru,q5,2,2,0.012317068
+ClickBench,paging_lru,q5,2,3,0.016635253
+ClickBench,paging_lru,q6,2,2,0.797391208
+ClickBench,paging_lru,q6,2,3,0.7776486189999999
+ClickBench,paging_lru,q7,2,2,0.025301255999999998
+ClickBench,paging_lru,q7,2,3,0.023995895
+ClickBench,paging_lru,q8,2,2,0.00745343
+ClickBench,paging_lru,q8,2,3,0.007291308
+ClickBench,paging_lru,q9,2,2,0.127733915
+ClickBench,paging_lru,q9,2,3,0.141207672
+ClickBench,paging_lru,q10,2,2,0.033821910000000004
+ClickBench,paging_lru,q10,2,3,0.031064728000000003
+ClickBench,paging_lru,q11,2,2,0.19648683
+ClickBench,paging_lru,q11,2,3,0.20627923800000003
+ClickBench,paging_lru,q12,2,2,0.12132707199999998
+ClickBench,paging_lru,q12,2,3,0.12993086199999998
+ClickBench,paging_lru,q13,2,2,0.7904757480000001
+ClickBench,paging_lru,q13,2,3,0.404489414
+ClickBench,paging_lru,q14,2,2,1.2082825990000001
+ClickBench,paging_lru,q14,2,3,0.741283126
+ClickBench,paging_lru,q15,2,2,0.492632814
+ClickBench,paging_lru,q15,2,3,0.177946988
+ClickBench,paging_lru,q16,2,2,0.019251372
+ClickBench,paging_lru,q16,2,3,0.016740901000000002
+ClickBench,paging_lru,q17,2,2,0.6363628610000001
+ClickBench,paging_lru,q17,2,3,0.296829008
+ClickBench,paging_lru,q18,2,2,0.8364198010000001
+ClickBench,paging_lru,q18,2,3,0.711339754
+ClickBench,paging_lru,q19,2,2,1.484298926
+ClickBench,paging_lru,q19,2,3,1.8140419859999999
+ClickBench,paging_lru,q20,2,2,0.014171634
+ClickBench,paging_lru,q20,2,3,0.014176017999999999
+ClickBench,paging_lru,q21,2,2,4.535627411
+ClickBench,paging_lru,q21,2,3,4.549561612
+ClickBench,paging_lru,q22,2,2,6.08617476
+ClickBench,paging_lru,q22,2,3,4.796946161000001
+ClickBench,paging_lru,q23,2,2,5.342593026
+ClickBench,paging_lru,q23,2,3,5.371975475999999
+ClickBench,paging_lru,q24,2,2,18.491801611000003
+ClickBench,paging_lru,q24,2,3,18.806797402
+ClickBench,paging_lru,q25,2,2,2.2111607839999996
+ClickBench,paging_lru,q25,2,3,2.340115257
+ClickBench,paging_lru,q26,2,2,0.240773695
+ClickBench,paging_lru,q26,2,3,0.24491348900000004
+ClickBench,paging_lru,q27,2,2,0.101337383
+ClickBench,paging_lru,q27,2,3,0.100626084
+ClickBench,paging_lru,q30,2,2,0.037935787
+ClickBench,paging_lru,q30,2,3,0.036083673
+ClickBench,paging_lru,q31,2,2,0.17661532900000002
+ClickBench,paging_lru,q31,2,3,0.177853949
+ClickBench,paging_lru,q32,2,2,1.253011088
+ClickBench,paging_lru,q32,2,3,1.219187236
+ClickBench,paging_lru,q33,2,2,0.116081937
+ClickBench,paging_lru,q33,2,3,0.154478392
+ClickBench,paging_lru,q34,2,2,4.351583626
+ClickBench,paging_lru,q34,2,3,4.428608478
+ClickBench,paging_lru,q35,2,2,4.496203488
+ClickBench,paging_lru,q35,2,3,5.942892878
+ClickBench,paging_lru,q36,2,2,0.038142063999999996
+ClickBench,paging_lru,q36,2,3,0.004441874
+ClickBench,paging_lru,q37,2,2,0.333637369
+ClickBench,paging_lru,q37,2,3,0.781510331
+ClickBench,paging_lru,q38,2,2,0.644227338
+ClickBench,paging_lru,q38,2,3,0.6465783340000001
+ClickBench,paging_lru,q39,2,2,0.143698706
+ClickBench,paging_lru,q39,2,3,0.820459252
+ClickBench,paging_lru,q40,2,2,0.35822364700000003
+ClickBench,paging_lru,q40,2,3,0.48486003400000005
+ClickBench,paging_lru,q41,2,2,0.113400045
+ClickBench,paging_lru,q41,2,3,0.111172307
+ClickBench,paging_lru,q42,2,2,0.031466746000000004
+ClickBench,paging_lru,q42,2,3,0.031709639
+ClickBench,paging_lru,q43,2,2,0.070258307
+ClickBench,paging_lru,q43,2,3,0.070542999
+ClickBench,reorder_future,q1,1,2,0.021304754
+ClickBench,reorder_future,q1,1,3,0.022320886999999998
+ClickBench,reorder_future,q2,1,2,0.006162872
+ClickBench,reorder_future,q2,1,3,0.007698305000000001
+ClickBench,reorder_future,q3,1,2,0.008333479999999999
+ClickBench,reorder_future,q3,1,3,0.007065648000000001
+ClickBench,reorder_future,q4,1,2,0.011262024
+ClickBench,reorder_future,q4,1,3,0.010591144
+ClickBench,reorder_future,q5,1,2,0.008045835
+ClickBench,reorder_future,q5,1,3,0.017078720999999998
+ClickBench,reorder_future,q6,1,2,0.06504625
+ClickBench,reorder_future,q6,1,3,0.055833796
+ClickBench,reorder_future,q7,1,2,0.026759573
+ClickBench,reorder_future,q7,1,3,0.028057778
+ClickBench,reorder_future,q8,1,2,0.007285967
+ClickBench,reorder_future,q8,1,3,0.007485806
+ClickBench,reorder_future,q9,1,2,0.17105916999999998
+ClickBench,reorder_future,q9,1,3,0.158268132
+ClickBench,reorder_future,q10,1,2,0.125810397
+ClickBench,reorder_future,q10,1,3,0.111173762
+ClickBench,reorder_future,q11,1,2,0.20066572400000002
+ClickBench,reorder_future,q11,1,3,0.206685683
+ClickBench,reorder_future,q12,1,2,0.13003582
+ClickBench,reorder_future,q12,1,3,0.119457455
+ClickBench,reorder_future,q13,1,2,0.073427393
+ClickBench,reorder_future,q13,1,3,0.073023304
+ClickBench,reorder_future,q14,1,2,1.0041726549999999
+ClickBench,reorder_future,q14,1,3,1.27338314
+ClickBench,reorder_future,q15,1,2,0.07591872999999999
+ClickBench,reorder_future,q15,1,3,0.071939201
+ClickBench,reorder_future,q16,1,2,0.021001818
+ClickBench,reorder_future,q16,1,3,0.009236108
+ClickBench,reorder_future,q17,1,2,0.077512316
+ClickBench,reorder_future,q17,1,3,0.072794194
+ClickBench,reorder_future,q18,1,2,0.075405833
+ClickBench,reorder_future,q18,1,3,0.096080459
+ClickBench,reorder_future,q19,1,2,1.075143803
+ClickBench,reorder_future,q19,1,3,1.054677006
+ClickBench,reorder_future,q20,1,2,0.011443638
+ClickBench,reorder_future,q20,1,3,0.011598286
+ClickBench,reorder_future,q21,1,2,5.020420504999999
+ClickBench,reorder_future,q21,1,3,3.966164556
+ClickBench,reorder_future,q22,1,2,2.6073130709999996
+ClickBench,reorder_future,q22,1,3,3.22142518
+ClickBench,reorder_future,q23,1,2,7.768059068999999
+ClickBench,reorder_future,q23,1,3,7.988832388999999
+ClickBench,reorder_future,q24,1,2,18.156177081000003
+ClickBench,reorder_future,q24,1,3,16.108607204000002
+ClickBench,reorder_future,q25,1,2,1.1518476180000001
+ClickBench,reorder_future,q25,1,3,1.2717847189999998
+ClickBench,reorder_future,q26,1,2,0.240748157
+ClickBench,reorder_future,q26,1,3,0.244835153
+ClickBench,reorder_future,q27,1,2,0.107218516
+ClickBench,reorder_future,q27,1,3,0.10207567399999999
+ClickBench,reorder_future,q30,1,2,0.006500011
+ClickBench,reorder_future,q30,1,3,0.004954123
+ClickBench,reorder_future,q31,1,2,0.089321584
+ClickBench,reorder_future,q31,1,3,0.09315614700000001
+ClickBench,reorder_future,q32,1,2,2.301730749
+ClickBench,reorder_future,q32,1,3,2.1788016050000003
+ClickBench,reorder_future,q33,1,2,0.14724753299999999
+ClickBench,reorder_future,q33,1,3,0.151941663
+ClickBench,reorder_future,q34,1,2,4.900846761
+ClickBench,reorder_future,q34,1,3,4.5061563399999995
+ClickBench,reorder_future,q35,1,2,4.454897297
+ClickBench,reorder_future,q35,1,3,4.623140973000001
+ClickBench,reorder_future,q36,1,2,0.006012895000000001
+ClickBench,reorder_future,q36,1,3,0.006367325
+ClickBench,reorder_future,q37,1,2,0.790084562
+ClickBench,reorder_future,q37,1,3,0.7719306810000001
+ClickBench,reorder_future,q38,1,2,0.6185398440000001
+ClickBench,reorder_future,q38,1,3,0.61942501
+ClickBench,reorder_future,q39,1,2,0.146484744
+ClickBench,reorder_future,q39,1,3,0.145371216
+ClickBench,reorder_future,q40,1,2,1.21767031
+ClickBench,reorder_future,q40,1,3,0.709435334
+ClickBench,reorder_future,q41,1,2,0.056695183999999996
+ClickBench,reorder_future,q41,1,3,0.056578393
+ClickBench,reorder_future,q42,1,2,0.07404483
+ClickBench,reorder_future,q42,1,3,0.074989017
+ClickBench,reorder_future,q43,1,2,0.009478152
+ClickBench,reorder_future,q43,1,3,0.010417371
+ClickBench,reorder_future,q1,2,2,0.021959478
+ClickBench,reorder_future,q1,2,3,0.02066346
+ClickBench,reorder_future,q2,2,2,0.007186735
+ClickBench,reorder_future,q2,2,3,0.007618987
+ClickBench,reorder_future,q3,2,2,0.005293422999999999
+ClickBench,reorder_future,q3,2,3,0.007251421
+ClickBench,reorder_future,q4,2,2,0.009251500999999999
+ClickBench,reorder_future,q4,2,3,0.010667138999999999
+ClickBench,reorder_future,q5,2,2,0.007299262999999999
+ClickBench,reorder_future,q5,2,3,0.005551785000000001
+ClickBench,reorder_future,q6,2,2,0.051122495999999996
+ClickBench,reorder_future,q6,2,3,0.056007004
+ClickBench,reorder_future,q7,2,2,0.027213683
+ClickBench,reorder_future,q7,2,3,0.025372695
+ClickBench,reorder_future,q8,2,2,0.006734143000000001
+ClickBench,reorder_future,q8,2,3,0.006714368
+ClickBench,reorder_future,q9,2,2,0.17793198699999999
+ClickBench,reorder_future,q9,2,3,0.162755023
+ClickBench,reorder_future,q10,2,2,0.139429979
+ClickBench,reorder_future,q10,2,3,0.108943151
+ClickBench,reorder_future,q11,2,2,0.20737418400000002
+ClickBench,reorder_future,q11,2,3,0.207535183
+ClickBench,reorder_future,q12,2,2,0.12774458
+ClickBench,reorder_future,q12,2,3,0.128605201
+ClickBench,reorder_future,q13,2,2,0.07650718100000001
+ClickBench,reorder_future,q13,2,3,0.07184961
+ClickBench,reorder_future,q14,2,2,1.0702730759999999
+ClickBench,reorder_future,q14,2,3,0.7711985619999999
+ClickBench,reorder_future,q15,2,2,0.07282232899999999
+ClickBench,reorder_future,q15,2,3,0.082107809
+ClickBench,reorder_future,q16,2,2,0.008254034
+ClickBench,reorder_future,q16,2,3,0.009546239
+ClickBench,reorder_future,q17,2,2,0.082879925
+ClickBench,reorder_future,q17,2,3,0.089672815
+ClickBench,reorder_future,q18,2,2,0.085844697
+ClickBench,reorder_future,q18,2,3,0.082828507
+ClickBench,reorder_future,q19,2,2,1.005832145
+ClickBench,reorder_future,q19,2,3,1.086055624
+ClickBench,reorder_future,q20,2,2,0.013288315
+ClickBench,reorder_future,q20,2,3,0.011172814000000001
+ClickBench,reorder_future,q21,2,2,4.539510805
+ClickBench,reorder_future,q21,2,3,5.132416708
+ClickBench,reorder_future,q22,2,2,2.937025190000001
+ClickBench,reorder_future,q22,2,3,3.4970557650000003
+ClickBench,reorder_future,q23,2,2,6.637107964
+ClickBench,reorder_future,q23,2,3,7.761409194
+ClickBench,reorder_future,q24,2,2,16.212303652
+ClickBench,reorder_future,q24,2,3,16.92393219
+ClickBench,reorder_future,q25,2,2,1.225494423
+ClickBench,reorder_future,q25,2,3,1.08724999
+ClickBench,reorder_future,q26,2,2,0.240355358
+ClickBench,reorder_future,q26,2,3,0.221821888
+ClickBench,reorder_future,q27,2,2,0.100960496
+ClickBench,reorder_future,q27,2,3,0.10767790400000002
+ClickBench,reorder_future,q30,2,2,0.004625381
+ClickBench,reorder_future,q30,2,3,0.005346186
+ClickBench,reorder_future,q31,2,2,0.09257629099999999
+ClickBench,reorder_future,q31,2,3,0.08891108299999999
+ClickBench,reorder_future,q32,2,2,1.924120059
+ClickBench,reorder_future,q32,2,3,2.3906150680000002
+ClickBench,reorder_future,q33,2,2,0.113094308
+ClickBench,reorder_future,q33,2,3,0.10278979699999999
+ClickBench,reorder_future,q34,2,2,4.575011128
+ClickBench,reorder_future,q34,2,3,4.542511612
+ClickBench,reorder_future,q35,2,2,4.067579255000001
+ClickBench,reorder_future,q35,2,3,4.708396386
+ClickBench,reorder_future,q36,2,2,0.005732044
+ClickBench,reorder_future,q36,2,3,0.005577746000000001
+ClickBench,reorder_future,q37,2,2,0.918649489
+ClickBench,reorder_future,q37,2,3,0.917928858
+ClickBench,reorder_future,q38,2,2,0.6395779990000001
+ClickBench,reorder_future,q38,2,3,0.642603897
+ClickBench,reorder_future,q39,2,2,0.14865324700000002
+ClickBench,reorder_future,q39,2,3,0.149276834
+ClickBench,reorder_future,q40,2,2,0.70263732
+ClickBench,reorder_future,q40,2,3,0.6495451310000001
+ClickBench,reorder_future,q41,2,2,0.055154922
+ClickBench,reorder_future,q41,2,3,0.070082509
+ClickBench,reorder_future,q42,2,2,0.07503127000000001
+ClickBench,reorder_future,q42,2,3,0.07535141299999999
+ClickBench,reorder_future,q43,2,2,0.009492513000000001
+ClickBench,reorder_future,q43,2,3,0.009484614
+TPC-H SF50,baseline,q1,1,2,4.602607036
+TPC-H SF50,baseline,q1,1,3,4.707487414000001
+TPC-H SF50,baseline,q2,1,2,0.6925641310000001
+TPC-H SF50,baseline,q2,1,3,0.710175791
+TPC-H SF50,baseline,q3,1,2,5.8688707309999995
+TPC-H SF50,baseline,q3,1,3,5.868217104
+TPC-H SF50,baseline,q4,1,2,2.805279875
+TPC-H SF50,baseline,q4,1,3,3.150664603
+TPC-H SF50,baseline,q5,1,2,5.868730633000001
+TPC-H SF50,baseline,q5,1,3,5.875277731000001
+TPC-H SF50,baseline,q6,1,2,4.124103093999999
+TPC-H SF50,baseline,q6,1,3,3.884886823
+TPC-H SF50,baseline,q7,1,2,6.468421319000001
+TPC-H SF50,baseline,q7,1,3,6.777656781000003
+TPC-H SF50,baseline,q8,1,2,8.309433680999998
+TPC-H SF50,baseline,q8,1,3,8.677782595999998
+TPC-H SF50,baseline,q9,1,2,8.830694326
+TPC-H SF50,baseline,q9,1,3,8.984657782999998
+TPC-H SF50,baseline,q10,1,2,5.2024933959999995
+TPC-H SF50,baseline,q10,1,3,5.244504219999999
+TPC-H SF50,baseline,q11,1,2,1.16425167
+TPC-H SF50,baseline,q11,1,3,1.189588083
+TPC-H SF50,baseline,q12,1,2,3.919621623
+TPC-H SF50,baseline,q12,1,3,4.060813393999999
+TPC-H SF50,baseline,q13,1,2,2.024398057
+TPC-H SF50,baseline,q13,1,3,2.1069674099999998
+TPC-H SF50,baseline,q14,1,2,5.326360810000001
+TPC-H SF50,baseline,q14,1,3,5.316091298999999
+TPC-H SF50,baseline,q15,1,2,5.316451587
+TPC-H SF50,baseline,q15,1,3,5.3106857000000005
+TPC-H SF50,baseline,q16,1,2,0.18925209699999998
+TPC-H SF50,baseline,q16,1,3,0.18806796200000003
+TPC-H SF50,baseline,q17,1,2,6.871754081
+TPC-H SF50,baseline,q17,1,3,6.822316180999997
+TPC-H SF50,baseline,q18,1,2,4.357921234
+TPC-H SF50,baseline,q18,1,3,4.464373312
+TPC-H SF50,baseline,q19,1,2,5.269192264
+TPC-H SF50,baseline,q19,1,3,5.2004142149999995
+TPC-H SF50,baseline,q20,1,2,4.932336947999999
+TPC-H SF50,baseline,q20,1,3,4.942561909999999
+TPC-H SF50,baseline,q21,1,2,11.316248889
+TPC-H SF50,baseline,q21,1,3,11.246541106999999
+TPC-H SF50,baseline,q22,1,2,0.310378196
+TPC-H SF50,baseline,q22,1,3,0.30902750500000004
+TPC-H SF50,baseline,q1,2,2,4.751163793
+TPC-H SF50,baseline,q1,2,3,4.812130509000001
+TPC-H SF50,baseline,q2,2,2,0.7036882499999999
+TPC-H SF50,baseline,q2,2,3,0.710442145
+TPC-H SF50,baseline,q3,2,2,5.810339766
+TPC-H SF50,baseline,q3,2,3,5.917289609
+TPC-H SF50,baseline,q4,2,2,3.181131626
+TPC-H SF50,baseline,q4,2,3,3.181111391
+TPC-H SF50,baseline,q5,2,2,5.845153814999999
+TPC-H SF50,baseline,q5,2,3,5.922564547
+TPC-H SF50,baseline,q6,2,2,3.857688021
+TPC-H SF50,baseline,q6,2,3,3.8695095999999998
+TPC-H SF50,baseline,q7,2,2,6.555290661
+TPC-H SF50,baseline,q7,2,3,6.794532002
+TPC-H SF50,baseline,q8,2,2,8.719694091
+TPC-H SF50,baseline,q8,2,3,8.526351093999999
+TPC-H SF50,baseline,q9,2,2,8.995408017
+TPC-H SF50,baseline,q9,2,3,8.950551146999997
+TPC-H SF50,baseline,q10,2,2,5.193080196
+TPC-H SF50,baseline,q10,2,3,4.697612335
+TPC-H SF50,baseline,q11,2,2,1.187535248
+TPC-H SF50,baseline,q11,2,3,1.2032667670000001
+TPC-H SF50,baseline,q12,2,2,4.132136868000001
+TPC-H SF50,baseline,q12,2,3,4.18081474
+TPC-H SF50,baseline,q13,2,2,2.1037543139999997
+TPC-H SF50,baseline,q13,2,3,2.099414668
+TPC-H SF50,baseline,q14,2,2,5.321433469
+TPC-H SF50,baseline,q14,2,3,5.338064724
+TPC-H SF50,baseline,q15,2,2,5.3231051
+TPC-H SF50,baseline,q15,2,3,5.329659356
+TPC-H SF50,baseline,q16,2,2,0.186880395
+TPC-H SF50,baseline,q16,2,3,0.188936852
+TPC-H SF50,baseline,q17,2,2,6.788481525000002
+TPC-H SF50,baseline,q17,2,3,6.956451219000001
+TPC-H SF50,baseline,q18,2,2,4.300783668
+TPC-H SF50,baseline,q18,2,3,4.250545171
+TPC-H SF50,baseline,q19,2,2,5.133754600000001
+TPC-H SF50,baseline,q19,2,3,5.123169826999999
+TPC-H SF50,baseline,q20,2,2,4.941053874999999
+TPC-H SF50,baseline,q20,2,3,5.005926972999999
+TPC-H SF50,baseline,q21,2,2,10.832835959
+TPC-H SF50,baseline,q21,2,3,11.15059371
+TPC-H SF50,baseline,q22,2,2,0.31060337099999996
+TPC-H SF50,baseline,q22,2,3,0.30943825399999997
+TPC-H SF50,baseline,q1,3,2,4.87985376
+TPC-H SF50,baseline,q1,3,3,4.570757554000001
+TPC-H SF50,baseline,q2,3,2,0.714011571
+TPC-H SF50,baseline,q2,3,3,0.7115587350000001
+TPC-H SF50,baseline,q3,3,2,5.7130657760000005
+TPC-H SF50,baseline,q3,3,3,5.727703571999999
+TPC-H SF50,baseline,q4,3,2,3.0237981860000005
+TPC-H SF50,baseline,q4,3,3,2.836825234
+TPC-H SF50,baseline,q5,3,2,6.002608446000001
+TPC-H SF50,baseline,q5,3,3,5.870122342000003
+TPC-H SF50,baseline,q6,3,2,3.9568121019999998
+TPC-H SF50,baseline,q6,3,3,3.8889143510000004
+TPC-H SF50,baseline,q7,3,2,6.860878179
+TPC-H SF50,baseline,q7,3,3,6.606279000000001
+TPC-H SF50,baseline,q8,3,2,9.026721956000001
+TPC-H SF50,baseline,q8,3,3,8.457248314000001
+TPC-H SF50,baseline,q9,3,2,8.970984955000002
+TPC-H SF50,baseline,q9,3,3,8.959975736
+TPC-H SF50,baseline,q10,3,2,5.20843071
+TPC-H SF50,baseline,q10,3,3,5.2194875519999995
+TPC-H SF50,baseline,q11,3,2,1.182474035
+TPC-H SF50,baseline,q11,3,3,1.200832928
+TPC-H SF50,baseline,q12,3,2,4.087347780999999
+TPC-H SF50,baseline,q12,3,3,4.064953972
+TPC-H SF50,baseline,q13,3,2,2.053765584
+TPC-H SF50,baseline,q13,3,3,2.029749807
+TPC-H SF50,baseline,q14,3,2,5.399374546999999
+TPC-H SF50,baseline,q14,3,3,5.468155295
+TPC-H SF50,baseline,q15,3,2,5.411752932999999
+TPC-H SF50,baseline,q15,3,3,5.341847788
+TPC-H SF50,baseline,q16,3,2,0.186856324
+TPC-H SF50,baseline,q16,3,3,0.19102494399999997
+TPC-H SF50,baseline,q17,3,2,6.9828118529999985
+TPC-H SF50,baseline,q17,3,3,6.834456828000001
+TPC-H SF50,baseline,q18,3,2,4.298668945999999
+TPC-H SF50,baseline,q18,3,3,4.258758811
+TPC-H SF50,baseline,q19,3,2,5.239406877000002
+TPC-H SF50,baseline,q19,3,3,5.216909438
+TPC-H SF50,baseline,q20,3,2,4.996926482000001
+TPC-H SF50,baseline,q20,3,3,4.923936829
+TPC-H SF50,baseline,q21,3,2,11.414281259999997
+TPC-H SF50,baseline,q21,3,3,11.156044204999999
+TPC-H SF50,baseline,q22,3,2,0.312433264
+TPC-H SF50,baseline,q22,3,3,0.30748850699999997
+TPC-H SF50,paging_lru,q1,1,2,5.543846749
+TPC-H SF50,paging_lru,q1,1,3,5.494750732000002
+TPC-H SF50,paging_lru,q2,1,2,0.43640354699999995
+TPC-H SF50,paging_lru,q2,1,3,0.429802368
+TPC-H SF50,paging_lru,q3,1,2,4.710194916000001
+TPC-H SF50,paging_lru,q3,1,3,4.792397288999999
+TPC-H SF50,paging_lru,q4,1,2,3.17195229
+TPC-H SF50,paging_lru,q4,1,3,2.9942162239999996
+TPC-H SF50,paging_lru,q5,1,2,5.927406442999999
+TPC-H SF50,paging_lru,q5,1,3,5.847101326999998
+TPC-H SF50,paging_lru,q6,1,2,3.9908084829999995
+TPC-H SF50,paging_lru,q6,1,3,4.351248844
+TPC-H SF50,paging_lru,q7,1,2,5.964580323
+TPC-H SF50,paging_lru,q7,1,3,5.974339964
+TPC-H SF50,paging_lru,q8,1,2,6.903530823000002
+TPC-H SF50,paging_lru,q8,1,3,7.062457204
+TPC-H SF50,paging_lru,q9,1,2,7.052680393999999
+TPC-H SF50,paging_lru,q9,1,3,6.554164824000002
+TPC-H SF50,paging_lru,q10,1,2,4.600547233000001
+TPC-H SF50,paging_lru,q10,1,3,4.744661447
+TPC-H SF50,paging_lru,q11,1,2,1.230949118
+TPC-H SF50,paging_lru,q11,1,3,1.217023548
+TPC-H SF50,paging_lru,q12,1,2,4.73171125
+TPC-H SF50,paging_lru,q12,1,3,4.515097290000001
+TPC-H SF50,paging_lru,q13,1,2,1.841603353
+TPC-H SF50,paging_lru,q13,1,3,1.8823274369999998
+TPC-H SF50,paging_lru,q14,1,2,5.666936109
+TPC-H SF50,paging_lru,q14,1,3,5.602609856
+TPC-H SF50,paging_lru,q15,1,2,5.665844517
+TPC-H SF50,paging_lru,q15,1,3,5.411076971000001
+TPC-H SF50,paging_lru,q16,1,2,0.05956342
+TPC-H SF50,paging_lru,q16,1,3,0.06184407599999999
+TPC-H SF50,paging_lru,q17,1,2,6.050789555000001
+TPC-H SF50,paging_lru,q17,1,3,5.385545549000001
+TPC-H SF50,paging_lru,q18,1,2,4.748227605000001
+TPC-H SF50,paging_lru,q18,1,3,4.616336366000001
+TPC-H SF50,paging_lru,q19,1,2,5.653297616999999
+TPC-H SF50,paging_lru,q19,1,3,5.513786789999999
+TPC-H SF50,paging_lru,q20,1,2,4.978044366
+TPC-H SF50,paging_lru,q20,1,3,5.016871208
+TPC-H SF50,paging_lru,q21,1,2,9.402579528
+TPC-H SF50,paging_lru,q21,1,3,8.480426448000005
+TPC-H SF50,paging_lru,q22,1,2,0.300793403
+TPC-H SF50,paging_lru,q22,1,3,0.30442861299999996
+TPC-H SF50,paging_lru,q1,2,2,5.170553270000001
+TPC-H SF50,paging_lru,q1,2,3,5.137281023999999
+TPC-H SF50,paging_lru,q2,2,2,0.432365113
+TPC-H SF50,paging_lru,q2,2,3,0.430132297
+TPC-H SF50,paging_lru,q3,2,2,4.8553306009999995
+TPC-H SF50,paging_lru,q3,2,3,4.789685243
+TPC-H SF50,paging_lru,q4,2,2,3.174995247999999
+TPC-H SF50,paging_lru,q4,2,3,3.021127918999999
+TPC-H SF50,paging_lru,q5,2,2,5.830953010999998
+TPC-H SF50,paging_lru,q5,2,3,5.888801169999997
+TPC-H SF50,paging_lru,q6,2,2,4.203513417
+TPC-H SF50,paging_lru,q6,2,3,4.243324246000001
+TPC-H SF50,paging_lru,q7,2,2,6.464476116
+TPC-H SF50,paging_lru,q7,2,3,6.160297978
+TPC-H SF50,paging_lru,q8,2,2,7.1414590140000005
+TPC-H SF50,paging_lru,q8,2,3,7.115893209000002
+TPC-H SF50,paging_lru,q9,2,2,6.636079984
+TPC-H SF50,paging_lru,q9,2,3,6.751580883
+TPC-H SF50,paging_lru,q10,2,2,4.590866829999999
+TPC-H SF50,paging_lru,q10,2,3,4.377084664999999
+TPC-H SF50,paging_lru,q11,2,2,1.211355928
+TPC-H SF50,paging_lru,q11,2,3,1.2292783189999998
+TPC-H SF50,paging_lru,q12,2,2,4.4088347090000015
+TPC-H SF50,paging_lru,q12,2,3,4.550999156
+TPC-H SF50,paging_lru,q13,2,2,1.835614834
+TPC-H SF50,paging_lru,q13,2,3,1.8593698429999999
+TPC-H SF50,paging_lru,q14,2,2,5.384225944000001
+TPC-H SF50,paging_lru,q14,2,3,5.641498154
+TPC-H SF50,paging_lru,q15,2,2,5.499935504
+TPC-H SF50,paging_lru,q15,2,3,5.415458892999999
+TPC-H SF50,paging_lru,q16,2,2,0.060689020999999996
+TPC-H SF50,paging_lru,q16,2,3,0.061948533
+TPC-H SF50,paging_lru,q17,2,2,5.568216436000002
+TPC-H SF50,paging_lru,q17,2,3,5.585155628000001
+TPC-H SF50,paging_lru,q18,2,2,4.684712275999998
+TPC-H SF50,paging_lru,q18,2,3,4.982611829
+TPC-H SF50,paging_lru,q19,2,2,5.592022165999999
+TPC-H SF50,paging_lru,q19,2,3,5.484002233999997
+TPC-H SF50,paging_lru,q20,2,2,5.163144635000001
+TPC-H SF50,paging_lru,q20,2,3,5.121643808000001
+TPC-H SF50,paging_lru,q21,2,2,9.027871921
+TPC-H SF50,paging_lru,q21,2,3,9.516839454000001
+TPC-H SF50,paging_lru,q22,2,2,0.301333024
+TPC-H SF50,paging_lru,q22,2,3,0.29740054899999996
+TPC-H SF50,paging_lru,q1,3,2,5.385822493000001
+TPC-H SF50,paging_lru,q1,3,3,5.106424713
+TPC-H SF50,paging_lru,q2,3,2,0.426854846
+TPC-H SF50,paging_lru,q2,3,3,0.42690677499999996
+TPC-H SF50,paging_lru,q3,3,2,5.007655079
+TPC-H SF50,paging_lru,q3,3,3,5.264633591000001
+TPC-H SF50,paging_lru,q4,3,2,3.229670012
+TPC-H SF50,paging_lru,q4,3,3,3.1446605579999996
+TPC-H SF50,paging_lru,q5,3,2,5.842836726999999
+TPC-H SF50,paging_lru,q5,3,3,5.879156102
+TPC-H SF50,paging_lru,q6,3,2,4.088145409
+TPC-H SF50,paging_lru,q6,3,3,4.298858121
+TPC-H SF50,paging_lru,q7,3,2,6.420354146999999
+TPC-H SF50,paging_lru,q7,3,3,6.229962229
+TPC-H SF50,paging_lru,q8,3,2,7.297387139000001
+TPC-H SF50,paging_lru,q8,3,3,7.114817000000001
+TPC-H SF50,paging_lru,q9,3,2,6.961638184000001
+TPC-H SF50,paging_lru,q9,3,3,6.8883070439999985
+TPC-H SF50,paging_lru,q10,3,2,4.237000416
+TPC-H SF50,paging_lru,q10,3,3,4.164707323000001
+TPC-H SF50,paging_lru,q11,3,2,1.2249621019999999
+TPC-H SF50,paging_lru,q11,3,3,1.1738536330000002
+TPC-H SF50,paging_lru,q12,3,2,4.561035012
+TPC-H SF50,paging_lru,q12,3,3,4.267880072
+TPC-H SF50,paging_lru,q13,3,2,1.834444938
+TPC-H SF50,paging_lru,q13,3,3,1.823000609
+TPC-H SF50,paging_lru,q14,3,2,5.7148519019999995
+TPC-H SF50,paging_lru,q14,3,3,5.391132165
+TPC-H SF50,paging_lru,q15,3,2,5.677928787999999
+TPC-H SF50,paging_lru,q15,3,3,5.652667697
+TPC-H SF50,paging_lru,q16,3,2,0.060000436
+TPC-H SF50,paging_lru,q16,3,3,0.060028506
+TPC-H SF50,paging_lru,q17,3,2,5.481062641
+TPC-H SF50,paging_lru,q17,3,3,5.444262328000001
+TPC-H SF50,paging_lru,q18,3,2,4.594500231
+TPC-H SF50,paging_lru,q18,3,3,4.892302378999999
+TPC-H SF50,paging_lru,q19,3,2,5.5572814589999995
+TPC-H SF50,paging_lru,q19,3,3,5.624092838000001
+TPC-H SF50,paging_lru,q20,3,2,4.944679362
+TPC-H SF50,paging_lru,q20,3,3,4.926961962999999
+TPC-H SF50,paging_lru,q21,3,2,8.654397108000003
+TPC-H SF50,paging_lru,q21,3,3,8.759790085
+TPC-H SF50,paging_lru,q22,3,2,0.298937015
+TPC-H SF50,paging_lru,q22,3,3,0.301610031
+TPC-H SF50,reorder_future,q1,1,2,4.972082094000001
+TPC-H SF50,reorder_future,q1,1,3,4.572075854
+TPC-H SF50,reorder_future,q2,1,2,0.11042579899999999
+TPC-H SF50,reorder_future,q2,1,3,0.11074422199999999
+TPC-H SF50,reorder_future,q3,1,2,5.041087596000001
+TPC-H SF50,reorder_future,q3,1,3,5.087051686000001
+TPC-H SF50,reorder_future,q4,1,2,1.540146168
+TPC-H SF50,reorder_future,q4,1,3,1.5371342999999997
+TPC-H SF50,reorder_future,q5,1,2,4.763524955
+TPC-H SF50,reorder_future,q5,1,3,4.7882992799999995
+TPC-H SF50,reorder_future,q6,1,2,2.0089402749999996
+TPC-H SF50,reorder_future,q6,1,3,1.869322907
+TPC-H SF50,reorder_future,q7,1,2,5.847712846000001
+TPC-H SF50,reorder_future,q7,1,3,5.444009866000002
+TPC-H SF50,reorder_future,q8,1,2,6.458193061999999
+TPC-H SF50,reorder_future,q8,1,3,6.371880366000001
+TPC-H SF50,reorder_future,q9,1,2,6.151253756
+TPC-H SF50,reorder_future,q9,1,3,6.235679137999999
+TPC-H SF50,reorder_future,q10,1,2,3.182566826
+TPC-H SF50,reorder_future,q10,1,3,3.188988948
+TPC-H SF50,reorder_future,q11,1,2,0.849841177
+TPC-H SF50,reorder_future,q11,1,3,1.010472459
+TPC-H SF50,reorder_future,q12,1,2,2.415061488
+TPC-H SF50,reorder_future,q12,1,3,2.3252524699999992
+TPC-H SF50,reorder_future,q13,1,2,1.591807081
+TPC-H SF50,reorder_future,q13,1,3,1.602134075
+TPC-H SF50,reorder_future,q14,1,2,3.273940972
+TPC-H SF50,reorder_future,q14,1,3,3.1308722380000003
+TPC-H SF50,reorder_future,q15,1,2,4.009836634
+TPC-H SF50,reorder_future,q15,1,3,4.009804009000001
+TPC-H SF50,reorder_future,q16,1,2,0.030393543999999998
+TPC-H SF50,reorder_future,q16,1,3,0.030471898999999997
+TPC-H SF50,reorder_future,q17,1,2,2.5241553870000004
+TPC-H SF50,reorder_future,q17,1,3,2.565041172
+TPC-H SF50,reorder_future,q18,1,2,2.821508657000001
+TPC-H SF50,reorder_future,q18,1,3,2.876008235
+TPC-H SF50,reorder_future,q19,1,2,4.072616486
+TPC-H SF50,reorder_future,q19,1,3,3.9800997439999994
+TPC-H SF50,reorder_future,q20,1,2,2.774530051
+TPC-H SF50,reorder_future,q20,1,3,2.7603844470000003
+TPC-H SF50,reorder_future,q21,1,2,7.711811677
+TPC-H SF50,reorder_future,q21,1,3,8.211944705
+TPC-H SF50,reorder_future,q22,1,2,0.09741262700000002
+TPC-H SF50,reorder_future,q22,1,3,0.097278744
+TPC-H SF50,reorder_future,q1,2,2,4.350499989
+TPC-H SF50,reorder_future,q1,2,3,5.142272645
+TPC-H SF50,reorder_future,q2,2,2,0.106351012
+TPC-H SF50,reorder_future,q2,2,3,0.112338123
+TPC-H SF50,reorder_future,q3,2,2,4.713019217000001
+TPC-H SF50,reorder_future,q3,2,3,4.489730501000002
+TPC-H SF50,reorder_future,q4,2,2,1.489359357
+TPC-H SF50,reorder_future,q4,2,3,1.627508699
+TPC-H SF50,reorder_future,q5,2,2,4.959098716000002
+TPC-H SF50,reorder_future,q5,2,3,4.906649617
+TPC-H SF50,reorder_future,q6,2,2,1.9259844020000003
+TPC-H SF50,reorder_future,q6,2,3,1.9665704349999997
+TPC-H SF50,reorder_future,q7,2,2,5.328926138000001
+TPC-H SF50,reorder_future,q7,2,3,5.4635583510000005
+TPC-H SF50,reorder_future,q8,2,2,6.2057949479999985
+TPC-H SF50,reorder_future,q8,2,3,6.589828656999999
+TPC-H SF50,reorder_future,q9,2,2,5.9635004270000005
+TPC-H SF50,reorder_future,q9,2,3,6.098210766
+TPC-H SF50,reorder_future,q10,2,2,3.2187388160000006
+TPC-H SF50,reorder_future,q10,2,3,3.099119432
+TPC-H SF50,reorder_future,q11,2,2,0.738256857
+TPC-H SF50,reorder_future,q11,2,3,0.718165155
+TPC-H SF50,reorder_future,q12,2,2,2.4961935750000004
+TPC-H SF50,reorder_future,q12,2,3,2.537914764
+TPC-H SF50,reorder_future,q13,2,2,1.5920448779999998
+TPC-H SF50,reorder_future,q13,2,3,1.5950316150000001
+TPC-H SF50,reorder_future,q14,2,2,3.32616793
+TPC-H SF50,reorder_future,q14,2,3,3.308062528
+TPC-H SF50,reorder_future,q15,2,2,4.340290604000001
+TPC-H SF50,reorder_future,q15,2,3,4.17923172
+TPC-H SF50,reorder_future,q16,2,2,0.030540419
+TPC-H SF50,reorder_future,q16,2,3,0.030268843
+TPC-H SF50,reorder_future,q17,2,2,2.6120422280000004
+TPC-H SF50,reorder_future,q17,2,3,2.7408395469999998
+TPC-H SF50,reorder_future,q18,2,2,2.8446409489999995
+TPC-H SF50,reorder_future,q18,2,3,2.8486736520000004
+TPC-H SF50,reorder_future,q19,2,2,4.353460113
+TPC-H SF50,reorder_future,q19,2,3,4.441332844000001
+TPC-H SF50,reorder_future,q20,2,2,2.9337650710000003
+TPC-H SF50,reorder_future,q20,2,3,3.007096144
+TPC-H SF50,reorder_future,q21,2,2,8.298644568999999
+TPC-H SF50,reorder_future,q21,2,3,7.936803659
+TPC-H SF50,reorder_future,q22,2,2,0.097208596
+TPC-H SF50,reorder_future,q22,2,3,0.097100136
+TPC-H SF50,reorder_future,q1,3,2,4.657320546
+TPC-H SF50,reorder_future,q1,3,3,4.983447338999999
+TPC-H SF50,reorder_future,q2,3,2,0.111329712
+TPC-H SF50,reorder_future,q2,3,3,0.114003021
+TPC-H SF50,reorder_future,q3,3,2,4.670165933
+TPC-H SF50,reorder_future,q3,3,3,5.077948739999999
+TPC-H SF50,reorder_future,q4,3,2,1.4989067660000002
+TPC-H SF50,reorder_future,q4,3,3,1.535655008
+TPC-H SF50,reorder_future,q5,3,2,4.88412845
+TPC-H SF50,reorder_future,q5,3,3,4.7757345529999995
+TPC-H SF50,reorder_future,q6,3,2,2.084763846
+TPC-H SF50,reorder_future,q6,3,3,2.024804616
+TPC-H SF50,reorder_future,q7,3,2,5.793248675999999
+TPC-H SF50,reorder_future,q7,3,3,5.309339866999998
+TPC-H SF50,reorder_future,q8,3,2,6.339193568999999
+TPC-H SF50,reorder_future,q8,3,3,6.435573892000001
+TPC-H SF50,reorder_future,q9,3,2,6.0775136409999995
+TPC-H SF50,reorder_future,q9,3,3,6.221616622000002
+TPC-H SF50,reorder_future,q10,3,2,3.2365167649999993
+TPC-H SF50,reorder_future,q10,3,3,3.1314840929999996
+TPC-H SF50,reorder_future,q11,3,2,0.8561135589999999
+TPC-H SF50,reorder_future,q11,3,3,0.7842415840000001
+TPC-H SF50,reorder_future,q12,3,2,2.354631729
+TPC-H SF50,reorder_future,q12,3,3,2.2724063090000004
+TPC-H SF50,reorder_future,q13,3,2,1.6034012509999997
+TPC-H SF50,reorder_future,q13,3,3,1.598103746
+TPC-H SF50,reorder_future,q14,3,2,3.2567165040000003
+TPC-H SF50,reorder_future,q14,3,3,3.201847071
+TPC-H SF50,reorder_future,q15,3,2,4.0440898899999995
+TPC-H SF50,reorder_future,q15,3,3,4.0191019269999995
+TPC-H SF50,reorder_future,q16,3,2,0.030359149
+TPC-H SF50,reorder_future,q16,3,3,0.030308155
+TPC-H SF50,reorder_future,q17,3,2,2.4035822799999997
+TPC-H SF50,reorder_future,q17,3,3,2.4856133260000006
+TPC-H SF50,reorder_future,q18,3,2,2.891488715
+TPC-H SF50,reorder_future,q18,3,3,2.7718727840000006
+TPC-H SF50,reorder_future,q19,3,2,4.141904302000001
+TPC-H SF50,reorder_future,q19,3,3,4.350361832000002
+TPC-H SF50,reorder_future,q20,3,2,2.719172165
+TPC-H SF50,reorder_future,q20,3,3,2.7525751669999994
+TPC-H SF50,reorder_future,q21,3,2,8.260853759999996
+TPC-H SF50,reorder_future,q21,3,3,8.132749041999999
+TPC-H SF50,reorder_future,q22,3,2,0.096429264
+TPC-H SF50,reorder_future,q22,3,3,0.096640065

@@ -38,7 +38,9 @@
 #include <exception>
 #include <memory>
 #include <mutex>
+#include <cstdlib>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <scan_manager/sirius_scan_manager.hpp>
 namespace sirius {
@@ -171,7 +173,42 @@ void gpu_pipeline_executor::manager_loop()
       _memory_space->get_available_memory(),
       _memory_space->get_total_reserved_memory(),
       _memory_space->get_max_memory());
-    auto reservation = _memory_space->make_reservation(bytes_needs);
+    // SIRIUS_PAGE_YIELD_TO_RESERVATION=1: when the reservation cannot be granted right now and
+    // the page cache alone holds enough to cover the gap, take the gap out of the cache rather
+    // than block until another task returns memory. The cache is reconstructible from the file;
+    // a task waiting here leaves a worker slot idle.
+    static bool const page_yield = [] {
+      auto const* v = std::getenv("SIRIUS_PAGE_YIELD_TO_RESERVATION");
+      return v != nullptr && std::string_view(v) == "1";
+    }();
+    std::unique_ptr<cucascade::memory::reservation> reservation;
+    if (page_yield) {
+      reservation = _memory_space->make_reservation_or_null(bytes_needs);
+      if (!reservation) {
+        // A reservation is granted while allocated + request <= the space's reservation limit
+        // (get_max_memory), and the page cache's buffers count as allocated. The capacity-based
+        // get_available_memory() is the wrong yardstick: it reports room above that limit.
+        auto const* adaptor = _memory_space->get_memory_resource_as<
+          cucascade::memory::reservation_aware_resource_adaptor>();
+        auto const allocated = adaptor != nullptr ? adaptor->get_total_allocated_bytes() : 0;
+        auto const limit     = _memory_space->get_max_memory();
+        auto const gap       = adaptor != nullptr && allocated + bytes_needs > limit
+                                 ? allocated + bytes_needs - limit
+                                 : 0;
+        if (auto const freed = scan_manager::release_page_store_for_reservation(gap); freed > 0) {
+          SIRIUS_LOG_INFO("[page-store] yielded {} bytes to a {}-byte reservation (gap {})",
+                          freed,
+                          bytes_needs,
+                          gap);
+        } else if (gap > 0) {
+          SIRIUS_LOG_INFO("[page-store] no yield: reservation {} gap {} exceeds the page cache",
+                          bytes_needs,
+                          gap);
+          reservation = _memory_space->make_reservation_or_null(bytes_needs);
+        }
+      }
+    }
+    if (!reservation) { reservation = _memory_space->make_reservation(bytes_needs); }
     if (!reservation) {
       SIRIUS_LOG_ERROR("GPU Pipeline Executor: Failed to acquire memory reservation for task {}",
                        gpu_task->get_task_id());

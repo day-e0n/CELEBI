@@ -41,9 +41,12 @@
 #include <cudf/dictionary/dictionary_factories.hpp>
 #include <cudf/dictionary/encode.hpp>
 #include <cudf/dictionary/update_keys.hpp>
+#include <cudf/binaryop.hpp>
 #include <cudf/scalar/scalar.hpp>
 #include <cudf/reduction.hpp>
 #include <cudf/copying.hpp>
+#include <cudf/null_mask.hpp>
+#include <cudf/strings/strings_column_view.hpp>
 #include <cudf/column/column_factories.hpp>
 #include <cudf/unary.hpp>
 #include <cudf/search.hpp>
@@ -68,9 +71,11 @@
 #include <cucascade/memory/memory_space.hpp>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <limits>
+#include <tuple>
 #include <cstdlib>
 #include <cctype>
 #include <cstdint>
@@ -89,6 +94,67 @@ namespace {
 /// pipeline executor knowing about SiriusContext. There is one scan manager per context and
 /// one context per process here; a second one simply replaces the first.
 std::atomic<sirius_scan_manager*> g_page_store_owner{nullptr};
+
+/// SIRIUS_PAGE_BIG_PREFIX=<fraction>: of a column larger than the whole budget, cache only the
+/// first <fraction> x budget bytes (in row group, page order) and read the rest from the file.
+/// Caching all of it only slides a window over the column: each later page evicts an earlier
+/// one, so the next scan, which starts again at row group 0, finds the front gone and evicts the
+/// middle it is about to need -- measured, URL served nothing of the 30 GiB it inserted.
+double page_big_prefix_fraction()
+{
+  static double const fraction = [] {
+    auto const* v = std::getenv("SIRIUS_PAGE_BIG_PREFIX");
+    return v == nullptr ? 0.0 : std::max(0.0, std::atof(v));
+  }();
+  return fraction;
+}
+
+/// SIRIUS_PAGE_BIG_PREFIX_PROTECT=1: rank those prefix pages with the fixed-width ones, so B7's
+/// variable-width-first pass does not take them first.
+bool page_big_prefix_protect()
+{
+  static bool const on = [] {
+    auto const* v = std::getenv("SIRIUS_PAGE_BIG_PREFIX_PROTECT");
+    return v != nullptr && std::string_view(v) == "1";
+  }();
+  return on;
+}
+
+bool page_tail_shrink_enabled()
+{
+  static bool const on = [] {
+    auto const* v = std::getenv("SIRIUS_PAGE_TAIL_SHRINK");
+    return v != nullptr && std::string_view(v) == "1";
+  }();
+  return on;
+}
+
+bool page_replace_admission_enabled()
+{
+  static bool const on = [] {
+    auto const* v = std::getenv("SIRIUS_PAGE_REPLACE_ADMISSION");
+    return v != nullptr && std::string_view(v) == "1";
+  }();
+  return on;
+}
+
+/// One line per scan and column saying what the page store held for it and, when it held
+/// nothing usable, why. Off by default; SIRIUS_SCAN_CACHE_TRACE=1 turns it on.
+bool scan_cache_trace_enabled()
+{
+  static bool const on = [] {
+    auto const* v = std::getenv("SIRIUS_SCAN_CACHE_TRACE");
+    return v != nullptr && v[0] == '1';
+  }();
+  return on;
+}
+
+std::uint64_t rg_trace_key(int file_id, int column_id, int row_group)
+{
+  return (static_cast<std::uint64_t>(static_cast<std::uint16_t>(file_id)) << 48) ^
+         (static_cast<std::uint64_t>(static_cast<std::uint32_t>(column_id) & 0xffffffu) << 24) ^
+         static_cast<std::uint64_t>(static_cast<std::uint32_t>(row_group) & 0xffffffu);
+}
 
 /// One log line per page is far too much for a normal run; this turns it on deliberately.
 bool page_trace_enabled()
@@ -3207,6 +3273,11 @@ std::size_t pinned_entry_device_bytes(
         for (auto const& page : index.pages) { add(page.owned_column); }
       }
     }
+    // The entry's own fixed-width pages hold device memory too. Leaving them out meant the
+    // one budget was checked against a figure that did not include them.
+    for (auto const& [__, col_pages] : entry.fixed_width_pages_by_column) {
+      for (auto const& page : col_pages) { add(page.owned_column); }
+    }
   }
   return bytes;
 }
@@ -3983,7 +4054,7 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
       // returned straight out, past every other enforcement point. On ClickBench it is the
       // common path (43 queries share one entry), which is why the cache sat at 7.86GB
       // while the sweep's own log showed it hitting 6.00GB exactly on every call.
-      enforce_total_cache_budget();
+      enforce_total_cache_budget_pinned_locked();
       return added;
     } else if (chunk_already_present(entry, provenance)) {
       // Two concurrent scan tasks can both miss the cache for the same brand-new
@@ -4085,7 +4156,7 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
       apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
                                                  _pages_bytes);
       // The variable-width store just grew on this path; the one budget covers it too.
-      enforce_total_cache_budget();
+      enforce_total_cache_budget_pinned_locked();
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4184,7 +4255,7 @@ std::size_t sirius_scan_manager::insert_fixed_page_entry_from_view(
   apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
                                                  _pages_bytes);
       // The variable-width store just grew on this path; the one budget covers it too.
-      enforce_total_cache_budget();
+      enforce_total_cache_budget_pinned_locked();
   auto eviction_count = inserted_entry.fixed_width_page_metrics.eviction_count;
   inserted_entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(inserted_entry);
   inserted_entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4326,7 +4397,7 @@ void sirius_scan_manager::insert_pinned_entry(
       apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
                                                  _pages_bytes);
       // The variable-width store just grew on this path; the one budget covers it too.
-      enforce_total_cache_budget();
+      enforce_total_cache_budget_pinned_locked();
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4465,7 +4536,7 @@ void sirius_scan_manager::insert_pinned_entry(
       apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
                                                  _pages_bytes);
       // The variable-width store just grew on this path; the one budget covers it too.
-      enforce_total_cache_budget();
+      enforce_total_cache_budget_pinned_locked();
       auto eviction_count = entry.fixed_width_page_metrics.eviction_count;
       entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(entry);
       entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4558,7 +4629,7 @@ void sirius_scan_manager::insert_pinned_entry(
   apply_global_fixed_width_page_eviction_policies(_pinned_entries, "post_insert",
                                                  _pages_bytes);
       // The variable-width store just grew on this path; the one budget covers it too.
-      enforce_total_cache_budget();
+      enforce_total_cache_budget_pinned_locked();
   auto eviction_count = inserted_entry.fixed_width_page_metrics.eviction_count;
   inserted_entry.fixed_width_page_metrics = compute_fixed_width_page_directory_metrics(inserted_entry);
   inserted_entry.fixed_width_page_metrics.eviction_count = eviction_count;
@@ -4666,6 +4737,163 @@ std::shared_ptr<cudf::column> concatenate_chunk_pages(pinned_entry const& entry,
     cudf::concatenate(views, stream, cudf::get_current_device_resource_ref()).release());
 }
 
+namespace {
+
+/// Every region inside a page slab starts on this boundary, so the data, the null mask
+/// and the offsets each keep the alignment cudf expects of a column buffer.
+constexpr std::size_t kPageRegionAlign = 256;
+
+std::size_t align_page_region(std::size_t bytes)
+{
+  return (bytes + kPageRegionAlign - 1) / kPageRegionAlign * kPageRegionAlign;
+}
+
+std::size_t page_mask_bytes(std::size_t rows, bool nullable)
+{
+  return nullable ? cudf::bitmask_allocation_size_bytes(static_cast<cudf::size_type>(rows)) : 0;
+}
+
+/// Slab bytes a page of @p rows fixed-width rows needs: data, then its null mask.
+std::size_t fixed_width_page_need(std::size_t rows, std::size_t width, bool nullable)
+{
+  return align_page_region(rows * width) + align_page_region(page_mask_bytes(rows, nullable));
+}
+
+/// Slab bytes a STRING page needs: its characters, its offsets (rows + 1 of them) and its
+/// null mask.
+std::size_t string_page_need(std::size_t rows,
+                             std::size_t chars,
+                             std::size_t offset_width,
+                             bool nullable)
+{
+  return align_page_region(chars) + align_page_region((rows + 1) * offset_width) +
+         align_page_region(page_mask_bytes(rows, nullable));
+}
+
+/// Copy rows [begin, end) of @p col into one allocation of exactly @p page_bytes and
+/// describe them with a view into it. Returns nullptr when they do not fit, which the
+/// page cutter is built to prevent.
+///
+/// The data (and STRING characters) go straight from @p col into the slab. Only the two parts
+/// that cannot be copied as they are take a small temporary: the null mask, which has to start
+/// at bit 0, and STRING offsets, which have to start at 0. An earlier version first copied the
+/// rows out as a whole column and then copied that into the slab, paying for every page twice;
+/// on TPC-H SF50 populating the cache cost as much as the reads it saved.
+std::shared_ptr<page_slab> make_page_slab(cudf::column_view const& col,
+                                          cudf::size_type begin,
+                                          cudf::size_type end,
+                                          std::size_t page_bytes,
+                                          rmm::cuda_stream_view stream,
+                                          rmm::device_async_resource_ref mr,
+                                          bool keep_mask,
+                                          std::int64_t chars_first,
+                                          std::int64_t chars_last,
+                                          std::size_t shrink_granule = 0)
+{
+  auto sliced = cudf::slice(col, {begin, end});
+  if (sliced.empty()) { return nullptr; }
+  auto const v        = sliced.front();
+  auto const rows     = static_cast<std::size_t>(v.size());
+  // keep_mask false: the caller counted no nulls in this row group, so the page needs no mask
+  // and no per-page null count (each count is a device-to-host sync).
+  bool const nullable = keep_mask && v.nullable();
+  auto const mask     = page_mask_bytes(rows, nullable);
+  bool const is_string = v.type().id() == cudf::type_id::STRING;
+
+  std::size_t data_bytes    = 0;
+  void const* data_src      = nullptr;
+  std::size_t offsets_bytes = 0;
+  cudf::data_type offsets_type{cudf::type_id::INT32};
+  std::unique_ptr<cudf::column> rebased_offsets;  // STRING offsets starting at 0
+  if (is_string) {
+    cudf::strings_column_view const scv{v};
+    auto const ov = scv.offsets();
+    offsets_type  = ov.type();
+    // The page's offsets run is [v.offset(), v.offset() + rows] of the parent's offsets.
+    auto const off_slice = cudf::slice(ov, {v.offset(), v.offset() + static_cast<cudf::size_type>(rows) + 1});
+    if (off_slice.empty()) { return nullptr; }
+    std::int64_t first = chars_first, last = chars_last;
+    auto const width = cudf::size_of(offsets_type);
+    if (first < 0 || last < 0) {  // caller did not batch them: read the two ends here
+      first = 0;
+      last  = 0;
+      auto const* base_ptr = ov.head<std::uint8_t>();
+      cudaMemcpyAsync(&first, base_ptr + static_cast<std::size_t>(v.offset()) * width, width,
+                      cudaMemcpyDeviceToHost, stream.value());
+      cudaMemcpyAsync(&last, base_ptr + (static_cast<std::size_t>(v.offset()) + rows) * width,
+                      width, cudaMemcpyDeviceToHost, stream.value());
+      stream.synchronize();
+      if (width == 4) {  // only the low 4 bytes were written
+        first = static_cast<std::int32_t>(first & 0xffffffff);
+        last  = static_cast<std::int32_t>(last & 0xffffffff);
+      }
+    }
+    data_bytes = static_cast<std::size_t>(last - first);
+    data_src   = scv.chars_begin(stream) + first;
+    if (offsets_type.id() == cudf::type_id::INT64) {
+      cudf::numeric_scalar<std::int64_t> base_scalar(first, true, stream);
+      rebased_offsets = cudf::binary_operation(off_slice.front(), base_scalar,
+                                               cudf::binary_operator::SUB, offsets_type, stream, mr);
+    } else {
+      cudf::numeric_scalar<std::int32_t> base_scalar(static_cast<std::int32_t>(first), true, stream);
+      rebased_offsets = cudf::binary_operation(off_slice.front(), base_scalar,
+                                               cudf::binary_operator::SUB, offsets_type, stream, mr);
+    }
+    offsets_bytes = (rows + 1) * width;
+  } else {
+    data_bytes = rows * cudf::size_of(v.type());
+    data_src   = v.head<std::uint8_t>() + static_cast<std::size_t>(v.offset()) * cudf::size_of(v.type());
+  }
+
+  auto const mask_at    = align_page_region(data_bytes);
+  auto const offsets_at = mask_at + align_page_region(mask);
+  if (offsets_at + align_page_region(offsets_bytes) > page_bytes) { return nullptr; }
+  // SIRIUS_PAGE_TAIL_SHRINK: a row group's last page is usually part empty -- 18.4% of every
+  // fixed-width byte the cache allocated was padding, all of it in these tails. Size such a page
+  // to what it holds, rounded up to the granule so allocation sizes stay few.
+  if (shrink_granule > 0) {
+    auto const need = offsets_at + align_page_region(offsets_bytes);
+    page_bytes = std::min(page_bytes, (need + shrink_granule - 1) / shrink_granule * shrink_granule);
+  }
+
+  // The mask has to start at the page's first row; copy_bitmask shifts it there.
+  rmm::device_buffer mask_buf;
+  cudf::size_type null_count = 0;
+  if (nullable) {
+    mask_buf   = cudf::copy_bitmask(v, stream, mr);
+    null_count = v.null_count();
+  }
+
+  auto slab        = std::make_shared<page_slab>();
+  slab->buffer     = rmm::device_buffer(page_bytes, stream, mr);
+  slab->used_bytes = data_bytes + mask + offsets_bytes;
+  auto* base       = static_cast<std::uint8_t*>(slab->buffer.data());
+  if (data_bytes > 0) {
+    cudaMemcpyAsync(base, data_src, data_bytes, cudaMemcpyDeviceToDevice, stream.value());
+  }
+  if (nullable && mask_buf.size() > 0) {
+    cudaMemcpyAsync(base + mask_at, mask_buf.data(), std::min(mask, mask_buf.size()),
+                    cudaMemcpyDeviceToDevice, stream.value());
+  }
+  if (offsets_bytes > 0) {
+    cudaMemcpyAsync(base + offsets_at, rebased_offsets->view().head<std::uint8_t>(), offsets_bytes,
+                    cudaMemcpyDeviceToDevice, stream.value());
+  }
+  auto const* mask_ptr =
+    nullable ? reinterpret_cast<cudf::bitmask_type const*>(base + mask_at) : nullptr;
+  auto const row_count = static_cast<cudf::size_type>(rows);
+  if (is_string) {
+    cudf::column_view const offsets_view{offsets_type, row_count + 1, base + offsets_at, nullptr, 0};
+    slab->view = cudf::column_view{v.type(), row_count, base, mask_ptr, null_count, 0, {offsets_view}};
+  } else {
+    slab->view = cudf::column_view{v.type(), row_count, base, mask_ptr, null_count};
+  }
+  // mask_buf and rebased_offsets free on `stream`, after the copies above.
+  return slab;
+}
+
+}  // namespace
+
 void sirius_scan_manager::insert_pages_from_view(
   std::string const& file_path,
   std::vector<cudf::size_type> const& row_groups,
@@ -4717,6 +4945,25 @@ void sirius_scan_manager::insert_pages_from_view(
   std::size_t admission_headroom = std::numeric_limits<std::size_t>::max();
   std::size_t admitted_bytes     = 0;
   bool admission_full            = false;
+  // SIRIUS_PAGE_REPLACE_ADMISSION=1: past the floor, a page may still come in by taking the
+  // place of one that ranks below it. Every page is one 16 MiB slab, so the swap leaves the
+  // pool where it was -- the floor guards against the cache GROWING, not against it changing.
+  bool replace_only              = false;
+  std::size_t replaced_here      = 0;
+  // Where a populate goes (us, summed over this call): page boundaries (for STRING, the offsets
+  // copied to the host), the null check, the STRING boundary reads, the page copies, and the
+  // publish under the store's lock. With SIRIUS_SCAN_PREP_SYNC=1 each page copy is synchronized
+  // so its GPU time lands in copy_us.
+  std::int64_t pd_layout_us = 0, pd_mask_us = 0, pd_bounds_us = 0, pd_copy_us = 0, pd_publish_us = 0;
+  std::size_t pd_pages = 0;
+  auto const pd_now    = [] { return std::chrono::steady_clock::now(); };
+  auto const pd_us     = [](auto a, auto b) {
+    return std::chrono::duration_cast<std::chrono::microseconds>(b - a).count();
+  };
+  static bool const pd_sync = [] {
+    auto const* v = std::getenv("SIRIUS_SCAN_PREP_SYNC");
+    return v != nullptr && std::string_view(v) == "1";
+  }();
   if (auto const min_free = fixed_page_cache_min_free_bytes_per_gpu(); min_free > 0) {
     auto const free_bytes =
       _reservation_manager.get_available_memory_for_tier(cucascade::memory::Tier::GPU);
@@ -4731,7 +4978,9 @@ void sirius_scan_manager::insert_pages_from_view(
       // this function is what hands memory BACK, and a pool below its floor is exactly when
       // that is needed. Returning here would leave the store holding everything it had while
       // the query it is starving asks for more.
-      admission_full = true;
+      admission_full = !page_replace_admission_enabled();
+      replace_only   = page_replace_admission_enabled();
+      admission_headroom = 0;
     } else {
       admission_headroom = free_bytes - min_free;
     }
@@ -4765,9 +5014,35 @@ void sirius_scan_manager::insert_pages_from_view(
       // and 1GB of VRAM sat unused while the fixed-width side thrashed. One store, one
       // budget, one LRU: whichever pages are actually being read win the space.
       int column_id = 0;
+      bool future_refuses = false;
       {
         std::lock_guard lock{_pages_mutex};
         column_id = intern_id(column_names[c]);
+        // Future-aware admission: a column no later query reads is not worth a copy.
+        future_refuses = _future_mode == 2 && !_future_next_use.contains(column_names[c]);
+        // Mode 3 (bypass): with the store at its budget, a column needed later than every
+        // resident page would be the sweep's first victim -- skip the copy instead of paying
+        // for it and throwing it away.
+        if (_future_mode == 3 && budget > 0 && _pages_bytes >= budget) {
+          auto const nx  = _future_next_use.find(column_names[c]);
+          int const mine = nx == _future_next_use.end() ? std::numeric_limits<int>::max()
+                                                        : nx->second;
+          int farthest   = -1;
+          for (auto const& [key, page] : _pages) {
+            auto const& name = key.column_id < static_cast<int>(_intern_names.size())
+                                 ? _intern_names[key.column_id]
+                                 : std::string{};
+            farthest = std::max(farthest, future_distance_locked(name, page));
+            if (farthest == std::numeric_limits<int>::max()) { break; }
+          }
+          future_refuses = mine > farthest;
+        }
+      }
+      if (future_refuses) {
+        if (page_trace_enabled() && g == 0) {
+          SIRIUS_LOG_INFO("[page-trace] skip col='{}' reason=not_used_again", column_names[c]);
+        }
+        continue;
       }
       bool const fixed_width = is_intrinsically_fixed_width_type(column_view);
       if (!fixed_width && column_view.type().id() != cudf::type_id::STRING) { continue; }
@@ -4784,14 +5059,33 @@ void sirius_scan_manager::insert_pages_from_view(
       // size (one device read of the end offsets, the same O(1) trick the
       // variable-width index uses) plus the 4-byte offset each row carries.
       auto const target = static_cast<std::size_t>(fixed_width_page_size_bytes());
+      auto const pd_layout0 = pd_now();
+      // Pages of an oversized column's prefix that may be cached (SIZE_MAX: no limit).
+      std::size_t big_prefix_pages = std::numeric_limits<std::size_t>::max();
 
       // Where each page of this row group starts. The last entry is `rows`, so page i spans
       // [page_starts[i], page_starts[i + 1]).
       std::vector<std::size_t> page_starts;
+      // Every page is one allocation of exactly `target` bytes (see make_page_slab), so a
+      // page holds as many rows as fit in it -- data AND null mask AND, for STRING, offsets.
+      // Cutting on the data alone made full fixed-width pages 16MiB of data plus a separate
+      // mask (17.0MiB for an int16 column) and STRING pages a row over the target.
+      // Cut as if every column had a null mask, whether or not this read produced one. The
+      // same column can come back with a mask in one scan and without in another; cutting on
+      // what this read happens to hold gave the same row group two page grids with the same
+      // page count, and a run assembled from both pages held the wrong number of rows
+      // (measured: 30,493,568 rows served for three 10M-row row groups). A column without a
+      // mask simply leaves that much more padding in its slab.
+      bool const nullable = true;
+      bool layout_fits    = true;
       if (fixed_width) {
-        // Every row is the same width, so an average IS exact.
         auto const width = std::max<std::size_t>(1, cudf::size_of(column_view.type()));
-        auto const rows_per_page = std::max<std::size_t>(1, target / width);
+        // Start from the mask-inclusive estimate and step down past the region padding.
+        auto rows_per_page =
+          std::max<std::size_t>(1, (target * 8) / (width * 8 + (nullable ? 1 : 0)));
+        while (rows_per_page > 1 && fixed_width_page_need(rows_per_page, width, nullable) > target) {
+          --rows_per_page;
+        }
         for (std::size_t r = 0; r < rows; r += rows_per_page) { page_starts.push_back(r); }
       } else {
         // A STRING row is not a fixed width, and dividing the row group's average into the
@@ -4844,37 +5138,37 @@ void sirius_scan_manager::insert_pages_from_view(
               stream.synchronize();
               std::copy(narrow.begin(), narrow.end(), cum.begin());
             }
-            auto const bytes_to = [&](std::size_t from, std::size_t to) {
-              return static_cast<std::size_t>(cum[to] - cum[from]) + 4 * (to - from);
+            // Bytes a page of rows [from, to) needs in its slab: characters, offsets, mask.
+            auto const offset_width = cudf::size_of(offs_all.type());
+            auto const need         = [&](std::size_t from, std::size_t to) {
+              return string_page_need(
+                to - from, static_cast<std::size_t>(cum[to] - cum[from]), offset_width, nullable);
             };
             std::size_t start = 0;
             page_starts.push_back(0);
-            while (start < rows && bytes_to(start, rows) >= target) {
-              // Smallest end row whose chars-plus-offsets reach the target. Binary search
-              // rather than a walk: a row group is millions of rows and only tens of pages.
-              std::size_t lo = start + 1, hi = rows;
-              while (lo < hi) {
+            while (start < rows && need(start, rows) > target) {
+              // Largest end row whose page still fits the target. Binary search rather than
+              // a walk: a row group is millions of rows and only tens of pages.
+              std::size_t lo = start, hi = rows;  // need(start, lo) fits, need(start, hi) not
+              while (hi - lo > 1) {
                 std::size_t const mid = lo + (hi - lo) / 2;
-                if (bytes_to(start, mid) >= target) { hi = mid; } else { lo = mid + 1; }
+                if (need(start, mid) <= target) { lo = mid; } else { hi = mid; }
               }
-              if (lo >= rows) { break; }
+              if (lo == start) {
+                page_starts.clear();  // one row is larger than a page: cannot be paged
+                break;
+              }
               page_starts.push_back(lo);
               start = lo;
             }
           }
-          if (page_starts.empty()) {
-            // No usable offsets: fall back to the run's average so a page store still forms.
-            auto const avg = std::max<double>(
-              1.0,
-              (static_cast<double>(scv.chars_size(stream)) + 4.0 * static_cast<double>(rows)) /
-                static_cast<double>(std::max<std::size_t>(1, rows)));
-            auto const rows_per_page =
-              std::max<std::size_t>(1, static_cast<std::size_t>(static_cast<double>(target) / avg));
-            for (std::size_t r = 0; r < rows; r += rows_per_page) { page_starts.push_back(r); }
-          }
+          // No usable offsets, or a single row too large for a page: leave this row group of
+          // the column uncached rather than make a page that does not fit its slab.
+          if (page_starts.empty()) { layout_fits = false; }
           std::lock_guard lock{_pages_mutex};
           _page_layouts.emplace(layout_key, page_starts);
         }
+        if (page_starts.empty()) { layout_fits = false; }
         if (page_trace_enabled()) {
           SIRIUS_LOG_INFO("[page-trace] offsets col='{}' rg={} rows={} pages={} us={}",
                           column_names[c],
@@ -4898,17 +5192,30 @@ void sirius_scan_manager::insert_pages_from_view(
       // that read them then start from the file every time -- those columns were serving a
       // little (URL 0.41 GiB of 43.8 GiB inserted), and a little beats nothing. Kept because
       // a different budget or dataset may put the line elsewhere.
+      if (!layout_fits) {
+        if (page_trace_enabled()) {
+          SIRIUS_LOG_INFO("[page-trace] skip col='{}' reason=row_exceeds_page rg={}",
+                          column_names[c],
+                          row_groups[g]);
+        }
+        continue;
+      }
       if (file_row_groups > 0 && !page_starts.empty()) {
-        // This row group's own size for this column, from the page boundaries just computed:
-        // every page but the last is one target's worth, and the last is whatever is left.
-        auto const full_pages = page_starts.size() > 0 ? page_starts.size() - 1 : 0;
-        auto const rg_bytes   = full_pages * target + target / 2;  // half a page for the tail
+        // This row group's own size for this column: every page, the last one included, is
+        // one allocation of exactly `target` bytes.
+        auto const rg_bytes = page_starts.size() * target;
         auto const column_bytes =
           static_cast<double>(rg_bytes) * static_cast<double>(file_row_groups);
         {
           std::lock_guard lock{_pages_mutex};
           auto& recorded = _column_full_bytes[column_id];
           recorded = std::max(recorded, static_cast<std::size_t>(column_bytes));
+        }
+        if (page_big_prefix_fraction() > 0 && budget > 0 &&
+            column_bytes > static_cast<double>(budget)) {
+          big_prefix_pages = static_cast<std::size_t>(page_big_prefix_fraction() *
+                                                      static_cast<double>(budget) /
+                                                      static_cast<double>(target));
         }
         if (skip_columns_larger_than_budget() && budget > 0 &&
             column_bytes > static_cast<double>(budget)) {
@@ -4923,6 +5230,7 @@ void sirius_scan_manager::insert_pages_from_view(
         }
       }
       if (page_starts.empty()) { page_starts.push_back(0); }
+      pd_layout_us += pd_us(pd_layout0, pd_now());
       auto const pages_in_row_group = page_starts.size();
       page_starts.push_back(rows);  // sentinel so page i spans [starts[i], starts[i + 1])
       // Keep one layout per row group. Rows-per-page is derived from this batch's average
@@ -4939,10 +5247,47 @@ void sirius_scan_manager::insert_pages_from_view(
           continue;
         }
       }
+      // Once per (column, row group): whether any row is null, and for STRING the chars
+      // offset at every page boundary -- one sync each, instead of one per page.
+      bool keep_mask = false;
+      auto const pd_mask0 = pd_now();
+      if (column_view.nullable()) {
+        auto const rg_view = cudf::slice(column_view, {rg_begin, rg_end});
+        keep_mask = !rg_view.empty() && rg_view.front().null_count() > 0;
+      }
+      auto const pd_bounds0 = pd_now();
+      pd_mask_us += pd_us(pd_mask0, pd_bounds0);
+      std::vector<std::int64_t> bounds;
+      if (!fixed_width) {
+        cudf::strings_column_view const scv_all{column_view};
+        auto const ov    = scv_all.offsets();
+        auto const width = cudf::size_of(ov.type());
+        auto const* base = ov.head<std::uint8_t>();
+        bounds.assign(pages_in_row_group + 1, 0);
+        for (std::size_t i = 0; i <= pages_in_row_group; ++i) {
+          auto const row = static_cast<std::size_t>(column_view.offset()) +
+                           static_cast<std::size_t>(rg_begin) + page_starts[i];
+          cudaMemcpyAsync(&bounds[i], base + row * width, width, cudaMemcpyDeviceToHost,
+                          stream.value());
+        }
+        stream.synchronize();
+        if (width == 4) {
+          for (auto& b : bounds) { b = static_cast<std::int32_t>(b & 0xffffffff); }
+        }
+      }
+      pd_bounds_us += pd_us(pd_bounds0, pd_now());
       for (std::size_t page_index = 0; page_index < pages_in_row_group; ++page_index) {
         auto const r         = page_starts[page_index];
         auto const page_rows = page_starts[page_index + 1] - r;
         if (page_rows == 0) { continue; }
+        // Oversized column: only its first big_prefix_pages pages, counted in row group order.
+        bool const in_big_prefix =
+          big_prefix_pages != std::numeric_limits<std::size_t>::max();
+        if (in_big_prefix &&
+            static_cast<std::size_t>(row_groups[g]) * pages_in_row_group + page_index >=
+              big_prefix_pages) {
+          continue;
+        }
         cached_page_key key{
           file_id, column_id, static_cast<int>(row_groups[g]), static_cast<int>(page_index)};
         {
@@ -4962,13 +5307,60 @@ void sirius_scan_manager::insert_pages_from_view(
         auto const end   = static_cast<cudf::size_type>(rg_begin + r + page_rows);
         auto slices      = cudf::slice(column_view, {begin, end});
         if (slices.empty()) { continue; }
+        // Past the headroom: either stop, or swap a lower-ranked page out first.
+        bool replaced = false;
+        if (replace_only || admitted_bytes + target > admission_headroom) {
+          if (!page_replace_admission_enabled()) {
+            SIRIUS_LOG_INFO("[page-store] admission capped: took={} headroom={} at column='{}'",
+                            admitted_bytes,
+                            admission_headroom,
+                            column_names[c]);
+            admission_full = true;
+            break;
+          }
+          std::lock_guard lock{_pages_mutex};
+          if (!evict_for_incoming_locked(column_names[c], !fixed_width, target)) {
+            admission_full = true;
+            break;
+          }
+          replaced = true;
+          ++_replace_admitted_pages;
+          ++replaced_here;
+        }
         cached_page page;
-        page.data = std::make_shared<cudf::column>(
-          slices.front(), stream, space.get_default_allocator());
+        auto const pd_copy0 = pd_now();
+        page.data = make_page_slab(column_view,
+                                   begin,
+                                   end,
+                                   target,
+                                   stream,
+                                   space.get_default_allocator(),
+                                   keep_mask,
+                                   bounds.empty() ? -1 : bounds[page_index],
+                                   bounds.empty() ? -1 : bounds[page_index + 1],
+                                   page_tail_shrink_enabled() && page_index + 1 == pages_in_row_group
+                                     ? std::size_t{1} << 20
+                                     : 0);
+        if (pd_sync) { stream.synchronize(); }
+        pd_copy_us += pd_us(pd_copy0, pd_now());
+        ++pd_pages;
+        if (!page.data) {
+          // The cutter sizes every page to fit, so this is a layout bug, not a capacity
+          // question. Skip the rest of this run: a run with a page missing is never served.
+          SIRIUS_LOG_WARN("[page-store] page does not fit its slab: col='{}' rg={} page={} rows={}",
+                          column_names[c],
+                          row_groups[g],
+                          page_index,
+                          page_rows);
+          break;
+        }
         page.num_rows          = page_rows;
+        page.big_prefix        = in_big_prefix;
         page.pages_in_row_group = pages_in_row_group;
-        page.num_bytes         = page.data->alloc_size();
-        if (admitted_bytes + page.num_bytes > admission_headroom) {
+        page.run_rows          = rows;
+        page.row_offset        = r;
+        page.num_bytes         = page.data->buffer.size();
+        if (!replaced && admitted_bytes + page.num_bytes > admission_headroom) {
           // Taking this page would push the pool past the floor the query needs. Stop here:
           // the pages already published stay, the rest of this batch is simply not cached,
           // and the eviction below still runs so the store is left within its budget.
@@ -4979,21 +5371,24 @@ void sirius_scan_manager::insert_pages_from_view(
           admission_full = true;
           break;
         }
-        admitted_bytes += page.num_bytes;
-        // Min/max page stats are a fixed-width notion (they drive predicate-based page
-        // skipping). A STRING page carries none and is simply never skipped on stats.
-        page.stats             = fixed_width
-                                   ? compute_fixed_width_page_stats_for_range(column_view, begin, end, &space)
-                                   : fixed_width_page_stats{};
+        if (!replaced) { admitted_bytes += page.num_bytes; }
+        // No min/max stats: nothing in the page store reads them, and computing them cost a
+        // reduction and a device-to-host sync per page on every insert.
         page.filter_signature  = filter_signature;
         page.filter_conjuncts  = filter_conjuncts;
         page.filter_ranges     = filter_ranges;
         page.filter_analyzable = filter_analyzable;
+        auto const pd_pub0 = pd_now();
         std::lock_guard lock{_pages_mutex};
+        pd_publish_us += pd_us(pd_pub0, pd_now());  // lock wait; the publish itself is O(1)
         // Another thread may have published this same page while the copy above ran; it
         // holds the same rows, so drop ours rather than pay for a second resident copy.
         if (_pages.contains(key)) { continue; }
         page.last_access_tick  = ++_page_tick;
+        page.future_epoch      = _future_epoch;  // the running query has this one already
+        if (scan_cache_trace_enabled()) {
+          _rg_ever_inserted.insert(rg_trace_key(key.file_id, key.column_id, key.row_group));
+        }
         _lru.push_back(key);
         page.lru_it            = std::prev(_lru.end());
         _pages_bytes += page.num_bytes;
@@ -5001,13 +5396,14 @@ void sirius_scan_manager::insert_pages_from_view(
         stats.inserted_pages += 1;
         stats.inserted_bytes += page.num_bytes;
         if (page_trace_enabled()) {
-          SIRIUS_LOG_INFO("[page-trace] cache col='{}' rg={} page={}/{} rows={} bytes={}",
+          SIRIUS_LOG_INFO("[page-trace] cache col='{}' rg={} page={}/{} rows={} bytes={} used={}",
                           column_names[c],
                           row_groups[g],
                           page_index,
                           pages_in_row_group,
                           page_rows,
-                          page.num_bytes);
+                          page.num_bytes,
+                          page.data->used_bytes);
         }
         _pages.emplace(std::move(key), std::move(page));
       }
@@ -5015,6 +5411,31 @@ void sirius_scan_manager::insert_pages_from_view(
     }
     if (admission_full) { break; }
     row_offset += rows;
+  }
+
+  if (pd_pages > 0) {
+    SIRIUS_LOG_INFO("[scan-populate-detail] pages={} layout_us={} mask_us={} bounds_us={} "
+                    "copy_us={} lockwait_us={}",
+                    pd_pages, pd_layout_us, pd_mask_us, pd_bounds_us, pd_copy_us, pd_publish_us);
+  }
+  if (replaced_here > 0) {
+    SIRIUS_LOG_INFO("[page-store] replace_admitted pages={} file='{}'", replaced_here, file_path);
+  }
+
+  // Record what admission turned away, so a later miss on it can say so.
+  if (admission_full && scan_cache_trace_enabled()) {
+    std::lock_guard lock{_pages_mutex};
+    for (std::size_t g = 0; g < row_groups.size(); ++g) {
+      for (std::size_t c = 0; c < column_names.size(); ++c) {
+        // intern_id, not intern_lookup: a batch declined before its first column was
+        // interned would otherwise leave no trace and later read as "never cached".
+        auto const column_id = intern_id(column_names[c]);
+        cached_page_key const first{file_id, column_id, static_cast<int>(row_groups[g]), 0};
+        if (!_pages.contains(first)) {
+          _rg_declined.insert(rg_trace_key(file_id, column_id, static_cast<int>(row_groups[g])));
+        }
+      }
+    }
   }
 
   // LRU down to whichever bound binds first: the configured budget, or what the
@@ -5034,6 +5455,15 @@ void sirius_scan_manager::insert_pages_from_view(
 }
 
 void sirius_scan_manager::enforce_total_cache_budget()
+{
+  // The sweep reads and evicts from _pinned_entries, which the pinned-entry inserts mutate
+  // under _pinned_entries_mutex alone. Holding only _pages_mutex here let a scan thread walk
+  // that map while another rehashed it. Lock order is pinned -> pages everywhere.
+  std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
+  enforce_total_cache_budget_pinned_locked();
+}
+
+void sirius_scan_manager::enforce_total_cache_budget_pinned_locked()
 {
   // Everything the cache holds shares one budget, and this is the only place that
   // enforces it. It has to run wherever the cache grows -- page inserts and
@@ -5114,12 +5544,21 @@ void sirius_scan_manager::enforce_total_cache_budget()
   // yet falls back to the width test, which holds on this workload because the size boundary
   // -- roughly budget / row groups -- happens to sit between the wide variable-width columns
   // and the rest.
+  // Requirement (HANDOFF B7): variable-width pages go first. The size-based rule above was a
+  // substitute for it; SIRIUS_PAGE_EVICT_ORDER=size brings that rule back for comparison.
+  static bool const evict_by_size = [] {
+    auto const* v = std::getenv("SIRIUS_PAGE_EVICT_ORDER");
+    return v != nullptr && std::string_view(v) == "size";
+  }();
   auto const gives_up_first = [&](cached_page_key const& key, cached_page const& page) {
-    auto const it = _column_full_bytes.find(key.column_id);
-    if (it != _column_full_bytes.end() && budget_to_use > 0) {
-      return it->second > budget_to_use;
+    if (page.big_prefix && page_big_prefix_protect()) { return false; }
+    if (evict_by_size) {
+      auto const it = _column_full_bytes.find(key.column_id);
+      if (it != _column_full_bytes.end() && budget_to_use > 0) {
+        return it->second > budget_to_use;
+      }
     }
-    return page.data && page.data->type().id() == cudf::type_id::STRING;
+    return page.data && page.data->view.type().id() == cudf::type_id::STRING;
   };
   // _pages alone may not be able to reach the budget when the unbudgeted stores already
   // exceed it; the loop below stops when _pages runs out either way, but say so once so a
@@ -5132,38 +5571,58 @@ void sirius_scan_manager::enforce_total_cache_budget()
                     budget_to_use,
                     _pages_bytes);
   }
-  for (int pass = 0; pass < 2 && resident > budget_to_use; ++pass) {
-    bool const variable_pass = (pass == 0);
-    for (auto lru_it = _lru.begin(); lru_it != _lru.end() && resident > budget_to_use;) {
+  // Victim order. Default (HANDOFF B7): variable-width pages first, then fixed-width, each
+  // oldest first. With future hints: the page whose column is needed furthest ahead goes first
+  // (never-again columns before all others); B7 and then age break ties.
+  std::vector<std::pair<std::tuple<long long, int, std::size_t>, decltype(_lru)::iterator>> order;
+  order.reserve(_lru.size());
+  {
+    std::size_t pos = 0;
+    for (auto lru_it = _lru.begin(); lru_it != _lru.end(); ++lru_it, ++pos) {
       auto it = _pages.find(*lru_it);
-      if (it == _pages.end()) {  // keep the list and the map in step
-        lru_it = _lru.erase(lru_it);
-        continue;
+      int const variable_rank = (it != _pages.end() && gives_up_first(*lru_it, it->second)) ? 0 : 1;
+      long long future_rank = 0;
+      if (_future_mode != 0) {
+        auto const& name = lru_it->column_id < static_cast<int>(_intern_names.size())
+                             ? _intern_names[lru_it->column_id]
+                             : std::string{};
+        future_rank = it == _pages.end()
+                        ? 0
+                        : -static_cast<long long>(future_distance_locked(name, it->second));
       }
-      if (gives_up_first(*lru_it, it->second) != variable_pass) {
-        ++lru_it;
-        continue;
-      }
-      auto const key = *lru_it;
-      resident -= it->second.num_bytes;
-      _pages_bytes -= it->second.num_bytes;
-      auto& col_stats = _column_stats[key.column_id];
-      col_stats.evicted_pages += 1;
-      col_stats.evicted_bytes += it->second.num_bytes;
-      if (page_trace_enabled()) {
-        SIRIUS_LOG_INFO("[page-trace] evict col='{}' rg={} page={} bytes={} pass={}",
-                        key.column_id < static_cast<int>(_intern_names.size())
-                          ? _intern_names[key.column_id]
-                          : "?",
-                        key.row_group,
-                        key.page_index,
-                        it->second.num_bytes,
-                        variable_pass ? "oversized" : "resident-capable");
-      }
-      _pages.erase(it);
-      lru_it = _lru.erase(lru_it);
-      ++evicted;
+      order.push_back({{future_rank, variable_rank, pos}, lru_it});
     }
+  }
+  std::sort(order.begin(), order.end(),
+            [](auto const& a, auto const& b) { return a.first < b.first; });
+  for (auto const& [rank, lru_it] : order) {
+    if (resident <= budget_to_use) { break; }
+    bool const variable_pass = std::get<1>(rank) == 0;
+    auto it = _pages.find(*lru_it);
+    if (it == _pages.end()) {  // keep the list and the map in step
+      _lru.erase(lru_it);
+      continue;
+    }
+    auto const key = *lru_it;
+    resident -= it->second.num_bytes;
+    _pages_bytes -= it->second.num_bytes;
+    auto& col_stats = _column_stats[key.column_id];
+    col_stats.evicted_pages += 1;
+    col_stats.evicted_bytes += it->second.num_bytes;
+    if (page_trace_enabled()) {
+      SIRIUS_LOG_INFO("[page-trace] evict col='{}' rg={} page={} bytes={} pass={} next_use={}",
+                      key.column_id < static_cast<int>(_intern_names.size())
+                        ? _intern_names[key.column_id]
+                        : "?",
+                      key.row_group,
+                      key.page_index,
+                      it->second.num_bytes,
+                      variable_pass ? "oversized" : "resident-capable",
+                      -std::get<0>(rank));
+    }
+    _pages.erase(it);
+    _lru.erase(lru_it);
+    ++evicted;
   }
 
   // The page LRU above can only shrink _pages. When the variable-width store is what puts
@@ -5255,6 +5714,8 @@ void sirius_scan_manager::enforce_total_cache_budget()
 
 void sirius_scan_manager::log_page_census(std::string_view when) const
 {
+  // Reads _pinned_entries below; same lock order as enforce_total_cache_budget.
+  std::lock_guard pinned_entries_lock{_pinned_entries_mutex};
   std::lock_guard lock{_pages_mutex};
 
   // The page budget is enforced against _pages_bytes alone, but the pinned entries hold
@@ -5273,9 +5734,13 @@ void sirius_scan_manager::log_page_census(std::string_view when) const
 
     std::size_t chunk_bytes = 0;
     std::size_t varpage_bytes = 0;
+    std::size_t fixedpage_bytes = 0;
     std::size_t n_chunks = 0;
     std::size_t n_varpages = 0;
     for (auto const& [_, entry] : _pinned_entries) {
+      for (auto const& [__, col_pages] : entry.fixed_width_pages_by_column) {
+        for (auto const& page : col_pages) { add(page.owned_column, fixedpage_bytes); }
+      }
       for (auto const& [__, chunks] : entry.data_batches_by_column) {
         for (auto const& chunk : chunks) {
           if (chunk) { n_chunks += 1; }
@@ -5292,16 +5757,18 @@ void sirius_scan_manager::log_page_census(std::string_view when) const
       }
     }
     SIRIUS_LOG_INFO("[page-store] resident {} pages_bytes={} chunk_bytes={} varpage_bytes={} "
-                    "total_bytes={} pages={} chunks={} varpages={} entries={}",
+                    "total_bytes={} pages={} chunks={} varpages={} entries={} "
+                    "pinned_fixedpage_bytes={}",
                     when,
                     _pages_bytes,
                     chunk_bytes,
                     varpage_bytes,
-                    _pages_bytes + chunk_bytes + varpage_bytes,
+                    _pages_bytes + chunk_bytes + varpage_bytes + fixedpage_bytes,
                     _pages.size(),
                     n_chunks,
                     n_varpages,
-                    _pinned_entries.size());
+                    _pinned_entries.size(),
+                    fixedpage_bytes);
   }
 
   if (_pages.empty() && _column_stats.empty()) { return; }
@@ -5419,6 +5886,123 @@ std::size_t sirius_scan_manager::drop_all_pages()
   return freed;
 }
 
+void sirius_scan_manager::set_future_cache_hints(int mode,
+                                                 std::unordered_set<std::string> current,
+                                                 std::unordered_map<std::string, int> next_use)
+{
+  std::lock_guard lock{_pages_mutex};
+  _future_mode     = mode;
+  ++_future_epoch;
+  _future_current  = std::move(current);
+  _future_next_use = std::move(next_use);
+}
+
+int sirius_scan_manager::future_distance_locked(std::string const& column,
+                                                cached_page const& page) const
+{
+  if (_future_current.contains(column) && page.future_epoch != _future_epoch) { return 0; }
+  auto const it = _future_next_use.find(column);
+  return it == _future_next_use.end() ? std::numeric_limits<int>::max() : it->second;
+}
+
+std::size_t sirius_scan_manager::release_pages(std::size_t bytes)
+{
+  std::lock_guard lock{_pages_mutex};
+  if (bytes == 0 || _pages_bytes < bytes) { return 0; }
+  // Same order as enforce_total_cache_budget_pinned_locked: furthest next use first when the
+  // cache has future hints, then variable-width before fixed-width (B7), then oldest first.
+  std::vector<std::pair<std::tuple<long long, int, std::size_t>, decltype(_lru)::iterator>> order;
+  order.reserve(_lru.size());
+  std::size_t pos = 0;
+  for (auto lru_it = _lru.begin(); lru_it != _lru.end(); ++lru_it, ++pos) {
+    auto it = _pages.find(*lru_it);
+    if (it == _pages.end()) { continue; }
+    int const variable_rank =
+      it->second.data && it->second.data->view.type().id() == cudf::type_id::STRING &&
+          !(it->second.big_prefix && page_big_prefix_protect())
+        ? 0
+        : 1;
+    long long future_rank = 0;
+    if (_future_mode != 0 && lru_it->column_id < static_cast<int>(_intern_names.size())) {
+      future_rank =
+        -static_cast<long long>(future_distance_locked(_intern_names[lru_it->column_id], it->second));
+    }
+    order.push_back({{future_rank, variable_rank, pos}, lru_it});
+  }
+  std::sort(order.begin(), order.end(),
+            [](auto const& a, auto const& b) { return a.first < b.first; });
+  std::size_t freed = 0;
+  for (auto const& [rank, lru_it] : order) {
+    if (freed >= bytes) { break; }
+    auto it = _pages.find(*lru_it);
+    if (it == _pages.end()) { continue; }
+    freed += it->second.num_bytes;
+    _pages_bytes -= it->second.num_bytes;
+    auto& col_stats = _column_stats[lru_it->column_id];
+    col_stats.evicted_pages += 1;
+    col_stats.evicted_bytes += it->second.num_bytes;
+    _pages.erase(it);
+    _lru.erase(lru_it);
+  }
+  return freed;
+}
+
+bool sirius_scan_manager::evict_for_incoming_locked(std::string const& column,
+                                                    bool incoming_variable,
+                                                    std::size_t bytes)
+{
+  // Rank tuples compare like the sweep's victim order: smaller goes first. The incoming page is
+  // the newest, and the running query has it already, so it ranks by its column's next use.
+  auto const incoming_distance = [&] {
+    if (_future_mode == 0) { return 0; }
+    auto const it = _future_next_use.find(column);
+    return it == _future_next_use.end() ? std::numeric_limits<int>::max() : it->second;
+  }();
+  std::tuple<long long, int, std::size_t> const incoming{
+    -static_cast<long long>(incoming_distance), incoming_variable ? 0 : 1,
+    std::numeric_limits<std::size_t>::max()};
+  std::vector<std::pair<std::tuple<long long, int, std::size_t>, decltype(_lru)::iterator>> order;
+  order.reserve(_lru.size());
+  std::size_t pos = 0;
+  for (auto lru_it = _lru.begin(); lru_it != _lru.end(); ++lru_it, ++pos) {
+    auto it = _pages.find(*lru_it);
+    if (it == _pages.end() || !it->second.data || it->second.data.use_count() > 1) { continue; }
+    int const variable_rank = it->second.data->view.type().id() == cudf::type_id::STRING &&
+                                  !(it->second.big_prefix && page_big_prefix_protect())
+                                ? 0
+                                : 1;
+    long long future_rank   = 0;
+    if (_future_mode != 0 && lru_it->column_id < static_cast<int>(_intern_names.size())) {
+      future_rank =
+        -static_cast<long long>(future_distance_locked(_intern_names[lru_it->column_id], it->second));
+    }
+    std::tuple<long long, int, std::size_t> rank{future_rank, variable_rank, pos};
+    if (rank < incoming) { order.push_back({rank, lru_it}); }
+  }
+  std::sort(order.begin(), order.end(),
+            [](auto const& a, auto const& b) { return a.first < b.first; });
+  std::size_t freed = 0;
+  for (auto const& [rank, lru_it] : order) {
+    if (freed >= bytes) { break; }
+    auto it = _pages.find(*lru_it);
+    freed += it->second.num_bytes;
+    _pages_bytes -= it->second.num_bytes;
+    auto& col_stats = _column_stats[lru_it->column_id];
+    col_stats.evicted_pages += 1;
+    col_stats.evicted_bytes += it->second.num_bytes;
+    _pages.erase(it);
+    _lru.erase(lru_it);
+  }
+  return freed >= bytes;
+}
+
+std::size_t release_page_store_for_reservation(std::size_t bytes)
+{
+  auto* owner = g_page_store_owner.load(std::memory_order_acquire);
+  if (owner == nullptr) { return 0; }
+  return owner->release_pages(bytes);
+}
+
 std::size_t drop_page_store_on_oom()
 {
   auto* owner = g_page_store_owner.load(std::memory_order_acquire);
@@ -5479,6 +6063,71 @@ std::vector<bool> sirius_scan_manager::cached_row_group_columns_available(
       .count(),
     std::memory_order_relaxed);
   auto const file_id = intern_lookup(file_path);
+  if (scan_cache_trace_enabled()) {
+    // Per column, what each requested row group looks like in the store. A separate pass so
+    // the decision below stays exactly as it is; it runs only when tracing.
+    enum { kFull, kPartial, kPredicate, kEvicted, kDeclined, kNever, kKinds };
+    for (auto const& name : column_names) {
+      auto const column_id = file_id < 0 ? -1 : intern_lookup(name);
+      std::array<std::size_t, kKinds> count{};
+      std::size_t full_bytes = 0;
+      for (auto const row_group : row_groups) {
+        auto const rg = static_cast<int>(row_group);
+        if (file_id < 0 || column_id < 0) { ++count[kNever]; continue; }
+        auto const first = _pages.find(cached_page_key{file_id, column_id, rg, 0});
+        if (first == _pages.end() || !first->second.data) {
+          auto const k = rg_trace_key(file_id, column_id, rg);
+          if (_pages.contains(cached_page_key{file_id, column_id, rg, 1})) {
+            ++count[kPartial];
+          } else if (_rg_ever_inserted.contains(k)) {
+            ++count[kEvicted];
+          } else if (_rg_declined.contains(k)) {
+            ++count[kDeclined];
+          } else {
+            ++count[kNever];
+          }
+          continue;
+        }
+        auto const expected = first->second.pages_in_row_group;
+        std::size_t found = 0, bytes = 0;
+        bool predicate_mismatch = false, layout_mismatch = false;
+        for (std::size_t i = 0; i < expected; ++i) {
+          auto const it =
+            _pages.find(cached_page_key{file_id, column_id, rg, static_cast<int>(i)});
+          if (it == _pages.end() || !it->second.data) { break; }
+          if (it->second.pages_in_row_group != expected) { layout_mismatch = true; break; }
+          auto const& sig = it->second.filter_signature;
+          if ((!sig.empty() && sig != required_filter_signature) ||
+              (sig.empty() && !required_filter_signature.empty())) {
+            predicate_mismatch = true;
+          }
+          ++found;
+          bytes += it->second.data->used_bytes;
+        }
+        if (predicate_mismatch) {
+          ++count[kPredicate];
+        } else if (layout_mismatch || found != expected) {
+          ++count[kPartial];
+        } else {
+          ++count[kFull];
+          full_bytes += bytes;
+        }
+      }
+      SIRIUS_LOG_INFO("[scan-cache] file='{}' col='{}' filtered={} rgs={} full={} partial={} "
+                      "predicate={} evicted={} declined={} never={} full_bytes={}",
+                      file_path,
+                      name,
+                      required_filter_signature.empty() ? 0 : 1,
+                      row_groups.size(),
+                      count[kFull],
+                      count[kPartial],
+                      count[kPredicate],
+                      count[kEvicted],
+                      count[kDeclined],
+                      count[kNever],
+                      full_bytes);
+    }
+  }
   if (file_id < 0) { return out; }  // nothing from this file is cached
   for (std::size_t ci = 0; ci < column_names.size(); ++ci) {
     auto const column_id = intern_lookup(column_names[ci]);
@@ -5540,6 +6189,68 @@ std::vector<bool> sirius_scan_manager::cached_row_group_columns_available(
   return out;
 }
 
+std::vector<std::vector<std::vector<cached_piece>>> sirius_scan_manager::cached_row_group_pieces(
+  std::string const& file_path,
+  std::vector<cudf::size_type> const& row_groups,
+  std::vector<std::string> const& column_names,
+  std::string const& required_filter_signature,
+  bool serve)
+{
+  std::vector<std::vector<std::vector<cached_piece>>> out(
+    column_names.size(), std::vector<std::vector<cached_piece>>(row_groups.size()));
+  std::lock_guard lock{_pages_mutex};
+  auto const file_id = intern_lookup(file_path);
+  if (file_id < 0) { return out; }
+  for (std::size_t ci = 0; ci < column_names.size(); ++ci) {
+    auto const column_id = intern_lookup(column_names[ci]);
+    if (column_id < 0) { continue; }
+    for (std::size_t gi = 0; gi < row_groups.size(); ++gi) {
+      auto const rg = static_cast<int>(row_groups[gi]);
+      // The run's layout, taken from whichever of its pages is resident. Pages from another
+      // layout (a different page count or run length) are not this run's and are skipped.
+      std::size_t expected = 0, run_rows = 0;
+      std::vector<decltype(_pages)::iterator> found;
+      bool usable = true;
+      for (int page_index = 0; usable; ++page_index) {
+        auto it = _pages.find(cached_page_key{file_id, column_id, rg, page_index});
+        if (expected != 0 && static_cast<std::size_t>(page_index) >= expected) { break; }
+        if (it == _pages.end() || !it->second.data) {
+          if (expected == 0 && page_index > 64) { break; }  // no page of this run is resident
+          continue;
+        }
+        auto const& pg = it->second;
+        if (expected == 0) {
+          expected = pg.pages_in_row_group;
+          run_rows = pg.run_rows;
+        } else if (pg.pages_in_row_group != expected || pg.run_rows != run_rows) {
+          usable = false;
+          break;
+        }
+        // Same rule as the splice: the cached rows must have gone through the same predicate.
+        if (pg.filter_signature != required_filter_signature) {
+          usable = false;
+          break;
+        }
+        found.push_back(it);
+      }
+      if (!usable || found.empty() || run_rows == 0) { continue; }
+      auto& pieces = out[ci][gi];
+      for (auto const& it : found) {
+        pieces.push_back(cached_piece{it->second.row_offset, it->second.num_rows, it->second.data});
+        if (serve) {
+          it->second.last_access_tick = ++_page_tick;
+          it->second.future_epoch     = _future_epoch;
+          _lru.splice(_lru.end(), _lru, it->second.lru_it);
+          auto& col_stats = _column_stats[column_id];
+          col_stats.served_pages += 1;
+          col_stats.served_bytes += it->second.num_bytes;
+        }
+      }
+    }
+  }
+  return out;
+}
+
 std::vector<std::shared_ptr<cudf::column>> sirius_scan_manager::cached_row_group_columns(
   std::string const& file_path,
   std::vector<cudf::size_type> const& row_groups,
@@ -5572,7 +6283,12 @@ std::vector<std::shared_ptr<cudf::column>> sirius_scan_manager::cached_row_group
     auto const column_id = intern_lookup(column_names[ci]);
     if (column_id < 0) { continue; }
     std::vector<cudf::column_view> parts;
-    std::vector<std::shared_ptr<cudf::column>> keep_alive;
+    std::vector<std::shared_ptr<page_slab>> keep_alive;
+    // Pages are counted as served, and moved to the LRU tail, only once the whole column
+    // turns out to be servable. Doing it per page as the walk went counted the leading row
+    // groups of a column that a later row group then rejected -- pages that were never
+    // handed to anyone -- and kept them warm in the LRU as if they had been.
+    std::vector<decltype(_pages)::iterator> touched;
     bool complete = true;
 
     for (auto const row_group : row_groups) {
@@ -5610,20 +6326,9 @@ std::vector<std::shared_ptr<cudf::column>> sirius_scan_manager::cached_row_group
           complete = false;
           break;
         }
-        it->second.last_access_tick = ++_page_tick;
-        _lru.splice(_lru.end(), _lru, it->second.lru_it);  // most recently used
-        parts.push_back(it->second.data->view());
+        parts.push_back(it->second.data->view);
         keep_alive.push_back(it->second.data);
-        auto& col_stats = _column_stats[column_id];
-        col_stats.served_pages += 1;
-        col_stats.served_bytes += it->second.num_bytes;
-        if (page_trace_enabled()) {
-          SIRIUS_LOG_INFO("[page-trace] serve col='{}' rg={} page={} bytes={}",
-                          column_names[ci],
-                          row_group,
-                          page_index,
-                          it->second.num_bytes);
-        }
+        touched.push_back(it);
         ++pages_found;
       }
       // Whole run or nothing: a short run means a page in the middle or at the end
@@ -5632,11 +6337,48 @@ std::vector<std::shared_ptr<cudf::column>> sirius_scan_manager::cached_row_group
         complete = false;
         break;
       }
+      // And the run's pages must add up to the run: pages from two different page grids can
+      // share a page count, and splicing them hands back the wrong number of rows.
+      {
+        std::size_t rows_in_run = 0, run_rows = 0;
+        for (std::size_t i = 0; i < pages_found; ++i) {
+          auto const& pg = _pages.find(cached_page_key{
+            file_id, column_id, static_cast<int>(row_group), static_cast<int>(i)})->second;
+          rows_in_run += pg.num_rows;
+          if (run_rows == 0) { run_rows = pg.run_rows; }
+          if (pg.run_rows != run_rows) { run_rows = 0; break; }
+        }
+        if (run_rows == 0 || rows_in_run != run_rows) {
+          SIRIUS_LOG_WARN("[page-store] run rows mismatch col='{}' rg={} rows={} expected={}",
+                          column_names[ci], row_group, rows_in_run, run_rows);
+          complete = false;
+          break;
+        }
+      }
     }
 
     if (!complete || parts.empty()) { continue; }
+    for (auto const& it : touched) {
+      it->second.last_access_tick = ++_page_tick;
+      it->second.future_epoch     = _future_epoch;
+      _lru.splice(_lru.end(), _lru, it->second.lru_it);  // most recently used
+      auto& col_stats = _column_stats[column_id];
+      col_stats.served_pages += 1;
+      col_stats.served_bytes += it->second.num_bytes;
+      if (page_trace_enabled()) {
+        SIRIUS_LOG_INFO("[page-trace] serve col='{}' rg={} page={} bytes={}",
+                        column_names[ci],
+                        it->first.row_group,
+                        it->first.page_index,
+                        it->second.num_bytes);
+      }
+    }
     if (parts.size() == 1) {
-      out[ci] = std::move(keep_alive.front());
+      // A page is a view into its slab, so hand back an owning copy. The caller takes this
+      // column as is (it is the only owner), so this is the one copy a hit pays, as before
+      // when the page itself was handed out and the caller copied it.
+      out[ci] = std::make_shared<cudf::column>(
+        parts.front(), stream, cudf::get_current_device_resource_ref());
       continue;
     }
     out[ci] = std::shared_ptr<cudf::column>(

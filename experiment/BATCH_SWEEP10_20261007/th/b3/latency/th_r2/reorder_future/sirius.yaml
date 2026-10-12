@@ -1,0 +1,24 @@
+sirius:
+  topology:
+    num_gpus: 1
+  memory:
+    gpu:
+      usage_limit_bytes: 20GB
+      reservation_limit_fraction: 0.85
+      downgrade_trigger_fraction: 0.8
+      downgrade_stop_fraction: 0.7
+    host:
+      capacity_bytes: 32GB
+    disk:
+      disk_id: 0
+      capacity_bytes: 100GB
+      downgrade_root_dirs: "/home/dy1013/sirius_multi-gpu/experiment/BATCH_SWEEP10_20261007/th/b3/latency/th_r2/reorder_future/disk_downgrade"
+  executor:
+    scan_manager:
+      enable_prefetch_cache: false
+      local:
+        use_odirect: true
+  telemetry:
+    enable_quent: true
+    output_directory: "/home/dy1013/sirius_multi-gpu/experiment/BATCH_SWEEP10_20261007/th/b3/latency/th_r2/reorder_future/telemetry_data"
+    engine_name: siriusDB

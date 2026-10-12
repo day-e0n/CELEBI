@@ -70,3 +70,11 @@ log/
 /doc/s3support/perf-baseline-*.json
 /doc/s3support/perf-history-*.jsonl
 *.local.md
+
+# Raw experiment output stays local; manifests, metadata and per-query CSVs are committed.
+experiment/**/log_dir/
+experiment/**/telemetry_data/
+experiment/**/disk_downgrade/
+experiment/**/binary/
+.tmp/
+experiment/frag_replay/replay

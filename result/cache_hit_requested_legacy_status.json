@@ -1,0 +1,72 @@
+{
+  "status": "complete",
+  "source": "legacy",
+  "updated_unix": 1791341662.72793,
+  "summary": [
+    {
+      "workload": "th",
+      "condition": "paging_lru",
+      "query_count": 22,
+      "executions": "2,3",
+      "independent_runs": 1,
+      "total_bytes": 376244651350,
+      "reader_bytes": 345049779766,
+      "cached_bytes": 31194871584,
+      "byte_hit_pct": 8.291113633660961,
+      "full_batch_hit_pct": 1.9189765458422174,
+      "trace_batches": 938,
+      "payload_batches": 938,
+      "full_batches": 18,
+      "metric": "legacy_parquet_bytes"
+    },
+    {
+      "workload": "th",
+      "condition": "reorder_future",
+      "query_count": 22,
+      "executions": "2,3",
+      "independent_runs": 1,
+      "total_bytes": 376244651350,
+      "reader_bytes": 276007282342,
+      "cached_bytes": 100237369008,
+      "byte_hit_pct": 26.64153992577415,
+      "full_batch_hit_pct": 6.823027718550106,
+      "trace_batches": 938,
+      "payload_batches": 938,
+      "full_batches": 64,
+      "metric": "legacy_parquet_bytes"
+    },
+    {
+      "workload": "cb",
+      "condition": "paging_lru",
+      "query_count": 41,
+      "executions": "2,3",
+      "independent_runs": 1,
+      "total_bytes": 356412178936,
+      "reader_bytes": 302492902420,
+      "cached_bytes": 53919276516,
+      "byte_hit_pct": 15.12834849722746,
+      "full_batch_hit_pct": 18.58974358974359,
+      "trace_batches": 312,
+      "payload_batches": 312,
+      "full_batches": 58,
+      "metric": "legacy_parquet_bytes"
+    },
+    {
+      "workload": "cb",
+      "condition": "reorder_future",
+      "query_count": 41,
+      "executions": "2,3",
+      "independent_runs": 1,
+      "total_bytes": 356412178936,
+      "reader_bytes": 295623997233,
+      "cached_bytes": 60788181703,
+      "byte_hit_pct": 17.05558488053675,
+      "full_batch_hit_pct": 28.525641025641026,
+      "trace_batches": 312,
+      "payload_batches": 312,
+      "full_batches": 89,
+      "metric": "legacy_parquet_bytes"
+    }
+  ],
+  "output_prefix": "/home/dy1013/sirius_multi-gpu/result/cache_hit_requested_legacy"
+}

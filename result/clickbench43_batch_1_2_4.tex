@@ -1,0 +1,20 @@
+% Requires \usepackage{booktabs}.
+{\footnotesize
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Workload & \multicolumn{3}{c}{Latency (s)} & \shortstack{Reduction\\(\%)} \\
+\cmidrule(lr){2-4}
+& Base & Page & CELEBI & CELEBI \\
+\midrule
+ClickBench ($B=1$) & 43.17 & 39.34 & \textbf{37.84} & \textbf{12.35} \\
+ClickBench ($B=2$) & 42.30 & 41.29 & \textbf{36.75} & \textbf{13.11} \\
+ClickBench ($B=4$) & 41.94 & 39.33 & \textbf{38.88} & \textbf{7.30} \\
+\midrule
+TPC-H SF50 ($B=1$) & 32.56 & 30.75 & \textbf{23.82} & \textbf{26.86} \\
+\bottomrule
+\end{tabular}
+}
+% ClickBench: all 43 queries, including q28/q29. B is the number of query batches.
+% B=1: 43 queries; B=2: 22+21; B=4: 11+11+11+10. Batch split seed=1.
+% Each row sums ALL 43 per-query execute().fetchall() times, averaged over executions 2 and 3.
+% TPC-H B=1 reuses the previous measurement; no new TPC-H batch measurement was performed.

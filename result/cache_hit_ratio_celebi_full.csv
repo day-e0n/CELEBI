@@ -1,0 +1,3 @@
+workload,condition,query_count,executions,total_decoded_value_bytes,reader_decoded_value_bytes,cache_served_decoded_value_bytes,cache_hit_pct,trace_batches,metric
+ClickBench,reorder_future,43,"2,3",249551573334,145581460850,103970112484,41.66277579217917,360,value_bytes_v2
+TPC-H SF50,reorder_future,22,"2,3",357960368486,226268163530,131692204956,36.78960481379394,938,value_bytes_v2

@@ -23,6 +23,8 @@
 
 // cudf
 #include <cudf/column/column_factories.hpp>
+#include <cudf/reduction.hpp>
+#include <cudf/scalar/scalar.hpp>
 #include <cudf/null_mask.hpp>
 #include <cudf/utilities/traits.hpp>
 
@@ -202,6 +204,35 @@ sirius_dynamic_in_list_filter::sirius_dynamic_in_list_filter(cudf::column_view c
         "[sirius_dynamic_in_list_filter] supported key type changed during construction.");
   }
   _set->replicas.push_back(std::move(source));
+
+  if (_num_keys > 0 && _num_keys <= kHostKeyLimit) {
+    std::vector<std::int64_t> host(_num_keys);
+    if (_key_type.id() == cudf::type_id::INT64) {
+      cudaMemcpyAsync(host.data(), keys.data<std::int64_t>(), _num_keys * sizeof(std::int64_t),
+                      cudaMemcpyDeviceToHost, stream.value());
+      stream.synchronize();
+    } else {
+      std::vector<std::int32_t> narrow(_num_keys);
+      cudaMemcpyAsync(narrow.data(), keys.data<std::int32_t>(), _num_keys * sizeof(std::int32_t),
+                      cudaMemcpyDeviceToHost, stream.value());
+      stream.synchronize();
+      std::copy(narrow.begin(), narrow.end(), host.begin());
+    }
+    std::sort(host.begin(), host.end());
+    host.erase(std::unique(host.begin(), host.end()), host.end());
+    _host_keys = std::move(host);
+  }
+  if (_num_keys > 0) {
+    auto [lo, hi] = cudf::minmax(keys, stream);
+    if (_key_type.id() == cudf::type_id::INT64) {
+      _bounds = std::pair{static_cast<cudf::numeric_scalar<std::int64_t>&>(*lo).value(stream),
+                          static_cast<cudf::numeric_scalar<std::int64_t>&>(*hi).value(stream)};
+    } else {
+      _bounds = std::pair<std::int64_t, std::int64_t>{
+        static_cast<cudf::numeric_scalar<std::int32_t>&>(*lo).value(stream),
+        static_cast<cudf::numeric_scalar<std::int32_t>&>(*hi).value(stream)};
+    }
+  }
 }
 
 bool sirius_dynamic_in_list_filter::supports(cudf::column_view const& keys) noexcept

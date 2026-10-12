@@ -30,6 +30,7 @@
 // used by prepare_for_query / create_provider_for.
 #include <cudf/column/column.hpp>
 #include <cudf/table/table.hpp>
+#include <rmm/device_buffer.hpp>
 
 #include <cucascade/cudf/host_data_representation.hpp>
 #include <cucascade/memory/memory_space.hpp>
@@ -444,13 +445,38 @@ struct cached_page_key {
   [[nodiscard]] bool operator==(cached_page_key const& other) const = default;
 };
 
+/// The storage behind one page: a single device allocation of exactly the page size,
+/// whatever the page holds. The page's data, null mask and (for STRING) offsets are laid
+/// out inside it and @ref view describes them; the rest of the allocation is padding.
+/// Every page asking the pool for the same byte count is what keeps the pool free of
+/// external fragmentation -- an evicted page leaves a hole any other page fits.
+struct page_slab {
+  rmm::device_buffer buffer;
+  cudf::column_view view;
+  std::size_t used_bytes{0};  ///< data + mask + offsets; buffer.size() minus this is padding
+};
+
+/// One resident page of a column in a row group, as handed to a partial read: where its rows
+/// sit within the row group, and the page itself (kept alive by the shared pointer).
+struct cached_piece {
+  std::size_t row_offset{0};
+  std::size_t num_rows{0};
+  std::shared_ptr<page_slab> slab;
+};
+
 struct cached_page {
-  std::shared_ptr<cudf::column> data;  ///< one page of this column within one row group
+  std::shared_ptr<page_slab> data;  ///< one page of this column within one row group
   std::size_t num_rows{0};
   /// How many pages the row group was cut into. The serve path needs it to tell a
   /// complete run from a truncated one: pages 0..2 present with page 3 evicted
   /// would otherwise look whole and silently hand back a column missing its tail.
   std::size_t pages_in_row_group{1};
+  /// Rows of the whole run (every page of this column in this row group). A run whose pages
+  /// add up to anything else mixes two layouts and must not be served.
+  std::size_t run_rows{0};
+  /// First row of this page within its row group. Lets a run with a page missing in the
+  /// middle still place the pages it has (see cached_row_group_pieces).
+  std::size_t row_offset{0};
   /// Position in @ref _lru. Touching a page splices it to the back in O(1), and
   /// eviction pops the front -- so neither path has to scan or sort the store.
   std::list<cached_page_key>::iterator lru_it{};
@@ -467,6 +493,11 @@ struct cached_page {
   std::vector<cache_filter_range> filter_ranges;
   bool filter_analyzable{false};
   std::uint64_t last_access_tick{0};
+  /// set_future_cache_hints call during which this page was last inserted or served. A page
+  /// the running query already consumed is ranked by its next use, not protected as current.
+  std::uint64_t future_epoch{0};
+  /// Part of the cached prefix of a column larger than the budget (SIRIUS_PAGE_BIG_PREFIX).
+  bool big_prefix{false};
 };
 
 
@@ -801,14 +832,29 @@ class sirius_scan_manager {
   /// was measured returning 0.22 GB against a query that needed gigabytes, after which the
   /// pressure sweep's own circuit breaker concluded eviction was useless and backed off.
   std::size_t drop_all_pages();
+  /// See release_page_store_for_reservation.
+  std::size_t release_pages(std::size_t bytes);
 
   /// Write one line per column describing what the store is holding for it and what it has
   /// done with it since the process started, then the totals. Called per query from reset().
   /// Evict until everything the cache holds -- pages, pinned chunks and variable-width
   /// pages -- fits the one configured budget. Call after any of them grows.
   void enforce_total_cache_budget();
+  /// Same, for callers that already hold _pinned_entries_mutex.
+  void enforce_total_cache_budget_pinned_locked();
 
   void log_page_census(std::string_view when) const;
+
+  /// Future-aware page management, driven by the query order the caller already knows (a
+  /// reordered batch). @p mode: 0 = off (variable-width first, then LRU), 1 = evict by next
+  /// use, 2 = also admit only columns that are used again, 3 = evict by next use and, with the
+  /// store full, skip a column needed later than every resident page. @p current holds the columns of
+  /// the query about to run; @p next_use maps a column to how many queries ahead its next
+  /// use after the current query is. A column in neither is never used again. Keyed by
+  /// column name, which is unique within each of the benchmarks this is run on.
+  void set_future_cache_hints(int mode,
+                              std::unordered_set<std::string> current,
+                              std::unordered_map<std::string, int> next_use);
 
   /// Microseconds probes have spent waiting for the page store's mutex, since process start.
   [[nodiscard]] std::int64_t page_lock_wait_us() const
@@ -826,6 +872,17 @@ class sirius_scan_manager {
   /// where a whole-row-group page had been a single move, and TPC-H SF50 pays it
   /// on 1,187 of 1,407 scans that end up not splicing at all: +1.76s of scan time.
   /// Ask this first, decide, then materialize only if the answer is yes.
+  /// For each requested column and each requested row group, the pages the store holds,
+  /// sorted by row and possibly with gaps. A run whose pages disagree on their layout, or
+  /// whose filter identity does not match, contributes nothing for that row group. With
+  /// @p serve true the returned pages count as served and move to the LRU tail.
+  [[nodiscard]] std::vector<std::vector<std::vector<cached_piece>>> cached_row_group_pieces(
+    std::string const& file_path,
+    std::vector<cudf::size_type> const& row_groups,
+    std::vector<std::string> const& column_names,
+    std::string const& required_filter_signature,
+    bool serve);
+
   [[nodiscard]] std::vector<bool> cached_row_group_columns_available(
     std::string const& file_path,
     std::vector<cudf::size_type> const& row_groups,
@@ -952,6 +1009,28 @@ class sirius_scan_manager {
   /// the number the width test is a proxy for; it comes from the row group actually being
   /// inserted times the file's row group count, so no extra metadata read.
   std::unordered_map<int, std::size_t> _column_full_bytes;
+  /// (file, column, row group) the store has ever published a page for, and those an insert
+  /// declined for lack of device memory. They let a scan that misses say why: never offered,
+  /// offered and evicted, or turned away at admission. Kept only under SIRIUS_SCAN_CACHE_TRACE.
+  std::unordered_set<std::uint64_t> _rg_ever_inserted;
+  /// set_future_cache_hints state; guarded by _pages_mutex.
+  int _future_mode{0};
+  std::uint64_t _future_epoch{0};
+  /// Pages that came in by replacement admission (SIRIUS_PAGE_REPLACE_ADMISSION).
+  std::size_t _replace_admitted_pages{0};
+  std::unordered_set<std::string> _future_current;
+  std::unordered_map<std::string, int> _future_next_use;
+  /// Replacement admission: evict pages that rank below an incoming page of @p column (same
+  /// order as the budget sweep) until @p bytes are actually returned to the pool. Pages someone
+  /// is still reading are skipped -- erasing them frees nothing. False when no page ranks
+  /// below the incoming one, i.e. the incoming page would be the next victim itself.
+  bool evict_for_incoming_locked(std::string const& column, bool incoming_variable,
+                                 std::size_t bytes);
+  /// Queries until @p page is needed again: 0 when the running query reads its column and has
+  /// not consumed it yet, otherwise the column's next use after this query (INT_MAX: never).
+  [[nodiscard]] int future_distance_locked(std::string const& column,
+                                           cached_page const& page) const;
+  std::unordered_set<std::uint64_t> _rg_declined;
   [[nodiscard]] int intern_id(std::string const& s);        ///< inserts if absent
   [[nodiscard]] int intern_lookup(std::string const& s) const;  ///< -1 when absent
   /// Running total of resident page bytes, maintained on insert and eviction so
@@ -1024,5 +1103,10 @@ class sirius_scan_manager {
 /// can call it from the OOM retry path without a dependency on SiriusContext. Returns 0 when
 /// no scan manager is registered or the store is already empty.
 std::size_t drop_page_store_on_oom();
+
+/// Evict pages until @p bytes are freed, in the same victim order the budget sweep uses, so a
+/// task's memory reservation can go through instead of waiting for the cache's memory. Does
+/// nothing (returns 0) unless the store holds at least @p bytes. Returns the bytes released.
+std::size_t release_page_store_for_reservation(std::size_t bytes);
 
 }  // namespace sirius::scan_manager

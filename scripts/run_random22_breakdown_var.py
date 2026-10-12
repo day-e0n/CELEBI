@@ -32,6 +32,7 @@ from cache_aware_query_reorder import (  # noqa: E402
     ReorderConfig, load_column_bytes, load_query_table_columns, load_query_table_filters, reorder_query_sequence,
     worst_case_sequence)
 from run_random22_breakdown import ARRIVAL_ORDER, write_config  # noqa: E402
+from future_cache_hints import hint_spec  # noqa: E402
 
 CONDITIONS = ["baseline", "celebi_fixed", "celebi_variable", "celebi_fixed_variable"]
 
@@ -144,7 +145,7 @@ def main() -> int:
                              "reproduce the older configuration.")
     parser.add_argument("--reorder-policy", choices=("fixed-overlap", "byte-overlap", "byte-lru", "cost-ascending",
                                  "cost-seeded-overlap", "unfiltered-overlap",
-                                 "fixed-then-variable", "fixed-first", "fixed-bytes-then-variable", "cacheable-first", "resident-overlap", "resident-overlap-spread", "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending"),
+                                 "fixed-then-variable", "fixed-first", "fixed-bytes-then-variable", "cacheable-first", "resident-overlap", "resident-overlap-spread", "big-same-adjacent", "big-diff-apart", "small-first-big-last", "small-first-big-runs", "small-first-big-ascending", "overlap-fit"),
                         default="fixed-overlap",
                         help="'fixed-overlap' maximises adjacent-pair overlap counted in "
                              "COLUMNS, so a 25-row nation column scores like a 600M-row "
@@ -160,6 +161,21 @@ def main() -> int:
     parser.add_argument("--query-table-columns",
                         help="JSON from scripts/probe_scan_requests.py, required by "
                              "cost-ascending.")
+    parser.add_argument("--future-cache", choices=("off", "evict", "admit", "bypass"), default="off",
+                        help="Tell the page cache the upcoming query order before each query "
+                             "(scripts/future_cache_hints.py): 'evict' evicts the column needed "
+                             "furthest ahead first, 'admit' also refuses columns not read again, "
+                             "'bypass' evicts like 'evict' and skips a column needed later than "
+                             "everything resident when the store is full.")
+    parser.add_argument("--future-horizon", choices=("execution", "run"), default="execution",
+                        help="How far ahead the cache sees: the rest of this execution, or "
+                             "every remaining execution of the run.")
+    parser.add_argument("--batches", type=int, default=1,
+                        help="Split the queries into this many batches at random (--batch-seed); "
+                             "each batch keeps the arrival order, is reordered on its own, and "
+                             "the page cache is told only the rest of the current batch. The "
+                             "batches run back to back in one process, so the cache carries over.")
+    parser.add_argument("--batch-seed", type=int, default=0)
     parser.add_argument("--no-reorder", action="store_true",
                         help="Run the arrival order even for a caching condition. The reorder is "
                              "normally applied to every non-baseline condition, which makes a "
@@ -185,9 +201,24 @@ def main() -> int:
     elif args.arrival == "worst":
         qnums = worst_case_sequence(qnums, "fixed_width")
         print(f"arrival(worst): {','.join(f'q{q}' for q in qnums)}", flush=True)
+    if args.batches > 1:
+        import random
+        shuffled = list(qnums)
+        random.Random(args.batch_seed).shuffle(shuffled)
+        groups = [shuffled[i::args.batches] for i in range(args.batches)]
+        position_of = {q: i for i, q in enumerate(qnums)}
+        batches = [sorted(g, key=position_of.__getitem__) for g in groups]
+        for i, b in enumerate(batches, start=1):
+            print(f"batch {i}: {','.join(f'q{q}' for q in b)}", flush=True)
+    else:
+        batches = [qnums]
     if args.condition != "baseline" and not args.no_reorder:
         if args.reorder_policy in ("byte-lru", "byte-overlap", "cost-ascending",
-                                   "cost-seeded-overlap"):
+                                   "cost-seeded-overlap", "fixed-then-variable",
+                                   "fixed-bytes-then-variable", "fixed-first", "cacheable-first",
+                                   "resident-overlap", "resident-overlap-spread",
+                                   "big-same-adjacent", "big-diff-apart", "small-first-big-last",
+                                   "small-first-big-runs", "small-first-big-ascending", "overlap-fit"):
             if not args.column_bytes:
                 parser.error(f"--reorder-policy {args.reorder_policy} requires --column-bytes")
             print(f"column bytes: {load_column_bytes(args.column_bytes)} columns", flush=True)
@@ -204,9 +235,11 @@ def main() -> int:
         cfg = ReorderConfig(policy=args.reorder_policy, scope="fixed_width", window=0,
                             keep_first=False, resident_column_budget=0,
                             cache_budget_bytes=_budget_bytes(args.fixed_cache_budget))
-        result = reorder_query_sequence(qnums, cfg)
-        qnums = list(result.reordered_queries)
-        print(f"reordered: {','.join(f'q{q}' for q in qnums)}", flush=True)
+        batches = [list(reorder_query_sequence(b, cfg).reordered_queries) for b in batches]
+        for i, b in enumerate(batches, start=1):
+            print(f"reordered{f' batch {i}' if len(batches) > 1 else ''}: "
+                  f"{','.join(f'q{q}' for q in b)}", flush=True)
+    qnums = [q for b in batches for q in b]
 
     output = args.output.resolve()
     case_dir = output / args.condition
@@ -229,9 +262,16 @@ def main() -> int:
     con = open_connection(args.input, gpu_execution=True)
     try:
         for execution in range(1, args.executions + 1):
-            for position, qnum in enumerate(qnums, start=1):
+            for position, (batch, in_batch, qnum) in enumerate(
+                    ((b, j, q) for b in batches for j, q in enumerate(b, start=1)), start=1):
                 label = f"{series_label}_q{qnum}_exec{execution}"
                 con.execute(f"CALL sirius_set_query_label('{label}')")
+                if args.future_cache != "off" and args.condition != "baseline":
+                    # With batches, the cache sees only the rest of the current batch.
+                    spec = hint_spec(args.future_cache, batch, args.executions, execution,
+                                     in_batch,
+                                     args.future_horizon if len(batches) == 1 else "execution")
+                    con.execute(f"CALL sirius_set_cache_hints('{spec}')")
                 con.execute("SET gpu_execution = true;")
                 # Wall clock per query. The telemetry's total_ms is summed GPU operator
                 # time, which a query can lower while taking longer end to end, so the

@@ -1,0 +1,201 @@
+{
+  "source_root": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1",
+  "executions": [
+    2,
+    3
+  ],
+  "independent_runs": 1,
+  "conditions": {
+    "baseline": {
+      "mean_query_wall_s": 1.5068151503801346,
+      "samples": {
+        "2": {
+          "query_wall_s": 1.508098793681711,
+          "position": 2,
+          "scan_batches": 30,
+          "column_splice_count": 0,
+          "partial_serve_count": 0,
+          "scan_audit_sums_us": {
+            "duration_us": 4551853,
+            "lookup_us": 30,
+            "materialize_us": 0,
+            "read_us": 4551851,
+            "assemble_us": 0,
+            "lock_wait_us": 30,
+            "stage_prep_us": 364,
+            "filter_us": 34,
+            "ps_peek_us": 14,
+            "ps_read_us": 0,
+            "ps_assemble_us": 0
+          },
+          "partial_read_log_lines": []
+        },
+        "3": {
+          "query_wall_s": 1.5055315070785582,
+          "position": 2,
+          "scan_batches": 30,
+          "column_splice_count": 0,
+          "partial_serve_count": 0,
+          "scan_audit_sums_us": {
+            "duration_us": 4501262,
+            "lookup_us": 13,
+            "materialize_us": 0,
+            "read_us": 4501259,
+            "assemble_us": 0,
+            "lock_wait_us": 60,
+            "stage_prep_us": 290,
+            "filter_us": 21,
+            "ps_peek_us": 6,
+            "ps_read_us": 0,
+            "ps_assemble_us": 0
+          },
+          "partial_read_log_lines": []
+        }
+      }
+    },
+    "paging_lru": {
+      "mean_query_wall_s": 1.5471500160638243,
+      "samples": {
+        "2": {
+          "query_wall_s": 1.5572748188860714,
+          "position": 2,
+          "scan_batches": 30,
+          "column_splice_count": 3,
+          "partial_serve_count": 0,
+          "scan_audit_sums_us": {
+            "duration_us": 4360531,
+            "lookup_us": 42,
+            "materialize_us": 173,
+            "read_us": 4360524,
+            "assemble_us": 5,
+            "lock_wait_us": 390,
+            "stage_prep_us": 911,
+            "filter_us": 41,
+            "ps_peek_us": 351,
+            "ps_read_us": 0,
+            "ps_assemble_us": 0
+          },
+          "partial_read_log_lines": []
+        },
+        "3": {
+          "query_wall_s": 1.5370252132415771,
+          "position": 2,
+          "scan_batches": 30,
+          "column_splice_count": 3,
+          "partial_serve_count": 0,
+          "scan_audit_sums_us": {
+            "duration_us": 4441036,
+            "lookup_us": 37,
+            "materialize_us": 109,
+            "read_us": 4441023,
+            "assemble_us": 11,
+            "lock_wait_us": 390,
+            "stage_prep_us": 772,
+            "filter_us": 34,
+            "ps_peek_us": 317,
+            "ps_read_us": 0,
+            "ps_assemble_us": 0
+          },
+          "partial_read_log_lines": []
+        }
+      }
+    },
+    "reorder_future": {
+      "mean_query_wall_s": 1.5433713770471513,
+      "samples": {
+        "2": {
+          "query_wall_s": 1.5081478571519256,
+          "position": 21,
+          "scan_batches": 30,
+          "column_splice_count": 28,
+          "partial_serve_count": 0,
+          "scan_audit_sums_us": {
+            "duration_us": 3969398,
+            "lookup_us": 40,
+            "materialize_us": 2010,
+            "read_us": 3969301,
+            "assemble_us": 83,
+            "lock_wait_us": 27420,
+            "stage_prep_us": 2783,
+            "filter_us": 38,
+            "ps_peek_us": 315,
+            "ps_read_us": 0,
+            "ps_assemble_us": 0
+          },
+          "partial_read_log_lines": []
+        },
+        "3": {
+          "query_wall_s": 1.578594896942377,
+          "position": 21,
+          "scan_batches": 30,
+          "column_splice_count": 25,
+          "partial_serve_count": 3,
+          "scan_audit_sums_us": {
+            "duration_us": 3799526,
+            "lookup_us": 37,
+            "materialize_us": 569,
+            "read_us": 3799444,
+            "assemble_us": 71,
+            "lock_wait_us": 74460,
+            "stage_prep_us": 492438,
+            "filter_us": 38,
+            "ps_peek_us": 331,
+            "ps_read_us": 480685,
+            "ps_assemble_us": 10247
+          },
+          "partial_read_log_lines": [
+            {
+              "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/log_dir/sirius_2026-10-07.log",
+              "line": 48682
+            },
+            {
+              "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/log_dir/sirius_2026-10-07.log",
+              "line": 48684
+            },
+            {
+              "path": "/home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/latency/th_r1/reorder_future/log_dir/sirius_2026-10-07.log",
+              "line": 48710
+            }
+          ]
+        }
+      }
+    }
+  },
+  "query_time_increase_pct": 2.4260591392245123,
+  "cache_hit": [
+    {
+      "workload": "th",
+      "condition": "paging_lru",
+      "query": "q1",
+      "total_bytes": "22800441636",
+      "reader_bytes": "22720806060",
+      "cached_bytes": "79635576",
+      "byte_hit_pct": "0.3492720767051374",
+      "full_batch_hit_pct": "0.0",
+      "trace_batches": "60",
+      "payload_batches": "60",
+      "full_batches": "0",
+      "metric": "value_bytes_v2"
+    },
+    {
+      "workload": "th",
+      "condition": "reorder_future",
+      "query": "q1",
+      "total_bytes": "22800441636",
+      "reader_bytes": "20400395148",
+      "cached_bytes": "2400046488",
+      "byte_hit_pct": "10.526315789473685",
+      "full_batch_hit_pct": "0.0",
+      "trace_batches": "60",
+      "payload_batches": "60",
+      "full_batches": "0",
+      "metric": "value_bytes_v2"
+    }
+  ],
+  "limits": [
+    "Cache hits measured in separate matching trace-on runs.",
+    "Summed scan/task timings include concurrent work; they are not additive query wall time.",
+    "Only two measured executions per condition; a stable regression or isolated causal overhead is not established.",
+    "Observed third-execution partial-serve path is an optimization candidate; no fresh GPU benchmarks or code changes were made."
+  ]
+}

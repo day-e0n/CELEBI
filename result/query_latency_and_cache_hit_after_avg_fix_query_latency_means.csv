@@ -1,0 +1,196 @@
+workload,condition,label,query,query_wall_s,cumulative_query_wall_s,samples,measurement_source
+ClickBench,baseline,Baseline,q1,0.07085291016846895,0.07085291016846895,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q2,0.0712258517742157,0.14207876194268465,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q3,0.09113680548034608,0.23321556742303073,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q4,0.1721687656827271,0.40538433310575783,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q5,0.2023325760383159,0.6077169091440737,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q6,0.3538678085897118,0.9615847177337855,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q7,0.07092409394681454,1.0325088116806,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q8,0.07097568921744823,1.1034845008980483,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q9,0.27313890052028,1.3766234014183283,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q10,0.28321370435878634,1.6598371057771146,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q11,0.24286787048913538,1.90270497626625,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q12,0.23778100265190005,2.14048597891815,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q13,0.3542159756179899,2.49470195453614,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q14,1.4311539188493043,3.9258558733854443,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q15,0.3743789871223271,4.300234860507771,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q16,0.21755656274035573,4.517791423248127,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q17,0.5102672528009862,5.028058676049113,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q18,0.5110421520657837,5.539100828114897,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q19,0.9002124262042344,6.439313254319131,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q20,0.16205653245560825,6.60136978677474,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q21,1.1830274069216102,7.78439719369635,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q22,1.427144846180454,9.211542039876804,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q23,3.1002041462343186,12.311746186111122,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q24,7.587932598544285,19.899678784655407,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q25,0.9757392285391688,20.875418013194576,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q26,1.026322046527639,21.901740059722215,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q27,0.5266601140610874,22.428400173783302,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q28,1.2641570752020925,23.692557248985395,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q29,11.479947331594303,35.1725045805797,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q30,0.0912790298461914,35.26378361042589,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q31,0.4502285444177687,35.71401215484366,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q32,0.7383767934516072,36.452388948295265,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q33,1.0879078321158886,37.540296780411154,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q34,1.5778638345655054,39.11816061497666,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q35,1.6029393104836345,40.721099925460294,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q36,0.18227476673200727,40.9033746921923,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q37,0.4246158136520535,41.327990505844355,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q38,0.3545161779038608,41.682506683748215,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q39,0.4203078020364046,42.10281448578462,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q40,0.6733669866807759,42.776181472465396,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q41,0.14690637751482427,42.92308784998022,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q42,0.12665463145822287,43.04974248143844,2,remeasured_after_avg_fix
+ClickBench,baseline,Baseline,q43,0.1216182594653219,43.171360740903765,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q1,0.0756564496550709,0.0756564496550709,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q2,0.07096639182418585,0.14662284147925675,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q3,0.0659719523973763,0.21259479387663305,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q4,0.17719603888690472,0.38979083276353776,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q5,0.0963071770966053,0.48609800986014307,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q6,0.37443026015534997,0.860528270015493,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q7,0.08128303149715066,0.9418113015126437,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q8,0.06088466430082917,1.0026959658134729,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q9,0.16742554726079106,1.170121513074264,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q10,0.15196561999619007,1.322087133070454,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q11,0.1520773924421519,1.474164525512606,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q12,0.11104448442347348,1.5852090099360794,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q13,0.33427404053509235,1.9194830504711717,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q14,1.238538566743955,3.1580216172151268,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q15,0.2578179894480854,3.415839606663212,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q16,0.11655061994679272,3.532390226610005,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q17,0.36430505476891994,3.896695281378925,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q18,0.33914856472983956,4.235843846108764,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q19,0.6870557221118361,4.9228995682206005,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q20,0.05095672095194459,4.973856289172545,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q21,1.2344456922728568,6.208301981445402,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q22,1.6176341688260436,7.8259361502714455,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q23,3.1325776630546898,10.958513813326135,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q24,7.311609003460035,18.27012281678617,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q25,1.0166086233220994,19.28673144010827,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q26,0.7736213584430516,20.06035279855132,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q27,0.15180296171456575,20.212155760265887,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q28,1.2895433262456208,21.501699086511508,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q29,10.8289749850519,32.33067407156341,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q30,0.09601011755876243,32.42668418912217,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q31,0.44514314620755613,32.871827335329726,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q32,0.4551517153158784,33.326979050645605,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q33,0.7621550133917481,34.08913406403735,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q34,1.6074492626357824,35.696583326673135,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q35,1.643335669534281,37.339918996207416,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q36,0.15179616562090814,37.491715161828324,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q37,0.4706895165145397,37.962404678342864,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q38,0.3742582064587623,38.336662884801626,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q39,0.1820923478808254,38.51875523268245,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q40,0.43517789081670344,38.953933123499155,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q41,0.17241183947771788,39.12634496297687,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q42,0.09147223248146474,39.21781719545834,2,remeasured_after_avg_fix
+ClickBench,paging_lru,Baseline+page caching,q43,0.12668579956516623,39.344502995023504,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q1,0.07606522366404533,0.07606522366404533,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q2,0.07113733794540167,0.147202561609447,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q3,0.09097698843106627,0.23817955004051328,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q4,0.06087142461910844,0.2990509746596217,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q5,0.0915047510061413,0.390555725665763,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q6,0.1317234260495752,0.5222791517153382,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q7,0.07599916704930365,0.5982783187646419,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q8,0.0557337524369359,0.6540120712015778,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q9,0.13144620973616838,0.7854582809377462,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q10,0.28825376788154244,1.0737120488192886,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q11,0.14141877903603017,1.2151308278553188,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q12,0.11140328552573919,1.326534113381058,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q13,0.13171207695268095,1.458246190333739,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q14,1.359983558068052,2.818229748401791,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q15,0.16715146461501718,2.985381213016808,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q16,0.11108922911807895,3.096470442134887,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q17,0.24249103153124452,3.3389614736661315,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q18,0.24271237011998892,3.5816738437861204,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q19,0.3996900168713182,3.9813638606574386,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q20,0.050825542537495494,4.032189403194934,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q21,1.2550729864742607,5.287262389669195,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q22,0.9365800209343433,6.223842410603538,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q23,3.1097366709727794,9.333579081576318,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q24,6.224260268500075,15.557839350076392,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q25,0.768641559407115,16.326480909483507,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q26,0.7840252129826695,17.110506122466177,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q27,0.1416685979347676,17.252174720400944,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q28,1.304281651508063,18.556456371909007,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q29,12.564818227896467,31.121274599805474,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q30,0.06090764934197068,31.182182249147445,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q31,0.21746290056034923,31.399645149707794,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q32,0.15675253397785127,31.556397683685645,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q33,1.0114087550900877,32.56780643877573,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q34,1.583106838632375,34.15091327740811,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q35,1.5020989528857172,35.653012230293825,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q36,0.1113144289702177,35.76432665926404,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q37,0.36449156212620437,36.12881822139025,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q38,0.37437423947267234,36.50319246086292,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q39,0.3186065836343914,36.82179904449731,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q40,0.7077274869661778,37.52952653146349,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q41,0.11666905623860657,37.646195587702096,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q42,0.1316398901399225,37.77783547784202,2,remeasured_after_avg_fix
+ClickBench,reorder_future,Baseline+page caching+reordering (CELEBI),q43,0.06082060653716326,37.83865608437918,2,remeasured_after_avg_fix
+TPC-H SF50,baseline,Baseline,q1,1.5068151503801346,1.5068151503801346,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q2,0.4862454535905272,1.9930606039706618,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q3,1.5644163994584233,3.557477003429085,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q4,0.8610419519245625,4.4185189553536475,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q5,1.7872781485784799,6.205797103932127,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q6,1.030866028741002,7.236663132673129,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q7,2.089190013008192,9.325853145681322,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q8,2.4005110959988087,11.72636424168013,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q9,2.798784533981234,14.525148775661364,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q10,1.761097292881459,16.286246068542823,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q11,0.40012066904455423,16.686366737587377,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q12,1.1159318347927183,17.802298572380096,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q13,1.2697359244339168,19.072034496814013,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q14,1.4317587439436466,20.50379324075766,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q15,1.460905646905303,21.964698887662962,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q16,0.351597415516153,22.316296303179115,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q17,1.8859951375052333,24.20229144068435,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q18,1.4468691162765026,25.64916055696085,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q19,1.447629215894267,27.096789772855118,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q20,1.563464452745393,28.66025422560051,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q21,3.5082523089367896,32.1685065345373,2,previous_measurement
+TPC-H SF50,baseline,Baseline,q22,0.3944245760794729,32.56293111061677,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q1,1.5471500160638243,1.5471500160638243,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q2,0.3541387466248125,1.9012887626886368,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q3,1.4520554677583277,3.3533442304469645,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q4,0.9160874073859304,4.269431637832895,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q5,1.8074466304387897,6.076878268271685,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q6,1.1139472669456154,7.1908255352173,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q7,1.8922153133898973,9.083040848607197,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q8,2.064811618067324,11.147852466674522,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q9,2.249881222611293,13.397733689285815,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q10,1.674628700595349,15.072362389881164,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q11,0.40015205065719783,15.472514440538362,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q12,1.21439304552041,16.68690748605877,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q13,1.172332241665572,17.859239727724344,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q14,1.4923295627813786,19.351569290505722,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q15,1.5274196041282266,20.87898889463395,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q16,0.22426004125736654,21.103248935891315,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q17,1.5579228054266423,22.661171741317958,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q18,1.5661092936061323,24.22728103492409,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q19,1.5857946970500052,25.813075731974095,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q20,1.4981637971941382,27.311239529168233,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q21,3.0592134171165526,30.370452946284786,2,previous_measurement
+TPC-H SF50,paging_lru,Baseline+page caching,q22,0.3790223414544016,30.749475287739187,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q1,1.5433713770471513,1.5433713770471513,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q2,0.18236797698773444,1.7257393540348858,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q3,1.3367052965331823,3.062444650568068,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q4,0.47602026048116386,3.538464911049232,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q5,1.519295068224892,5.057759979274124,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q6,0.5462245098315179,5.603984489105642,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q7,1.6941259659361094,7.298110455041751,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q8,1.8745743944309652,9.172684849472716,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q9,1.93837358802557,11.111058437498286,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q10,1.1590908530633897,12.270149290561676,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q11,0.3348625230137259,12.605011813575402,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q12,0.7181979361921549,13.323209749767557,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q13,1.0429604635573924,14.36617021332495,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q14,0.9417363274842501,15.3079065408092,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q15,1.2305410453118384,16.538447586121038,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q16,0.19413515157066286,16.7325827376917,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q17,0.864433767972514,17.597016505664214,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q18,1.0566855233628303,18.653702029027045,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q19,1.188659569947049,19.842361598974094,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q20,1.043414406478405,20.8857760054525,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q21,2.748241459019482,23.63401746447198,2,previous_measurement
+TPC-H SF50,reorder_future,Baseline+page caching+reordering (CELEBI),q22,0.18296554335393012,23.81698300782591,2,previous_measurement

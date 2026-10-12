@@ -23,7 +23,12 @@
 
 #include <rmm/aligned.hpp>
 
+#include <cuda_runtime.h>
+
 #include <algorithm>
+#include <cstdlib>
+#include <string_view>
+#include <vector>
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
@@ -71,6 +76,29 @@ buffer_pool::buffer_pool(cucascade::memory::memory_reservation_manager& reservat
 
 buffer_pool::~buffer_pool() = default;
 
+namespace {
+// DEBUG (temporary): give the cache its own pinned buffers instead of blocks from the
+// shared host memory resource, to test whether its blocks alias another user's.
+bool dbg_own_buffers()
+{
+  static bool const on = [] {
+    auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_OWN_BUFFERS");
+    return v != nullptr && std::string_view(v) == "1";
+  }();
+  return on;
+}
+std::vector<std::byte*> dbg_alloc(size_t n, size_t bytes)
+{
+  std::vector<std::byte*> out;
+  for (size_t i = 0; i < n; ++i) {
+    void* p = nullptr;
+    if (cudaMallocHost(&p, bytes) != cudaSuccess) { break; }
+    out.push_back(static_cast<std::byte*>(p));
+  }
+  return out;
+}
+}  // namespace
+
 std::vector<std::byte*> buffer_pool::allocate_bulk_from(size_t n, int numa_node)
 {
   if (n == 0) return {};
@@ -94,6 +122,16 @@ std::vector<std::byte*> buffer_pool::allocate_bulk_from(size_t n, int numa_node)
 std::vector<std::byte*> buffer_pool::allocate_bulk(size_t n, int& numa_node)
 {
   if (n == 0) return {};
+  if (dbg_own_buffers()) {
+    numa_node = _host_arenas.empty() ? 0 : _host_arenas.front().numa_id;
+    auto out  = dbg_alloc(n, _chunk_bytes);
+    if (out.size() != n) {
+      for (auto* p : out) { cudaFreeHost(p); }
+      return {};
+    }
+    _n_allocated_chunks.fetch_add(out.size(), std::memory_order_relaxed);
+    return out;
+  }
 
   // Start at the preferred NUMA's arena (if known) and wrap around so every
   // arena is tried before giving up — caching on a remote node still beats a
@@ -123,6 +161,11 @@ std::vector<std::byte*> buffer_pool::allocate_bulk(size_t n, int& numa_node)
 void buffer_pool::deallocate_bulk(std::vector<std::byte*>&& out, int numa) noexcept
 {
   if (out.empty()) return;
+  if (dbg_own_buffers()) {
+    for (auto* p : out) { cudaFreeHost(p); }
+    _n_allocated_chunks.fetch_sub(out.size(), std::memory_order_relaxed);
+    return;
+  }
   auto it = _numa_to_arena_index.find(numa);
   if (it == _numa_to_arena_index.end()) return;
   auto& arena      = _host_arenas.at(it->second);

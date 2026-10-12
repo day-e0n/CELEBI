@@ -25,8 +25,42 @@
 #include <cudf/reduction/approx_distinct_count.hpp>
 #include <cudf/strings/strings_column_view.hpp>
 
+#include <chrono>
+#include <cstdlib>
+#include <limits>
+#include <string_view>
+#include <unordered_set>
+
 namespace sirius {
 namespace op {
+
+namespace {
+
+// Any subset (a group) is bounded by row_count times the column extrema. Check
+// with 128-bit host arithmetic so the proof itself cannot overflow. Nulls do
+// not contribute; using all rows rather than valid rows is conservative.
+bool average_sum_fits_native(cudf::column_view const& column,
+                             rmm::cuda_stream_view stream,
+                             rmm::device_async_resource_ref mr)
+{
+  auto extrema = cudf::minmax(column, stream, mr);
+  if (!extrema.first->is_valid(stream)) { return true; }
+  auto const rows = static_cast<__int128>(column.size());
+  if (column.type().id() == cudf::type_id::INT64) {
+    auto const low =
+      static_cast<cudf::numeric_scalar<int64_t> const&>(*extrema.first).value(stream);
+    auto const high =
+      static_cast<cudf::numeric_scalar<int64_t> const&>(*extrema.second).value(stream);
+    return rows * low >= std::numeric_limits<int64_t>::min() &&
+           rows * high <= std::numeric_limits<int64_t>::max();
+  }
+  auto const high =
+    static_cast<cudf::numeric_scalar<uint64_t> const&>(*extrema.second).value(stream);
+  return rows * static_cast<__int128>(high) <=
+         static_cast<__int128>(std::numeric_limits<uint64_t>::max());
+}
+
+}  // namespace
 
 template <typename Base = cudf::aggregation>
 std::unique_ptr<Base> get_local_aggregation(cudf::aggregation::Kind kind)
@@ -133,6 +167,32 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
   auto input_table = get_cudf_table_view(input);
   auto mr          = memory_space.get_default_allocator();
 
+  // Synchronize phase boundaries only in dedicated diagnostics.
+  static bool const diagnose = [] {
+    auto const* value = std::getenv("SIRIUS_GROUPBY_DIAGNOSTIC");
+    return value != nullptr && std::string_view(value) == "1";
+  }();
+  static bool const use_native_average = [] {
+    auto const* value = std::getenv("SIRIUS_GROUPBY_SAFE_AVG_INT64");
+    return value == nullptr || std::string_view(value) != "0";
+  }();
+  auto phase_start = std::chrono::steady_clock::now();
+  if (diagnose) {
+    stream.synchronize();
+    phase_start = std::chrono::steady_clock::now();
+  }
+  auto report_phase = [&](char const* name) {
+    if (!diagnose) { return; }
+    stream.synchronize();
+    auto const now = std::chrono::steady_clock::now();
+    SIRIUS_LOG_INFO(
+      "[groupby-phase] rows={} phase={} elapsed_us={}",
+      input_table.num_rows(),
+      name,
+      std::chrono::duration_cast<std::chrono::microseconds>(now - phase_start).count());
+    phase_start = now;
+  };
+
   // Dictionary-encode STRING group keys when:
   //  1. Average string length >= 4 bytes (short strings hash nearly as fast as
   //     int32, so the encode/decode overhead is not worthwhile), AND
@@ -191,7 +251,7 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
       group_cols.push_back(col);
     }
   }
-  cudf::groupby::groupby grpby_obj(cudf::table_view(group_cols), cudf::null_policy::INCLUDE);
+  report_phase("key_prep");
 
   // Make aggregation requests, group aggregations on the same column in the single request.
   // For multi-column COLLECT_SET, a synthetic negative key -(i+1) is used so that each such
@@ -211,11 +271,12 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
                 input_table.column(aggregate_idx[i]).type().id() == cudf::type_id::UINT64)) {
       // This SUM is the accumulator behind an AVG over a 64-bit integer column, which has
       // nowhere left to widen into: AVG(UserID) over ClickBench's hits sums to 2.5e26 against
-      // an int64 ceiling of 9.2e18. Give it its own request over a DECIMAL128 copy -- a
-      // __int128 underneath -- so it never shares a request with a plain SUM on the same
-      // column, whose INT64 output the merge still expects.
-      aggregate_col_id                   = -(static_cast<int>(i) + 1);
-      widened_source[aggregate_col_id]   = aggregate_idx[i];
+      // an int64 ceiling of 9.2e18. Give it a separate request, using DECIMAL128 unless
+      // column extrema prove every group sum fits in the original type. Its partial
+      // result is always DECIMAL128, distinct from a plain SUM on the same column,
+      // whose INT64 output the merge still expects.
+      aggregate_col_id                 = -(static_cast<int>(i) + 1);
+      widened_source[aggregate_col_id] = aggregate_idx[i];
     } else {
       aggregate_col_id = aggregate_idx[i];
     }
@@ -238,15 +299,23 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
   std::vector<std::unique_ptr<cudf::column>> temp_struct_cols;
 
   std::vector<cudf::groupby::aggregation_request> requests;
+  std::unordered_set<int> native_average_requests;
   for (int aggregate_col_id : input_col_order) {
     cudf::groupby::aggregation_request request;
-    if (auto wit = widened_source.find(aggregate_col_id); wit != widened_source.end()) {
-      auto widened = cudf::cast(input_table.column(wit->second),
-                                cudf::data_type(cudf::type_id::DECIMAL128, 0),
-                                stream,
-                                memory_space.get_default_allocator());
-      request.values = widened->view();
-      temp_struct_cols.push_back(std::move(widened));
+    if (auto source_entry = widened_source.find(aggregate_col_id);
+        source_entry != widened_source.end()) {
+      auto const source = input_table.column(source_entry->second);
+      if (use_native_average && average_sum_fits_native(source, stream, mr)) {
+        request.values = source;
+        native_average_requests.insert(aggregate_col_id);
+      } else {
+        auto widened   = cudf::cast(source,
+                                  cudf::data_type(cudf::type_id::DECIMAL128, 0),
+                                  stream,
+                                  memory_space.get_default_allocator());
+        request.values = widened->view();
+        temp_struct_cols.push_back(std::move(widened));
+      }
     } else if (aggregate_col_id < 0) {
       // Multi-col COLLECT_SET: synthesize a struct column from the component columns.
       // The synthetic key is -(slot_index + 1), so slot_index = -aggregate_col_id - 1.
@@ -272,9 +341,23 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
     requests.push_back(std::move(request));
   }
 
+  report_phase("request_prep");
+  if (diagnose) {
+    for (auto const& request : requests) {
+      for (auto const& agg : request.aggregations) {
+        SIRIUS_LOG_INFO("[groupby-request] rows={} value_type={} aggregation={}",
+                        input_table.num_rows(),
+                        static_cast<int>(request.values.type().id()),
+                        static_cast<int>(agg->kind));
+      }
+    }
+  }
+
+  cudf::groupby::groupby grpby_obj(cudf::table_view(group_cols), cudf::null_policy::INCLUDE);
   // Call cudf groupby and populate output columns
   auto groupby_result = grpby_obj.aggregate(requests, stream, mr);
-  auto output_cols    = groupby_result.first->release();
+  report_phase("aggregate");
+  auto output_cols = groupby_result.first->release();
 
   // Decode dictionary-encoded group key columns back to STRING
   for (size_t i = 0; i < group_idx.size(); i++) {
@@ -312,7 +395,15 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
       auto result_view = aggregation_result.results[j]->view();
       // Widen decimal result for SUM (expected by duckdb)
       if (requests[i].aggregations[j]->kind == cudf::aggregation::Kind::SUM) {
-        if (requests[i].values.type().id() == cudf::type_id::DECIMAL64) {
+        if (native_average_requests.contains(aggregate_col_id)) {
+          // Keep the local partial-sum schema identical to the overflow-safe
+          // path. Different batches may need different accumulator widths;
+          // every AVG partial still reaches the merge as DECIMAL128.
+          aggregation_result.results[j] = cudf::cast(result_view,
+                                                     cudf::data_type(cudf::type_id::DECIMAL128, 0),
+                                                     stream,
+                                                     memory_space.get_default_allocator());
+        } else if (requests[i].values.type().id() == cudf::type_id::DECIMAL64) {
           aggregation_result.results[j] =
             cudf::cast(result_view,
                        cudf::data_type(cudf::type_id::DECIMAL128, result_view.type().scale()),

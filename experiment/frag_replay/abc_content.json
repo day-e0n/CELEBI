@@ -1,0 +1,42 @@
+{
+ "batch": [
+  {
+   "query": "A",
+   "requested": 812479752,
+   "unique": 812480136,
+   "duplicate": 0
+  },
+  {
+   "query": "B",
+   "requested": 1964606006,
+   "unique": 1964606666,
+   "duplicate": 812480136
+  },
+  {
+   "query": "C",
+   "requested": 2777086606,
+   "unique": 2777086802,
+   "duplicate": 2777086802
+  }
+ ],
+ "page": [
+  {
+   "query": "A",
+   "requested": 812480136,
+   "unique": 812480136,
+   "duplicate": 0
+  },
+  {
+   "query": "B",
+   "requested": 1964609025,
+   "unique": 1964606666,
+   "duplicate": 0
+  },
+  {
+   "query": "C",
+   "requested": 2777089161,
+   "unique": 2777086802,
+   "duplicate": 0
+  }
+ ]
+}

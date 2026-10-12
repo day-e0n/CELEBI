@@ -1,0 +1,13 @@
+START latency_runs
+DONE latency_runs
+START hit_runs
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/scripts/run_avg_fix_full_figures.py", line 130, in <module>
+  File "/home/dy1013/sirius_multi-gpu/scripts/run_avg_fix_full_figures.py", line 107, in main
+    state["status"] = "failed_or_contaminated"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    save()
+    ^^^^^^
+    raise RuntimeError(
+    ^
+RuntimeError: Invalid measurements; inspect /home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/job_status.json

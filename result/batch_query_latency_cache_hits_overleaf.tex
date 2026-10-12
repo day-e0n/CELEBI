@@ -1,0 +1,41 @@
+% Add \usepackage{booktabs} to your document preamble.
+% Use table* for a two-column paper; use table for a single-column document.
+\begin{table*}[t]
+  \centering
+  \caption{Batch query latency and byte cache hit ratio. CELEBI combines page
+    caching, query reordering, and future-aware eviction. Latency reduction is
+    relative to the baseline.}
+  \label{tab:batch-latency-cache-hits}
+  \small
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}{@{}lrrrrrr@{}}
+    \toprule
+    Workload & \multicolumn{3}{c}{Batch query latency (s)}
+      & \multicolumn{2}{c}{Byte cache hit ratio (\%)}
+      & \shortstack{CELEBI latency\\reduction (\%)} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-6}
+      & Baseline & Paging & CELEBI & Paging & CELEBI & \\
+    \midrule
+    ClickBench (43 queries)
+      & 43.17 & 39.34 & \textbf{37.84}
+      & 22.53 & \textbf{37.01} & \textbf{12.35} \\
+    TPC-H SF50 (22 queries)
+      & 32.56 & 30.75 & \textbf{23.82}
+      & 9.01 & \textbf{36.79} & \textbf{26.86} \\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{4pt}
+  \begin{minipage}{\textwidth}
+    \footnotesize
+    Batch latency is the sum of per-query \texttt{execute().fetchall()} elapsed
+    times, averaged over executions 2 and 3; execution 1 is excluded as warmup.
+    It excludes query-label and cache-hint calls and reorder preparation.
+    Byte cache hit ratio is the sum of cache-served decoded value bytes divided
+    by the sum of requested decoded value bytes, pooled over executions 2 and 3.
+    Repeated requests are included; string offsets, null masks, and allocation
+    padding are excluded. Latency and cache hits are collected in separate
+    trace-off and trace-on runs with matching settings.
+    ClickBench includes q28 and q29 and was remeasured after the AVG optimization;
+    TPC-H uses the previous measurements. Paging uses LRU without reordering.
+  \end{minipage}
+\end{table*}

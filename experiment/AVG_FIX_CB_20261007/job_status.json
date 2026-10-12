@@ -1,0 +1,27 @@
+{
+  "status": "complete_with_recorded_post_workload_trace_exit",
+  "started_utc": "2026-10-07T06:32:57.711242+00:00",
+  "wait_pid": null,
+  "plans": [
+    {
+      "plan": "latency_runs",
+      "status": "complete",
+      "started_utc": "2026-10-07T06:32:57.768838+00:00",
+      "returncode": 0,
+      "ended_utc": "2026-10-07T06:39:16.605051+00:00"
+    },
+    {
+      "plan": "hit_runs",
+      "status": "failed",
+      "started_utc": "2026-10-07T06:39:16.661574+00:00",
+      "returncode": 2,
+      "ended_utc": "2026-10-07T06:43:21.063575+00:00"
+    }
+  ],
+  "overlaps": [],
+  "published_figures": "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/figures",
+  "selected_hit_manifests": [
+    "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/hit_paging_retry_job/runs/manifest.json",
+    "/home/dy1013/sirius_multi-gpu/experiment/AVG_FIX_CB_20261007/hit_future_process_exit_job/runs/manifest.json"
+  ]
+}

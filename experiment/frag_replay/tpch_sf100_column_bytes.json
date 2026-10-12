@@ -1,0 +1,79 @@
+{
+  "customer": {
+    "c_acctbal": 120000000,
+    "c_address": 435084713,
+    "c_comment": 1146182523,
+    "c_custkey": 60000000,
+    "c_mktsegment": 194983763,
+    "c_name": 330000000,
+    "c_nationkey": 60000000,
+    "c_phone": 285000000
+  },
+  "lineitem": {
+    "l_comment": 18300050966,
+    "l_commitdate": 2400151608,
+    "l_discount": 4800303216,
+    "l_extendedprice": 4800303216,
+    "l_linenumber": 2400151608,
+    "l_linestatus": 3000189510,
+    "l_orderkey": 4800303216,
+    "l_partkey": 2400151608,
+    "l_quantity": 4800303216,
+    "l_receiptdate": 2400151608,
+    "l_returnflag": 3000189510,
+    "l_shipdate": 2400151608,
+    "l_shipinstruct": 9601991142,
+    "l_shipmode": 4972491856,
+    "l_suppkey": 2400151608,
+    "l_tax": 4800303216
+  },
+  "nation": {
+    "n_comment": 100,
+    "n_name": 100,
+    "n_nationkey": 100,
+    "n_regionkey": 100
+  },
+  "orders": {
+    "o_clerk": 2850000000,
+    "o_comment": 7875057069,
+    "o_custkey": 600000000,
+    "o_orderdate": 600000000,
+    "o_orderkey": 1200000000,
+    "o_orderpriority": 1860452927,
+    "o_orderstatus": 750000000,
+    "o_shippriority": 600000000,
+    "o_totalprice": 1200000000
+  },
+  "part": {
+    "p_brand": 240000000,
+    "p_comment": 349797926,
+    "p_container": 231458270,
+    "p_mfgr": 360000000,
+    "p_name": 734927415,
+    "p_partkey": 80000000,
+    "p_retailprice": 160000000,
+    "p_size": 80000000,
+    "p_type": 491906738
+  },
+  "partsupp": {
+    "ps_availqty": 320000000,
+    "ps_comment": 10201195638,
+    "ps_partkey": 320000000,
+    "ps_suppkey": 320000000,
+    "ps_supplycost": 640000000
+  },
+  "region": {
+    "r_comment": 20,
+    "r_name": 20,
+    "r_regionkey": 20
+  },
+  "supplier": {
+    "s_acctbal": 8000000,
+    "s_address": 28944580,
+    "s_comment": 66011352,
+    "s_name": 22000000,
+    "s_nationkey": 4000000,
+    "s_phone": 19000000,
+    "s_suppkey": 4000000
+  }
+}

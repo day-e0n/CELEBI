@@ -1,0 +1,13 @@
+Waiting: th/paging_lru: prepared; th/reorder_future: prepared; cb/paging_lru: prepared; cb/reorder_future: prepared
+Waiting: th/paging_lru: prepared; th/reorder_future: prepared; cb/paging_lru: prepared; cb/reorder_future: prepared
+Waiting: th/paging_lru: running; th/reorder_future: prepared; cb/paging_lru: prepared; cb/reorder_future: prepared
+Traceback (most recent call last):
+  File "/home/dy1013/sirius_multi-gpu/result/plot_requested_cache_hits.py", line 319, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/dy1013/sirius_multi-gpu/result/plot_requested_cache_hits.py", line 276, in main
+    summary, per_query, per_path, per_execution, audit = collect(args.source, args.input_root)
+                                                         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dy1013/sirius_multi-gpu/result/plot_requested_cache_hits.py", line 121, in collect
+    raise ValueError(f"Failed comparison: {case}, status={status}")
+ValueError: Failed comparison: /home/dy1013/sirius_multi-gpu/experiment/FULL_CACHE_PIN_20261007/runs/hit/th_r1/paging_lru, status=incomplete

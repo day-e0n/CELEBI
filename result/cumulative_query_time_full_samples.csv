@@ -1,0 +1,391 @@
+workload,condition,query,run,execution,query_wall_s
+ClickBench,baseline,q1,1,2,0.07087262859568
+ClickBench,baseline,q2,1,2,0.07096249191090465
+ClickBench,baseline,q3,1,2,0.0912294089794159
+ClickBench,baseline,q4,1,2,0.16179574793204665
+ClickBench,baseline,q5,1,2,0.1924063260667026
+ClickBench,baseline,q6,1,2,0.34433888737112284
+ClickBench,baseline,q7,1,2,0.06087647471576929
+ClickBench,baseline,q8,1,2,0.07106211688369513
+ClickBench,baseline,q9,1,2,0.27368747908622026
+ClickBench,baseline,q10,1,2,0.2734331120736897
+ClickBench,baseline,q11,1,2,0.24326485814526677
+ClickBench,baseline,q12,1,2,0.25302648497745395
+ClickBench,baseline,q13,1,2,0.3542489558458328
+ClickBench,baseline,q14,1,2,1.4052292769774795
+ClickBench,baseline,q15,1,2,0.37356827314943075
+ClickBench,baseline,q16,1,2,0.2225906322710216
+ClickBench,baseline,q17,1,2,0.5261822799220681
+ClickBench,baseline,q18,1,2,0.516455554869026
+ClickBench,baseline,q19,1,2,0.8905161516740918
+ClickBench,baseline,q20,1,2,0.15181358763948083
+ClickBench,baseline,q21,1,2,1.2144597140140831
+ClickBench,baseline,q22,1,2,1.3881350420415401
+ClickBench,baseline,q23,1,2,3.107374422252178
+ClickBench,baseline,q24,1,2,7.64566705795005
+ClickBench,baseline,q25,1,2,0.9613971384242177
+ClickBench,baseline,q26,1,2,1.052099830005318
+ClickBench,baseline,q27,1,2,0.5159375462681055
+ClickBench,baseline,q28,1,2,17.021955865900964
+ClickBench,baseline,q29,1,2,41.24791915435344
+ClickBench,baseline,q30,1,2,0.09111264022067189
+ClickBench,baseline,q31,1,2,0.44515076698735356
+ClickBench,baseline,q32,1,2,0.7593507170677185
+ClickBench,baseline,q33,1,2,1.0625651529990137
+ClickBench,baseline,q34,1,2,1.5967745520174503
+ClickBench,baseline,q35,1,2,1.557468951214105
+ClickBench,baseline,q36,1,2,0.18235844187438488
+ClickBench,baseline,q37,1,2,0.4152978998608887
+ClickBench,baseline,q38,1,2,0.3540837587788701
+ClickBench,baseline,q39,1,2,0.4255504906177521
+ClickBench,baseline,q40,1,2,0.6686863582581282
+ClickBench,baseline,q41,1,2,0.15210853796452284
+ClickBench,baseline,q42,1,2,0.12166621908545494
+ClickBench,baseline,q43,1,2,0.12181145930662751
+ClickBench,baseline,q1,1,3,0.0708976830355823
+ClickBench,baseline,q2,1,3,0.07112684799358249
+ClickBench,baseline,q3,1,3,0.09104249207302928
+ClickBench,baseline,q4,1,3,0.16170643782243133
+ClickBench,baseline,q5,1,3,0.19232887402176857
+ClickBench,baseline,q6,1,3,0.3540463726967573
+ClickBench,baseline,q7,1,3,0.06091409316286445
+ClickBench,baseline,q8,1,3,0.07113021006807685
+ClickBench,baseline,q9,1,3,0.2730436781421304
+ClickBench,baseline,q10,1,3,0.2936714733950794
+ClickBench,baseline,q11,1,3,0.24273261008784175
+ClickBench,baseline,q12,1,3,0.22222201526165009
+ClickBench,baseline,q13,1,3,0.3539624842815101
+ClickBench,baseline,q14,1,3,1.434854757040739
+ClickBench,baseline,q15,1,3,0.37453507585451007
+ClickBench,baseline,q16,1,3,0.21272098133340478
+ClickBench,baseline,q17,1,3,0.4963402156718075
+ClickBench,baseline,q18,1,3,0.5353550827130675
+ClickBench,baseline,q19,1,3,0.880399202927947
+ClickBench,baseline,q20,1,3,0.15177439199760556
+ClickBench,baseline,q21,1,3,1.1731881410814822
+ClickBench,baseline,q22,1,3,1.3749828529544175
+ClickBench,baseline,q23,1,3,3.0945999389514327
+ClickBench,baseline,q24,1,3,7.676379282958806
+ClickBench,baseline,q25,1,3,0.9617308350279927
+ClickBench,baseline,q26,1,3,1.0516087566502392
+ClickBench,baseline,q27,1,3,0.5775093329139054
+ClickBench,baseline,q28,1,3,16.440896360669285
+ClickBench,baseline,q29,1,3,39.49339419789612
+ClickBench,baseline,q30,1,3,0.09123622719198465
+ClickBench,baseline,q31,1,3,0.4447573800571263
+ClickBench,baseline,q32,1,3,0.7387501099146903
+ClickBench,baseline,q33,1,3,1.0727321580052376
+ClickBench,baseline,q34,1,3,1.5358413252979517
+ClickBench,baseline,q35,1,3,1.58721962897107
+ClickBench,baseline,q36,1,3,0.1722251558676362
+ClickBench,baseline,q37,1,3,0.42491742968559265
+ClickBench,baseline,q38,1,3,0.3541598473675549
+ClickBench,baseline,q39,1,3,0.4145316742360592
+ClickBench,baseline,q40,1,3,0.6678545391187072
+ClickBench,baseline,q41,1,3,0.14172937301918864
+ClickBench,baseline,q42,1,3,0.12149687996134162
+ClickBench,baseline,q43,1,3,0.12158969091251493
+ClickBench,paging_lru,q1,1,2,0.07123089069500566
+ClickBench,paging_lru,q2,1,2,0.0708339479751885
+ClickBench,paging_lru,q3,1,2,0.060644709039479494
+ClickBench,paging_lru,q4,1,2,0.17194610508158803
+ClickBench,paging_lru,q5,1,2,0.09151076897978783
+ClickBench,paging_lru,q6,1,2,0.37486355984583497
+ClickBench,paging_lru,q7,1,2,0.08104992099106312
+ClickBench,paging_lru,q8,1,2,0.06062310002744198
+ClickBench,paging_lru,q9,1,2,0.16213635308668017
+ClickBench,paging_lru,q10,1,2,0.15221143001690507
+ClickBench,paging_lru,q11,1,2,0.14167867274954915
+ClickBench,paging_lru,q12,1,2,0.11152293719351292
+ClickBench,paging_lru,q13,1,2,0.34377527609467506
+ClickBench,paging_lru,q14,1,2,1.1934142410755157
+ClickBench,paging_lru,q15,1,2,0.29321471182629466
+ClickBench,paging_lru,q16,1,2,0.121905033942312
+ClickBench,paging_lru,q17,1,2,0.40491423895582557
+ClickBench,paging_lru,q18,1,2,0.4348559519276023
+ClickBench,paging_lru,q19,1,2,0.7080297940410674
+ClickBench,paging_lru,q20,1,2,0.050628677010536194
+ClickBench,paging_lru,q21,1,2,1.2562336949631572
+ClickBench,paging_lru,q22,1,2,1.5902660437859595
+ClickBench,paging_lru,q23,1,2,3.1188034252263606
+ClickBench,paging_lru,q24,1,2,7.530417887028307
+ClickBench,paging_lru,q25,1,2,0.9922029608860612
+ClickBench,paging_lru,q26,1,2,0.7784370849840343
+ClickBench,paging_lru,q27,1,2,0.14168870402500033
+ClickBench,paging_lru,q28,1,2,15.62009203992784
+ClickBench,paging_lru,q29,1,2,40.215924521908164
+ClickBench,paging_lru,q30,1,2,0.09109821170568466
+ClickBench,paging_lru,q31,1,2,0.445621301420033
+ClickBench,paging_lru,q32,1,2,0.4448459749110043
+ClickBench,paging_lru,q33,1,2,0.7689414662308991
+ClickBench,paging_lru,q34,1,2,1.6251947567798197
+ClickBench,paging_lru,q35,1,2,1.5877300510182977
+ClickBench,paging_lru,q36,1,2,0.18202623585239053
+ClickBench,paging_lru,q37,1,2,0.4452870190143585
+ClickBench,paging_lru,q38,1,2,0.37418338283896446
+ClickBench,paging_lru,q39,1,2,0.13102822937071323
+ClickBench,paging_lru,q40,1,2,0.42430306412279606
+ClickBench,paging_lru,q41,1,2,0.171835380140692
+ClickBench,paging_lru,q42,1,2,0.08094606501981616
+ClickBench,paging_lru,q43,1,2,0.1213647723197937
+ClickBench,paging_lru,q1,1,3,0.07096280716359615
+ClickBench,paging_lru,q2,1,3,0.07082860730588436
+ClickBench,paging_lru,q3,1,3,0.09106388268992305
+ClickBench,paging_lru,q4,1,3,0.17220282088965178
+ClickBench,paging_lru,q5,1,3,0.09154464676976204
+ClickBench,paging_lru,q6,1,3,0.36405074084177613
+ClickBench,paging_lru,q7,1,3,0.08118262095376849
+ClickBench,paging_lru,q8,1,3,0.060721895191818476
+ClickBench,paging_lru,q9,1,3,0.16191736375913024
+ClickBench,paging_lru,q10,1,3,0.14160157181322575
+ClickBench,paging_lru,q11,1,3,0.1516434489749372
+ClickBench,paging_lru,q12,1,3,0.1110946936532855
+ClickBench,paging_lru,q13,1,3,0.1920021059922874
+ClickBench,paging_lru,q14,1,3,1.1120436326600611
+ClickBench,paging_lru,q15,1,3,0.16180664580315351
+ClickBench,paging_lru,q16,1,3,0.11110725905746222
+ClickBench,paging_lru,q17,1,3,0.24273287691175938
+ClickBench,paging_lru,q18,1,3,0.2324746260419488
+ClickBench,paging_lru,q19,1,3,0.6066187210381031
+ClickBench,paging_lru,q20,1,3,0.05071857525035739
+ClickBench,paging_lru,q21,1,3,1.3436968713067472
+ClickBench,paging_lru,q22,1,3,1.4924707380123436
+ClickBench,paging_lru,q23,1,3,3.17234552372247
+ClickBench,paging_lru,q24,1,3,7.05755109898746
+ClickBench,paging_lru,q25,1,3,1.00126526132226
+ClickBench,paging_lru,q26,1,3,0.7783008152619004
+ClickBench,paging_lru,q27,1,3,0.15149025293067098
+ClickBench,paging_lru,q28,1,3,16.18382005300373
+ClickBench,paging_lru,q29,1,3,39.43163154786453
+ClickBench,paging_lru,q30,1,3,0.10145748080685735
+ClickBench,paging_lru,q31,1,3,0.45620544301345944
+ClickBench,paging_lru,q32,1,3,0.45530126616358757
+ClickBench,paging_lru,q33,1,3,0.7690699216909707
+ClickBench,paging_lru,q34,1,3,1.579213566146791
+ClickBench,paging_lru,q35,1,3,1.8499980750493705
+ClickBench,paging_lru,q36,1,3,0.14178246492519975
+ClickBench,paging_lru,q37,1,3,0.20282368315383792
+ClickBench,paging_lru,q38,1,3,0.3850833768956363
+ClickBench,paging_lru,q39,1,3,0.1419405392371118
+ClickBench,paging_lru,q40,1,3,0.43502953089773655
+ClickBench,paging_lru,q41,1,3,0.17239114129915833
+ClickBench,paging_lru,q42,1,3,0.09154614387080073
+ClickBench,paging_lru,q43,1,3,0.12150129396468401
+ClickBench,reorder_future,q2,1,2,0.07073270482942462
+ClickBench,reorder_future,q8,1,2,0.05082548502832651
+ClickBench,reorder_future,q3,1,2,0.0911713601090014
+ClickBench,reorder_future,q30,1,2,0.0606972579844296
+ClickBench,reorder_future,q10,1,2,0.28339569503441453
+ClickBench,reorder_future,q9,1,2,0.1315069952979684
+ClickBench,reorder_future,q4,1,2,0.06093307817354798
+ClickBench,reorder_future,q5,1,2,0.09126520017161965
+ClickBench,reorder_future,q16,1,2,0.11114981258288026
+ClickBench,reorder_future,q20,1,2,0.060982270166277885
+ClickBench,reorder_future,q11,1,2,0.14177191723138094
+ClickBench,reorder_future,q12,1,2,0.10110814915969968
+ClickBench,reorder_future,q14,1,2,1.3647565906867385
+ClickBench,reorder_future,q17,1,2,0.24302241997793317
+ClickBench,reorder_future,q18,1,2,0.2423459030687809
+ClickBench,reorder_future,q6,1,2,0.12125219823792577
+ClickBench,reorder_future,q13,1,2,0.13150430284440517
+ClickBench,reorder_future,q26,1,2,0.7681252448819578
+ClickBench,reorder_future,q15,1,2,0.16188277304172516
+ClickBench,reorder_future,q31,1,2,0.22285523172467947
+ClickBench,reorder_future,q36,1,2,0.11149231716990471
+ClickBench,reorder_future,q33,1,2,0.9910453693009913
+ClickBench,reorder_future,q32,1,2,0.16224730014801025
+ClickBench,reorder_future,q25,1,2,0.7692106408067048
+ClickBench,reorder_future,q27,1,2,0.14188747573643923
+ClickBench,reorder_future,q19,1,2,0.4048110833391547
+ClickBench,reorder_future,q43,1,2,0.06095719477161765
+ClickBench,reorder_future,q7,1,2,0.08107493072748184
+ClickBench,reorder_future,q42,1,2,0.1316841202788055
+ClickBench,reorder_future,q41,1,2,0.11140793887898326
+ClickBench,reorder_future,q1,1,2,0.08102752221748233
+ClickBench,reorder_future,q21,1,2,1.233659579884261
+ClickBench,reorder_future,q22,1,2,0.8598322970792651
+ClickBench,reorder_future,q24,1,2,6.079298239201307
+ClickBench,reorder_future,q28,1,2,16.135268033947796
+ClickBench,reorder_future,q34,1,2,1.5875214650295675
+ClickBench,reorder_future,q35,1,2,1.6497370009310544
+ClickBench,reorder_future,q37,1,2,0.4354609167203307
+ClickBench,reorder_future,q39,1,2,0.14201044477522373
+ClickBench,reorder_future,q23,1,2,2.7080557430163026
+ClickBench,reorder_future,q40,1,2,0.7181594716385007
+ClickBench,reorder_future,q29,1,2,39.38907486014068
+ClickBench,reorder_future,q38,1,2,0.37424579076468945
+ClickBench,reorder_future,q2,1,3,0.07101463805884123
+ClickBench,reorder_future,q8,1,3,0.06079694489017129
+ClickBench,reorder_future,q3,1,3,0.10174330975860357
+ClickBench,reorder_future,q30,1,3,0.07120582088828087
+ClickBench,reorder_future,q10,1,3,0.28308839863166213
+ClickBench,reorder_future,q9,1,3,0.1419199979864061
+ClickBench,reorder_future,q4,1,3,0.060735716950148344
+ClickBench,reorder_future,q5,1,3,0.09129373403266072
+ClickBench,reorder_future,q16,1,3,0.12199556082487106
+ClickBench,reorder_future,q20,1,3,0.05054278112947941
+ClickBench,reorder_future,q11,1,3,0.14194104121997952
+ClickBench,reorder_future,q12,1,3,0.11126512428745627
+ClickBench,reorder_future,q14,1,3,1.3353714779950678
+ClickBench,reorder_future,q17,1,3,0.24260437907651067
+ClickBench,reorder_future,q18,1,3,0.25293551897630095
+ClickBench,reorder_future,q6,1,3,0.1320155542343855
+ClickBench,reorder_future,q13,1,3,0.1420316118746996
+ClickBench,reorder_future,q26,1,3,0.7675359779968858
+ClickBench,reorder_future,q15,1,3,0.17250502482056618
+ClickBench,reorder_future,q31,1,3,0.22228928608819842
+ClickBench,reorder_future,q36,1,3,0.11122982995584607
+ClickBench,reorder_future,q33,1,3,1.0213546412996948
+ClickBench,reorder_future,q32,1,3,0.16189696500077844
+ClickBench,reorder_future,q25,1,3,0.8172341263853014
+ClickBench,reorder_future,q27,1,3,0.1417295685969293
+ClickBench,reorder_future,q19,1,3,0.40476315282285213
+ClickBench,reorder_future,q43,1,3,0.06046628998592496
+ClickBench,reorder_future,q7,1,3,0.08143419586122036
+ClickBench,reorder_future,q42,1,3,0.13153392123058438
+ClickBench,reorder_future,q41,1,3,0.11137109901756048
+ClickBench,reorder_future,q1,1,3,0.0809844727627933
+ClickBench,reorder_future,q21,1,3,1.377884122543037
+ClickBench,reorder_future,q22,1,3,1.0528223938308656
+ClickBench,reorder_future,q24,1,3,6.215827696956694
+ClickBench,reorder_future,q28,1,3,17.219401959329844
+ClickBench,reorder_future,q34,1,3,1.3207192509435117
+ClickBench,reorder_future,q35,1,3,1.07212735991925
+ClickBench,reorder_future,q37,1,3,0.20256863022223115
+ClickBench,reorder_future,q39,1,3,0.3945556180551648
+ClickBench,reorder_future,q23,1,3,2.943330619018525
+ClickBench,reorder_future,q40,1,3,0.7280666348524392
+ClickBench,reorder_future,q29,1,3,41.614634301979095
+ClickBench,reorder_future,q38,1,3,0.374389935284853
+TPC-H SF50,baseline,q8,1,2,2.384766701143235
+TPC-H SF50,baseline,q1,1,2,1.508098793681711
+TPC-H SF50,baseline,q4,1,2,0.8605481656268239
+TPC-H SF50,baseline,q7,1,2,2.109321891795844
+TPC-H SF50,baseline,q17,1,2,1.89700942998752
+TPC-H SF50,baseline,q5,1,2,1.78410150622949
+TPC-H SF50,baseline,q6,1,2,1.0308702536858618
+TPC-H SF50,baseline,q2,1,2,0.4972720672376454
+TPC-H SF50,baseline,q10,1,2,1.8129709418863058
+TPC-H SF50,baseline,q16,1,2,0.3573304992169142
+TPC-H SF50,baseline,q12,1,2,1.1176135707646608
+TPC-H SF50,baseline,q19,1,2,1.4574638907797635
+TPC-H SF50,baseline,q21,1,2,3.537435278762132
+TPC-H SF50,baseline,q14,1,2,1.4378165360540152
+TPC-H SF50,baseline,q18,1,2,1.4662267863750458
+TPC-H SF50,baseline,q15,1,2,1.445076848845929
+TPC-H SF50,baseline,q22,1,2,0.3942201239988208
+TPC-H SF50,baseline,q9,1,2,2.8179845581762493
+TPC-H SF50,baseline,q13,1,2,1.275349617935717
+TPC-H SF50,baseline,q20,1,2,1.5801058621145785
+TPC-H SF50,baseline,q3,1,2,1.6008379668928683
+TPC-H SF50,baseline,q11,1,2,0.39438213407993317
+TPC-H SF50,baseline,q8,1,3,2.4162554908543825
+TPC-H SF50,baseline,q1,1,3,1.5055315070785582
+TPC-H SF50,baseline,q4,1,3,0.861535738222301
+TPC-H SF50,baseline,q7,1,3,2.0690581342205405
+TPC-H SF50,baseline,q17,1,3,1.8749808450229466
+TPC-H SF50,baseline,q5,1,3,1.7904547909274697
+TPC-H SF50,baseline,q6,1,3,1.0308618037961423
+TPC-H SF50,baseline,q2,1,3,0.47521883994340897
+TPC-H SF50,baseline,q10,1,3,1.7092236438766122
+TPC-H SF50,baseline,q16,1,3,0.3458643318153918
+TPC-H SF50,baseline,q12,1,3,1.1142500988207757
+TPC-H SF50,baseline,q19,1,3,1.4377945410087705
+TPC-H SF50,baseline,q21,1,3,3.4790693391114473
+TPC-H SF50,baseline,q14,1,3,1.425700951833278
+TPC-H SF50,baseline,q18,1,3,1.4275114461779594
+TPC-H SF50,baseline,q15,1,3,1.476734444964677
+TPC-H SF50,baseline,q22,1,3,0.394629028160125
+TPC-H SF50,baseline,q9,1,3,2.7795845097862184
+TPC-H SF50,baseline,q13,1,3,1.2641222309321165
+TPC-H SF50,baseline,q20,1,3,1.5468230433762074
+TPC-H SF50,baseline,q3,1,3,1.5279948320239782
+TPC-H SF50,baseline,q11,1,3,0.4058592040091753
+TPC-H SF50,paging_lru,q8,1,2,2.0128702810034156
+TPC-H SF50,paging_lru,q1,1,2,1.5572748188860714
+TPC-H SF50,paging_lru,q4,1,2,0.9000088716857135
+TPC-H SF50,paging_lru,q7,1,2,1.9003691831603646
+TPC-H SF50,paging_lru,q17,1,2,1.5467931008897722
+TPC-H SF50,paging_lru,q5,1,2,1.8023290089331567
+TPC-H SF50,paging_lru,q6,1,2,1.104222089983523
+TPC-H SF50,paging_lru,q2,1,2,0.35452935099601746
+TPC-H SF50,paging_lru,q10,1,2,1.7116711111739278
+TPC-H SF50,paging_lru,q16,1,2,0.22411426110193133
+TPC-H SF50,paging_lru,q12,1,2,1.2037368770688772
+TPC-H SF50,paging_lru,q19,1,2,1.5963452267460525
+TPC-H SF50,paging_lru,q21,1,2,2.9742560223676264
+TPC-H SF50,paging_lru,q14,1,2,1.4474521381780505
+TPC-H SF50,paging_lru,q18,1,2,1.53647042484954
+TPC-H SF50,paging_lru,q15,1,2,1.446735206991434
+TPC-H SF50,paging_lru,q22,1,2,0.3739489456638694
+TPC-H SF50,paging_lru,q9,1,2,2.245208302978426
+TPC-H SF50,paging_lru,q13,1,2,1.1728159124031663
+TPC-H SF50,paging_lru,q20,1,2,1.5089915730059147
+TPC-H SF50,paging_lru,q3,1,2,1.4979474721476436
+TPC-H SF50,paging_lru,q11,1,2,0.40564207499846816
+TPC-H SF50,paging_lru,q8,1,3,2.1167529551312327
+TPC-H SF50,paging_lru,q1,1,3,1.5370252132415771
+TPC-H SF50,paging_lru,q4,1,3,0.9321659430861473
+TPC-H SF50,paging_lru,q7,1,3,1.88406144361943
+TPC-H SF50,paging_lru,q17,1,3,1.5690525099635124
+TPC-H SF50,paging_lru,q5,1,3,1.8125642519444227
+TPC-H SF50,paging_lru,q6,1,3,1.123672443907708
+TPC-H SF50,paging_lru,q2,1,3,0.3537481422536075
+TPC-H SF50,paging_lru,q10,1,3,1.6375862900167704
+TPC-H SF50,paging_lru,q16,1,3,0.22440582141280174
+TPC-H SF50,paging_lru,q12,1,3,1.2250492139719427
+TPC-H SF50,paging_lru,q19,1,3,1.575244167353958
+TPC-H SF50,paging_lru,q21,1,3,3.1441708118654788
+TPC-H SF50,paging_lru,q14,1,3,1.5372069873847067
+TPC-H SF50,paging_lru,q18,1,3,1.5957481623627245
+TPC-H SF50,paging_lru,q15,1,3,1.6081040012650192
+TPC-H SF50,paging_lru,q22,1,3,0.38409573724493384
+TPC-H SF50,paging_lru,q9,1,3,2.25455414224416
+TPC-H SF50,paging_lru,q13,1,3,1.1718485709279776
+TPC-H SF50,paging_lru,q20,1,3,1.4873360213823617
+TPC-H SF50,paging_lru,q3,1,3,1.4061634633690119
+TPC-H SF50,paging_lru,q11,1,3,0.3946620263159275
+TPC-H SF50,reorder_future,q8,1,2,1.8873022668994963
+TPC-H SF50,reorder_future,q5,1,2,1.5206360407173634
+TPC-H SF50,reorder_future,q7,1,2,1.6384769170545042
+TPC-H SF50,reorder_future,q15,1,2,1.245438175741583
+TPC-H SF50,reorder_future,q14,1,2,0.9518684279173613
+TPC-H SF50,reorder_future,q6,1,2,0.5356627767905593
+TPC-H SF50,reorder_future,q17,1,2,0.8299901578575373
+TPC-H SF50,reorder_future,q20,1,2,1.0436088228598237
+TPC-H SF50,reorder_future,q11,1,2,0.3350913468748331
+TPC-H SF50,reorder_future,q2,1,2,0.1824105172418058
+TPC-H SF50,reorder_future,q16,1,2,0.19338089507073164
+TPC-H SF50,reorder_future,q9,1,2,1.9457225040532649
+TPC-H SF50,reorder_future,q18,1,2,1.0518860057927668
+TPC-H SF50,reorder_future,q22,1,2,0.18283553700894117
+TPC-H SF50,reorder_future,q13,1,2,1.0422693970613182
+TPC-H SF50,reorder_future,q3,1,2,1.2869398230686784
+TPC-H SF50,reorder_future,q10,1,2,1.1632849560119212
+TPC-H SF50,reorder_future,q4,1,2,0.4761135131120682
+TPC-H SF50,reorder_future,q21,1,2,2.763057867065072
+TPC-H SF50,reorder_future,q12,1,2,0.7173250489868224
+TPC-H SF50,reorder_future,q1,1,2,1.5081478571519256
+TPC-H SF50,reorder_future,q19,1,2,1.1231413423083723
+TPC-H SF50,reorder_future,q8,1,3,1.861846521962434
+TPC-H SF50,reorder_future,q5,1,3,1.5179540957324207
+TPC-H SF50,reorder_future,q7,1,3,1.7497750148177147
+TPC-H SF50,reorder_future,q15,1,3,1.2156439148820937
+TPC-H SF50,reorder_future,q14,1,3,0.9316042270511389
+TPC-H SF50,reorder_future,q6,1,3,0.5567862428724766
+TPC-H SF50,reorder_future,q17,1,3,0.8988773780874908
+TPC-H SF50,reorder_future,q20,1,3,1.0432199900969863
+TPC-H SF50,reorder_future,q11,1,3,0.33463369915261865
+TPC-H SF50,reorder_future,q2,1,3,0.18232543673366308
+TPC-H SF50,reorder_future,q16,1,3,0.19488940807059407
+TPC-H SF50,reorder_future,q9,1,3,1.931024671997875
+TPC-H SF50,reorder_future,q18,1,3,1.0614850409328938
+TPC-H SF50,reorder_future,q22,1,3,0.18309554969891906
+TPC-H SF50,reorder_future,q13,1,3,1.0436515300534666
+TPC-H SF50,reorder_future,q3,1,3,1.3864707699976861
+TPC-H SF50,reorder_future,q10,1,3,1.1548967501148582
+TPC-H SF50,reorder_future,q4,1,3,0.47592700785025954
+TPC-H SF50,reorder_future,q21,1,3,2.733425050973892
+TPC-H SF50,reorder_future,q12,1,3,0.7190708233974874
+TPC-H SF50,reorder_future,q1,1,3,1.578594896942377
+TPC-H SF50,reorder_future,q19,1,3,1.2541777975857258

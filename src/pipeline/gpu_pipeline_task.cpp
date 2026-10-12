@@ -482,6 +482,27 @@ void gpu_pipeline_task::execute(rmm::cuda_stream_view stream)
       reservation_bytes,
       peak_bytes,
       local_state.get_reservation_size_info()->bytes_to_materialize_input);
+    // SIRIUS_RESERVATION_TRACE=1: what the task reserved against what it actually used, so an
+    // over-sized reservation (which blocks other tasks in Reserving) can be measured.
+    static bool const reservation_trace = [] {
+      auto const* v = std::getenv("SIRIUS_RESERVATION_TRACE");
+      return v != nullptr && std::string_view(v) == "1";
+    }();
+    if (reservation_trace) {
+      auto const& info = local_state.get_reservation_size_info();
+      SIRIUS_LOG_INFO(
+        "[reservation-trace] pipeline={} task={} reserved={} peak_estimate={} history={} "
+        "materialize={} actual_peak={} input_basis={} first_op={}",
+        pipeline->get_pipeline_id(),
+        _task_id,
+        info ? info->reservation_size : 0,
+        info ? info->peak_memory_estimate : 0,
+        info && info->had_history ? 1 : 0,
+        info ? info->bytes_to_materialize_input : 0,
+        peak_bytes + (info ? info->bytes_to_materialize_input : 0),
+        input_basis,
+        first_op.get_name());
+    }
   }
 
   if (output_data) { publish_output(*output_data, stream); }

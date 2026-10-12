@@ -1,0 +1,5 @@
+workload,condition,query_count,cache_hit_pct,total_bytes,reader_bytes,cached_bytes,metric
+TPC-H SF50,paging_lru,22,8.291113633660961,376244651350,345049779766,31194871584,legacy_parquet_bytes
+TPC-H SF50,reorder_future,22,26.64153992577415,376244651350,276007282342,100237369008,legacy_parquet_bytes
+ClickBench,paging_lru,41,15.12834849722746,356412178936,302492902420,53919276516,legacy_parquet_bytes
+ClickBench,reorder_future,41,17.05558488053675,356412178936,295623997233,60788181703,legacy_parquet_bytes

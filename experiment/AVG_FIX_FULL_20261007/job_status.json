@@ -1,0 +1,14 @@
+{
+  "status": "cancelled_user_scope_change",
+  "started_utc": "2026-10-07T06:27:59.095632+00:00",
+  "wait_pid": 492870,
+  "plans": [
+    {
+      "plan": "latency_runs",
+      "status": "running",
+      "started_utc": "2026-10-07T06:27:59.155074+00:00"
+    }
+  ],
+  "overlaps": [],
+  "reason": "User requested ClickBench only; reuse previous TPC-H measurements."
+}

@@ -1,0 +1,19 @@
+workload,condition,table,total_gib,read_gib,served_gib,byte_hit_pct,batches,full_batches,splice_batches,partial_batches,miss_batches,batch_hit_pct
+TPC-H SF50,paging,customer,2.04,1.95,0.08,4.12,9.0,0,2.0,0,7.0,0.0
+TPC-H SF50,paging,lineitem,151.87,138.7,13.17,8.67,381.0,9.0,68.5,15.5,288.0,2.36
+TPC-H SF50,paging,nation,0.0,0.0,0.0,15.87,12.0,0,6.0,0,6.0,0.0
+TPC-H SF50,paging,orders,14.49,13.93,0.56,3.86,32.0,0,2.0,0,30.0,0.0
+TPC-H SF50,paging,part,2.73,2.65,0.07,2.73,8.0,0,1.0,0,7.0,0.0
+TPC-H SF50,paging,partsupp,3.87,2.68,1.19,30.77,12.0,3.0,1.0,0,8.0,25.0
+TPC-H SF50,paging,region,0.0,0.0,0.0,6.41,4.0,0,1.0,0,3.0,0.0
+TPC-H SF50,paging,supplier,0.2,0.19,0.01,6.45,11.0,2.0,2.0,0,7.0,18.18
+TPC-H SF50,paging + reorder,customer,1.81,1.21,0.61,33.49,9.0,4.0,1.0,1.0,3.0,44.44
+TPC-H SF50,paging + reorder,lineitem,145.17,91.21,53.96,37.17,381.0,7.5,256.0,25.5,92.0,1.97
+TPC-H SF50,paging + reorder,nation,0.0,0.0,0.0,61.19,12.0,5.0,4.0,0,3.0,41.67
+TPC-H SF50,paging + reorder,orders,13.37,9.46,3.91,29.26,32.0,3.0,10.0,0,19.0,9.38
+TPC-H SF50,paging + reorder,part,2.28,1.94,0.34,14.94,8.0,0,3.0,0,5.0,0.0
+TPC-H SF50,paging + reorder,partsupp,3.87,1.48,2.39,61.72,12.0,7.0,1.0,2.0,2.0,58.33
+TPC-H SF50,paging + reorder,region,0.0,0.0,0.0,25.0,4.0,1.0,0,0,3.0,25.0
+TPC-H SF50,paging + reorder,supplier,0.18,0.11,0.08,41.41,11.0,6.0,2.0,0,3.0,54.55
+ClickBench,paging,hits_v2,101.21,75.57,25.64,25.33,160.0,24.5,55.0,15.0,65.5,15.31
+ClickBench,paging + reorder,hits_v2,101.21,62.67,38.54,38.08,160.0,51.0,38.0,16.5,54.5,31.88

@@ -1,0 +1,197 @@
+[
+  {
+    "workload": "th",
+    "condition": "baseline",
+    "trace_mode": "latency",
+    "run": 1,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 32.612527184188366,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "paging_lru",
+    "trace_mode": "latency",
+    "run": 1,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 29.26234919996932,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "reorder_future",
+    "trace_mode": "latency",
+    "run": 1,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 23.51961474539712,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "baseline",
+    "trace_mode": "latency",
+    "run": 2,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 32.25606171740219,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "paging_lru",
+    "trace_mode": "latency",
+    "run": 2,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 30.304380598012358,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "reorder_future",
+    "trace_mode": "latency",
+    "run": 2,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 25.175200364319608,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "baseline",
+    "trace_mode": "latency",
+    "run": 3,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 32.8639691544231,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "paging_lru",
+    "trace_mode": "latency",
+    "run": 3,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 30.496396687347442,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "reorder_future",
+    "trace_mode": "latency",
+    "run": 3,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 25.762585493037477,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "baseline",
+    "trace_mode": "latency",
+    "run": 4,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 32.43584719253704,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "paging_lru",
+    "trace_mode": "latency",
+    "run": 4,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 30.101423365529627,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "reorder_future",
+    "trace_mode": "latency",
+    "run": 4,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 26.61612947937101,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "baseline",
+    "trace_mode": "latency",
+    "run": 5,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 32.459320481168106,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "paging_lru",
+    "trace_mode": "latency",
+    "run": 5,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 30.5762566649355,
+    "foreign_gpu_processes": []
+  },
+  {
+    "workload": "th",
+    "condition": "reorder_future",
+    "trace_mode": "latency",
+    "run": 5,
+    "status": "complete",
+    "status_counts": {
+      "ok": 66
+    },
+    "comparison_valid": true,
+    "steady_state_workload_wall_s": 26.20287766889669,
+    "foreign_gpu_processes": []
+  }
+]
