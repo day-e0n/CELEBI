@@ -269,12 +269,11 @@ std::shared_ptr<cucascade::data_batch> gpu_aggregate_impl::local_grouped_aggrega
     } else if (has_widen_sum && aggregate_widen_sum[i] &&
                (input_table.column(aggregate_idx[i]).type().id() == cudf::type_id::INT64 ||
                 input_table.column(aggregate_idx[i]).type().id() == cudf::type_id::UINT64)) {
-      // This SUM is the accumulator behind an AVG over a 64-bit integer column, which has
-      // nowhere left to widen into: AVG(UserID) over ClickBench's hits sums to 2.5e26 against
-      // an int64 ceiling of 9.2e18. Give it a separate request, using DECIMAL128 unless
-      // column extrema prove every group sum fits in the original type. Its partial
-      // result is always DECIMAL128, distinct from a plain SUM on the same column,
-      // whose INT64 output the merge still expects.
+      // This SUM is the accumulator behind an AVG over a 64-bit integer column, which has nowhere
+      // left to widen into and can exceed the int64 range. Give it a separate request, using
+      // DECIMAL128 unless column extrema prove every group sum fits in the original type. Its
+      // partial result is always DECIMAL128, distinct from a plain SUM on the same column, whose
+      // INT64 output the merge still expects.
       aggregate_col_id                 = -(static_cast<int>(i) + 1);
       widened_source[aggregate_col_id] = aggregate_idx[i];
     } else {

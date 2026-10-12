@@ -22,8 +22,8 @@
 #include <sirius/exception.hpp>
 
 // cudf
-#include <cudf/cudf_utils.hpp>
 #include <cudf/copying.hpp>
+#include <cudf/cudf_utils.hpp>
 #include <cudf/unary.hpp>
 
 // standard library
@@ -85,11 +85,9 @@ evaluate_result expression_evaluator::evaluate(sirius::ast::cast const& alt, eva
   auto const return_type = sirius::get_cudf_type(alt.target_type);
   auto child             = evaluate(*alt.child, evaluation_mode::MATERIALIZE);
   if (child.is_scalar()) {
-    // A CAST over a literal. This used to be a D_ASSERT, which is nothing in a release build,
-    // so the get_column_view below threw "column view from non-column" instead -- DuckDB
-    // rewrites SUM(x + 1) into sum(x) + count(x) * CAST(1 AS HUGEINT) and hands exactly this
-    // shape over. cuDF casts columns, not scalars, so go through a one-element column and
-    // come back, which keeps the result a scalar for whatever consumes it.
+    // A CAST over a literal. DuckDB rewrites SUM(x + 1) into sum(x) + count(x) * CAST(1 AS HUGEINT)
+    // and hands exactly this shape over. cuDF casts columns, not scalars, so go through a
+    // one-element column and come back, which keeps the result a scalar for whatever consumes it.
     if (mode == evaluation_mode::AST) {
       // cudf::ast::literal needs a concrete scalar type, which is not recoverable from the
       // type-erased cudf::scalar here. Broadcast to a full-length column instead and let the

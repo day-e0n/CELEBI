@@ -19,8 +19,9 @@
 #include <cudf/column/column.hpp>
 #include <cudf/column/column_view.hpp>
 
-#include <cucascade/memory/memory_space.hpp>
 #include <rmm/cuda_stream_view.hpp>
+
+#include <cucascade/memory/memory_space.hpp>
 
 #include <atomic>
 #include <cstddef>
@@ -62,7 +63,8 @@ struct variable_width_column_page {
       last_access_tick(other.last_access_tick.load(std::memory_order_relaxed)),
       active_reader_count(other.active_reader_count.load(std::memory_order_relaxed)),
       owned_column(other.owned_column)
-  {}
+  {
+  }
 
   variable_width_column_page& operator=(variable_width_column_page const& other)
   {
@@ -97,7 +99,8 @@ struct variable_width_column_page {
       last_access_tick(other.last_access_tick.load(std::memory_order_relaxed)),
       active_reader_count(other.active_reader_count.load(std::memory_order_relaxed)),
       owned_column(std::move(other.owned_column))
-  {}
+  {
+  }
 
   variable_width_column_page& operator=(variable_width_column_page&& other) noexcept
   {
@@ -139,20 +142,17 @@ struct variable_width_column_page {
   std::shared_ptr<cudf::column> owned_column;
 };
 
-/// Sparse row->byte map over one variable-width column chunk -- the "index"
-/// that lets page cutting, admission sizing and partial-residency planning all
-/// be answered on the host, without touching the GPU or reading a per-row value.
+/// Sparse row->byte map over one variable-width column chunk -- the "index" that lets page cutting,
+/// admission sizing and partial-residency planning all be answered on the host, without touching
+/// the GPU or reading a per-row value.
 ///
-/// `byte_prefix[i]` is the number of chars bytes preceding sample row `i`,
-/// relative to the column's own first offset. Sample `i` covers row `i * stride`
-/// for every `i` except the last, which is pinned to `num_rows` exactly so
-/// `byte_prefix.back()` is the column's exact total chars byte size. Between two
-/// samples, byte positions are linearly interpolated: the map is therefore exact
-/// at stride boundaries and off by at most one stride bucket's byte skew in
-/// between -- accurate to well under 1% of a 16MiB page at the default sample
-/// budget, while costing a single strided device->host copy (measured 7-18us on
-/// a 10M-row chunk, against ~6ms for the full per-row offsets copy an earlier
-/// revision paid; see queue_variable_width_offsets_extraction).
+/// `byte_prefix[i]` is the number of chars bytes preceding sample row `i`, relative to the column's
+/// own first offset. Sample `i` covers row `i * stride` for every `i` except the last, which is
+/// pinned to `num_rows` exactly so `byte_prefix.back()` is the column's exact total chars byte
+/// size. Between two samples, byte positions are linearly interpolated: the map is exact at stride
+/// boundaries and off by at most one stride bucket's byte skew in between -- well under 1% of a
+/// 16MiB page at the default sample budget -- for the cost of a single strided device->host copy
+/// rather than a copy of every row's offset.
 struct variable_width_row_byte_map {
   /// Rows between consecutive samples. 0 means the map was never built.
   std::size_t stride{0};
@@ -250,7 +250,8 @@ struct variable_width_row_byte_skiplist {
   /// `budget` once `per_row_overhead` is charged per row, found by descending
   /// the levels. Never returns start_row, so an oversized single row still
   /// forms a page instead of stalling.
-  [[nodiscard]] std::size_t find_page_end(std::size_t start_row, std::int64_t budget,
+  [[nodiscard]] std::size_t find_page_end(std::size_t start_row,
+                                          std::int64_t budget,
                                           std::size_t per_row_overhead) const noexcept;
   /// Total host bytes held by all levels plus the page directory.
   [[nodiscard]] std::size_t footprint_bytes() const noexcept;
@@ -272,17 +273,18 @@ struct variable_width_row_byte_skiplist {
 /// row for the offsets child the page will carry on the GPU.
 /// `base_stride == 1` keeps every row and makes page boundaries exact.
 variable_width_row_byte_skiplist build_row_byte_skiplist(
-  std::vector<std::int32_t> const& offsets, std::size_t base_stride, std::size_t fanout,
-  std::size_t page_size_bytes = 0,
+  std::vector<std::int32_t> const& offsets,
+  std::size_t base_stride,
+  std::size_t fanout,
+  std::size_t page_size_bytes        = 0,
   std::size_t per_row_overhead_bytes = kVariableWidthOffsetsOverheadPerRow);
 
 /// Page start rows of `index`, i.e. the top level flattened -- kept as a thin
 /// accessor so existing callers that want a plain vector do not have to reach
 /// into the structure.
-std::vector<std::size_t> cut_pages_with_skiplist(
-  variable_width_row_byte_skiplist const& index, std::size_t page_size_bytes,
-  std::size_t per_row_overhead_bytes);
-
+std::vector<std::size_t> cut_pages_with_skiplist(variable_width_row_byte_skiplist const& index,
+                                                 std::size_t page_size_bytes,
+                                                 std::size_t per_row_overhead_bytes);
 
 /// Cuts [0, map.num_rows) into pages whose real footprint -- chars bytes plus
 /// `per_row_overhead_bytes` per row -- stays within `page_size_bytes`, returning
@@ -348,9 +350,13 @@ variable_width_chunk_page_index index_variable_width_column_pages(
 /// those two functions directly instead, to pay for exactly one
 /// stream.synchronize() for the whole chunk rather than one per column.
 variable_width_chunk_page_index index_variable_width_column_pages_from_view(
-  cudf::column_view const& col, std::size_t page_size_bytes, std::size_t chunk_index,
-  std::string const& table_name, std::string const& column_name,
-  cucascade::memory::memory_space& memory_space, rmm::cuda_stream_view stream);
+  cudf::column_view const& col,
+  std::size_t page_size_bytes,
+  std::size_t chunk_index,
+  std::string const& table_name,
+  std::string const& column_name,
+  cucascade::memory::memory_space& memory_space,
+  rmm::cuda_stream_view stream);
 
 /// Result of queue_variable_width_offsets_extraction(): the FIRST and LAST
 /// offsets of `col`'s row range, host-resident once the stream passed to that
@@ -379,32 +385,19 @@ struct variable_width_offsets_extraction {
   std::vector<std::int32_t> full_offsets;
 };
 
-/// Issues a device->host copy of ONLY col's first and last row offsets on
-/// `stream` via cudaMemcpyAsync, WITHOUT synchronizing. Returns {valid=false}
-/// immediately (no device work issued) if col isn't a non-empty STRING
-/// column. O(1) regardless of row count -- earlier revisions here copied
-/// every row's offset to compute exact per-row lengths for byte-budget
-/// cutting, an O(row count) host-side cost that dominated wall-clock time on
-/// SF50 (measured: ~4.3s across a 220-query benchmark run just from this
-/// scan, unaffected by page_size_bytes since it's paid regardless of how many
-/// pages result). Row-count-based cutting from the exact column average
-/// keeps pages close to page_size_bytes -- like fixed-width's own
-/// page_size_bytes / element_size division -- without ever reading a
-/// per-row value, while a naive fixed-row-count-with-no-byte-awareness
-/// scheme would let column-to-column length variance (a short l_shipmode vs.
-/// a long l_comment) produce wildly non-uniform page sizes, which is exactly
-/// the external-fragmentation risk (in the shared GPU memory pool, not
-/// within a page) that byte-aware sizing avoids.
+/// Issues a device->host copy of ONLY col's first and last row offsets on `stream` via
+/// cudaMemcpyAsync, WITHOUT synchronizing. Returns {valid=false} immediately (no device work
+/// issued) if col isn't a non-empty STRING column. O(1) regardless of row count. Cutting by row
+/// count from the exact column average keeps pages close to page_size_bytes without reading a
+/// per-row value, while staying byte-aware so columns of very different widths do not produce
+/// non-uniform page sizes (and external fragmentation in the shared GPU pool).
 ///
-/// Callers indexing multiple columns of the same chunk should call this once
-/// per column, synchronize `stream` exactly once after all calls, then call
-/// build_variable_width_column_pages() for each -- batching what would
-/// otherwise be one blocking stream.synchronize() per column into one for the
-/// whole chunk.
-/// `full_offsets` copies every row offset rather than a strided sample, so the
-/// resulting index can be exact. Measured at chunk scale: the copy is ~6ms per
-/// 10M rows against ~12us for the sample, and building the skiplist on top costs
-/// a further ~47ms -- pay it only when exact page boundaries actually matter.
+/// Callers indexing multiple columns of the same chunk should call this once per column,
+/// synchronize `stream` exactly once after all calls, then call build_variable_width_column_pages()
+/// for each -- one blocking synchronize for the whole chunk instead of one per column.
+/// `full_offsets` copies every row offset rather than a strided sample, so the resulting index can
+/// be exact. It costs far more than the sample (the copy plus the skiplist build); pay it only when
+/// exact page boundaries actually matter.
 variable_width_offsets_extraction queue_variable_width_offsets_extraction(
   cudf::column_view const& col, rmm::cuda_stream_view stream, bool full_offsets = false);
 
@@ -412,8 +405,7 @@ variable_width_offsets_extraction queue_variable_width_offsets_extraction(
 /// synchronized. Returns an invalid (default) map -- signalling callers to fall
 /// back to average-based cutting -- when the strided sample was never issued or
 /// came back non-monotone.
-variable_width_row_byte_map build_row_byte_map(
-  variable_width_offsets_extraction const& extraction);
+variable_width_row_byte_map build_row_byte_map(variable_width_offsets_extraction const& extraction);
 
 /// Must only be called after the stream passed to queue_variable_width_offsets_extraction()
 /// for `extraction` has been synchronized (first_offset/last_offset must
@@ -446,53 +438,51 @@ variable_width_row_byte_map build_row_byte_map(
 /// page's exact byte cost for admission and eviction accounting regardless of
 /// where the boundaries were placed.
 variable_width_chunk_page_index build_variable_width_column_pages(
-  variable_width_offsets_extraction const& extraction, std::size_t page_size_bytes,
-  std::size_t chunk_index, std::string const& table_name, std::string const& column_name,
-  cucascade::memory::memory_space& memory_space, rmm::cuda_stream_view stream,
-  std::size_t alignment_rows = 0, std::size_t slab_max_rows = 0);
+  variable_width_offsets_extraction const& extraction,
+  std::size_t page_size_bytes,
+  std::size_t chunk_index,
+  std::string const& table_name,
+  std::string const& column_name,
+  cucascade::memory::memory_space& memory_space,
+  rmm::cuda_stream_view stream,
+  std::size_t alignment_rows = 0,
+  std::size_t slab_max_rows  = 0);
 
-/// Picks this column's chars-slab size from a small power-of-two ladder, given
-/// how many bytes its rows actually average and how many rows a page may hold.
+/// Picks this column's chars-slab size from a small power-of-two ladder, given how many bytes its
+/// rows actually average and how many rows a page may hold.
 ///
-/// One slab size for every column is what made the first slab implementation
-/// lose: with a 16MiB chars slab and a 524,288-row cap, l_comment ran at 85%
-/// utilization but l_returnflag at 14% and l_shipmode at 23%, because the row cap
-/// binds long before the byte budget on narrow columns. Measured consequence at a
-/// 2GiB budget on SF30: 26 eviction events against 7, 67 cache hits against 77,
-/// and 5.1% slower end to end -- the internal waste cost far more than the ~6.7%
-/// external fragmentation the slabs removed. Sizing per column keeps utilization
-/// high while still drawing from only a handful of distinct sizes, which measured
-/// 0.16-0.81% external fragmentation against 6.7% for fully variable sizes.
+/// One slab size for every column wastes most of each slab on narrow columns, where the row cap
+/// binds long before the byte budget. Sizing per column keeps utilization high while still drawing
+/// from only a handful of distinct sizes, which keeps external fragmentation low.
 ///
-/// The ladder is capped below by `min_bytes` so tiny columns still get a sane
-/// slab, and above by `max_bytes`.
-std::size_t choose_chars_slab_bytes(double bytes_per_row, std::size_t max_rows_per_page,
-                                    std::size_t min_bytes, std::size_t max_bytes);
+/// The ladder is capped below by `min_bytes` so tiny columns still get a sane slab, and above by
+/// `max_bytes`.
+std::size_t choose_chars_slab_bytes(double bytes_per_row,
+                                    std::size_t max_rows_per_page,
+                                    std::size_t min_bytes,
+                                    std::size_t max_bytes);
 
-/// Materializes rows [start_row, start_row + num_rows) of `col` into page storage
-/// whose device allocations are a FIXED size, independent of how much of them the
-/// page actually uses.
+/// Materializes rows [start_row, start_row + num_rows) of `col` into page storage whose device
+/// allocations are a FIXED size, independent of how much of them the page actually uses.
 ///
-/// This is the point of the whole exercise. Measured on this box with
-/// cudaMallocAsync (the allocator behind memory_space), churning a working set
-/// with 50% eviction for 20 rounds: allocations that are all exactly one size
-/// cost 0.00% external fragmentation at every scale tested, while variable-sized
-/// allocations cost 3.9-13.0% (6.7% at a 6GB working set). Rounding sizes up to
-/// 2MB/4MB/power-of-two classes did NOT help -- only true uniformity did. A cudf
-/// STRING column is two allocations (a chars buffer and an offsets child), so
-/// both are given their own fixed size here; the unused tail of each is internal
-/// fragmentation, which costs capacity but never strands a slot.
+/// With cudaMallocAsync, allocations that are all exactly one size leave no external fragmentation
+/// under eviction churn, while variable-sized ones do, and rounding sizes up to size classes does
+/// not help. A cudf STRING column is two allocations (a chars buffer and an offsets child), so both
+/// are given their own fixed size here; the unused tail of each is internal fragmentation, which
+/// costs capacity but never strands a slot.
 ///
-/// `chars_slab_bytes` must be >= the page's chars byte count and
-/// `offsets_slab_bytes` >= (num_rows + 1) * sizeof(int32_t); the caller sizes
-/// pages so that holds. Returns nullptr if the range does not fit, if `col` is
-/// not a non-empty STRING column, or if it carries nulls (the prototype leaves
-/// nullable columns on the exact-size path rather than hand-rolling a sliced
-/// null mask).
+/// `chars_slab_bytes` must be >= the page's chars byte count and `offsets_slab_bytes` >= (num_rows
+/// + 1) * sizeof(int32_t); the caller sizes pages so that holds. Returns nullptr if the range does
+/// not fit, if `col` is not a non-empty STRING column, or if it carries nulls (nullable columns
+/// stay on the exact-size path).
 std::shared_ptr<cudf::column> materialize_page_into_slab(
-  cudf::column_view const& col, std::size_t start_row, std::size_t num_rows,
-  std::size_t chars_slab_bytes, std::size_t offsets_slab_bytes,
-  cucascade::memory::memory_space& memory_space, rmm::cuda_stream_view stream);
+  cudf::column_view const& col,
+  std::size_t start_row,
+  std::size_t num_rows,
+  std::size_t chars_slab_bytes,
+  std::size_t offsets_slab_bytes,
+  cucascade::memory::memory_space& memory_space,
+  rmm::cuda_stream_view stream);
 
 /// Fills `index.pages` -- the top level, i.e. the page directory -- in place, using
 /// the slab constraints (chars must fit `chars_budget_bytes`, row count must not

@@ -34,12 +34,9 @@ namespace sirius {
 
 /// CAST return types that are currently safe to lower into a cuDF AST.
 ///
-/// HUGEINT and UHUGEINT are here because this engine already maps them to cuDF INT64 and
-/// UINT64 -- the same types BIGINT and UBIGINT map to (see get_cudf_type, which documents the
-/// 128->64 narrowing). A cast to HUGEINT is therefore a cast to INT64, and leaving it out sent
-/// it down the materializing fallback instead. DuckDB reaches that path on its own: it rewrites
-/// SUM(x + 1) into sum(x) + count(x) * CAST(1 AS HUGEINT), whose scalar operand the fallback
-/// cannot take -- ClickBench q30 is ninety of those.
+/// HUGEINT and UHUGEINT map to cuDF INT64 and UINT64, the same types BIGINT and UBIGINT map to (see
+/// get_cudf_type), so a cast to HUGEINT is a cast to INT64. DuckDB produces such casts itself when
+/// it rewrites SUM(x + 1) into sum(x) + count(x) * CAST(1 AS HUGEINT).
 inline constexpr std::array<duckdb::LogicalTypeId, 5> supported_ast_cast_types{
   {duckdb::LogicalTypeId::UBIGINT,
    duckdb::LogicalTypeId::BIGINT,

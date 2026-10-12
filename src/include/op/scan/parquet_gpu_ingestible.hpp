@@ -41,10 +41,10 @@
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <unordered_set>
-#include <unordered_map>
 #include <span>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace sirius::scan_manager {
@@ -252,7 +252,10 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   /// back to @c parquet_ingestible_table_info for typed access.
   explicit parquet_gpu_ingestible(std::unique_ptr<parquet_ingestible_table_info> info);
 
-  void set_scan_manager(scan_manager::sirius_scan_manager* manager) noexcept { _scan_manager = manager; }
+  void set_scan_manager(scan_manager::sirius_scan_manager* manager) noexcept
+  {
+    _scan_manager = manager;
+  }
 
   [[nodiscard]] std::string fixed_page_cache_filter_signature() const;
 
@@ -285,9 +288,8 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   /// computed from parked footer statistics without reading data. Empty when
   /// there is no filter, no parked footer, or the predicate does not translate --
   /// callers must read that as "claims nothing", not "nothing survives".
-  [[nodiscard]] std::unordered_map<std::string, std::unordered_set<int>>
-  surviving_row_groups(io::ioctx_resolver const& resolve) const;
-
+  [[nodiscard]] std::unordered_map<std::string, std::unordered_set<int>> surviving_row_groups(
+    io::ioctx_resolver const& resolve) const;
 
   ~parquet_gpu_ingestible() override;
 
@@ -317,7 +319,6 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   /// @ref next_split_provider).
   std::unique_ptr<scan_info> build_file_scan_info(std::string const& file_path,
                                                   std::shared_ptr<io::sirius_ioctx> const& io_ctx);
-
 
   void auto_cache_materialized_table(cudf::table_view view,
                                      const cucascade::memory::memory_space& mem_space,
@@ -350,10 +351,9 @@ class parquet_gpu_ingestible : public gpu_ingestible {
   // the page cache's per-entry admission ceiling BEFORE decoding and copying it.
   std::atomic<std::size_t> _projected_cache_entry_bytes{0};
 
-  // Same estimate broken out per data column, in _plan->data_columns order.
-  // Lets variable-width paging decide ONCE, from the footer, whether a column's
-  // whole-table decoded size can ever be resident -- replacing an incremental
-  // "have I cached 512MB of this yet" test that necessarily cuts mid-column.
+  // Same estimate broken out per data column, in _plan->data_columns order. Lets variable-width
+  // paging decide once, from the footer, whether a column's whole-table decoded size can ever be
+  // resident, instead of cutting mid-column.
   mutable std::mutex _projected_column_bytes_mutex;
   std::vector<std::size_t> _projected_column_bytes;
 

@@ -265,7 +265,8 @@ scan_plan build_scan_plan(duckdb::vector<duckdb::ColumnIndex> const& column_ids,
       // The row-identity columns LATE_MATERIALIZATION joins on. Dropping them silently -- what
       // every other virtual column still gets -- leaves the join keyed on columns that do not
       // exist, so refuse the scan (CPU fallback) where they cannot be produced.
-      bool const row_number = primary_idx == duckdb::MultiFileReader::COLUMN_IDENTIFIER_FILE_ROW_NUMBER;
+      bool const row_number =
+        primary_idx == duckdb::MultiFileReader::COLUMN_IDENTIFIER_FILE_ROW_NUMBER;
       bool const file_index = primary_idx == duckdb::MultiFileReader::COLUMN_IDENTIFIER_FILE_INDEX;
       if (!row_number && !file_index) { return; }
       if (!partition_indices.empty()) {
@@ -277,7 +278,8 @@ scan_plan build_scan_plan(duckdb::vector<duckdb::ColumnIndex> const& column_ids,
       plan.virtual_columns.push_back(scan_plan::virtual_column{
         row_number ? scan_plan::virtual_column::FILE_ROW_NUMBER
                    : scan_plan::virtual_column::FILE_INDEX,
-        sirius::logical_type::make(row_number ? sirius::type_id::BIGINT : sirius::type_id::UBIGINT)});
+        sirius::logical_type::make(row_number ? sirius::type_id::BIGINT
+                                              : sirius::type_id::UBIGINT)});
       plan.output_position_by_column_id[column_ids_pos] = plan.output_layout.size();
       plan.output_layout.push_back(
         scan_plan::output_entry{scan_plan::output_entry::VIRTUAL, virtual_idx});
@@ -306,8 +308,8 @@ scan_plan build_scan_plan(duckdb::vector<duckdb::ColumnIndex> const& column_ids,
       // data_columns without ever consuming the name downstream.
       auto const batch_idx = plan.data_columns.size();
       std::string col_name = names.empty() ? std::string{} : names.at(primary_idx);
-      plan.data_columns.push_back(scan_plan::data_column{
-        primary_idx, std::move(col_name), returned_types.at(primary_idx)});
+      plan.data_columns.push_back(
+        scan_plan::data_column{primary_idx, std::move(col_name), returned_types.at(primary_idx)});
       primary_to_batch[primary_idx] = batch_idx;
       if (is_output) {
         plan.output_position_by_column_id[column_ids_pos] = plan.output_layout.size();
@@ -339,10 +341,10 @@ scan_plan build_scan_plan(duckdb::vector<duckdb::ColumnIndex> const& column_ids,
     plan.batch_position_by_column_id[c] = it->second;
   }
 
-  // count(*) reads no column, and an unprojected reader then decodes every column of the file:
-  // 105 of them for ClickBench's hits, 7.2 GB per row group, to produce nothing but a row
-  // count. Read the narrowest fixed-width column instead. output_layout stays empty, so the
-  // reader's batch (now that one column) still goes downstream as is and carries the count.
+  // count(*) reads no column, and an unprojected reader then decodes every column of the file to
+  // produce nothing but a row count. Read the narrowest fixed-width column instead. output_layout
+  // stays empty, so the reader's batch (now that one column) still goes downstream as is and
+  // carries the count.
   if (plan.data_columns.empty() && plan.partition_columns.empty() && !names.empty() &&
       plan.partition_primary_indices.empty()) {
     std::optional<std::size_t> narrowest;

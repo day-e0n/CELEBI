@@ -111,9 +111,7 @@ std::unique_ptr<op::operator_data> sirius_gpu_scan_operator::execute(
 
   ::cucascade::memory::memory_space* mem_space = scan_input->gpu_memory_space;
   std::unique_ptr<cudf::table> output_table;
-  // [scan-audit] covers materialize_table only. The two stages after it are not accounted
-  // anywhere, and GPU_SCAN's occupancy rose 0.49s with a cache resident while its read fell
-  // 4.6s -- a gap that has to be in one of them.
+  // [scan-audit] covers materialize_table only; time the two stages after it as well.
   auto const t0           = std::chrono::steady_clock::now();
   auto materialized_table = _ingestible->materialize_table(*scan_input, stream);
   auto const t1           = std::chrono::steady_clock::now();
@@ -123,16 +121,18 @@ std::unique_ptr<op::operator_data> sirius_gpu_scan_operator::execute(
   } else {
     output_table = materialized_table.table.release(stream, mem_space->get_default_allocator());
   }
-  auto const t2 = std::chrono::steady_clock::now();
+  auto const t2          = std::chrono::steady_clock::now();
   auto const output_rows = output_table ? output_table->num_rows() : 0;
 
-  auto batch = sirius::make_data_batch(std::move(output_table), *mem_space, stream);
+  auto batch    = sirius::make_data_batch(std::move(output_table), *mem_space, stream);
   auto const t3 = std::chrono::steady_clock::now();
   auto const us = [](auto a, auto b) {
     return std::chrono::duration_cast<std::chrono::microseconds>(b - a).count();
   };
   SIRIUS_LOG_INFO("[scan-stage] materialize_us={} postfilter_us={} make_batch_us={} rows={}",
-                  us(t0, t1), us(t1, t2), us(t2, t3),
+                  us(t0, t1),
+                  us(t1, t2),
+                  us(t2, t3),
                   output_rows);
   std::vector<std::shared_ptr<::cucascade::data_batch>> batches{std::move(batch)};
   return std::make_unique<pipelineable_operator_data>(std::move(batches));
@@ -144,12 +144,10 @@ std::size_t sirius_gpu_scan_operator::no_history_peak_memory_estimate(
   // Pinned (cached) inputs are pass-throughs in the common case, so the estimate equals the
   // input size. For a fresh read, stats.bytes is already the split's UNCOMPRESSED size (the
   // footer's per-column-chunk sizes), so the factor only has to cover decode temporaries and
-  // the post-filter copy -- not decompression. Measured with SIRIUS_RESERVATION_TRACE=1 over
-  // TPC-H SF50 and ClickBench (GPU_SCAN tasks without history, splits >= 64 MiB): actual peak /
-  // stats.bytes has a median of 2.1-3.0 and a p90 of 2.9-5.9. The old 8x reserved 3.2x what
-  // those tasks used (1,261 GiB for 396 GiB on TPC-H), and the excess blocked other tasks in
-  // Reserving. The per-pipeline history takes over after the first task either way.
-  // SIRIUS_SCAN_NO_HISTORY_FACTOR overrides the factor (8 restores the old estimate).
+  // the post-filter copy -- not decompression. Peak use without history is about 2-3x
+  // stats.bytes (SIRIUS_RESERVATION_TRACE=1); over-reserving blocks other tasks in Reserving.
+  // The per-pipeline history takes over after the first task.
+  // SIRIUS_SCAN_NO_HISTORY_FACTOR overrides the factor.
   static double const factor = [] {
     auto const* v = std::getenv("SIRIUS_SCAN_NO_HISTORY_FACTOR");
     if (v == nullptr || v[0] == '\0') { return 3.0; }

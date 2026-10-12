@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include <cstdlib>
-#include <string_view>
 #include "transparent/sirius_optimizer_extension.hpp"
 
 #include "sirius_context.hpp"
@@ -28,6 +26,9 @@
 #include <duckdb/planner/operator/logical_get.hpp>
 #include <duckdb/planner/table_filter.hpp>
 #include <log/logging.hpp>
+
+#include <cstdlib>
+#include <string_view>
 
 namespace sirius::transparent {
 
@@ -124,21 +125,12 @@ void sirius_pre_optimizer_hook(duckdb::OptimizerExtensionInput& input,
   // expressions using partition statistics, producing EXPRESSION_GET + DUMMY_SCAN.
   // Transparent execution still falls back on those COLUMN_DATA_SCAN sources.
   disabled.insert(duckdb::OptimizerType::STATISTICS_PROPAGATION);
-  // LATE_MATERIALIZATION rewrites `ORDER BY ... LIMIT N` over a scan into a
-  // self-RIGHT_SEMI_JOIN keyed on the parquet virtual columns `file_index` /
-  // `file_row_number` (TOP_N picks the N rows, the semi-join re-fetches them
-  // by row id). Sirius's parquet scan path drops virtual columns silently
-  // (src/op/scan/scan_plan.cpp:194), so the join's key_col_indices reference
-  // columns that don't exist at runtime. Until the scan path threads virtual
-  // columns through (or sirius_plan_get falls back on them), disable this
-  // pass so the small-sort / ORDER-BY-LIMIT plans stay on the standard
-  // sort path. See PR #732 comment 3242605041.
-  //
-  // The pass is kept by default: the parquet scan now emits file_index / file_row_number
-  // (scan_plan virtual columns) and the re-fetch scan reads only the rows the join's IN-list
-  // names. ClickBench q24 (SELECT * ... ORDER BY ... LIMIT 10) otherwise decodes all 105
-  // columns of all 100M rows to return ten (measured: ClickBench -5.1% with the page cache).
-  // SIRIUS_ENABLE_LATE_MATERIALIZATION=0 disables it again.
+  // LATE_MATERIALIZATION rewrites `ORDER BY ... LIMIT N` over a scan into a self-RIGHT_SEMI_JOIN
+  // keyed on the parquet virtual columns `file_index` / `file_row_number` (TOP_N picks the N rows,
+  // the semi-join re-fetches them by row id). The parquet scan emits those columns (scan_plan
+  // virtual columns) and the re-fetch scan reads only the rows the join's IN-list names, so the
+  // pass is kept by default: without it a SELECT * ... ORDER BY ... LIMIT 10 decodes every column
+  // of every row. SIRIUS_ENABLE_LATE_MATERIALIZATION=0 disables it.
   static bool const late_materialization = [] {
     auto const* v = std::getenv("SIRIUS_ENABLE_LATE_MATERIALIZATION");
     return v == nullptr || std::string_view(v) != "0";

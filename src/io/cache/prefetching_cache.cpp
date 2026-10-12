@@ -38,6 +38,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <exception>
 #include <iterator>
 #include <limits>
@@ -46,11 +47,9 @@
 #include <optional>
 #include <shared_mutex>
 #include <span>
+#include <string_view>
 #include <utility>
 #include <vector>
-
-#include <cstdlib>
-#include <string_view>
 
 namespace sirius::io::cache {
 
@@ -512,7 +511,7 @@ exec::semi_future<std::size_t> prefetching_cache::device_read_async(const sirius
       }
       cached_chunk* c = (ci < chunks.size() && chunks[ci]->offset == off) ? chunks[ci] : nullptr;
 
-      // DEBUG (temporary): bisect a wrong-result bug in this path.
+      // Debug switches: SIRIUS_PREFETCH_DBG_NO_HIT / _NO_LOAD bypass hits / loads on this path.
       static bool const dbg_no_hit = [] {
         auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_NO_HIT");
         return v != nullptr && std::string_view(v) == "1";
@@ -539,9 +538,9 @@ exec::semi_future<std::size_t> prefetching_cache::device_read_async(const sirius
         // and leave the chunk uncached -- zero over-read.  (Short-term: a heavily
         // partial boundary chunk is re-read each pass; full partial caching is a
         // larger redesign.)
-        size_t const need_lo     = std::max(off, offset);
-        size_t const need_hi     = std::min(off + chunk_bytes, offset + size);
-        size_t const overread    = chunk_bytes - (need_hi - need_lo);
+        size_t const need_lo            = std::max(off, offset);
+        size_t const need_hi            = std::min(off + chunk_bytes, offset + size);
+        size_t const overread           = chunk_bytes - (need_hi - need_lo);
         static bool const dbg_full_only = [] {
           auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_FULL_ONLY");
           return v != nullptr && std::string_view(v) == "1";
@@ -577,7 +576,7 @@ exec::semi_future<std::size_t> prefetching_cache::device_read_async(const sirius
     _counters.h2d.fetch_add(h2d, std::memory_order_relaxed);
     _counters.misses.fetch_add(misses, std::memory_order_relaxed);
 
-    // DEBUG (temporary): compare every hit against a fresh read of the file.
+    // Debug switch SIRIUS_PREFETCH_DBG_VERIFY: compare every hit against a fresh read of the file.
     static bool const dbg_verify = [] {
       auto const* v = std::getenv("SIRIUS_PREFETCH_DBG_VERIFY");
       return v != nullptr && std::string_view(v) == "1";
@@ -587,10 +586,10 @@ exec::semi_future<std::size_t> prefetching_cache::device_read_async(const sirius
         size_t const vs = std::max(c->offset, offset);
         size_t const ve = std::min(c->offset + chunk_bytes, offset + size);
         std::vector<uint8_t> fresh(ve - vs);
-        auto const n = _io_ctx->host_read_io(obj, vs, ve - vs, fresh.data());
+        auto const n             = _io_ctx->host_read_io(obj, vs, ve - vs, fresh.data());
         auto const* cached_bytes = c->data + (vs - c->offset);
-        size_t first_bad = fresh.size();
-        size_t bad = 0;
+        size_t first_bad         = fresh.size();
+        size_t bad               = 0;
         for (size_t i = 0; i < std::min<size_t>(n, fresh.size()); ++i) {
           if (fresh[i] != cached_bytes[i]) {
             if (first_bad == fresh.size()) { first_bad = i; }
@@ -601,8 +600,15 @@ exec::semi_future<std::size_t> prefetching_cache::device_read_async(const sirius
           spdlog::error(
             "[prefetch-verify] MISMATCH file={} chunk_off={} req_off={} req_size={} "
             "copy=[{},{}) first_bad_in_chunk={} bad_bytes={} state={} pins={}",
-            obj.raw_file_cache_id(), c->offset, offset, size, vs - c->offset, ve - c->offset,
-            (vs - c->offset) + first_bad, bad, static_cast<int>(c->state.get_state()),
+            obj.raw_file_cache_id(),
+            c->offset,
+            offset,
+            size,
+            vs - c->offset,
+            ve - c->offset,
+            (vs - c->offset) + first_bad,
+            bad,
+            static_cast<int>(c->state.get_state()),
             c->state.get_pin_count());
         }
       }

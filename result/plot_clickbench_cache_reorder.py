@@ -18,13 +18,9 @@ Measured values:
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
-
-# ----------------------------------------------------------------------
-# Data
-# ----------------------------------------------------------------------
 
 RUNS = [
     ("Baseline\n(no cache)", 38.69, "#b4b2ab"),
@@ -38,11 +34,6 @@ colors = [color for _, _, color in RUNS]
 
 baseline = vals[0]
 
-
-# ----------------------------------------------------------------------
-# Figure
-# ----------------------------------------------------------------------
-
 fig, ax = plt.subplots(
     figsize=(5.2, 4.0),
     dpi=200,
@@ -55,11 +46,6 @@ ax.set_facecolor(background)
 
 x = range(len(RUNS))
 
-
-# ----------------------------------------------------------------------
-# Bars
-# ----------------------------------------------------------------------
-
 ax.bar(
     x,
     vals,
@@ -70,11 +56,6 @@ ax.bar(
     zorder=2,
 )
 
-
-# ----------------------------------------------------------------------
-# Value labels
-# ----------------------------------------------------------------------
-
 for i, v in enumerate(vals):
 
     if i == 0:
@@ -83,10 +64,7 @@ for i, v in enumerate(vals):
     else:
         change = (v / baseline - 1) * 100
 
-        text = (
-            f"{v:.2f}s\n"
-            f"({change:+.1f}%)"
-        )
+        text = f"{v:.2f}s\n" f"({change:+.1f}%)"
 
     ax.text(
         i,
@@ -97,11 +75,6 @@ for i, v in enumerate(vals):
         fontsize=10,
         color="#0b0b0b",
     )
-
-
-# ----------------------------------------------------------------------
-# X axis
-# ----------------------------------------------------------------------
 
 ax.set_xticks(
     list(x),
@@ -114,11 +87,6 @@ ax.tick_params(
     labelsize=10,
     colors="#52514e",
 )
-
-
-# ----------------------------------------------------------------------
-# Y axis
-# ----------------------------------------------------------------------
 
 ax.set_ylabel(
     "Total wall time (s)",
@@ -138,11 +106,6 @@ ax.tick_params(
     colors="#898781",
 )
 
-
-# ----------------------------------------------------------------------
-# Title
-# ----------------------------------------------------------------------
-
 ax.set_title(
     "ClickBench (41 queries), 6 GB GPU page cache",
     fontsize=11,
@@ -151,11 +114,6 @@ ax.set_title(
     pad=10,
 )
 
-
-# ----------------------------------------------------------------------
-# Grid
-# ----------------------------------------------------------------------
-
 ax.grid(
     axis="y",
     color="#e6e5e1",
@@ -163,47 +121,22 @@ ax.grid(
     zorder=0,
 )
 
-
-# ----------------------------------------------------------------------
-# Spines
-# ----------------------------------------------------------------------
-
 for spine in ("top", "right", "left"):
     ax.spines[spine].set_visible(False)
 
 ax.spines["bottom"].set_color("#898781")
 
-
-# ----------------------------------------------------------------------
-# Footnote
-# ----------------------------------------------------------------------
-
 fig.text(
     0.01,
     0.01,
-    "Lower is better. Prefetch OFF, natural query order, "
-    "executions 2-3 averaged.",
+    "Lower is better. Prefetch OFF, natural query order, " "executions 2-3 averaged.",
     fontsize=7.5,
     color="#898781",
 )
 
+fig.tight_layout(rect=(0, 0.04, 1, 1))
 
-# ----------------------------------------------------------------------
-# Layout
-# ----------------------------------------------------------------------
-
-fig.tight_layout(
-    rect=(0, 0.04, 1, 1)
-)
-
-
-# ----------------------------------------------------------------------
-# Save
-# ----------------------------------------------------------------------
-
-out = Path(__file__).with_name(
-    "clickbench_cache_reorder.png"
-)
+out = Path(__file__).with_name("clickbench_cache_reorder.png")
 
 fig.savefig(
     out,
@@ -213,26 +146,14 @@ fig.savefig(
 
 plt.close(fig)
 
-
-# ----------------------------------------------------------------------
-# Print result
-# ----------------------------------------------------------------------
-
 print(f"Saved: {out}")
 
 for label, value, _ in RUNS:
 
     if value == baseline:
-        print(
-            f"{label.replace(chr(10), ' ')}: "
-            f"{value:.2f}s"
-        )
+        print(f"{label.replace(chr(10), ' ')}: " f"{value:.2f}s")
 
     else:
         change = (value / baseline - 1) * 100
 
-        print(
-            f"{label.replace(chr(10), ' ')}: "
-            f"{value:.2f}s "
-            f"({change:+.1f}%)"
-        )
+        print(f"{label.replace(chr(10), ' ')}: " f"{value:.2f}s " f"({change:+.1f}%)")

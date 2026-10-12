@@ -346,9 +346,9 @@ std::unique_ptr<operator_data> sirius_physical_ungrouped_aggregate::execute(
           break;
         }
         case aggregate_kind::COUNT_DISTINCT: {
-          auto col = view.column(static_cast<cudf::size_type>(spec.input_idx));
-          auto agg_op =
-            cudf::make_collect_set_aggregation<cudf::reduce_aggregation>(cudf::null_policy::EXCLUDE);
+          auto col    = view.column(static_cast<cudf::size_type>(spec.input_idx));
+          auto agg_op = cudf::make_collect_set_aggregation<cudf::reduce_aggregation>(
+            cudf::null_policy::EXCLUDE);
           auto scalar =
             cudf::reduce(col, *agg_op, cudf::data_type{cudf::type_id::LIST}, std::nullopt, stream);
           cols.push_back(cudf::make_column_from_scalar(*scalar, 1, stream));
@@ -399,10 +399,9 @@ std::unique_ptr<operator_data> sirius_physical_ungrouped_aggregate::execute(
               col        = casted_col->view();
             } else if (col.type().id() == cudf::type_id::INT64 ||
                        col.type().id() == cudf::type_id::UINT64) {
-              // A 64-bit column has nowhere left to widen into: AVG(UserID) over ClickBench's
-              // hits sums to 2.5e26, which wraps INT64 and lands a negative average. DuckDB
-              // accumulates in hugeint, so accumulate in DECIMAL128 -- a __int128 underneath --
-              // and let make_avg_column do the one rounding, at the divide.
+              // A 64-bit column has nowhere left to widen into: a large sum wraps INT64 and lands a
+              // negative average. DuckDB accumulates in hugeint, so accumulate in DECIMAL128 -- a
+              // __int128 underneath -- and let make_avg_column do the one rounding, at the divide.
               casted_col = cudf::cast(col, cudf::data_type(cudf::type_id::DECIMAL128, 0), stream);
               col        = casted_col->view();
             }
@@ -520,9 +519,8 @@ std::unique_ptr<operator_data> sirius_physical_ungrouped_aggregate_merge::execut
     if (spec.kind == aggregate_kind::COUNT_DISTINCT) {
       // One row holding every distinct value the merge kept; its length is the answer.
       auto list_view = merged_view.column(static_cast<cudf::size_type>(spec.local_sum_idx));
-      auto sizes     = cudf::lists::count_elements(cudf::lists_column_view(list_view),
-                                               stream,
-                                               cudf::get_current_device_resource_ref());
+      auto sizes     = cudf::lists::count_elements(
+        cudf::lists_column_view(list_view), stream, cudf::get_current_device_resource_ref());
       output_cols.push_back(cudf::cast(sizes->view(),
                                        cudf::data_type{cudf::type_id::INT64},
                                        stream,

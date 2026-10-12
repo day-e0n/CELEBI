@@ -30,6 +30,7 @@
 // used by prepare_for_query / create_provider_for.
 #include <cudf/column/column.hpp>
 #include <cudf/table/table.hpp>
+
 #include <rmm/device_buffer.hpp>
 
 #include <cucascade/cudf/host_data_representation.hpp>
@@ -47,8 +48,8 @@ namespace cucascade::memory {
 class fixed_size_host_memory_resource;
 }  // namespace cucascade::memory
 
-#include <memory>
 #include <list>
+#include <memory>
 #include <mutex>
 #include <span>
 #include <string>
@@ -124,11 +125,11 @@ struct cache_filter_range {
 
 class cache_entry_info {
  public:
-  std::vector<std::string> resolved_file_paths;    ///< parquet identity (file set)
-  std::string catalog_name;                        ///< duckdb identity: catalog (attach alias)
-  std::string schema_name;                         ///< duckdb identity: schema
-  std::string table_name;                          ///< duckdb identity: table
-  std::string filter_signature;                    ///< non-empty for filter-specific auto caches
+  std::vector<std::string> resolved_file_paths;  ///< parquet identity (file set)
+  std::string catalog_name;                      ///< duckdb identity: catalog (attach alias)
+  std::string schema_name;                       ///< duckdb identity: schema
+  std::string table_name;                        ///< duckdb identity: table
+  std::string filter_signature;                  ///< non-empty for filter-specific auto caches
   /// The same predicate as @c filter_signature, decomposed into per-column value
   /// ranges. Lets an entry serve a DIFFERENT query whose predicate is strictly
   /// narrower -- see filter_ranges_subsume. Empty with @c filter_analyzable false
@@ -239,7 +240,8 @@ struct fixed_width_column_page {
       active_reader_count(other.active_reader_count.load(std::memory_order_relaxed)),
       owned_column(other.owned_column),
       stats(other.stats)
-  {}
+  {
+  }
 
   fixed_width_column_page& operator=(fixed_width_column_page const& other)
   {
@@ -286,7 +288,8 @@ struct fixed_width_column_page {
       active_reader_count(other.active_reader_count.load(std::memory_order_relaxed)),
       owned_column(std::move(other.owned_column)),
       stats(other.stats)
-  {}
+  {
+  }
 
   fixed_width_column_page& operator=(fixed_width_column_page&& other) noexcept
   {
@@ -390,15 +393,13 @@ struct fixed_width_chunk_page_span {
 struct chunk_provenance {
   std::vector<std::pair<std::string, std::vector<cudf::size_type>>> slices;
   std::size_t num_rows{0};
-  /// Row count of each row group in @c slices, flattened in the same order.
-  /// Empty when the producer could not supply it (non-parquet readers), in which
-  /// case page cutting falls back to a plain byte grid over the whole chunk.
+  /// Row count of each row group in @c slices, flattened in the same order. Empty when the producer
+  /// could not supply it (non-parquet readers), in which case page cutting falls back to a plain
+  /// byte grid over the whole chunk.
   ///
-  /// Needed because a page must not straddle a row-group boundary: the residual
-  /// path reads whole row groups, so a page spanning two of them cannot be
-  /// dropped or kept as a unit. Cutting on the boundary also removes the
-  /// remainder waste that a chunk-wide grid leaves -- measured 12.9% on TPC-H's
-  /// 9,962,958-row groups and 31.1% on ClickBench's 10,000,000-row ones.
+  /// A page must not straddle a row-group boundary: the residual path reads whole row groups, so a
+  /// page spanning two of them cannot be dropped or kept as a unit. Cutting on the boundary also
+  /// removes the remainder waste a chunk-wide grid leaves.
   std::vector<std::size_t> row_group_rows;
   /// The predicate that produced THIS chunk's rows, as per-column value ranges.
   /// Carried per chunk rather than per entry so one entry can hold chunks filtered
@@ -406,40 +407,32 @@ struct chunk_provenance {
   /// picks the chunks whose predicate its own is narrower than.
   std::vector<cache_filter_range> filter_ranges;
   bool filter_analyzable{false};
-  /// The predicate's text, kept alongside the ranges. A predicate that is not a
-  /// conjunction of range comparisons -- `SearchPhrase <> ''`, `contains(URL,...)`,
-  /// which is most of ClickBench -- has no ranges to compare, and without this an
-  /// identical query could no longer reuse its own chunk: reuse fell 45 -> 3.
+  /// The predicate's text, kept alongside the ranges. A predicate that is not a conjunction of
+  /// range comparisons (`SearchPhrase <> ''`, `contains(URL,...)`) has no ranges to compare, and
+  /// without this an identical query could not reuse its own chunk.
   std::string filter_signature;
 };
 
 /// One cached column of one row group -- the unit the cache is addressed by.
 ///
-/// Replaces the entry as the thing a scan looks up. An entry bundled pages under a
-/// name and made reuse all-or-nothing across everything in the bundle: one absent
-/// column, or one predicate that did not match byte for byte, and the whole bundle
-/// went unused. Measured on ClickBench: entries held a median of 6 MB -- less than
-/// one 16 MB page -- so the bundling bought nothing and cost every reuse decision.
+/// Reuse is decided per page rather than per bundle of columns, so one absent column or one
+/// mismatched predicate does not disqualify the rest.
 ///
-/// Addressed by (file, column, row group). Nothing above that: no projection, no
-/// predicate. The predicate travels WITH the page instead, as the signature that
-/// produced it plus its value ranges, so a scan can ask "are these rows a superset
-/// of what I need?" per page rather than per bundle.
-/// Key for @ref cached_page. Kept as a struct rather than a packed string so the
-/// parts stay inspectable in logs and in eviction, which works per file.
+/// Addressed by (file, column, row group). Nothing above that: no projection, no predicate. The
+/// predicate travels WITH the page instead, as the signature that produced it plus its value
+/// ranges, so a scan can ask "are these rows a superset of what I need?" per page.
+/// Key for @ref cached_page. Kept as a struct rather than a packed string so the parts stay
+/// inspectable in logs and in eviction, which works per file.
 struct cached_page_key {
-  /// File path and column name as interned ids, not strings. The page loop below
-  /// runs once per page of every column of every row group a scan touches, and
-  /// hashing a 60-character path there cost 4.10s of TPC-H SF50's scan time once
-  /// row groups were cut into 16MiB pages. Interning moves that to one hash per
-  /// column per scan and leaves four ints in the inner loop.
+  /// File path and column name as interned ids, not strings. The page loop runs once per page of
+  /// every column of every row group a scan touches, and hashing a long path there is costly;
+  /// interning leaves one hash per column per scan and four ints in the inner loop.
   int file_id{-1};
   int column_id{-1};
   int row_group{0};
   /// Which page within that row group. A row group is cut into pages of about
-  /// fixed_width_page_size_bytes() so the cache's unit of residency and eviction
-  /// is a page, not a whole row group -- a ClickBench row group of URL is 0.9GiB,
-  /// 15% of a 6GB budget, and evicting one throws all of it away.
+  /// fixed_width_page_size_bytes() so the cache's unit of residency and eviction is a page, not a
+  /// whole row group, which for a wide column is a large share of the budget.
   int page_index{0};
 
   [[nodiscard]] bool operator==(cached_page_key const& other) const = default;
@@ -500,16 +493,16 @@ struct cached_page {
   bool big_prefix{false};
 };
 
-
 struct cached_page_key_hash {
   [[nodiscard]] std::size_t operator()(cached_page_key const& key) const noexcept
   {
     // Four ints packed into one 64-bit word, then mixed. No string hashing on a
     // path this hot.
-    auto const packed = (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.file_id)) << 48) ^
-                        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.column_id)) << 32) ^
-                        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.row_group)) << 16) ^
-                        static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.page_index));
+    auto const packed =
+      (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.file_id)) << 48) ^
+      (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.column_id)) << 32) ^
+      (static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.row_group)) << 16) ^
+      static_cast<std::uint64_t>(static_cast<std::uint32_t>(key.page_index));
     return std::hash<std::uint64_t>{}(packed * 0x9e3779b97f4a7c15ULL);
   }
 };
@@ -731,22 +724,19 @@ class sirius_scan_manager {
                            std::vector<std::unique_ptr<cudf::table>> data_tables,
                            std::vector<cucascade::memory::memory_space*> chunk_memory_spaces);
 
-  /// Populate an automatic fixed-page entry directly from a materialized GPU
-  /// table view. This skips the transient full-table cache copy used by
-  /// insert_pinned_entry and stores only owned fixed-width pages.
-  /// \return Number of new fixed-width pages actually added (0 means not
-  ///         populated -- rejected, skipped, or a detected duplicate).
+  /// Populate an automatic fixed-page entry directly from a materialized GPU table view. This skips
+  /// the transient full-table cache copy used by insert_pinned_entry and stores only owned
+  /// fixed-width pages.
+  /// \return Number of new fixed-width pages actually added (0 means not populated -- rejected,
+  /// skipped, or a detected duplicate).
   ///
-  /// @param fixed_width_pre_rejected  The caller has already determined (from the
-  ///        parquet footer) that this entry's fixed-width columns cannot fit under
-  ///        fixed_page_admission_limit_bytes(). Their pages are then skipped
-  ///        outright -- no copy is made and no admission check runs -- while STRING
-  ///        columns still populate the variable-width page index, which has its own
-  ///        independent budget. Without this split, a fixed-width size verdict also
-  ///        silently disables variable-width caching for the table (measured on SF50:
-  ///        lineitem's variable-width indexing went 61 -> 0). The resulting entry
-  ///        holds nullptr chunks for its fixed-width columns, which is the same shape
-  ///        SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED=0 already produces.
+  /// @param fixed_width_pre_rejected  The caller has already determined (from the parquet footer)
+  /// that this entry's fixed-width columns cannot fit under fixed_page_admission_limit_bytes().
+  /// Their pages are then skipped outright -- no copy, no admission check -- while STRING columns
+  /// still populate the variable-width page index, which has its own budget. Without this split a
+  /// fixed-width size verdict would also disable variable-width caching for the table. The
+  /// resulting entry holds nullptr chunks for its fixed-width columns, the same shape
+  /// SIRIUS_FIXED_WIDTH_PAGE_CACHE_ENABLED=0 produces.
   [[nodiscard]] std::size_t insert_fixed_page_entry_from_view(
     const std::string& name,
     cache_entry_info cache_info,
@@ -796,19 +786,16 @@ class sirius_scan_manager {
   [[nodiscard]] std::shared_ptr<sirius::io::sirius_datasource> create_datasource(
     std::string_view path);
 
-  /// Cached data for @p column_names covering exactly @p row_groups of @p file_path,
-  /// concatenated in that order; an entry is nullptr when the column is not cached
-  /// for every one of them. Lets a scan read only the columns it is MISSING and
-  /// splice the cached ones in, instead of the all-or-nothing rule where one absent
-  /// column sends every column back to parquet -- 539 of 602 cache misses on
-  /// ClickBench were exactly that.
+  /// Cached data for @p column_names covering exactly @p row_groups of @p file_path, concatenated
+  /// in that order; an entry is nullptr when the column is not cached for every one of them. Lets a
+  /// scan read only the columns it is MISSING and splice the cached ones in, instead of one absent
+  /// column sending every column back to parquet.
   ///
-  /// Only UNFILTERED cached data qualifies: a filtered entry holds a subset of the
-  /// row group's rows and cannot be pasted beside freshly read columns that hold
-  /// all of them.
-  /// Store one row group's worth of @p column_names from @p view into the flat page
-  /// store. @p row_group_rows says how the view's rows divide among @p row_groups,
-  /// so each page holds exactly one row group.
+  /// Only UNFILTERED cached data qualifies: a filtered entry holds a subset of the row group's rows
+  /// and cannot be pasted beside freshly read columns that hold all of them.
+  /// Store one row group's worth of @p column_names from @p view into the flat page store. @p
+  /// row_group_rows says how the view's rows divide among @p row_groups, so each page holds exactly
+  /// one row group.
   void insert_pages_from_view(std::string const& file_path,
                               std::vector<cudf::size_type> const& row_groups,
                               std::vector<std::size_t> const& row_group_rows,
@@ -826,11 +813,9 @@ class sirius_scan_manager {
   [[nodiscard]] std::pair<std::size_t, std::size_t> page_store_size() const;
 
   /// Throw the whole page store away and report how many bytes that returned. Called when a
-  /// pipeline task has actually run out of device memory: at that point the cache is holding
-  /// memory a running query needs, and every page in it is by definition reconstructible from
-  /// the file. Handing back only the configured floor's shortfall is not enough there -- it
-  /// was measured returning 0.22 GB against a query that needed gigabytes, after which the
-  /// pressure sweep's own circuit breaker concluded eviction was useless and backed off.
+  /// pipeline task has actually run out of device memory: the cache is holding memory a running
+  /// query needs, and every page in it is reconstructible from the file. Handing back only the
+  /// configured floor's shortfall is not enough there.
   std::size_t drop_all_pages();
   /// See release_page_store_for_reservation.
   std::size_t release_pages(std::size_t bytes);
@@ -845,13 +830,13 @@ class sirius_scan_manager {
 
   void log_page_census(std::string_view when) const;
 
-  /// Future-aware page management, driven by the query order the caller already knows (a
-  /// reordered batch). @p mode: 0 = off (variable-width first, then LRU), 1 = evict by next
-  /// use, 2 = also admit only columns that are used again, 3 = evict by next use and, with the
-  /// store full, skip a column needed later than every resident page. @p current holds the columns of
-  /// the query about to run; @p next_use maps a column to how many queries ahead its next
-  /// use after the current query is. A column in neither is never used again. Keyed by
-  /// column name, which is unique within each of the benchmarks this is run on.
+  /// Future-aware page management, driven by the query order the caller already knows (a reordered
+  /// batch). @p mode: 0 = off (variable-width first, then LRU), 1 = evict by next use, 2 = also
+  /// admit only columns that are used again, 3 = evict by next use and, with the store full, skip a
+  /// column needed later than every resident page. @p current holds the columns of the query about
+  /// to run; @p next_use maps a column to how many queries ahead its next use after the current
+  /// query is. A column in neither is never used again. Keyed by column name, which is unique
+  /// within each of the benchmarks this is run on.
   void set_future_cache_hints(int mode,
                               std::unordered_set<std::string> current,
                               std::unordered_map<std::string, int> next_use);
@@ -862,20 +847,16 @@ class sirius_scan_manager {
     return _page_lock_wait_us.load(std::memory_order_relaxed);
   }
 
-  /// Which of @p column_names the cache can serve for these row groups, without
-  /// materializing any of them.
+  /// Which of @p column_names the cache can serve for these row groups, without materializing any
+  /// of them.
   ///
-  /// cached_row_group_columns concatenates a column's pages into one column, which
-  /// allocates and copies every byte -- and its caller throws the result away
-  /// unless the splice is worth doing (some columns cached AND some still to
-  /// read). Cutting row groups into 16MiB pages made that concatenate real work
-  /// where a whole-row-group page had been a single move, and TPC-H SF50 pays it
-  /// on 1,187 of 1,407 scans that end up not splicing at all: +1.76s of scan time.
-  /// Ask this first, decide, then materialize only if the answer is yes.
-  /// For each requested column and each requested row group, the pages the store holds,
-  /// sorted by row and possibly with gaps. A run whose pages disagree on their layout, or
-  /// whose filter identity does not match, contributes nothing for that row group. With
-  /// @p serve true the returned pages count as served and move to the LRU tail.
+  /// cached_row_group_columns concatenates a column's pages, which copies every byte, and its
+  /// caller throws the result away unless the splice is worth doing. Ask this first, decide, then
+  /// materialize only if the answer is yes.
+  /// For each requested column and each requested row group, the pages the store holds, sorted by
+  /// row and possibly with gaps. A run whose pages disagree on their layout, or whose filter
+  /// identity does not match, contributes nothing for that row group. With @p serve true the
+  /// returned pages count as served and move to the LRU tail.
   [[nodiscard]] std::vector<std::vector<std::vector<cached_piece>>> cached_row_group_pieces(
     std::string const& file_path,
     std::vector<cudf::size_type> const& row_groups,
@@ -887,7 +868,7 @@ class sirius_scan_manager {
     std::string const& file_path,
     std::vector<cudf::size_type> const& row_groups,
     std::vector<std::string> const& column_names,
-    std::string const& required_filter_signature = {},
+    std::string const& required_filter_signature              = {},
     std::vector<std::string> const& required_filter_conjuncts = {});
 
   [[nodiscard]] std::vector<std::shared_ptr<cudf::column>> cached_row_group_columns(
@@ -895,7 +876,7 @@ class sirius_scan_manager {
     std::vector<cudf::size_type> const& row_groups,
     std::vector<std::string> const& column_names,
     rmm::cuda_stream_view stream,
-    std::string const& required_filter_signature = {},
+    std::string const& required_filter_signature              = {},
     std::vector<std::string> const& required_filter_conjuncts = {});
 
  private:
@@ -947,11 +928,8 @@ class sirius_scan_manager {
   /// The flat page store: (file, column, row group) -> one cached column. This is
   /// what the auto page cache is, now that the entry is gone from the lookup path.
   std::unordered_map<cached_page_key, cached_page, cached_page_key_hash> _pages;
-  /// Least-recently-used order, oldest at the front. Kept as a list so a touch is
-  /// a splice and an eviction is a pop, both O(1). The previous pass rebuilt a
-  /// vector of every page and sorted it on EVERY insert -- O(n log n) each time,
-  /// and n grew tenfold when row groups were cut into 16MiB pages, which turned
-  /// TPC-H SF50 from -3.1% into +2.3% against its own baseline.
+  /// Least-recently-used order, oldest at the front. Kept as a list so a touch is a splice and an
+  /// eviction is a pop, both O(1).
   std::list<cached_page_key> _lru;
   /// Microseconds probes have spent waiting for `_pages_mutex`, summed across threads.
   std::atomic<std::int64_t> _page_lock_wait_us{0};
@@ -960,10 +938,9 @@ class sirius_scan_manager {
   /// Reverse of @ref _intern, so a census can name the column an id belongs to.
   std::vector<std::string> _intern_names;
 
-  /// How one row group of one column was cut into pages. The boundaries are a property of the
-  /// row group, and the same row group is offered again on every rescan -- five times for
-  /// ClickBench's URL row group 0 in a single run -- so they are worked out once and kept.
-  /// This is also what guarantees a row group only ever has one layout.
+  /// How one row group of one column was cut into pages. The boundaries are a property of the row
+  /// group, and the same row group is offered again on every rescan, so they are worked out once
+  /// and kept. This is also what guarantees a row group only ever has one layout.
   struct page_layout_key {
     int file_id{-1};
     int column_id{-1};
@@ -978,15 +955,15 @@ class sirius_scan_manager {
   struct page_layout_key_hash {
     std::size_t operator()(page_layout_key const& k) const noexcept
     {
-      auto const packed = (static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.file_id)) << 40) ^
-                          (static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.column_id)) << 20) ^
-                          static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.row_group));
+      auto const packed =
+        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.file_id)) << 40) ^
+        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.column_id)) << 20) ^
+        static_cast<std::uint64_t>(static_cast<std::uint32_t>(k.row_group));
       return static_cast<std::size_t>((packed ^ (k.rows * 0xff51afd7ed558ccdULL)) *
                                       0x9e3779b97f4a7c15ULL);
     }
   };
-  std::unordered_map<page_layout_key, std::vector<std::size_t>, page_layout_key_hash>
-    _page_layouts;
+  std::unordered_map<page_layout_key, std::vector<std::size_t>, page_layout_key_hash> _page_layouts;
 
   /// What the store did with one column's pages over the life of the process. Page counts
   /// and byte totals alone cannot answer "is URL actually being cached and served" -- a
@@ -995,7 +972,7 @@ class sirius_scan_manager {
   struct column_page_stats {
     std::size_t inserted_pages{0};
     std::size_t inserted_bytes{0};
-    std::size_t served_pages{0};   ///< pages handed to a splice
+    std::size_t served_pages{0};  ///< pages handed to a splice
     std::size_t served_bytes{0};
     std::size_t evicted_pages{0};
     std::size_t evicted_bytes{0};
@@ -1024,14 +1001,15 @@ class sirius_scan_manager {
   /// order as the budget sweep) until @p bytes are actually returned to the pool. Pages someone
   /// is still reading are skipped -- erasing them frees nothing. False when no page ranks
   /// below the incoming one, i.e. the incoming page would be the next victim itself.
-  bool evict_for_incoming_locked(std::string const& column, bool incoming_variable,
+  bool evict_for_incoming_locked(std::string const& column,
+                                 bool incoming_variable,
                                  std::size_t bytes);
   /// Queries until @p page is needed again: 0 when the running query reads its column and has
   /// not consumed it yet, otherwise the column's next use after this query (INT_MAX: never).
   [[nodiscard]] int future_distance_locked(std::string const& column,
                                            cached_page const& page) const;
   std::unordered_set<std::uint64_t> _rg_declined;
-  [[nodiscard]] int intern_id(std::string const& s);        ///< inserts if absent
+  [[nodiscard]] int intern_id(std::string const& s);            ///< inserts if absent
   [[nodiscard]] int intern_lookup(std::string const& s) const;  ///< -1 when absent
   /// Running total of resident page bytes, maintained on insert and eviction so
   /// the budget check does not have to sum the whole store.
@@ -1042,48 +1020,35 @@ class sirius_scan_manager {
   std::size_t _page_pressure_skip{0};
   /// Set when a pipeline task ran out of device memory and the store was dropped; cleared by
   /// reset(), which runs per query. Dropping alone does not help -- the next batch of the same
-  /// query simply refills the store and it runs out again, measured as 305 drop-and-refill
-  /// cycles on ClickBench q24 before the retry budget ran out. A query that has already hit
-  /// the wall gets no more caching; the next one starts clean.
+  /// query refills the store and runs out again -- so a query that has already hit the wall gets no
+  /// more caching; the next one starts clean.
   std::atomic<bool> _admission_suspended{false};
   std::size_t _page_pressure_free_before{0};
 
   /// Canonical variable-width pages, shared across cache entries.
   ///
-  /// The cache name folds in the projection (";cols=A,B,C"), so a column read by
-  /// three different projections was paged three times and stored three times.
-  /// Measured on ClickBench 100M: SearchPhrase (1.2 GB decoded) appeared in three
-  /// keys, so 3.6 GB competed for a 2 GB budget and the sweep evicted 25 times --
-  /// and an evicted page is an outright lost hit, because a paged column has no
-  /// whole-chunk copy to fall back on.
+  /// The cache name folds in the projection (";cols=A,B,C"), so without sharing a column read by
+  /// several projections would be paged and stored once per projection.
   ///
-  /// Keyed by (file identity + filter signature, column, chunk index, chunk rows)
-  /// so only genuinely identical row ranges are shared. Safe here because the
-  /// coalescer's byte cap is smaller than one row group, so every projection
-  /// chunks on row-group boundaries and the cut points coincide -- verified in
-  /// the page_directory log, where all unfiltered SearchPhrase entries cut at
-  /// exactly 10,000,000 rows regardless of projection.
+  /// Keyed by (file identity + filter signature, column, chunk index, chunk rows) so only genuinely
+  /// identical row ranges are shared. Safe because the coalescer's byte cap is smaller than one row
+  /// group, so every projection chunks on row-group boundaries and the cut points coincide.
   ///
-  /// Entries keep their own page metadata and take a reference to the buffers, so
-  /// usable()/coverage logic is unchanged; only the device allocation is shared.
-  /// Guarded by _pinned_entries_mutex.
+  /// Entries keep their own page metadata and take a reference to the buffers, so usable()/coverage
+  /// logic is unchanged; only the device allocation is shared. Guarded by _pinned_entries_mutex.
   std::unordered_map<std::string, shared_variable_pages> _shared_variable_pages;
 
-  /// Distinct values of dictionary-encoded columns, keyed by (file identity +
-  /// filter signature, column).
+  /// Distinct values of dictionary-encoded columns, keyed by (file identity + filter signature,
+  /// column).
   ///
-  /// A decoded STRING column costs its characters plus 4 bytes of offsets per row,
-  /// which is why ClickBench's Title (9.22 GB) and URL (8.80 GB) can never be
-  /// admitted and the queries that read them get no cache at all. Encoding splits
-  /// the column into one int32 code per row -- which is fixed-width, so it needs no
-  /// variable-width paging machinery and goes through the existing page path -- plus
-  /// one copy of the distinct values, kept here. Measured on ClickBench: Title
-  /// 9.22 GB -> 1.58 GB (5.8x), and the keys do not grow as chunks are added
-  /// (per-chunk 0.38 GB, unified across chunks 0.38 GB), so this store's size is a
-  /// property of the column rather than of how much of it has been cached.
+  /// A decoded STRING column costs its characters plus 4 bytes of offsets per row, so a wide string
+  /// column may never fit the budget. Encoding splits it into one int32 code per row --
+  /// fixed-width, so it goes through the existing page path -- plus one copy of the distinct
+  /// values, kept here. The key set is a property of the column, not of how much of it has been
+  /// cached.
   ///
-  /// Held strongly: the codes are meaningless without the keys, so evicting these
-  /// while code pages remain would leave unreadable pages behind.
+  /// Held strongly: the codes are meaningless without the keys, so evicting these while code pages
+  /// remain would leave unreadable pages behind.
   std::unordered_map<std::string, std::shared_ptr<cudf::column>> _shared_dictionaries;
   std::unordered_set<std::string> _fixed_page_admission_rejected_entries;
 

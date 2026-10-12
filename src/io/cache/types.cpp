@@ -26,12 +26,12 @@
 #include <cuda_runtime.h>
 
 #include <algorithm>
-#include <cstdlib>
-#include <string_view>
-#include <vector>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <stdexcept>
+#include <string_view>
+#include <vector>
 
 namespace sirius::io::cache {
 
@@ -77,8 +77,8 @@ buffer_pool::buffer_pool(cucascade::memory::memory_reservation_manager& reservat
 buffer_pool::~buffer_pool() = default;
 
 namespace {
-// DEBUG (temporary): give the cache its own pinned buffers instead of blocks from the
-// shared host memory resource, to test whether its blocks alias another user's.
+// Debug switch SIRIUS_PREFETCH_DBG_OWN_BUFFERS: give the cache its own pinned buffers instead
+// of blocks from the shared host memory resource.
 bool dbg_own_buffers()
 {
   static bool const on = [] {
@@ -126,7 +126,9 @@ std::vector<std::byte*> buffer_pool::allocate_bulk(size_t n, int& numa_node)
     numa_node = _host_arenas.empty() ? 0 : _host_arenas.front().numa_id;
     auto out  = dbg_alloc(n, _chunk_bytes);
     if (out.size() != n) {
-      for (auto* p : out) { cudaFreeHost(p); }
+      for (auto* p : out) {
+        cudaFreeHost(p);
+      }
       return {};
     }
     _n_allocated_chunks.fetch_add(out.size(), std::memory_order_relaxed);
@@ -162,7 +164,9 @@ void buffer_pool::deallocate_bulk(std::vector<std::byte*>&& out, int numa) noexc
 {
   if (out.empty()) return;
   if (dbg_own_buffers()) {
-    for (auto* p : out) { cudaFreeHost(p); }
+    for (auto* p : out) {
+      cudaFreeHost(p);
+    }
     _n_allocated_chunks.fetch_sub(out.size(), std::memory_order_relaxed);
     return;
   }
